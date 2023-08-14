@@ -1,0 +1,14 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"rootDir": ".",
+		"baseUrl": ".",
+		"types": [
+			"node"
+		]
+	},
+	"exclude": [
+		"node_modules",
+		"dist",
+	]
+}

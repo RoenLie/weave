@@ -1,0 +1,72 @@
+{
+	"editor.bracketPairColorization.enabled": true,
+	"editor.guides.bracketPairs": "active",
+	"editor.formatOnSave": true,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true
+	},
+	"editor.detectIndentation": false,
+	"editor.insertSpaces": false,
+	"eslint.run": "onSave",
+	"eslint.useESLintClass": true,
+	"eslint.format.enable": true,
+	"eslint.validate": [
+		"javascript",
+		"typescript",
+	],
+	"prettier.enable": false,
+	"[typescript]": {
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+	},
+	"typescript.format.insertSpaceAfterTypeAssertion": true,
+	"typescript.format.semicolons": "insert",
+	"typescript.preferences.importModuleSpecifier": "project-relative",
+	"typescript.preferences.quoteStyle": "single",
+	"typescript.updateImportsOnFileMove.enabled": "always",
+	"javascript.preferences.importModuleSpecifierEnding": "js",
+	"typescript.preferences.importModuleSpecifierEnding": "js",
+	"typescript.tsdk": "node_modules\\typescript\\lib",
+	"workbench.colorCustomizations": {
+		"activityBar.activeBackground": "#373737",
+		"activityBar.background": "#373737",
+		"activityBar.foreground": "#e7e7e7",
+		"activityBar.inactiveForeground": "#e7e7e799",
+		"activityBarBadge.background": "#787828",
+		"activityBarBadge.foreground": "#e7e7e7",
+		"commandCenter.border": "#e7e7e799",
+		"sash.hoverBorder": "#373737",
+		"statusBar.background": "#1e1e1e",
+		"statusBar.foreground": "#e7e7e7",
+		"statusBarItem.hoverBackground": "#373737",
+		"statusBarItem.remoteBackground": "#1e1e1e",
+		"statusBarItem.remoteForeground": "#e7e7e7",
+		"titleBar.activeBackground": "#1e1e1e",
+		"titleBar.activeForeground": "#e7e7e7",
+		"titleBar.inactiveBackground": "#1e1e1e99",
+		"titleBar.inactiveForeground": "#e7e7e799"
+	},
+	"peacock.color": "rgb(30,30,30)",
+	"restoreTerminals.runOnStartup": true,
+	"restoreTerminals.terminals": [
+		{
+			"splitTerminals": [
+				{
+					"name": "client",
+					"commands": [
+						"cd client"
+					]
+				}
+			]
+		},
+		{
+			"splitTerminals": [
+				{
+					"name": "server",
+					"commands": [
+						"cd server"
+					]
+				}
+			]
+		}
+	],
+}

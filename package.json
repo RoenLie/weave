@@ -1,0 +1,30 @@
+{
+	"author": {
+		"name": "Kristoffer Roen-Lie"
+	},
+	"description": "",
+	"keywords": [],
+	"license": "MIT",
+	"type": "module",
+	"dependencies": {
+		"tslib": "^2.6.1"
+	},
+	"devDependencies": {
+		"@roenlie/eslint-config": "^1.2.0",
+		"@roenlie/package-toolbox": "^0.0.19",
+		"@roenlie/tsconfig": "^1.0.2",
+		"@types/node": "^20.5.0",
+		"@typescript-eslint/eslint-plugin": "^6.3.0",
+		"@typescript-eslint/parser": "^6.3.0",
+		"eslint": "^8.47.0",
+		"eslint-plugin-import": "^2.28.0",
+		"eslint-plugin-lit": "^1.9.1",
+		"eslint-plugin-simple-import-sort": "^10.0.0",
+		"globby": "^13.2.2",
+		"rimraf": "^5.0.1",
+		"tsx": "^3.12.7",
+		"typescript": "^5.1.6",
+		"vite": "^4.4.9",
+		"vitest": "^0.34.1"
+	}
+}

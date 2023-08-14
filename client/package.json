@@ -1,0 +1,26 @@
+{
+	"name": "@roenlie/lit-htmx-client",
+	"version": "0.0.1",
+	"description": "Extensions and utilities for the LIT framework.",
+	"author": {
+		"name": "Kristoffer Roen-Lie",
+		"url": "https://github.com/RoenLie"
+	},
+	"license": "MIT",
+	"type": "module",
+	"types": "./dist/index-fallback.d.ts",
+	"main": "./dist/index-fallback.js",
+	"exports": {
+		"./*": "./dist/*"
+	},
+	"scripts": {
+		"dev": "vite"
+	},
+	"dependencies": {},
+	"peerDependencies": {
+		"lit": "*"
+	},
+	"devDependencies": {
+		"lit": "^2.8.0"
+	}
+}

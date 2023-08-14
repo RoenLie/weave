@@ -1,0 +1,4 @@
+packages:
+  # Supporting packages.
+  - "client"
+  - "server"

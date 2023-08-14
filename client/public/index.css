@@ -1,0 +1,8 @@
+body {
+	display: grid;
+	height: 100dvh;
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+	background-color: cadetblue;
+}
