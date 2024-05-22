@@ -1,0 +1,30 @@
+{
+	"name": "@roenlie/eslint-config",
+	"version": "1.0.0",
+	"author": "Kristoffer Roen-Lie",
+	"license": "MIT",
+	"description": "eslint config preferences.",
+	"main": "index.js",
+	"files": [
+		"base.js",
+		"recommended.js",
+		"lit.js",
+		"index.js"
+	],
+	"dependencies": {
+		"@typescript-eslint/eslint-plugin": "^8.0.0-alpha.10",
+		"@typescript-eslint/parser": "^8.0.0-alpha.10",
+		"eslint": "^9.3.0",
+		"eslint-import-resolver-typescript": "^3.6.1",
+		"eslint-plugin-import": "^2.29.1",
+		"eslint-plugin-lit": "^1.13.0",
+		"eslint-plugin-simple-import-sort": "^12.1.0",
+		"typescript": "^5.4.5"
+	},
+	"devDependencies": {
+		"@roenlie/package-toolbox": "^1.0.7"
+	},
+	"engines": {
+		"node": ">=20.10"
+	}
+}

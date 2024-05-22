@@ -1,0 +1,21 @@
+{
+	"name": "@roenlie/tsconfig",
+	"version": "1.0.0",
+	"author": "Kristoffer Roen-Lie",
+	"license": "MIT",
+	"description": "tsconfig with convenient defaults.",
+	"main": "tsconfig.json",
+	"files": [
+		"tsconfig.json"
+	],
+	"keywords": [
+		"tsconfig",
+		"typescript",
+		"ts",
+		"config",
+		"configuration"
+	],
+	"devDependencies": {
+		"@roenlie/package-toolbox": "^1.0.7"
+	}
+}

@@ -1,0 +1,53 @@
+{
+	"editor.bracketPairColorization.enabled": true,
+	"editor.guides.bracketPairs": "active",
+	"editor.formatOnSave": true,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+	"editor.detectIndentation": false,
+	"editor.insertSpaces": false,
+	"eslint.run": "onSave",
+	"eslint.useESLintClass": true,
+	"eslint.format.enable": true,
+	"eslint.validate": [
+		"javascript",
+		"typescript",
+	],
+	"eslint.workingDirectories": [
+		{
+			"mode": "auto"
+		}
+	],
+	"[typescript]": {
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+	},
+	"typescript.format.insertSpaceAfterTypeAssertion": true,
+	"typescript.format.semicolons": "insert",
+	"typescript.updateImportsOnFileMove.enabled": "always",
+	"typescript.preferences.importModuleSpecifier": "project-relative",
+	"typescript.preferences.quoteStyle": "single",
+	"javascript.preferences.importModuleSpecifierEnding": "js",
+	"typescript.tsdk": "node_modules\\typescript\\lib",
+	"workbench.colorCustomizations": {
+		"activityBar.activeBackground": "#39596f",
+		"activityBar.background": "#39596f",
+		"activityBar.foreground": "#e7e7e7",
+		"activityBar.inactiveForeground": "#e7e7e799",
+		"activityBarBadge.background": "#2a1622",
+		"activityBarBadge.foreground": "#e7e7e7",
+		"commandCenter.border": "#e7e7e799",
+		"sash.hoverBorder": "#39596f",
+		"statusBar.background": "#283e4d",
+		"statusBar.foreground": "#e7e7e7",
+		"statusBarItem.hoverBackground": "#39596f",
+		"statusBarItem.remoteBackground": "#283e4d",
+		"statusBarItem.remoteForeground": "#e7e7e7",
+		"titleBar.activeBackground": "#283e4d",
+		"titleBar.activeForeground": "#e7e7e7",
+		"titleBar.inactiveBackground": "#283e4d99",
+		"titleBar.inactiveForeground": "#e7e7e799"
+	},
+	"peacock.color": "#283e4d",
+	"restoreTerminals.runOnStartup": false,
+}

@@ -1,0 +1,49 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"lib": [
+			"ESNext",
+			"DOM",
+			"DOM.Iterable",
+		],
+		// output
+		"noEmit": false,
+		"emitDeclarationOnly": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": false,
+		// features
+		"allowJs": true,
+		"allowSyntheticDefaultImports": true,
+		"importHelpers": true,
+		"incremental": false,
+		"removeComments": true,
+		"skipLibCheck": true,
+		// strictness
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"forceConsistentCasingInFileNames": true,
+		"pretty": true,
+		"isolatedModules": true,
+		"noUncheckedIndexedAccess": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"noImplicitOverride": true,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"noFallthroughCasesInSwitch": true,
+		"noEmitOnError": true,
+		"noImplicitReturns": false,
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"resolveJsonModule": true,
+		"strict": true,
+		"strictPropertyInitialization": false,
+		"strictNullChecks": true,
+		"useDefineForClassFields": false,
+		"verbatimModuleSyntax": true
+	}
+}
