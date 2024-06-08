@@ -9,6 +9,10 @@
 			"DOM",
 			"DOM.Iterable",
 		],
+		// filedir
+		"outDir": "../dist",
+		"rootDir": ".",
+		"baseUrl": ".",
 		// output
 		"noEmit": false,
 		"emitDeclarationOnly": true,

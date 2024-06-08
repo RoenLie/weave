@@ -1,0 +1,12 @@
+{
+	"name": "@roenlie/grid-layout",
+	"description": "A grid layout component for dashboard creation",
+	"authors": "Kristoffer Roen-Lie",
+	"version": "1.0.0",
+	"main": "./dist/index.js",
+	"type": "module",
+	"scripts": {
+		"lint-windows": "set TIMING=1 && pnpm eslint"
+	},
+	"dependencies": {}
+}

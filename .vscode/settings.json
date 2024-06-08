@@ -7,7 +7,7 @@
 	},
 	"editor.detectIndentation": false,
 	"editor.insertSpaces": false,
-	"eslint.run": "onSave",
+	"eslint.run": "onType",
 	"eslint.useESLintClass": true,
 	"eslint.format.enable": true,
 	"eslint.validate": [
@@ -19,6 +19,9 @@
 			"mode": "auto"
 		}
 	],
+	"[javascript]": {
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+	},
 	"[typescript]": {
 		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
 	},
@@ -26,8 +29,9 @@
 	"typescript.format.semicolons": "insert",
 	"typescript.updateImportsOnFileMove.enabled": "always",
 	"typescript.preferences.importModuleSpecifier": "project-relative",
-	"typescript.preferences.quoteStyle": "single",
 	"javascript.preferences.importModuleSpecifierEnding": "js",
+	"typescript.preferences.quoteStyle": "single",
+	"javascript.preferences.quoteStyle": "single",
 	"typescript.tsdk": "node_modules\\typescript\\lib",
 	"workbench.colorCustomizations": {
 		"activityBar.activeBackground": "#39596f",

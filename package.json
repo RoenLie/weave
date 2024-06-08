@@ -1,16 +1,17 @@
 {
 	"name": "weave",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"build": "turbo build",
 		"dev": "turbo dev",
 		"lint": "turbo lint"
 	},
 	"devDependencies": {
-		"turbo": "latest",
-		"typescript": "^5.4.5",
+		"@roenlie/eslint-config": "workspace:*",
 		"@roenlie/tsconfig": "workspace:*",
-		"@roenlie/eslint-config": "workspace:*"
+		"turbo": "latest",
+		"typescript": "^5.4.5"
 	},
 	"packageManager": "pnpm@9.0.6",
 	"engines": {

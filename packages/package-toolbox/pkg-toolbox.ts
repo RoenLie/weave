@@ -7,7 +7,7 @@ export default defineToolbox(async () => {
 
 	return {
 		indexBuilder: {
-			entrypoints: [
+						entrypoints: [
 				{
 					path:            './src/vite-utils/index.ts',
 					packagePath:     './vite-utils',
