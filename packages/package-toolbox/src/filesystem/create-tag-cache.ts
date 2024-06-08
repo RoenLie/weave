@@ -6,8 +6,8 @@ import { getFiles } from './get-files.js';
 
 export const createTagCache = async (options: {
 	directories: { path: string; whitelist?: RegExp[]; blacklist?: RegExp[] }[];
-	cache?: Map<string, string>;
-	pattern?: RegExp[];
+	cache?:      Map<string, string>;
+	pattern?:    RegExp[];
 }) => {
 	const { cache = new Map<string, string>() } = options;
 

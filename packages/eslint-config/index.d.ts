@@ -1,17 +1,17 @@
-import { FlatConfig } from 'typescript-eslint';
+import type { Config } from 'typescript-eslint';
 
 
 declare const configs: {
-	base: FlatConfig.ConfigArray,
-	node: FlatConfig.ConfigArray,
-	lit: FlatConfig.ConfigArray,
-	all: FlatConfig.ConfigArray,
+	base: Config,
+	node: Config,
+	lit:  Config,
+	all:  Config,
 } = {
 	base,
 	node,
 	lit,
-	all
-}
+	all,
+};
 
 
 export default configs;

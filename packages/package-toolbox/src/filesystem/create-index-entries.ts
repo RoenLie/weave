@@ -3,10 +3,10 @@ import { join, resolve, sep } from 'node:path';
 
 
 export interface Entrypoint {
-	path: string;
-	packagePath: string;
+	path:          string;
+	packagePath:   string;
 	packageExport: boolean;
-	filters: ((path: string) => boolean)[];
+	filters:       ((path: string) => boolean)[];
 }
 
 

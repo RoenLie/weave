@@ -4,14 +4,6 @@
 		"outDir": "../dist",
 		"rootDir": ".",
 		"baseUrl": ".",
-		"types": []
+		"checkJs": true,
 	},
-	"include": [
-		"*.ts",
-		"*.d.ts",
-	],
-	"exclude": [
-		"*.test.ts",
-		"*.bench.ts",
-	]
 }

@@ -5,7 +5,7 @@ import { type ConfigEnv, type UserConfig } from 'vite';
 
 export type ConfigOverrides = UserConfig
 | ((env: ConfigEnv) => UserConfig)
-| ((env: ConfigEnv) => Promise<UserConfig>)
+| ((env: ConfigEnv) => Promise<UserConfig>);
 
 
 export interface ConfigOptions {
@@ -73,7 +73,8 @@ export const libConfig = (
 
 				rollupOptions: {
 					/** By default, we externalize all dependencies.
-					 *  a filter can be supplied that excludes certain sources from being externalized */
+					 *  a filter can be supplied that excludes certain
+					 *  sources from being externalized */
 					external(source, importer, isResolved) {
 						const filterResult = filter?.(source, importer, isResolved);
 						if (filterResult !== undefined)
@@ -85,12 +86,13 @@ export const libConfig = (
 					},
 
 					output: {
-						/** By preseving modules, we retain the folder structure of the original source, thereby allowing
+						/** By preseving modules, we retain the folder structure of the
+						 *  original source, thereby allowing
 						 *  generated d.ts files to be correctly picked up. */
 						preserveModules: true,
 
-						/** We remove src from any module paths to preserve the folder structure incase any virtual or node_modules
-						 *  files are included */
+						/** We remove src from any module paths to preserve the folder
+						 *  structure incase any virtual or node_modules files are included */
 						preserveModulesRoot: 'src',
 					},
 				},

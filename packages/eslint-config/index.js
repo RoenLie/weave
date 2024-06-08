@@ -1,4 +1,3 @@
-// @ts-check
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import litConfig from 'eslint-plugin-lit';
@@ -270,10 +269,17 @@ const base = tseslint.config({
 		'@typescript-eslint/no-non-null-assertion': 'off',
 		'@typescript-eslint/no-unused-vars':        [
 			'warn', {
-				argsIgnorePattern: '^_',
+				'args':                           'all',
+				'argsIgnorePattern':              '^_',
+				'caughtErrors':                   'all',
+				'caughtErrorsIgnorePattern':      '^_',
+				'destructuredArrayIgnorePattern': '^_',
+				'varsIgnorePattern':              '^_',
+				'ignoreRestSiblings':             true,
 			},
 		],
-		'@typescript-eslint/no-namespace': 'off',
+		'@typescript-eslint/no-namespace':      'off',
+		'@typescript-eslint/no-dynamic-delete': 'off',
 	},
 });
 

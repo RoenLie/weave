@@ -24,7 +24,10 @@ export interface Target extends Options {
 }
 
 
-export interface CopyOptions extends Options, Exclude<WriteFileOptions, BufferEncoding | null>, FSCopyOptions {
+export interface CopyOptions extends
+	Options,
+	Exclude<WriteFileOptions, BufferEncoding | null>,
+	FSCopyOptions {
 	/**
 	 * Remove the base directory structure of copied files.
 	 * @default true
@@ -64,8 +67,8 @@ const generateCopyTarget = async (
 	from: string,
 	to: string,
 	{ flatten, rename, transform }: {
-		flatten: CopyOptions['flatten'];
-		rename: Target['rename'];
+		flatten:   CopyOptions['flatten'];
+		rename:    Target['rename'];
 		transform: Target['transform'];
 	},
 ) => {
@@ -77,7 +80,9 @@ const generateCopyTarget = async (
 		? to
 		: dir.replace(dir.split('/')[0] ?? '', to);
 
-	const destination = path.join(destinationFolder, rename ? renameTarget(base, rename, from) : base);
+	const destination = path.join(destinationFolder,
+		rename ? renameTarget(base, rename, from) : base);
+
 	const contents = transform ? await transform(await fs.readFile(from), base) : undefined;
 
 	return {
@@ -110,8 +115,10 @@ export const copy = async (options: CopyOptions = {}) => {
 		if (!from || !to)
 			throw new Error(`${ stringify(target) } target must have "src" and "dest" properties`);
 
-		if (rename && typeof rename !== 'string' && typeof rename !== 'function')
-			throw new Error(`${ stringify(target) } target's "rename" property must be a string or a function`);
+		if (rename && typeof rename !== 'string' && typeof rename !== 'function') {
+			throw new Error(stringify(target)
+				+ `target's "rename" property must be a string or a function`);
+		}
 
 		const matchedPaths = await globby(from, {
 			expandDirectories: false,
@@ -122,7 +129,9 @@ export const copy = async (options: CopyOptions = {}) => {
 
 		for (const matchedPath of matchedPaths) {
 			const destPromises = Array.isArray(to)
-				? to.map(dest => generateCopyTarget(matchedPath, dest, { flatten, rename, transform }))
+				? to.map(dest => generateCopyTarget(
+					matchedPath, dest, { flatten, rename, transform },
+				))
 				: [ generateCopyTarget(matchedPath, to, { flatten, rename, transform }) ];
 
 			copyTargets.push(...await Promise.all(destPromises));
@@ -141,11 +150,15 @@ export const copy = async (options: CopyOptions = {}) => {
 			}
 			else {
 				try {
-					const [ newStat, existStat ] = await Promise.all([ await fs.stat(from), await fs.stat(to) ]);
+					const [ newStat, existStat ] = await Promise.all([
+						fs.stat(from),
+						fs.stat(to),
+					]);
+
 					if (areDatesEqual(newStat.mtime, existStat.mtime))
 						continue;
 				}
-				catch (error) { /*  */ }
+				catch (_error) { /* error */ }
 
 				await fs.copy(from, to, restPluginOptions);
 			}

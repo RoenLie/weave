@@ -44,6 +44,7 @@
 		"./filesystem/*": "./dist/filesystem/*"
 	},
 	"scripts": {
+		"lint": "eslint src --fix",
 		"build": "pnpm run --sequential \"/^build::.*/\"",
 		"build::prepare": "rimraf dist",
 		"build::js1": "vite build",

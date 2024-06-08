@@ -8,19 +8,19 @@ export interface ToolboxConfig {
 	};
 	indexBuilder?: {
 		entrypoints: {
-			path: string;
-			filters?: ((path: string) => boolean)[];
-			packagePath?: string;
-			packageExport?: boolean;
+			path:             string;
+			filters?:         ((path: string) => boolean)[];
+			packagePath?:     string;
+			packageExport?:   boolean;
 			includeWildcard?: boolean;
 		}[];
-		defaultFilters?: ((path: string) => boolean)[];
-		exclusionJSDocTag?: string;
-		defaultPackageExport?: boolean;
+		defaultFilters?:             ((path: string) => boolean)[];
+		exclusionJSDocTag?:          string;
+		defaultPackageExport?:       boolean;
 		packageExportNameTransform?: (path: string) => string;
 	};
 	exportsBuilder?: {
-		entries: Parameters<typeof createPackageExports>['0'],
+		entries:  Parameters<typeof createPackageExports>['0'],
 		options?: Parameters<typeof createPackageExports>['1']
 	},
 	copy?: Record<string, CopyOptions>;

@@ -6,7 +6,7 @@ import { inc, type ReleaseType } from 'semver';
 
 export const incrementVersion = (options?: {
 	placeholder?: string;
-	release?: ReleaseType
+	release?:     ReleaseType
 }) => {
 	const {
 		placeholder = '1.0.semver-replace',

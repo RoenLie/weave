@@ -11,7 +11,10 @@ async function genToArray<T>(generated: AsyncIterable<T>): Promise<T[]> {
 }
 
 
-async function* getFiles(directory: string, pattern?: RegExp): AsyncGenerator<string, void, string | undefined> {
+async function* getFiles(
+	directory: string,
+	pattern?: RegExp,
+): AsyncGenerator<string, void, string | undefined> {
 	const dirents = await Fs.promises.readdir(directory, { withFileTypes: true });
 	for (const dirent of dirents) {
 		const res = path.resolve(directory, dirent.name);
@@ -47,13 +50,13 @@ export const getImportPaths = async (
 		exclude?: Partial<{
 			file?: Partial<{
 				startsWith: string[];
-				includes: string[];
-				endsWith: string[];
+				includes:   string[];
+				endsWith:   string[];
 			}>
 			path: Partial<{
 				startsWith: string[];
-				includes: string[];
-				endsWith: string[];
+				includes:   string[];
+				endsWith:   string[];
 			}>;
 		}>
 	},
@@ -96,7 +99,9 @@ export const getImportPaths = async (
 };
 
 
-export const getExternalImportPaths = async (...[ from, options ]: Parameters<typeof getImportPaths>) => {
+export const getExternalImportPaths = async (
+	...[ from, options ]: Parameters<typeof getImportPaths>
+) => {
 	options ??= {};
 	options.exclude ??= {};
 	options.exclude.path ??= {};

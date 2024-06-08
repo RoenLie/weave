@@ -64,11 +64,15 @@ export const indexBuilder = async (
 
 	const lines = exports.reduce((prev, { path, symbols, types }) => {
 		if (symbols.length) {
-			const line = `export { ${ symbols.join(', ') } } from '${ path.replace('.ts', '.js') }';`;
+			const line = `export { ${ symbols.join(', ') } }`
+				+ ` from '${ path.replace('.ts', '.js') }';`;
+
 			prev.push(line.replace(dirTarget.replaceAll('\\', '/'), '.'));
 		}
 		if (types.length) {
-			const line = `export type { ${ types.join(', ') } } from '${ path.replace('.ts', '.js') }';`;
+			const line = `export type { ${ types.join(', ') } }`
+				+ ` from '${ path.replace('.ts', '.js') }';`;
+
 			prev.push(line.replace(dirTarget.replaceAll('\\', '/'), '.'));
 		}
 

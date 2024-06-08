@@ -4,7 +4,11 @@ import type { ReleaseType } from 'semver';
 import { copy } from '../filesystem/copy-files.js';
 import { indexBuilder as buildIndex } from '../index-builder/index-builder.js';
 import { mergeTSConfig } from '../merge-tsconfig/merge-tsconfig.js';
-import { createPackageExports, createTypePath, type ExportEntry } from '../package-exports/package-exports.js';
+import {
+	createPackageExports,
+	createTypePath,
+	type ExportEntry,
+} from '../package-exports/package-exports.js';
 import { incrementVersion } from '../versioning/increment-version.js';
 import { loadConfigWithTsup } from './config.js';
 
@@ -90,7 +94,8 @@ export const toolbox = async (filePath = './pkg-toolbox.ts') => {
 
 		copy: async (profile: string) => {
 			const cfg = config?.copy?.[profile];
-			cfg && await copy(cfg);
+			if (cfg)
+				await copy(cfg);
 		},
 
 		mergeTSConfig: (config: string, outFile: string) => {

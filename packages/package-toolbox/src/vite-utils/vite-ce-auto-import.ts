@@ -6,21 +6,21 @@ import { createTagCache, getUsedTags } from '../filesystem/create-tag-cache.js';
 
 
 export interface AutoImportPluginProps {
-	directories: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
-	prefixes: RegExp[];
-	loadWhitelist: RegExp[];
+	directories:    { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
+	prefixes:       RegExp[];
+	loadWhitelist:  RegExp[];
 	loadBlacklist?: RegExp[];
-	cache?: Map<string, string>;
+	cache?:         Map<string, string>;
 }
 
 export interface AutoImportLoadProps {
-	id: string;
-	config: ResolvedConfig;
-	cache: Map<string, string>;
-	prefixes: RegExp[];
-	loadWhitelist: RegExp[];
+	id:             string;
+	config:         ResolvedConfig;
+	cache:          Map<string, string>;
+	prefixes:       RegExp[];
+	loadWhitelist:  RegExp[];
 	loadBlacklist?: RegExp[];
-	tagPattern?: RegExp;
+	tagPattern?:    RegExp;
 }
 
 

@@ -2,13 +2,13 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 
 export interface ExportEntry {
-	path: string;
-	types?: string;
-	default: string;
-	import?: string;
-	node?: string;
+	path:     string;
+	types?:   string;
+	default:  string;
+	import?:  string;
+	node?:    string;
 	require?: string;
-	custom?: Omit<ExportEntry, 'custom'>[]
+	custom?:  Omit<ExportEntry, 'custom'>[]
 }
 
 
@@ -35,41 +35,50 @@ export const createPackageExports = async (
 			entry.types = createTypePath(entry.import ?? entry.default);
 
 		interface Entry {
-			types?: string;
-			import?: string;
-			node?: string;
+			types?:   string;
+			import?:  string;
+			node?:    string;
 			require?: string;
 			default?: string;
 		}
 
-		type EntryRec = {[key: string]: string | EntryRec} & Entry;
+		type EntryRec = { [key: string]: string | EntryRec } & Entry;
 
 		const target = (exports[entry.path] ??= {}) as EntryRec;
 		target.types = entry.types;
 
 		entry.custom?.forEach(val => {
 			const tar = (target[val.path] ??= {}) as EntryRec;
-			val.types   && (tar.types   = val.types);
-			val.import  && (tar.import  = val.import);
-			val.node    && (tar.node    = val.node);
-			val.require && (tar.require = val.require);
-			val.default && (tar.default = val.default);
+			if (val.types)
+				tar.types = val.types;
+			if (val.import)
+				tar.import = val.import;
+			if (val.node)
+			   tar.node = val.node;
+			if (val.require)
+				tar.require = val.require;
+			if (val.default)
+				tar.default = val.default;
 		});
 
-		entry.import  && (target.import  = entry.import);
-		entry.node    && (target.node    = entry.node);
-		entry.require && (target.require = entry.require);
-		entry.default && (target.default = entry.default);
+		if (entry.import)
+			target.import = entry.import;
+		if (entry.node)
+		   target.node = entry.node;
+		if (entry.require)
+			target.require = entry.require;
+		if (entry.default)
+			target.default = entry.default;
 
 		const sortEntry = (entry: EntryRec) => {
-			const keyvalues: {key: string; value: string | EntryRec;}[] = [];
+			const keyvalues: { key: string; value: string | EntryRec; }[] = [];
 
 			for (const key in entry) {
 				keyvalues.push({ key, value: entry[key]! });
 				delete entry[key];
 			}
 
-			const assignValue = (kv: {key: string}) =>
+			const assignValue = (kv: { key: string }) =>
 				kv.key === 'types' ? 0
 					: kv.key === 'import'  ? 20
 						: kv.key === 'node' ? 30

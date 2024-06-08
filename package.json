@@ -8,6 +8,7 @@
 		"lint": "turbo lint"
 	},
 	"devDependencies": {
+		"@roenlie/package-toolbox": "workspace:*",
 		"@roenlie/eslint-config": "workspace:*",
 		"@roenlie/tsconfig": "workspace:*",
 		"turbo": "latest",

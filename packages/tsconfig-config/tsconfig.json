@@ -9,7 +9,7 @@
 			"DOM",
 			"DOM.Iterable",
 		],
-		// filedir
+		// filedir -- This should be added by consumer.
 		"outDir": "../dist",
 		"rootDir": ".",
 		"baseUrl": ".",
