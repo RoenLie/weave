@@ -6,10 +6,12 @@
 	"main": "./dist/index.js",
 	"type": "module",
 	"scripts": {
-		"lint-windows": "set TIMING=1 && pnpm eslint"
+		"lint-windows": "set TIMING=1 && pnpm eslint",
+		"dev": "vite serve demo"
 	},
 	"dependencies": {
-		"lit": "^3.1.4"
+		"lit": "^3.1.4",
+		"tslib": "^2.6.2"
 	},
 	"devDependencies": {
 		"vite": "^5.1.6"

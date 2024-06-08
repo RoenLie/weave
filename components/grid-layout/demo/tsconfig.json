@@ -1,0 +1,17 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"outDir": "../dist",
+		"rootDir": "..",
+		"baseUrl": ".",
+		"types": []
+	},
+	"include": [
+		"*.ts",
+		"*.d.ts",
+	],
+	"exclude": [
+		"*.test.ts",
+		"*.bench.ts",
+	]
+}

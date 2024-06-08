@@ -26,6 +26,7 @@
 		"incremental": false,
 		"removeComments": true,
 		"skipLibCheck": true,
+		"allowImportingTsExtensions": true,
 		// strictness
 		"esModuleInterop": true,
 		"experimentalDecorators": true,

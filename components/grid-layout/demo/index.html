@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Grid-Layout</title>
+	<link rel="preconnect" href="https://rsms.me/">
+	<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+
+	<style>
+		:root {
+			font-family: 'Inter', sans-serif;
+		}
+		@supports (font-variation-settings: normal) {
+			:root {
+				font-family: 'Inter var', sans-serif;
+			}
+		}
+		body {
+			display: grid;
+			height: 100vb;
+			background-color: rgb(40 40 40);
+			color: white;
+			padding: 0px;
+			margin: 0px;
+		}
+		body > * {
+			grid-row: 1/2;
+			grid-column: 1/2;
+		}
+	</style>
+
+	<script type="module" src="./index.ts"></script>
+</head>
+<body>
+	<resize-wrapper>
+		<demo-element></demo-element>
+	</resize-wrapper>
+</body>
+</html>
