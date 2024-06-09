@@ -1,22 +1,33 @@
 import { LitElement, css, html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, query } from 'lit/decorators.js';
 
 
 @customElement('resize-wrapper')
 export class ResizeCmp extends LitElement {
 
+	@query('div', true) protected wrapperEl: HTMLElement;
+
 	protected set inset(v: number) {
-		this.style.setProperty('inset', `0px ${ v }px`);
+		this.wrapperEl.style.setProperty('inset', `0px ${ v }px`);
 	}
 
-	protected onResizeMousedown() {
+	protected onResizeMousedown(ev: MouseEvent) {
+		const direction = (ev.target as HTMLElement).id as 'left' | 'right';
+
 		const onMousemove = (ev: MouseEvent) => {
 			if (!ev.buttons)
 				return onMouseup();
-			if (ev.x > ((window.innerWidth - (window.innerWidth * 0.10)) / 2))
-				return;
 
-			this.inset = ev.x;
+			const rect = this.getBoundingClientRect();
+			const widthLimit = ((this.offsetWidth - (this.offsetWidth * 0.10)) / 2);
+			let width = 0;
+
+			if (direction === 'left')
+				width = ev.x - rect.left;
+			if (direction === 'right')
+				width = rect.right - ev.x;
+
+			this.inset = Math.min(widthLimit, Math.max(0, width));
 		};
 		const onMouseup = () => {
 			window.removeEventListener('mousemove', onMousemove);
@@ -29,21 +40,27 @@ export class ResizeCmp extends LitElement {
 
 	protected override render() {
 		return html`
-		<s-resize-handle id="left"
-			@mousedown=${ this.onResizeMousedown }
-		></s-resize-handle>
+		<div>
+			<s-resize-handle id="left"
+				@mousedown=${ this.onResizeMousedown }
+			></s-resize-handle>
 
-		<slot></slot>
+			<slot></slot>
 
-		<s-resize-handle id="right"
-			@mousedown=${ this.onResizeMousedown }
-		></s-resize-handle>
+			<s-resize-handle id="right"
+				@mousedown=${ this.onResizeMousedown }
+			></s-resize-handle>
+		</div>
 		`;
 	}
 
 	public static override styles = [
 		css`
 		:host {
+			position: relative;
+			display: grid;
+		}
+		div {
 			position: absolute;
 			inset: 0px;
 			display: grid;
