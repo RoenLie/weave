@@ -7,10 +7,10 @@ export class DemoCmp extends LitElement {
 
 	protected override render(): unknown {
 		return html`
-		<widget-grid>
-			<demo-widget widget-min-col=2 widget-min-row=3></demo-widget>
-			<demo-widget></demo-widget>
-			<demo-widget widget-min-col=3 widget-min-row=2></demo-widget>
+		<widget-grid @change=${ (ev: CustomEvent) => console.log('config updated', ev) }>
+			<demo-widget widget-area="0/0/1/1"></demo-widget>
+			<demo-widget widget-area="0/3/1/4"></demo-widget>
+			<demo-widget widget-area="3/1/5/2"></demo-widget>
 			<demo-widget></demo-widget>
 			<demo-widget></demo-widget>
 			<demo-widget></demo-widget>
@@ -46,9 +46,11 @@ export class WidgetCmp extends LitElement {
 		</style>
 
 		<s-drag-handle widget-mover>
+			Move
 		</s-drag-handle>
 
 		<s-drag-handle widget-resizer>
+			Resize
 		</s-drag-handle>
 		`;
 	}
@@ -61,8 +63,11 @@ export class WidgetCmp extends LitElement {
 	}
 	s-drag-handle {
 		position: absolute;
-		width: 50px;
-		height: 50px;
+		display: block;
+		width: 60px;
+		height: 40px;
+		text-align: center;
+		align-content: center;
 		background-color: black;
 		cursor: grab;
 

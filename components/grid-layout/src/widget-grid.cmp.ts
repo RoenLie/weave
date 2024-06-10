@@ -2,7 +2,15 @@ import { LitElement, css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { map } from 'lit/directives/map.js';
+import { when } from 'lit/directives/when.js';
 
+
+export interface GridConfig {
+	area:    Area;
+	rows:    number;
+	columns: number;
+	element: HTMLElement;
+}
 
 /** A string representing the grid area of a element. */
 type Area = `${ string }/${ string }/${ string }/${ string }`;
@@ -25,11 +33,36 @@ export class WidgetGridCmp extends LitElement {
 
 	@state() protected colCount = 5;
 	@state() protected rowCount = 9;
+	@state() protected showGrid = false;
 	@state() protected highlightedArea?: Area;
 
+	/** Grid structure that holds the state of the different cells. */
 	protected grid: (HTMLElement | true | null)[][] = [];
-	protected gridMap = new Map<HTMLElement, Area>();
 
+	public emitGridConfig() {
+		//this.printGrid();
+
+		const slottedElements = new Set(this.shadowRoot!
+			.querySelector('slot')!
+			.assignedElements() as HTMLElement[]);
+
+		const config: GridConfig[] = [];
+
+		slottedElements.forEach(element => {
+			const area = element.getAttribute('widget-area') as Area | null;
+			if (!area)
+				throw new Error('Slotted element missing assigned area');
+
+			const [ rowStart, colStart, rowEnd, colEnd ] = this.areaToRanges(area);
+			const rows = rowEnd - rowStart + 1;
+			const columns = colEnd - colStart + 1;
+
+			config.push({ area, rows, columns, element });
+		});
+
+		this.dispatchEvent(new CustomEvent('change',
+			{ composed: true, detail: config }));
+	}
 
 	protected printGrid(): void {
 		const reOrdered: (HTMLElement | true | null)[][] = [];
@@ -75,10 +108,61 @@ export class WidgetGridCmp extends LitElement {
 		}
 	}
 
+	protected highlightValid = (
+		element: HTMLElement,
+		fromCol: number, fromRow: number,
+		toCol: number,   toRow: number,
+	) => {
+		this.highlightedArea = undefined;
+
+		// We reduce ending col/row by 1 due to iterating by index
+		const targetArea = this.rangesToArea(
+			fromCol, toCol,
+			fromRow, toRow,
+		);
+
+		let enoughSpace = true;
+		this.iterateArea(targetArea, (col, row) => {
+			const gridValue = this.grid[col]?.[row];
+
+			if (gridValue === element)
+				return;
+
+			if (gridValue || gridValue === undefined)
+				enoughSpace = false;
+		});
+
+		if (enoughSpace)
+			this.highlightedArea = targetArea;
+
+		this.requestUpdate();
+	};
+
+	protected moveArea(element: HTMLElement, area: Area) {
+		// Reset map and grid for given area.
+		const oldArea = element.getAttribute('widget-area') as Area | null;
+
+		if (oldArea) {
+			// Remove the old references to the element in the grid.
+			this.iterateArea(oldArea, (col, row) => this.grid[col]![row] = null);
+		}
+
+		// Add the new references to the element in the grid.
+		this.iterateArea(area, (col, row) => this.grid[col]![row] = element);
+
+		const [ rowStart, colStart, rowEnd, colEnd ] = this.areaToRanges(area);
+
+		element.setAttribute('widget-rows', String(rowEnd - rowStart + 1));
+		element.setAttribute('widget-columns', String(colEnd - colStart + 1));
+
+		element.setAttribute('widget-area', area);
+		element.style.gridArea = this.areaToGridArea(area);
+	}
+
 	public override connectedCallback(): void {
 		super.connectedCallback();
 
-		this.addEventListener('mousedown', this.onMousedown, { autoDispose: true });
+		this.addEventListener('mousedown', this.onMousedown);
 	}
 
 	public override disconnectedCallback(): void {
@@ -91,14 +175,13 @@ export class WidgetGridCmp extends LitElement {
 		super.willUpdate(props);
 
 		if (props.has('colCount') || props.has('rowCount')) {
-			this.gridMap.clear();
 			this.grid = range(this.colCount)
 				.map(() => range(this.rowCount).map(() => null));
 		}
 	}
 
 	protected onMousedown = (ev: MouseEvent) => {
-		const path = ev.composedPath();
+		const path = ev.composedPath() as HTMLElement[];
 
 		const isMover = path.some(el =>
 			el instanceof Element && el.hasAttribute('widget-mover'));
@@ -111,15 +194,16 @@ export class WidgetGridCmp extends LitElement {
 			this.onResizerMousedown(ev, path);
 	};
 
-	protected onMoverMousedown(ev: MouseEvent, path: EventTarget[]) {
+	protected onMoverMousedown(ev: MouseEvent, path: HTMLElement[]) {
 		ev.preventDefault();
+
+		this.showGrid = true;
 
 		const slottedElements = new Set(this.shadowRoot!
 			.querySelector('slot')!
 			.assignedElements());
 
-		const elementToMove = path.find(el =>
-			slottedElements.has(el as any)) as HTMLElement;
+		const elementToMove = path.find(el => slottedElements.has(el))!;
 
 		const rect = elementToMove.getBoundingClientRect();
 
@@ -130,6 +214,7 @@ export class WidgetGridCmp extends LitElement {
 		const height = elementToMove.offsetHeight;
 
 		let prevColRow = '';
+
 		const onMousemove = (ev: MouseEvent) => {
 			if (!ev.buttons)
 				return onMouseup();
@@ -144,69 +229,29 @@ export class WidgetGridCmp extends LitElement {
 				'z-index': 1,
 			});
 
-			const highlightValid = (ev: MouseEvent) => {
-				const elements = this.shadowRoot!.elementsFromPoint(ev.x, ev.y) as HTMLElement[];
-				const rowEl = elements.find(el => el.localName === 's-row' && el.id !== prevColRow);
-				if (!rowEl)
-					return;
+			const elements = this.shadowRoot!.elementsFromPoint(ev.x, ev.y) as HTMLElement[];
+			const rowEl = elements.find(el => el.localName === 's-row' && el.id !== prevColRow);
+			if (!rowEl)
+				return;
 
-				prevColRow = rowEl.id;
+			prevColRow = rowEl.id;
 
-				const el = elementToMove;
-				const minCols = el.getAttribute('widget-min-col')
-					? Number(el.getAttribute('widget-min-col')) : 1;
+			const col = Number(rowEl.dataset['col']);
+			const row = Number(rowEl.dataset['row']);
 
-				const minRows = el.getAttribute('widget-min-row')
-					? Number(el.getAttribute('widget-min-row')) : 1;
+			const minCols = (elementToMove.getAttribute('widget-columns')
+				? Number(elementToMove.getAttribute('widget-columns')) : 1) - 1;
 
-				this.highlightedArea = undefined;
+			const minRows = (elementToMove.getAttribute('widget-rows')
+				? Number(elementToMove.getAttribute('widget-rows')) : 1) - 1;
 
-				const col = Number(rowEl.dataset['col']);
-				const row = Number(rowEl.dataset['row']);
-
-				// We reduce ending col/row by 1 due to iterating by index
-				const targetArea = this.rangesToArea(
-					col, col + minCols - 1,
-					row, row + minRows - 1,
-				);
-
-				let enoughSpace = true;
-				this.iterateArea(targetArea, (col, row) => {
-					const gridValue = this.grid[col]?.[row];
-
-					if (gridValue === elementToMove)
-						return;
-
-					if (gridValue || gridValue === undefined)
-						enoughSpace = false;
-				});
-
-				if (enoughSpace)
-					this.highlightedArea = targetArea;
-
-				this.requestUpdate();
-			};
-
-			highlightValid(ev);
+			this.highlightValid(elementToMove, col, row, col + minCols, row + minRows);
 		};
+
 		const onMouseup = () => {
 			// If there are any highlighted cells, we will move the area.
 			if (this.highlightedArea) {
-				// Reset map and grid for given area.
-				const oldArea = elementToMove.getAttribute('widget-area') as Area;
-				this.iterateArea(oldArea, (col, row) => {
-					this.grid[col]![row] = null;
-				});
-
-				this.iterateArea(this.highlightedArea, (col, row) => {
-					this.grid[col]![row] = elementToMove;
-				});
-
-				this.gridMap.set(elementToMove, this.highlightedArea);
-
-				elementToMove.setAttribute('widget-area', this.highlightedArea);
-				elementToMove.style.gridArea = this.areaToGridArea(this.highlightedArea);
-
+				this.moveArea(elementToMove, this.highlightedArea);
 				this.highlightedArea = undefined;
 			}
 
@@ -221,54 +266,138 @@ export class WidgetGridCmp extends LitElement {
 			window.removeEventListener('mousemove', onMousemove);
 			window.removeEventListener('mouseup', onMouseup);
 
-			this.printGrid();
+			this.showGrid = false;
+
+			this.emitGridConfig();
 		};
 
 		window.addEventListener('mousemove', onMousemove);
 		window.addEventListener('mouseup', onMouseup);
 	}
 
-	protected onResizerMousedown(_ev: MouseEvent, _path: EventTarget[]) {
-		console.log('is a resizer');
+	protected onResizerMousedown(ev: MouseEvent, path: HTMLElement[]) {
+		ev.preventDefault();
+
+		this.showGrid = true;
+
+		const slottedElements = new Set(this.shadowRoot!
+			.querySelector('slot')!
+			.assignedElements());
+
+		const elementToMove = path.find(el => slottedElements.has(el as any))!;
+
+		const rect = elementToMove.getBoundingClientRect();
+
+		const offsetY = ev.y - rect.bottom;
+		const offsetX = ev.x - rect.right;
+
+		let prevColRow = '';
+
+		const onMousemove = (ev: MouseEvent) => {
+			if (!ev.buttons)
+				return onMouseup();
+
+			const width = ev.x - rect.left - offsetX;
+			const height = ev.y - rect.top - offsetY;
+
+			Object.assign(elementToMove.style, {
+				position:  'fixed',
+				top:       rect.top + 'px',
+				left:      rect.left + 'px',
+				width:     width + 'px',
+				height:    height + 'px',
+				opacity:   '0.8',
+				'z-index': 1,
+			});
+
+			const elements = this.shadowRoot!.elementsFromPoint(ev.x, ev.y) as HTMLElement[];
+			const rowEl = elements.find(el => el.localName === 's-row' && el.id !== prevColRow);
+			if (!rowEl)
+				return;
+
+			prevColRow = rowEl.id;
+
+			const col = Number(rowEl.dataset['col']);
+			const row = Number(rowEl.dataset['row']);
+
+			const [ rowStart, colStart ] = this
+				.areaToRanges(elementToMove.getAttribute('widget-area') as Area);
+
+			this.highlightValid(elementToMove, colStart, rowStart, col, row);
+		};
+
+		const onMouseup = () => {
+			// If there are any highlighted cells, we will move the area.
+			if (this.highlightedArea) {
+				this.moveArea(elementToMove, this.highlightedArea);
+				this.highlightedArea = undefined;
+			}
+
+			elementToMove.style.removeProperty('position');
+			elementToMove.style.removeProperty('top');
+			elementToMove.style.removeProperty('left');
+			elementToMove.style.removeProperty('width');
+			elementToMove.style.removeProperty('height');
+			elementToMove.style.removeProperty('opacity');
+			elementToMove.style.removeProperty('z-index');
+
+			window.removeEventListener('mousemove', onMousemove);
+			window.removeEventListener('mouseup', onMouseup);
+
+			this.showGrid = false;
+
+			this.emitGridConfig();
+		};
+
+		window.addEventListener('mousemove', onMousemove);
+		window.addEventListener('mouseup', onMouseup);
 	}
 
 	protected onSlotChange(ev: Event) {
 		const target = ev.target as HTMLSlotElement;
-		const elements = target.assignedElements() as HTMLElement[];
+		const elements = new Set(target.assignedElements() as HTMLElement[]);
 
+		// Go through and assign the existing area to the areas that have one.
+		// We then delete those elements from the set, so that we can lay out
+		// the remaining elements according to remaining space.
 		elements.forEach(el => {
-			if (this.gridMap.has(el))
-				return;
+			const existingArea = el.getAttribute('widget-area') as Area | null;
+			if (existingArea) {
+				this.moveArea(el, existingArea);
+				elements.delete(el);
+			}
+		});
 
-			const minCols = el.getAttribute('widget-min-col')
-				? Number(el.getAttribute('widget-min-col')) : 1;
+		// Go through the elements that don't have an explicit area and assign
+		// an available area.
+		elements.forEach(el => {
+			const minCols = el.getAttribute('widget-columns')
+				? Number(el.getAttribute('widget-columns')) : 1;
 
-			const minRows = el.getAttribute('widget-min-row')
-				? Number(el.getAttribute('widget-min-row')) : 1;
+			const minRows = el.getAttribute('widget-rows')
+				? Number(el.getAttribute('widget-rows')) : 1;
 
 			// Find all available positions in the grid for this widget.
 			const possiblePositions: [col: number, row: number][] = [];
-			this.grid.forEach((rows, colI) => {
-				rows.some((_, rowI) => {
-					// We reduce ending col/row by 1 due to iterating by index
-					const area = this.rangesToArea(
-						colI, colI + minCols - 1,
-						rowI, rowI + minRows - 1,
-					);
+			this.grid.forEach((rows, colI) => rows.some((_, rowI) => {
+				// We reduce ending col/row by 1 due to iterating by index
+				const area = this.rangesToArea(
+					colI, colI + minCols - 1,
+					rowI, rowI + minRows - 1,
+				);
 
-					let enoughSpace = true;
-					this.iterateArea(area, (col, row) => {
-						if (this.grid[col]?.[row] || this.grid[col]?.[row] === undefined)
-							enoughSpace = false;
-					});
-
-					const valid = enoughSpace;
-					if (valid)
-						possiblePositions.push([ colI, rowI ]);
-
-					return valid;
+				let enoughSpace = true;
+				this.iterateArea(area, (col, row) => {
+					if (this.grid[col]?.[row] || this.grid[col]?.[row] === undefined)
+						enoughSpace = false;
 				});
-			});
+
+				const valid = enoughSpace;
+				if (valid)
+					possiblePositions.push([ colI, rowI ]);
+
+				return valid;
+			}));
 
 			// Find the most suitable row/col out of the possible positions.
 			const [ col, row ] = possiblePositions.reduce((acc, [ col, row ]) => {
@@ -284,24 +413,10 @@ export class WidgetGridCmp extends LitElement {
 				row, row + minRows - 1,
 			);
 
-			// Set the row and column as occupied.
-			this.iterateArea(widgetArea, (col, row) => {
-				this.grid[col]![row] = el;
-			});
-
-			// Map the col/row from-to directly to the element.
-			this.gridMap.set(el, widgetArea);
-
-			// Assign the widget area attribute, this one uses 0 based indexing
-			// as we use it for operating on the internal arrays.
-			el.setAttribute('widget-area', widgetArea);
-
-			// Assign the styles that position the element.
-			// We add + 1 to each value as grid uses 1 based indexing.
-			Object.assign(el.style, { gridArea: this.areaToGridArea(widgetArea) });
+			this.moveArea(el, widgetArea);
 		});
 
-		this.printGrid();
+		this.emitGridConfig();
 	}
 
 	protected renderGrid(): unknown {
@@ -330,18 +445,20 @@ export class WidgetGridCmp extends LitElement {
 				class=${ classMap({ highlight: !!highlight?.(colI, rowI) }) }
 				data-row=${ rowI }
 				data-col=${ colI }
-			>${ gridArea }</s-row>
+			></s-row>
 			`;
 		}));
 	}
 
-	protected override render() {
+	protected override render(): unknown {
 		return html`
 		<style>
 			:host {
 				--col-count: ${ this.colCount };
 				--row-count: ${ this.rowCount };
 			}
+			${ when(this.showGrid,
+				() => 's-row { display: block !important; }') }
 		</style>
 
 		<!-- These are only for visually displaying the grid. -->
@@ -364,7 +481,7 @@ export class WidgetGridCmp extends LitElement {
 		gap: var(--gap);
 	}
 	s-row {
-		display: block;
+		display: none;
 		background-color: rgb(80 100 50 / 10%);
 	}
 	s-row.highlight {
