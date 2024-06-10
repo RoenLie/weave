@@ -1,5 +1,5 @@
 import { LitElement, css, html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
@@ -31,17 +31,18 @@ const range = (length: number): undefined[] => {
 @customElement('widget-grid')
 export class WidgetGridCmp extends LitElement {
 
-	@state() protected colCount = 5;
-	@state() protected rowCount = 9;
+	@property({ type: Number }) public rows = 9;
+	@property({ type: Number }) public columns = 5;
+
 	@state() protected showGrid = false;
 	@state() protected highlightedArea?: Area;
 
 	/** Grid structure that holds the state of the different cells. */
 	protected grid: (HTMLElement | true | null)[][] = [];
 
-	public emitGridConfig() {
-		//this.printGrid();
 
+	//#region public api
+	public getConfig() {
 		const slottedElements = new Set(this.shadowRoot!
 			.querySelector('slot')!
 			.assignedElements() as HTMLElement[]);
@@ -60,11 +61,10 @@ export class WidgetGridCmp extends LitElement {
 			config.push({ area, rows, columns, element });
 		});
 
-		this.dispatchEvent(new CustomEvent('change',
-			{ composed: true, detail: config }));
+		return config;
 	}
 
-	protected printGrid(): void {
+	public printGrid(): void {
 		const reOrdered: (HTMLElement | true | null)[][] = [];
 
 		this.grid.forEach((rows, colI) => {
@@ -75,6 +75,14 @@ export class WidgetGridCmp extends LitElement {
 		});
 
 		console.table(reOrdered);
+	}
+	//#endregion public api
+
+
+	//#region logic
+	protected emitGridConfig() {
+		this.dispatchEvent(new CustomEvent('change',
+			{ composed: true, detail: this.getConfig() }));
 	}
 
 	protected rangesToArea(
@@ -159,6 +167,76 @@ export class WidgetGridCmp extends LitElement {
 		element.style.gridArea = this.areaToGridArea(area);
 	}
 
+	protected initialize() {
+		const elements = new Set(this.shadowRoot!
+			.querySelector('slot')!
+			.assignedElements() as HTMLElement[]);
+
+		// Go through and assign the existing area to the areas that have one.
+		// We then delete those elements from the set, so that we can lay out
+		// the remaining elements according to remaining space.
+		elements.forEach(el => {
+			const existingArea = el.getAttribute('widget-area') as Area | null;
+			if (existingArea) {
+				this.moveArea(el, existingArea);
+				elements.delete(el);
+			}
+		});
+
+		// Go through the elements that don't have an explicit area and assign
+		// an available area.
+		elements.forEach(el => {
+			const minCols = el.getAttribute('widget-columns')
+				? Number(el.getAttribute('widget-columns')) : 1;
+
+			const minRows = el.getAttribute('widget-rows')
+				? Number(el.getAttribute('widget-rows')) : 1;
+
+			// Find all available positions in the grid for this widget.
+			const possiblePositions: [col: number, row: number][] = [];
+			this.grid.forEach((rows, colI) => rows.some((_, rowI) => {
+				// We reduce ending col/row by 1 due to iterating by index
+				const area = this.rangesToArea(
+					colI, colI + minCols - 1,
+					rowI, rowI + minRows - 1,
+				);
+
+				let enoughSpace = true;
+				this.iterateArea(area, (col, row) => {
+					if (this.grid[col]?.[row] || this.grid[col]?.[row] === undefined)
+						enoughSpace = false;
+				});
+
+				const valid = enoughSpace;
+				if (valid)
+					possiblePositions.push([ colI, rowI ]);
+
+				return valid;
+			}));
+
+			// Find the most suitable row/col out of the possible positions.
+			const [ col, row ] = possiblePositions.reduce((acc, [ col, row ]) => {
+				if (row < acc[1])
+					acc = [ col, row ];
+
+				return acc;
+			}, [ Infinity, Infinity ] as [col: number, row: number]);
+
+			// We reduce ending col/row by 1 due to iterating by index
+			const widgetArea = this.rangesToArea(
+				col, col + minCols - 1,
+				row, row + minRows - 1,
+			);
+
+			this.moveArea(el, widgetArea);
+		});
+
+		this.emitGridConfig();
+	}
+	//#endregion logic
+
+
+	//#region lifecycle
 	public override connectedCallback(): void {
 		super.connectedCallback();
 
@@ -174,12 +252,15 @@ export class WidgetGridCmp extends LitElement {
 	protected override willUpdate(props: Map<PropertyKey, unknown>): void {
 		super.willUpdate(props);
 
-		if (props.has('colCount') || props.has('rowCount')) {
-			this.grid = range(this.colCount)
-				.map(() => range(this.rowCount).map(() => null));
+		if (props.has('columns') || props.has('rows')) {
+			//
+			this.grid = range(this.columns).map(() => range(this.rows).map(() => null));
 		}
 	}
+	//#endregion lifecycle
 
+
+	//#region listeners
 	protected onMousedown = (ev: MouseEvent) => {
 		const path = ev.composedPath() as HTMLElement[];
 
@@ -273,6 +354,8 @@ export class WidgetGridCmp extends LitElement {
 
 		window.addEventListener('mousemove', onMousemove);
 		window.addEventListener('mouseup', onMouseup);
+
+		onMousemove(ev);
 	}
 
 	protected onResizerMousedown(ev: MouseEvent, path: HTMLElement[]) {
@@ -351,74 +434,17 @@ export class WidgetGridCmp extends LitElement {
 
 		window.addEventListener('mousemove', onMousemove);
 		window.addEventListener('mouseup', onMouseup);
+
+		requestAnimationFrame(() => onMousemove(ev));
 	}
 
-	protected onSlotChange(ev: Event) {
-		const target = ev.target as HTMLSlotElement;
-		const elements = new Set(target.assignedElements() as HTMLElement[]);
-
-		// Go through and assign the existing area to the areas that have one.
-		// We then delete those elements from the set, so that we can lay out
-		// the remaining elements according to remaining space.
-		elements.forEach(el => {
-			const existingArea = el.getAttribute('widget-area') as Area | null;
-			if (existingArea) {
-				this.moveArea(el, existingArea);
-				elements.delete(el);
-			}
-		});
-
-		// Go through the elements that don't have an explicit area and assign
-		// an available area.
-		elements.forEach(el => {
-			const minCols = el.getAttribute('widget-columns')
-				? Number(el.getAttribute('widget-columns')) : 1;
-
-			const minRows = el.getAttribute('widget-rows')
-				? Number(el.getAttribute('widget-rows')) : 1;
-
-			// Find all available positions in the grid for this widget.
-			const possiblePositions: [col: number, row: number][] = [];
-			this.grid.forEach((rows, colI) => rows.some((_, rowI) => {
-				// We reduce ending col/row by 1 due to iterating by index
-				const area = this.rangesToArea(
-					colI, colI + minCols - 1,
-					rowI, rowI + minRows - 1,
-				);
-
-				let enoughSpace = true;
-				this.iterateArea(area, (col, row) => {
-					if (this.grid[col]?.[row] || this.grid[col]?.[row] === undefined)
-						enoughSpace = false;
-				});
-
-				const valid = enoughSpace;
-				if (valid)
-					possiblePositions.push([ colI, rowI ]);
-
-				return valid;
-			}));
-
-			// Find the most suitable row/col out of the possible positions.
-			const [ col, row ] = possiblePositions.reduce((acc, [ col, row ]) => {
-				if (row < acc[1])
-					acc = [ col, row ];
-
-				return acc;
-			}, [ Infinity, Infinity ] as [col: number, row: number]);
-
-			// We reduce ending col/row by 1 due to iterating by index
-			const widgetArea = this.rangesToArea(
-				col, col + minCols - 1,
-				row, row + minRows - 1,
-			);
-
-			this.moveArea(el, widgetArea);
-		});
-
-		this.emitGridConfig();
+	protected onSlotChange() {
+		this.initialize();
 	}
+	//#endregion listeners
 
+
+	//#region template
 	protected renderGrid(): unknown {
 		let highlight: ((col: number, row: number) => boolean) | undefined;
 
@@ -454,8 +480,11 @@ export class WidgetGridCmp extends LitElement {
 		return html`
 		<style>
 			:host {
-				--col-count: ${ this.colCount };
-				--row-count: ${ this.rowCount };
+				--col-count: ${ this.columns };
+				--row-count: ${ this.rows };
+				--row-height: 100px;
+				--col-width: 200px;
+				--gap: 12px;
 			}
 			${ when(this.showGrid,
 				() => 's-row { display: block !important; }') }
@@ -467,13 +496,12 @@ export class WidgetGridCmp extends LitElement {
 		<slot @slotchange=${ this.onSlotChange }></slot>
 		`;
 	}
+	//#endregion template
 
+
+	//#region styles
 	public static override styles = css`
 	:host {
-		--row-height: 100px;
-		--col-width: 200px;
-		--gap: 12px;
-
 		display: grid;
 		justify-content: center;
 		grid-template-columns: repeat(var(--col-count), minmax(0, var(--col-width)));
@@ -488,5 +516,6 @@ export class WidgetGridCmp extends LitElement {
 		background-color: rgb(80 100 50 / 70%);
 	}
 	`;
+	//#endregion styles
 
 }

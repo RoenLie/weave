@@ -1,5 +1,6 @@
 import { LitElement, css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import '../../src/index.ts';
 
 
 @customElement('demo-element')
@@ -7,7 +8,11 @@ export class DemoCmp extends LitElement {
 
 	protected override render(): unknown {
 		return html`
-		<widget-grid @change=${ (ev: CustomEvent) => console.log('config updated', ev) }>
+		<widget-grid
+			rows=12
+			columns=7
+			@change=${ (ev: CustomEvent) => console.log('config updated', ev) }
+		>
 			<demo-widget widget-area="0/0/1/1"></demo-widget>
 			<demo-widget widget-area="0/3/1/4"></demo-widget>
 			<demo-widget widget-area="3/1/5/2"></demo-widget>
