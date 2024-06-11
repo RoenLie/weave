@@ -13,10 +13,10 @@ export class DemoCmp extends LitElement {
 			columns=7
 			@change=${ (ev: CustomEvent) => console.log('config updated', ev) }
 		>
-			<demo-widget widget-area="0/0/1/1"></demo-widget>
+			<demo-widget widget-area="0/0/1/1" widget-mover></demo-widget>
 			<demo-widget widget-area="0/3/1/4"></demo-widget>
 			<demo-widget widget-area="3/1/5/2"></demo-widget>
-			<demo-widget></demo-widget>
+			<demo-widget widget-columns="3" widget-rows="2"></demo-widget>
 			<demo-widget></demo-widget>
 			<demo-widget></demo-widget>
 		</widget-grid>
