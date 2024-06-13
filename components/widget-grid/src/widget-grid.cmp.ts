@@ -384,7 +384,10 @@ export class WidgetGridCmp extends LitElement {
 				'z-index': 1,
 			});
 
-			const elements = this.shadowRoot!.elementsFromPoint(ev.x, ev.y) as HTMLElement[];
+			const rect = elementToMove.getBoundingClientRect();
+			const elements = this.shadowRoot!
+				.elementsFromPoint(rect.left, rect.top) as HTMLElement[];
+
 			const rowEl = elements.find(el => el.localName === 's-row' && el.id !== prevColRow);
 			if (!rowEl)
 				return;
@@ -468,7 +471,10 @@ export class WidgetGridCmp extends LitElement {
 				'z-index': 1,
 			});
 
-			const elements = this.shadowRoot!.elementsFromPoint(ev.x, ev.y) as HTMLElement[];
+			const currentRect = elementToMove.getBoundingClientRect();
+			const elements = this.shadowRoot!
+				.elementsFromPoint(currentRect.right, currentRect.bottom) as HTMLElement[];
+
 			const rowEl = elements.find(el => el.localName === 's-row' && el.id !== prevColRow);
 			if (!rowEl)
 				return;
