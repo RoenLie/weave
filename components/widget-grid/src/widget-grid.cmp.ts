@@ -15,6 +15,8 @@ export interface GridConfig {
 /** A string representing the grid area of a element. */
 type Area = `${ string }/${ string }/${ string }/${ string }`;
 
+type Grid = HTMLElement[][][];
+
 
 const inRange = (val: number, from: number, to: number) => val >= from && val <= to;
 
@@ -31,14 +33,27 @@ const range = (length: number): undefined[] => {
 @customElement('widget-grid')
 export class WidgetGridCmp extends LitElement {
 
-	@property({ type: Number }) public rows = 9;
-	@property({ type: Number }) public columns = 5;
-
+	@state() protected rows = 10;
+	@state() protected columns = 5;
 	@state() protected showGrid = false;
 	@state() protected highlightedArea?: Area;
 
+	protected rowHeight = 100;
+	protected columnWidth = 200;
+
+	/** stuff */
+	protected grids = new Map<number, Grid>();
+
 	/** Grid structure that holds the state of the different cells. */
-	protected grid: (HTMLElement | true | null)[][] = [];
+	protected grid: Grid = [];
+	protected gridLookup = new Map<HTMLElement, Area>();
+	protected resizeCtrl = new ResizeObserver((entries) => {
+		const entry = entries[0]!;
+		const rect = entry.contentRect;
+		const width = rect.width;
+
+		this.setColumns(width);
+	});
 
 
 	//#region public api
@@ -65,7 +80,7 @@ export class WidgetGridCmp extends LitElement {
 	}
 
 	public printGrid(): void {
-		const reOrdered: (HTMLElement | true | null)[][] = [];
+		const reOrdered: Grid = [];
 
 		this.grid.forEach((rows, colI) => {
 			rows.forEach((el, rowI) => {
@@ -116,55 +131,108 @@ export class WidgetGridCmp extends LitElement {
 		}
 	}
 
-	protected highlightValid = (
+	protected highlightValid(
 		element: HTMLElement,
 		fromCol: number, fromRow: number,
 		toCol: number,   toRow: number,
-	) => {
+	) {
 		this.highlightedArea = undefined;
 
-		// We reduce ending col/row by 1 due to iterating by index
-		const targetArea = this.rangesToArea(
-			fromCol, toCol,
-			fromRow, toRow,
-		);
+		const targetArea = this.rangesToArea(fromCol, toCol, fromRow, toRow);
+		const { outOfBounds, hasConflict } = this.hasConflicts(this.grid, element, targetArea);
 
-		let enoughSpace = true;
-		this.iterateArea(targetArea, (col, row) => {
-			const gridValue = this.grid[col]?.[row];
-
-			if (gridValue === element)
-				return;
-
-			if (gridValue || gridValue === undefined)
-				enoughSpace = false;
-		});
-
-		if (enoughSpace)
+		if (!outOfBounds && !hasConflict)
 			this.highlightedArea = targetArea;
 
 		this.requestUpdate();
 	};
 
-	protected moveArea(element: HTMLElement, area: Area) {
-		// Reset map and grid for given area.
-		const oldArea = element.getAttribute('widget-area') as Area | null;
+	protected hasConflicts(grid: Grid, element: HTMLElement, area: Area) {
+		const conflicts = new Set<HTMLElement>();
+		let hasConflict = false;
+		let outOfBounds = false;
 
+		this.iterateArea(area, (col, row) => {
+			const gridValue = grid[col]?.[row];
+
+			if (gridValue === undefined)
+				return outOfBounds = true;
+
+			if (gridValue.includes(element) && gridValue.length === 1) {
+				return;
+			}
+			else {
+				gridValue.forEach(v => {
+					if (v !== element) {
+						hasConflict = true;
+						conflicts.add(v);
+					}
+				});
+			}
+		});
+
+		return { hasConflict, outOfBounds, conflicts };
+	}
+
+	protected moveArea(grid: Grid, element: HTMLElement, area: Area) {
+		// Reset map and grid for given area.
+		const oldArea = this.gridLookup.get(element);
 		if (oldArea) {
 			// Remove the old references to the element in the grid.
-			this.iterateArea(oldArea, (col, row) => this.grid[col]![row] = null);
+			this.iterateArea(oldArea, (col, row) => {
+				const arr = grid[col]![row]!;
+				const index = arr.indexOf(element);
+				arr.splice(index, 1);
+			});
 		}
 
 		// Add the new references to the element in the grid.
-		this.iterateArea(area, (col, row) => this.grid[col]![row] = element);
+		this.iterateArea(area, (col, row) => grid[col]![row]!.push(element));
 
 		const [ rowStart, colStart, rowEnd, colEnd ] = this.areaToRanges(area);
+
+		this.gridLookup.set(element, area);
 
 		element.setAttribute('widget-rows', String(rowEnd - rowStart + 1));
 		element.setAttribute('widget-columns', String(colEnd - colStart + 1));
 
 		element.setAttribute('widget-area', area);
 		element.style.gridArea = this.areaToGridArea(area);
+	}
+
+	protected cloneGrid(grid: Grid) {
+		const clone: typeof grid = [];
+		grid.forEach(col => clone.push(col.map(cell => cell.map(el => el))));
+
+		return clone;
+	}
+
+	protected setColumns(width: number) {
+		let newColumns = this.columns;
+
+		if (width > (this.columnWidth * 8))
+			newColumns = 8;
+		else if (width > (this.columnWidth * 6))
+			newColumns = 6;
+		else if (width > (this.columnWidth * 4))
+			newColumns = 4;
+		else if (width > (this.columnWidth * 2))
+			newColumns = 2;
+
+		if (this.columns === newColumns)
+			return;
+
+		this.columns = newColumns;
+
+		this.updateComplete.then(() => {
+			const elements = new Set(this.shadowRoot!
+				.querySelector('slot')!
+				.assignedElements() as HTMLElement[]);
+
+			elements.forEach(el => el.removeAttribute('widget-area'));
+
+			this.initialize();
+		});
 	}
 
 	protected initialize() {
@@ -178,7 +246,7 @@ export class WidgetGridCmp extends LitElement {
 		elements.forEach(el => {
 			const existingArea = el.getAttribute('widget-area') as Area | null;
 			if (existingArea) {
-				this.moveArea(el, existingArea);
+				this.moveArea(this.grid, el, existingArea);
 				elements.delete(el);
 			}
 		});
@@ -203,7 +271,7 @@ export class WidgetGridCmp extends LitElement {
 
 				let enoughSpace = true;
 				this.iterateArea(area, (col, row) => {
-					if (this.grid[col]?.[row] || this.grid[col]?.[row] === undefined)
+					if (this.grid[col]?.[row]?.length !== 0)
 						enoughSpace = false;
 				});
 
@@ -228,7 +296,7 @@ export class WidgetGridCmp extends LitElement {
 				row, row + minRows - 1,
 			);
 
-			this.moveArea(el, widgetArea);
+			this.moveArea(this.grid, el, widgetArea);
 		});
 
 		this.emitGridConfig();
@@ -240,21 +308,26 @@ export class WidgetGridCmp extends LitElement {
 	public override connectedCallback(): void {
 		super.connectedCallback();
 
+		const rect = this.getBoundingClientRect();
+		this.setColumns(rect.width);
+
 		this.addEventListener('mousedown', this.onMousedown);
+		this.resizeCtrl.observe(this);
 	}
 
 	public override disconnectedCallback(): void {
 		super.disconnectedCallback();
 
 		this.removeEventListener('mousedown', this.onMousedown);
+		this.resizeCtrl.disconnect();
 	}
 
 	protected override willUpdate(props: Map<PropertyKey, unknown>): void {
 		super.willUpdate(props);
 
 		if (props.has('columns') || props.has('rows')) {
-			//
-			this.grid = range(this.columns).map(() => range(this.rows).map(() => null));
+			this.grid = range(this.columns).map(() => range(this.rows).map(() => []));
+			this.gridLookup.clear();
 		}
 	}
 	//#endregion lifecycle
@@ -266,6 +339,7 @@ export class WidgetGridCmp extends LitElement {
 
 		const isMover = path.some(el =>
 			el instanceof Element && el.hasAttribute('widget-mover'));
+
 		const isResizer = path.some(el =>
 			el instanceof Element && el.hasAttribute('widget-resizer'));
 
@@ -326,13 +400,14 @@ export class WidgetGridCmp extends LitElement {
 			const minRows = (elementToMove.getAttribute('widget-rows')
 				? Number(elementToMove.getAttribute('widget-rows')) : 1) - 1;
 
+			// We reduce ending col/row by 1 due to iterating by index
 			this.highlightValid(elementToMove, col, row, col + minCols, row + minRows);
 		};
 
 		const onMouseup = () => {
 			// If there are any highlighted cells, we will move the area.
 			if (this.highlightedArea) {
-				this.moveArea(elementToMove, this.highlightedArea);
+				this.moveArea(this.grid, elementToMove, this.highlightedArea);
 				this.highlightedArea = undefined;
 			}
 
@@ -355,7 +430,7 @@ export class WidgetGridCmp extends LitElement {
 		window.addEventListener('mousemove', onMousemove);
 		window.addEventListener('mouseup', onMouseup);
 
-		onMousemove(ev);
+		requestAnimationFrame(() => onMousemove(ev));
 	}
 
 	protected onResizerMousedown(ev: MouseEvent, path: HTMLElement[]) {
@@ -404,7 +479,7 @@ export class WidgetGridCmp extends LitElement {
 			const row = Number(rowEl.dataset['row']);
 
 			const [ rowStart, colStart ] = this
-				.areaToRanges(elementToMove.getAttribute('widget-area') as Area);
+				.areaToRanges(this.gridLookup.get(elementToMove)!);
 
 			this.highlightValid(elementToMove, colStart, rowStart, col, row);
 		};
@@ -412,7 +487,7 @@ export class WidgetGridCmp extends LitElement {
 		const onMouseup = () => {
 			// If there are any highlighted cells, we will move the area.
 			if (this.highlightedArea) {
-				this.moveArea(elementToMove, this.highlightedArea);
+				this.moveArea(this.grid, elementToMove, this.highlightedArea);
 				this.highlightedArea = undefined;
 			}
 
@@ -482,12 +557,11 @@ export class WidgetGridCmp extends LitElement {
 			:host {
 				--col-count: ${ this.columns };
 				--row-count: ${ this.rows };
-				--row-height: 100px;
-				--col-width: 200px;
+				--row-height: ${ this.rowHeight }px;
+				--col-width: ${ this.columnWidth }px;
 				--gap: 12px;
 			}
-			${ when(this.showGrid,
-				() => 's-row { display: block !important; }') }
+			${ when(this.showGrid, () => 's-row { display: block !important; }') }
 		</style>
 
 		<!-- These are only for visually displaying the grid. -->
@@ -502,10 +576,12 @@ export class WidgetGridCmp extends LitElement {
 	//#region styles
 	public static override styles = css`
 	:host {
+		overflow: hidden;
+		overflow-y: auto;
 		display: grid;
 		justify-content: center;
-		grid-template-columns: repeat(var(--col-count), minmax(0, var(--col-width)));
 		grid-template-rows: repeat(var(--row-count), var(--row-height));
+		grid-template-columns: repeat(var(--col-count), minmax(0, var(--col-width)));
 		gap: var(--gap);
 	}
 	s-row {
