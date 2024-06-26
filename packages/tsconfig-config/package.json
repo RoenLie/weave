@@ -15,7 +15,5 @@
 		"config",
 		"configuration"
 	],
-	"devDependencies": {
-		"@roenlie/package-toolbox": "^1.0.7"
-	}
+	"devDependencies": {}
 }

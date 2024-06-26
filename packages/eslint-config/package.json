@@ -15,17 +15,14 @@
 		"lint-windows": "set TIMING=1 && pnpm eslint"
 	},
 	"dependencies": {
-		"@eslint/js": "^9.4.0",
-		"@stylistic/eslint-plugin": "^2.1.0",
+		"@eslint/js": "^9.5.0",
+		"@stylistic/eslint-plugin": "^2.3.0",
 		"@types/eslint__js": "^8.42.3",
-		"eslint": "^9.3.0",
+		"eslint": "^9.5.0",
 		"eslint-plugin-lit": "^1.13.0",
-		"turbo": "latest",
-		"typescript": "^5.4.5",
+		"turbo": "^2.0.5",
+		"typescript": "^5.5.2",
 		"typescript-eslint": "^8.0.0-alpha.28"
-	},
-	"devDependencies": {
-		"@roenlie/package-toolbox": "^1.0.7"
 	},
 	"engines": {
 		"node": ">=20.10"

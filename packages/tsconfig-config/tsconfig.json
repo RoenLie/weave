@@ -9,10 +9,9 @@
 			"DOM",
 			"DOM.Iterable",
 		],
-		// filedir -- This should be added by consumer.
-		"outDir": "../dist",
-		"rootDir": ".",
-		"baseUrl": ".",
+		"outDir": "${configDir}/../dist",
+		"rootDir": "${configDir}",
+		"baseUrl": "${configDir}",
 		// output
 		"noEmit": false,
 		"emitDeclarationOnly": true,

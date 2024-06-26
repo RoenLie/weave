@@ -1,0 +1,9 @@
+body {
+	display: block;
+	height: 100dvh;
+	width: 100vw;
+	background-color: pink;
+
+	padding: 0px;
+	margin: 0px;
+}
