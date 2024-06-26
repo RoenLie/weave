@@ -1,11 +1,13 @@
 {
 	"extends": "@roenlie/tsconfig",
 	"compilerOptions": {
-		"types": []
+		"types": [
+			"vite/client"
+		]
 	},
 	"include": [
-		"*.ts",
-		"*.d.ts",
+		"./**/*.ts",
+		"./**/*.d.ts",
 	],
 	"exclude": [
 		"*.test.ts",

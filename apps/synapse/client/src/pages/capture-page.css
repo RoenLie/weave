@@ -1,0 +1,24 @@
+:host {
+	height: 100%;
+	display: grid;
+}
+.hidden {
+	display: none !important;
+}
+#camera, #output {
+	grid-area: 1/1/2/2;
+
+	display: grid;
+	grid-template-rows: 1fr auto;
+	background-color: black;
+
+	#video, #photo {
+		place-self: center;
+	}
+	button {
+		height: 100px;
+	}
+}
+#canvas {
+	display: none;
+}
