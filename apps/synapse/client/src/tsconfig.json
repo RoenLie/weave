@@ -2,7 +2,8 @@
 	"extends": "@roenlie/tsconfig",
 	"compilerOptions": {
 		"types": [
-			"vite/client"
+			"vite/client",
+			"vite-plugin-import-css-sheet/client"
 		]
 	},
 	"include": [

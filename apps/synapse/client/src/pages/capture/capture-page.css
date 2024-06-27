@@ -1,0 +1,16 @@
+:host {
+	position: fixed;
+	inset: 0px;
+
+	display: grid;
+
+	grid-template-rows: auto 1fr auto auto;
+	background-color: black;
+}
+.hidden {
+	display: none !important;
+}
+s-top-controls {
+	display: flex;
+	height: 80px;
+}

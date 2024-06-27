@@ -1,0 +1,36 @@
+:host {
+	display: grid;
+	grid-template-rows: 1fr auto;
+}
+section {
+	overflow: hidden;
+	display: grid;
+	place-items: center;
+	margin-inline: 12px;
+
+	img {
+		width: 100%;
+		object-fit: contain;
+	}
+}
+s-zoom-control {
+	display: flex;
+	justify-content: center;
+
+	.active {
+		outline: goldenrod 1px solid;
+	}
+}
+s-actions {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	place-items: center;
+	height: 100px;
+
+	button {
+		grid-column: 2/3;
+		height: 60px;
+		aspect-ratio: 1;
+		border-radius: 999px;
+	}
+}
