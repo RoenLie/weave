@@ -1,17 +1,26 @@
-import { css, html, LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 
 import { customElement } from 'lit/decorators.js';
 import { Routes } from '@lit-labs/router';
 import { provide } from '@roenlie/lit-context';
+import { sharedStyles } from '../app/utils/shared-styles.ts';
+import mainStyles from './main.css' with { type: 'css' };
+
+
+export const mainRoutesID = 'main-routes';
 
 
 @customElement('syn-main')
 export class MainCmp extends LitElement {
 
-	@provide('main-routes') protected routes = new Routes(this, [
-	  { path: '', render: () => html`<h1>Home</h1>` },
-	  {
-			path:   'capture',
+	@provide(mainRoutesID) protected routes = new Routes(this, [
+		{
+			path:   '',
+			enter:  () => !!import('../pages/search/search-page.ts'),
+			render: () => html`<syn-search-page></syn-search-page>`,
+		},
+		{
+			path:   'capture/*',
 			enter:  () => !!import('../pages/capture/capture-page.ts'),
 			render: () => html`<syn-capture-page></syn-capture-page>`,
 		},
@@ -21,37 +30,28 @@ export class MainCmp extends LitElement {
 		},
 	});
 
-	public override connectedCallback(): void {
-		super.connectedCallback();
-	}
-
 	protected override render() {
 	  	return html`
 		${ this.routes.outlet() }
 
 		<nav>
-			<a href=${ this.routes.link('') }>
-				Home
+			<a tabindex="-1" href=${ this.routes.link('') }>
+				<button synapse outlined>
+					Home
+				</button>
 			</a>
-			<a href=${ this.routes.link('capture') }>
-				Capture
+			<a tabindex="-1" href=${ this.routes.link('capture/camera') }>
+				<button synapse outlined>
+					Capture
+				</button>
 			</a>
 		</nav>
 		`;
 	}
 
-	public static override styles = css`
-	:host {
-		height: 100%;
-		display: grid;
-		grid-template-rows: 1fr auto;
-	}
-	nav {
-		grid-row: 2/3;
-		display: grid;
-		grid-auto-flow: column;
-		grid-auto-columns: 1fr;
-	}
-	`;
+	public static override styles = [
+		sharedStyles,
+		mainStyles,
+	];
 
 }

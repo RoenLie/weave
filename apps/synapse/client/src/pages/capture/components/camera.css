@@ -1,17 +1,20 @@
 :host {
 	display: grid;
-	grid-template-rows: 1fr auto;
+	grid-template-rows: auto 1fr auto;
+}
+s-top-controls {
+	display: flex;
+	height: 80px;
 }
 section {
 	overflow: hidden;
 	display: grid;
 	place-items: center;
 	margin-inline: 12px;
-
-	img {
-		width: 100%;
-		object-fit: contain;
-	}
+}
+video {
+	overflow: hidden;
+	display: grid;
 }
 s-zoom-control {
 	display: flex;
@@ -32,5 +35,9 @@ s-actions {
 		height: 60px;
 		aspect-ratio: 1;
 		border-radius: 999px;
+		color: white;
+		background-color: rgb(30 30 30);
+		outline: 2px solid rgb(50 50 50);
+		border: none;
 	}
 }

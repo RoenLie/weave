@@ -4,6 +4,7 @@ import cameraStyles from './camera.css' with { type: 'css' };
 import { maybe } from '../../../app/utils/maybe.ts';
 import { map } from 'lit/directives/map.js';
 import { classMap } from 'lit/directives/class-map.js';
+import { sharedStyles } from '../../../app/utils/shared-styles.ts';
 
 
 @customElement('syn-capture-camera')
@@ -38,14 +39,14 @@ export class CaptureCameraCmp extends LitElement {
 
 	protected async setCameraMode() {
 		const sectionEl = this.sectionEl;
-		const aspectRatio = (Math
-			.round(sectionEl.offsetHeight / sectionEl.offsetWidth * 10) / 10) - 0.1;
+		const aspectRatio = Math.max(1,
+			(Math.round(sectionEl.offsetHeight / sectionEl.offsetWidth * 10) / 10) - 0.2);
 
 		const [ stream, error ] = await maybe(
 			navigator.mediaDevices.getUserMedia({
 				video: {
 					facingMode:  'environment',
-					aspectRatio: { ideal: aspectRatio },
+					aspectRatio: { exact: aspectRatio },
 					advanced:    [
 						{ width: { exact: 2560 } },
 						{ width: { exact: 1920 } },
@@ -169,6 +170,9 @@ export class CaptureCameraCmp extends LitElement {
 
 	protected override render(): unknown {
 		return html`
+		<s-top-controls>
+		</s-top-controls>
+
 		<section>
 			<video id="video"
 				width   =${ this.width }
@@ -194,7 +198,7 @@ export class CaptureCameraCmp extends LitElement {
 			<button
 				@click=${ this.onClickButton }
 			>
-				Take photo
+				<span>Take photo</span>
 			</button>
 
 			<slot name="action-end"></slot>
@@ -202,7 +206,7 @@ export class CaptureCameraCmp extends LitElement {
 		`;
 	}
 
-	public static override styles = [ cameraStyles ];
+	public static override styles = [ sharedStyles, cameraStyles ];
 
 }
 

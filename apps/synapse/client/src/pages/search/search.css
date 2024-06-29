@@ -1,0 +1,16 @@
+:host {
+	display: grid;
+	grid-template-rows: 1fr auto;
+	padding-bottom: 32px;
+	border-bottom: 2px solid var(--outline);
+}
+s-search {
+	display: flex;
+	justify-content: center;
+}
+input[type="search"] {
+	font-size: 20px;
+	height: 60px;
+	width: 300px;
+	padding-inline: 24px;
+}

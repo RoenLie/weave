@@ -32,6 +32,9 @@ importers:
       '@roenlie/lit-context':
         specifier: ^1.0.47
         version: 1.0.47(lit@3.1.4)
+      bootstrap-icons:
+        specifier: ^1.11.3
+        version: 1.11.3
       lit:
         specifier: ^3.1.4
         version: 3.1.4
@@ -850,6 +853,9 @@ packages:
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
+
+  bootstrap-icons@1.11.3:
+    resolution: {integrity: sha512-+3lpHrCw/it2/7lBL15VR0HEumaBss0+f/Lb6ZvHISn1mlK83jjFpooTLsMWbIjJMDjDjOExMsTxnXSIT4k4ww==}
 
   brace-expansion@1.1.11:
     resolution: {integrity: sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==}
@@ -2322,6 +2328,8 @@ snapshots:
   before-after-hook@2.2.3: {}
 
   binary-extensions@2.3.0: {}
+
+  bootstrap-icons@1.11.3: {}
 
   brace-expansion@1.1.11:
     dependencies:

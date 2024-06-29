@@ -2,8 +2,17 @@ body {
 	display: block;
 	height: 100dvh;
 	width: 100vw;
-	background-color: pink;
+	color: var(--color);
+	background-color: var(--background);
+	font-family: var(--font-family);
 
 	padding: 0px;
 	margin: 0px;
+}
+:root {
+	--color: white;
+	--background: black;
+	--font-family: "Inter", sans-serif;
+	--outline: rgb(54.1% 57.6% 54.1% / 0.38);
+	--outline-strong: rgb(54.1% 57.6% 54.1% / 0.6);
 }
