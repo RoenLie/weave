@@ -1,12 +1,5 @@
 import weaviate from 'weaviate-client';
-import { config } from 'dotenv';
 
-config({
-	path: [
-		'.env.local',
-		'.env',
-	],
-});
 
 const huggingFaceApiKey = process.env['HUGGING_FACE_API_KEY'];
 if (!huggingFaceApiKey)

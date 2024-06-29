@@ -16,7 +16,6 @@ export class SearchPageCmp extends LitElement {
 		});
 	}
 
-
 	protected override render(): unknown {
 		return html`
 		<s-results>

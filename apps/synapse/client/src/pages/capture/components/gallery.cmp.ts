@@ -6,6 +6,11 @@ import { consume, type ContextProp } from '@roenlie/lit-context';
 import type { Routes } from '@lit-labs/router';
 import { sharedStyles } from '../../../app/utils/shared-styles.ts';
 import { captureRoutesID } from '../capture-page.ts';
+import { maybe } from '../../../app/utils/maybe.ts';
+import { dataURItoBlob } from '../../../app/utils/datauri-to-blob.ts';
+
+
+export interface Image { name: string; datauri: string };
 
 
 @customElement('syn-capture-gallery')
@@ -13,16 +18,22 @@ export class CaptureGalleryCmp extends LitElement {
 
 	@query('s-focus-image') protected focusWrapper:    HTMLElement;
 	@consume(captureRoutesID) protected captureRoutes: ContextProp<Routes>;
-	@property({ type: Array }) public images:          string[];
-	@state() protected focusImageEl?:                  HTMLImageElement;
-	protected focusImageOriginal:                      HTMLImageElement;
+	@property({ type: Array }) public images:          { name: string; datauri: string }[];
+	@state() protected focusImageEl?:                  HTMLElement;
+	protected focusImageOriginal:                      HTMLElement;
 	protected animating = false;
 
-	protected onImgClick(ev: Event) {
+	public override connectedCallback(): void {
+		super.connectedCallback();
+	}
+
+	protected onImgClick(ev: Event): void {
 		if (this.animating)
 			return;
 
-		const target = ev.composedPath().find(ev => ev instanceof HTMLImageElement);
+		const target = ev.composedPath().find(ev =>
+			(ev as HTMLElement).localName === 's-img-wrapper') as HTMLElement
+			;
 		if (!target)
 			return;
 
@@ -55,6 +66,7 @@ export class CaptureGalleryCmp extends LitElement {
 				inset:        '0%',
 				borderRadius: '0px',
 				opacity:      1,
+
 			},
 		], {
 			duration: 1000,
@@ -67,7 +79,7 @@ export class CaptureGalleryCmp extends LitElement {
 		this.animating = true;
 	}
 
-	protected onImgClose() {
+	protected onImgClose(): void {
 		if (this.animating)
 			return;
 
@@ -111,11 +123,33 @@ export class CaptureGalleryCmp extends LitElement {
 		this.animating = true;
 	}
 
+	protected async onSubmit(): Promise<void> {
+		const formData = new FormData();
+		this.images.map(img => {
+			const blob = dataURItoBlob(img.datauri);
+			formData.append(img.name, blob);
+		});
+
+		const [ result, error ] = await maybe(fetch('http://localhost:42069/api/capture/upload', {
+			method: 'post',
+			body:   formData,
+		}));
+
+		if (error)
+			return;
+
+		const json = await result?.json();
+
+		console.log(json);
+	}
+
 	protected override render(): unknown {
 		return html`
 		<section @click=${ this.onImgClick }>
 		${ map(this.images, (image) => html`
-			<img .src=${ image }>
+			<s-img-wrapper>
+				<img .src=${ image.datauri }>
+			</s-img-wrapper>
 		`) }
 		</section>
 
@@ -126,10 +160,8 @@ export class CaptureGalleryCmp extends LitElement {
 				</button>
 			</a>
 
-			<button synapse outlined>
-				<span slot="start">❤️</span>
-				<span>hello there</span>
-				<span slot="end">☀️</span>
+			<button synapse outlined @click=${ this.onSubmit }>
+				<span>Submit</span>
 			</button>
 		</s-actions>
 

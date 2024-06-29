@@ -8,8 +8,8 @@ section {
 	overflow-y: auto;
 	scrollbar-gutter: stable;
 
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+	display: flex;
+	flex-flow: row wrap;
 	justify-content: center;
 	gap: 12px;
 	padding-top: 12px;
@@ -26,10 +26,17 @@ section {
 	}
 	> * {
 		cursor: pointer;
-		aspect-ratio: 0.75;
 		&:hover {
 			transform: scale(1.1);
 		}
+	}
+	s-img-wrapper {
+		overflow: hidden;
+		display: block;
+		border: 1px solid var(--outline);
+		border-radius: 16px;
+		width: 175px;
+		height: 200px;
 	}
 }
 s-actions {
@@ -37,13 +44,6 @@ s-actions {
 	grid-auto-flow: column;
 	place-items: center;
 	height: 100px;
-}
-img {
-	border-radius: 16px;
-	border: 1px solid var(--outline);
-	object-fit: cover;
-	width: 100%;
-	height: 100%;
 }
 s-focus-image {
 	overflow: hidden;
@@ -63,5 +63,11 @@ s-focus-image {
 		bottom: auto;
 		height: 60px;
 		background-color: rgb(0 0 0 / 0.2);
+	}
+	img {
+		object-fit: contain;
+		width: 100%;
+		height: 100%;
+		background-color: var(--background);
 	}
 }
