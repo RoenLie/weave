@@ -10,7 +10,11 @@ import { maybe } from '../../../app/utils/maybe.ts';
 import { dataURItoBlob } from '../../../app/utils/datauri-to-blob.ts';
 
 
-export interface Image { name: string; datauri: string };
+export interface Image {
+	directory: string[];
+	name:      string;
+	datauri:   string;
+};
 
 
 @customElement('syn-capture-gallery')
@@ -18,7 +22,7 @@ export class CaptureGalleryCmp extends LitElement {
 
 	@query('s-focus-image') protected focusWrapper:    HTMLElement;
 	@consume(captureRoutesID) protected captureRoutes: ContextProp<Routes>;
-	@property({ type: Array }) public images:          { name: string; datauri: string }[];
+	@property({ type: Array }) public images:          Image[];
 	@state() protected focusImageEl?:                  HTMLElement;
 	protected focusImageOriginal:                      HTMLElement;
 	protected animating = false;
@@ -139,7 +143,6 @@ export class CaptureGalleryCmp extends LitElement {
 			return;
 
 		const json = await result?.json();
-
 		console.log(json);
 	}
 

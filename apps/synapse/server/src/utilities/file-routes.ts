@@ -6,7 +6,8 @@ import { basename, join, resolve } from 'path/posix';
 
 
 // Caches the starting dir -> file-paths.
-const cache = new Map<string, string[]>();
+const fileCache = new Map<string, string[]>();
+const registerCache = new Set<string>();
 
 
 export interface ControllerMethod {
@@ -24,14 +25,22 @@ export const registerControllers = async (dir: string) => {
 		dir = dir.replace(/^\/+/, '');
 
 	// We only register controllers from a directory subtree once.
-	const cached = cache.get(dir);
+	const cached = fileCache.get(dir);
 	if (cached)
 		return;
 
 	const filePaths = await globby(dir, { onlyFiles: true });
 
-	const promises = filePaths.filter(path => basename(path).endsWith('controller.ts'))
-		.map(async path => await import(join(resolve(), path)).then(m => m.default));
+	const filesToRegister = filePaths
+		.map(path => join(resolve(), path))
+		.filter(path => {
+			const isController = basename(path).endsWith('controller.ts');
+			if (isController && !registerCache.has(path))
+				return !!registerCache.add(path);
+		});
+
+	const promises = filesToRegister
+		.map(async path => await import(path).then(m => m.default));
 
 	const imports: ExpressController[] = await Promise.all(promises);
 
