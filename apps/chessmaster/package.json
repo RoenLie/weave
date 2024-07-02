@@ -49,13 +49,11 @@
 		"tslib": "^2.4.0"
 	},
 	"devDependencies": {
-		"@types/node": "^20.14.9",
 		"@types/sharedworker": "^0.0.117",
 		"bootstrap-icons": "^1.9.1",
 		"rimraf": "^5.0.7",
 		"ts-toolbelt": "^9.6.0",
 		"type-fest": "^4.21.0",
-		"typescript": "^5.5.3",
 		"vite": "^5.3.2",
 		"vitest": "^1.6.0"
 	}

@@ -28,9 +28,7 @@
 		"vite": "^5.1.6",
 		"@roenlie/eslint-config": "workspace:*",
 		"@roenlie/package-toolbox": "workspace:*",
-		"@roenlie/tsconfig": "workspace:*",
-		"@types/node": "^20.11.28",
-		"typescript": "^5.4.2"
+		"@roenlie/tsconfig": "workspace:*"
 	},
 	"engines": {
 		"node": ">=20.10"

@@ -17,6 +17,9 @@ importers:
       '@roenlie/tsconfig':
         specifier: workspace:*
         version: link:packages/tsconfig-config
+      '@types/node':
+        specifier: ^20.14.9
+        version: 20.14.9
       turbo:
         specifier: ^2.0.5
         version: 2.0.6
@@ -51,9 +54,6 @@ importers:
         specifier: ^2.4.0
         version: 2.6.3
     devDependencies:
-      '@types/node':
-        specifier: ^20.14.9
-        version: 20.14.9
       '@types/sharedworker':
         specifier: ^0.0.117
         version: 0.0.117
@@ -69,9 +69,6 @@ importers:
       type-fest:
         specifier: ^4.21.0
         version: 4.21.0
-      typescript:
-        specifier: ^5.5.3
-        version: 5.5.3
       vite:
         specifier: ^5.3.2
         version: 5.3.2(@types/node@20.14.9)(terser@5.31.1)
@@ -109,15 +106,9 @@ importers:
       '@roenlie/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig-config
-      '@types/node':
-        specifier: 20.14.9
-        version: 20.14.9
       dotenv:
         specifier: ^16.3.1
         version: 16.4.5
-      typescript:
-        specifier: ^5.1.6
-        version: 5.5.3
       vite:
         specifier: ^5.3.2
         version: 5.3.2(@types/node@20.14.9)(terser@5.31.1)
@@ -516,9 +507,6 @@ importers:
       '@types/formidable':
         specifier: ^3.4.5
         version: 3.4.5
-      '@types/node':
-        specifier: ^20.14.9
-        version: 20.14.9
       tsx:
         specifier: ^4.16.0
         version: 4.16.0
@@ -541,9 +529,6 @@ importers:
         specifier: ^2.4.0
         version: 2.6.3
     devDependencies:
-      '@types/node':
-        specifier: ^20.14.9
-        version: 20.14.9
       '@types/sharedworker':
         specifier: ^0.0.117
         version: 0.0.117
@@ -556,9 +541,6 @@ importers:
       type-fest:
         specifier: ^4.21.0
         version: 4.21.0
-      typescript:
-        specifier: ^5.5.3
-        version: 5.5.3
       vite:
         specifier: ^5.3.2
         version: 5.3.2(@types/node@20.14.9)(terser@5.31.1)
@@ -1013,9 +995,6 @@ importers:
       '@types/fs-extra':
         specifier: ^11.0.4
         version: 11.0.4
-      '@types/node':
-        specifier: ^20.14.9
-        version: 20.14.9
       '@types/semver':
         specifier: ^7.5.8
         version: 7.5.8
@@ -1081,15 +1060,9 @@ importers:
       '@roenlie/tsconfig':
         specifier: workspace:*
         version: link:../../tsconfig-config
-      '@types/node':
-        specifier: ^20.11.28
-        version: 20.14.9
       tslib:
         specifier: ^2.6.2
         version: 2.6.3
-      typescript:
-        specifier: ^5.4.2
-        version: 5.5.3
       vite:
         specifier: ^5.1.6
         version: 5.3.2(@types/node@20.14.9)(terser@5.31.1)
