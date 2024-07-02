@@ -1,0 +1,64 @@
+{
+	"name": "@roenlie/mimic-localize",
+	"version": "99.99.99",
+	"description": "A lightweight and reactive localization package, with a focus on use with LIT web components.",
+	"author": {
+		"name": "Kristoffer Roen-Lie",
+		"url": "https://github.com/RoenLie"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/RoenLie/mimic.git"
+	},
+	"bugs": {
+		"url": "https://github.com/RoenLie/mimic/issues"
+	},
+	"homepage": "https://github.com/RoenLie/mimic#readme",
+	"type": "module",
+	"types": "./dist/index.d.ts",
+	"main": "./dist/index.ts",
+	"exports": {
+		"./core": {
+			"types": "./dist/core/index.d.ts",
+			"default": "./dist/core/index.js"
+		},
+		"./directive": {
+			"types": "./dist/directive/index.d.ts",
+			"default": "./dist/directive/index.js"
+		},
+		"./implement": {
+			"types": "./dist/implement/index.d.ts",
+			"default": "./dist/implement/index.js"
+		},
+		"./utilities": {
+			"types": "./dist/utilities/index.d.ts",
+			"default": "./dist/utilities/index.js"
+		},
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"test": "vitest",
+		"test:dom": "vitest --dom",
+		"build": "pnpm build:prepare && pnpm build:index && pnpm build:types && vite build",
+		"build:prepare": "rimraf dist",
+		"build:index": "pkg-toolbox build-indexes",
+		"build:types": "tsc --project ./src/tsconfig.json",
+		"updatedeps": "pnpm update --latest",
+		"increment-version": "pkg-toolbox increment-version --placeholder 99.99.99"
+	},
+	"dependencies": {
+		"@roenlie/mimic-core": "workspace:^"
+	},
+	"peerDependencies": {
+		"lit": "*"
+	},
+	"devDependencies": {
+		"happy-dom": "^14.7.1",
+		"lit": "^3.1.3"
+	},
+	"sideEffects": false
+}

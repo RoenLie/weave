@@ -1,0 +1,50 @@
+{
+	"name": "@roenlie/lit-context",
+	"version": "99.99.99",
+	"description": "Context provider and consumer for Lit Elements",
+	"author": {
+		"name": "Kristoffer Roen-Lie",
+		"url": "https://github.com/RoenLie"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/RoenLie/mimic.git"
+	},
+	"bugs": {
+		"url": "https://github.com/RoenLie/mimic/issues"
+	},
+	"homepage": "https://github.com/RoenLie/mimic#readme",
+	"type": "module",
+	"types": "./dist/index.d.ts",
+	"main": "./dist/index.js",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"test": "vitest",
+		"test:dom": "vitest --dom",
+		"dev": "pnpm vite --config ./docs/vite.config.ts",
+		"build": "pnpm build:prepare && pnpm build:index && pnpm build:types && vite build",
+		"build:prepare": "rimraf dist",
+		"build:index": "pkg-toolbox build-indexes",
+		"build:types": "tsc --project ./src/tsconfig.json",
+		"updatedeps": "pnpm update --latest",
+		"increment-version": "pkg-toolbox increment-version --placeholder 99.99.99"
+	},
+	"dependencies": {
+		"@roenlie/mimic-core": "workspace:^"
+	},
+	"peerDependencies": {
+		"lit": "*"
+	},
+	"devDependencies": {
+		"@roenlie/mirage-docs": "^2.0.15",
+		"happy-dom": "^14.7.1",
+		"lit": "^3.1.3"
+	},
+	"sideEffects": false
+}

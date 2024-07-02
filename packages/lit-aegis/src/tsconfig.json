@@ -1,0 +1,25 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"outDir": "../dist/lib",
+		"rootDir": ".",
+		"baseUrl": ".",
+		"noEmit": false,
+		"emitDeclarationOnly": true,
+		"incremental": true,
+		"tsBuildInfoFile": "../dist/.tsbuildinfo",
+		"types": [
+			"vite/client"
+		]
+	},
+	"include": [
+		"./**/*.ts",
+		"./**/*.d.ts",
+		"./**/*.js",
+	],
+	"exclude": [
+		"./**/_demo",
+		"./**/*.test.ts",
+		"./**/*.bench.ts",
+	]
+}

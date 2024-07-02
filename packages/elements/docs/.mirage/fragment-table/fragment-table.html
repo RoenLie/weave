@@ -1,0 +1,20 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono">
+	<script type="module">import "@roenlie/mirage-docs/assets/index.css";</script>
+	<script type="module" src="/bootstrap.ts"></script>
+	<script type="module" src="/.mirage/siteconfig.ts"></script>
+	<script type="module" src="/.mirage/fragment-table/fragment-table.ts"></script>
+</head>
+<body>
+	<midoc-page></midoc-page>
+	<script type="module">
+		import { PageElement } from '@roenlie/mirage-docs/app/components/page/page-element.js';
+		PageElement.register();
+	</script>
+</body>
+</html>

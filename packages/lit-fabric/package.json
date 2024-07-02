@@ -1,0 +1,47 @@
+{
+	"name": "@roenlie/lit-fabric",
+	"version": "99.99.99",
+	"description": "React hooks syntax for LIT",
+	"author": {
+		"name": "Kristoffer Roen-Lie",
+		"url": "https://github.com/RoenLie"
+	},
+	"license": "MIT",
+	"keywords": [],
+	"type": "module",
+	"exports": {
+		"./hooks": {
+			"types": "./dist/hooks/index.d.ts",
+			"default": "./dist/hooks/index.js"
+		},
+		"./core": {
+			"types": "./dist/core/index.d.ts",
+			"default": "./dist/core/index.js"
+		},
+		"./utilities": {
+			"types": "./dist/utilities/index.d.ts",
+			"default": "./dist/utilities/index.js"
+		}
+	},
+	"scripts": {
+		"dev": "vite --config ./docs/vite.config.ts",
+		"build": "pnpm build:prepare && pnpm build:index && pnpm build:types && vite build",
+		"build:prepare": "rimraf dist",
+		"build:index": "pkg-toolbox build-indexes",
+		"build:types": "tsc --project ./src/tsconfig.json",
+		"typecheck": "tsc --project ./tsconfig.json",
+		"updatedeps": "pnpm update --latest",
+		"increment-version": "pkg-toolbox increment-version --placeholder 99.99.99"
+	},
+	"dependencies": {
+		"@roenlie/mimic-core": "workspace:^"
+	},
+	"peerDependencies": {
+		"lit": "*"
+	},
+	"devDependencies": {
+		"@roenlie/mirage-docs": "^2.0.15",
+		"lit": "^3.1.3"
+	},
+	"sideEffects": false
+}

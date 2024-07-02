@@ -1,0 +1,146 @@
+{
+	"name": "@roenlie/mimic-elements",
+	"version": "99.99.99",
+	"description": "Standalone custom elements created with LIT",
+	"license": "MIT",
+	"author": {
+		"name": "Kristoffer Roen-Lie",
+		"url": "https://github.com/RoenLie"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/RoenLie/mimic.git"
+	},
+	"bugs": {
+		"url": "https://github.com/RoenLie/mimic/issues"
+	},
+	"homepage": "https://github.com/RoenLie/mimic#readme",
+	"files": [
+		"dist",
+		"src"
+	],
+	"type": "module",
+	"types": "./dist/index.d.ts",
+	"main": "./dist/index.js",
+	"exports": {
+		"./alert": {
+			"types": "./src/components/alert/index.ts",
+			"default": "./dist/components/alert/index.js"
+		},
+		"./button": {
+			"types": "./src/components/button/index.ts",
+			"default": "./dist/components/button/index.js"
+		},
+		"./drawer": {
+			"types": "./src/components/drawer/index.ts",
+			"default": "./dist/components/drawer/index.js"
+		},
+		"./icon": {
+			"types": "./src/components/icon/index.ts",
+			"default": "./dist/components/icon/index.js"
+		},
+		"./nav-rail": {
+			"types": "./src/components/nav-rail/index.ts",
+			"default": "./dist/components/nav-rail/index.js"
+		},
+		"./progress-bar": {
+			"types": "./src/components/progress-bar/index.ts",
+			"default": "./dist/components/progress-bar/index.js"
+		},
+		"./ripple": {
+			"types": "./src/components/ripple/index.ts",
+			"default": "./dist/components/ripple/index.js"
+		},
+		"./spinner": {
+			"types": "./src/components/spinner/index.ts",
+			"default": "./dist/components/spinner/index.js"
+		},
+		"./tabs": {
+			"types": "./src/components/tabs/index.ts",
+			"default": "./dist/components/tabs/index.js"
+		},
+		"./template-list": {
+			"types": "./src/components/template-list/index.ts",
+			"default": "./dist/components/template-list/index.js"
+		},
+		"./text": {
+			"types": "./src/components/text/index.ts",
+			"default": "./dist/components/text/index.js"
+		},
+		"./tooltip": {
+			"types": "./src/components/tooltip/index.ts",
+			"default": "./dist/components/tooltip/index.js"
+		},
+		"./upload": {
+			"types": "./src/components/upload/index.ts",
+			"default": "./dist/components/upload/index.js"
+		},
+		"./dialog": {
+			"types": "./src/components/dialog/index.ts",
+			"default": "./dist/components/dialog/index.js"
+		},
+		"./input": {
+			"types": "./src/components/input/index.ts",
+			"default": "./dist/components/input/index.js"
+		},
+		"./typeahead": {
+			"types": "./src/components/typeahead/index.ts",
+			"default": "./dist/components/typeahead/index.js"
+		},
+		"./action-bar": {
+			"types": "./src/components/action-bar/index.ts",
+			"default": "./dist/components/action-bar/index.js"
+		},
+		"./fragment-table": {
+			"types": "./src/components/fragment-table/index.ts",
+			"default": "./dist/components/fragment-table/index.js"
+		},
+		"./virtual-scrollbar": {
+			"types": "./src/components/virtual-scrollbar/index.ts",
+			"default": "./dist/components/virtual-scrollbar/index.js"
+		},
+		"./router": {
+			"types": "./src/components/router/index.ts",
+			"default": "./dist/components/router/index.js"
+		},
+		"./styles": {
+			"types": "./src/styles/index.ts",
+			"default": "./dist/styles/index.js"
+		},
+		"./utilities": {
+			"types": "./src/utilities/index.ts",
+			"default": "./dist/utilities/index.js"
+		}
+	},
+	"scripts": {
+		"dev": "vite --config ./docs/vite.config.ts",
+		"build": "pnpm build:prepare && pnpm build:index && pnpm build:types && vite build",
+		"build:prepare": "rimraf dist",
+		"build:index": "pkg-toolbox build-indexes",
+		"build:types": "tsc --project ./src/tsconfig.json",
+		"typecheck": "tsc --project ./tsconfig.json",
+		"updatedeps": "pnpm update --latest",
+		"increment-version": "pkg-toolbox increment-version --placeholder 99.99.99"
+	},
+	"dependencies": {
+		"@floating-ui/dom": "^1.6.4",
+		"@roenlie/lit-aegis": "workspace:^",
+		"@roenlie/mimic-core": "workspace:^",
+		"@roenlie/mimic-lit": "workspace:^",
+		"@roenlie/mimic-localize": "workspace:^",
+		"@vaadin/router": "^1.7.5"
+	},
+	"peerDependencies": {
+		"lit": "*"
+	},
+	"devDependencies": {
+		"@faker-js/faker": "^8.4.1",
+		"@roenlie/mirage-docs": "^2.0.15",
+		"lit": "^3.1.3",
+		"vite-plugin-import-css-sheet": "^1.0.9",
+		"@roenlie/mimic-elements": "workspace:^"
+	},
+	"vaadin": {
+		"disableUsageStatistics": true
+	}
+}

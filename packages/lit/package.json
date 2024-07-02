@@ -1,0 +1,77 @@
+{
+	"name": "@roenlie/mimic-lit",
+	"version": "99.99.99",
+	"description": "Extensions and utilities for the LIT framework.",
+	"author": {
+		"name": "Kristoffer Roen-Lie",
+		"url": "https://github.com/RoenLie"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/RoenLie/mimic.git"
+	},
+	"bugs": {
+		"url": "https://github.com/RoenLie/mimic/issues"
+	},
+	"homepage": "https://github.com/RoenLie/mimic#readme",
+	"type": "module",
+	"types": "./dist/index-fallback.d.ts",
+	"main": "./dist/index-fallback.js",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./controllers": {
+			"types": "./src/controllers/index.ts",
+			"default": "./dist/controllers/index.js"
+		},
+		"./decorators": {
+			"types": "./src/decorators/index.ts",
+			"default": "./dist/decorators/index.js"
+		},
+		"./directives": {
+			"types": "./src/directives/index.ts",
+			"default": "./dist/directives/index.js"
+		},
+		"./styles": {
+			"types": "./src/styles/index.ts",
+			"default": "./dist/styles/index.js"
+		},
+		"./types": {
+			"types": "./src/types/index.ts",
+			"default": "./dist/types/index.js"
+		},
+		"./element": {
+			"types": "./src/element/index.ts",
+			"default": "./dist/element/index.js"
+		}
+	},
+	"scripts": {
+		"test": "vitest",
+		"test:dom": "vitest --dom",
+		"build": "pnpm build:prepare && pnpm build:index && pnpm build:types && vite build",
+		"build:prepare": "rimraf dist",
+		"build:index": "pkg-toolbox build-indexes",
+		"build:types": "tsc --project ./src/tsconfig.json",
+		"updatedeps": "pnpm update --latest",
+		"increment-version": "pkg-toolbox increment-version --placeholder 99.99.99"
+	},
+	"dependencies": {
+		"@floating-ui/dom": "^1.6.4",
+		"@roenlie/mimic-core": "workspace:^",
+		"fast-equals": "^5.0.1",
+		"nanoid": "^5.0.7"
+	},
+	"peerDependencies": {
+		"lit": "*"
+	},
+	"devDependencies": {
+		"happy-dom": "^14.7.1",
+		"lit": "^3.1.3"
+	},
+	"sideEffects": [
+		"dist/injectable/core.js"
+	]
+}
