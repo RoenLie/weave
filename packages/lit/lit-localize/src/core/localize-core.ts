@@ -17,9 +17,10 @@ export abstract class TermStore {
 
 	protected store = new Map<string, string>();
 	protected listeners = new Map<string, Set<WeakRef<Function>>>();
-	protected gcRegistry = new FinalizationRegistry<{ref: WeakRef<Function>; set: Set<WeakRef<Function>>;}>(
-		({ set, ref }) => void set.delete(ref),
-	);
+	protected gcRegistry = new FinalizationRegistry<{
+		ref: WeakRef<Function>;
+		set: Set<WeakRef<Function>>;
+	}>(({ set, ref }) => void set.delete(ref));
 
 	protected langChangeObs = new MutationObserver(() => this.onLanguageChange());
 
@@ -135,7 +136,9 @@ export abstract class TermStore {
 		return document.documentElement.getAttribute('lang') ?? 'en';
 	}
 
-	protected abstract onTermDoesNotExist(requestedTerm: string, lang: string): Promise<void> | void
+	protected abstract onTermDoesNotExist(
+		requestedTerm: string, lang: string
+	): Promise<void> | void;
 
 }
 
