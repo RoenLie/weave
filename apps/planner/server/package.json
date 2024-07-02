@@ -17,24 +17,24 @@
 		"workspace-to-file-deps": "pnpm tsm ./scripts/modify-deps/workspace-to-file-deps.ts"
 	},
 	"dependencies": {
-		"@azure/cosmos": "^3.17.3",
-		"@faker-js/faker": "^7.6.0",
-		"@nestjs/common": "^9.4.0",
-		"@nestjs/core": "^9.4.0",
-		"@nestjs/platform-express": "^9.4.0",
-		"@nestjs/throttler": "^4.0.0",
-		"@roenlie/mimic-core": "^0.0.7",
+		"@azure/cosmos": "^4.0.0",
+		"@faker-js/faker": "^8.4.1",
+		"@nestjs/common": "^10.3.10",
+		"@nestjs/core": "^10.3.10",
+		"@nestjs/platform-express": "^10.3.10",
+		"@nestjs/throttler": "^5.2.0",
+		"@roenlie/mimic-core": "workspace:*",
 		"@roenlie/planner-entities": "workspace:*",
-		"dotenv": "^16.0.3",
-		"nanoid": "^4.0.2",
 		"@roenlie/reflect-metadata": "workspace:*",
+		"dotenv": "^16.0.3",
+		"nanoid": "^5.0.7",
 		"rxjs": "^7.2.0",
 		"tslib": "^2.5.0"
 	},
 	"devDependencies": {
-		"@nestjs/cli": "^9.4.0",
-		"@nestjs/schematics": "^9.1.0",
-		"@nestjs/testing": "^9.4.0",
+		"@nestjs/cli": "^10.4.0",
+		"@nestjs/schematics": "^10.1.2",
+		"@nestjs/testing": "^10.3.10",
 		"@roenlie/package-toolbox": "workspace:*"
 	}
 }

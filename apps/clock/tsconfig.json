@@ -1,0 +1,13 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {},
+	"include": [
+		"./**/*.ts",
+		"./**/*.js",
+	],
+	"exclude": [
+		"./**/*.test.ts",
+		"./**/*.bench.ts",
+		"./**/*.editor.d.ts"
+	]
+}

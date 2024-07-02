@@ -40,7 +40,7 @@
 		"@codemirror/view": "^6.23.0",
 		"@lezer/highlight": "^1.2.0",
 		"@lezer/markdown": "^1.2.0",
-		"@roenlie/mimic-core": "^0.0.88",
+		"@roenlie/mimic-core": "workspace:*",
 		"cm6-theme-basic-dark": "^0.2.0",
 		"highlight.js": "^11.9.0",
 		"lit": "^3.1.0",

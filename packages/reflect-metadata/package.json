@@ -35,8 +35,5 @@
 		"build::js": "vite build",
 		"build::ts": "tsc --project ./src/tsconfig.json"
 	},
-	"dependencies": {},
-	"peerDependencies": {},
-	"devDependencies": {},
-	"sideEffects": []
+	"sideEffects": false
 }
