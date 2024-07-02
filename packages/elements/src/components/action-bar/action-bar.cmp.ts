@@ -1,7 +1,7 @@
 import { autoUpdate, computePosition, flip, offset, type Placement, shift } from '@floating-ui/dom';
-import { queryId, watch } from '@roenlie/mimic-lit/decorators';
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { queryId, watch } from '@roenlie/lit-utilities/decorators';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html } from 'lit';
 import { queryAssignedElements, state } from 'lit/decorators.js';
 import { map } from 'lit/directives/map.js';

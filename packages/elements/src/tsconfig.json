@@ -8,7 +8,7 @@
 		"emitDeclarationOnly": false,
 		"types": [
 			"vite/client",
-			"vite-plugin-import-css-sheet/client"
+			"@roenlie/vite-plugin-import-css-sheet/client"
 		]
 	},
 	"include": [

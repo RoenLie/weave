@@ -1,4 +1,4 @@
-import { InjectableElement } from '@roenlie/mimic-lit/injectable';
+import { InjectableElement } from '@roenlie/lit-utilities/injectable';
 
 
 export class EntityPanelElement extends InjectableElement {

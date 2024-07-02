@@ -1,5 +1,5 @@
 {
-	"name": "@rotul/planner-client",
+	"name": "@roenlie/planner-client",
 	"version": "0.0.1",
 	"description": "Spiritual successor to Absence.",
 	"private": true,
@@ -27,24 +27,23 @@
 		"@floating-ui/dom": "^1.2.6",
 		"@lit-labs/context": "^0.3.0",
 		"@lukeed/uuid": "^2.0.1",
-		"@roenlie/mimic-core": "^0.0.8",
-		"@roenlie/mimic-lit": "^0.0.7",
-		"@roenlie/mimic-router": "^1.0.1",
-		"@rotul/planner-entities": "workspace:*",
+		"@roenlie/mimic-core": "workspace:*",
+		"@roenlie/lit-utilities": "workspace:*",
+		"@roenlie/lit-router": "workspace:*",
+		"@roenlie/planner-entities": "workspace:*",
 		"deepmerge-ts": "^5.1.0",
 		"fast-equals": "^5.0.1",
 		"inversify": "^6.0.1",
 		"lit": "^2.7.2",
 		"nanoid": "^4.0.2",
-		"reflect-metadata": "^0.1.13",
-		"signia": "^0.1.3",
+		"@roenlie/reflect-metadata": "workspace:*",
 		"tabbable": "^6.1.1",
 		"ts-pattern": "^4.2.2",
 		"tslib": "^2.5.0"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^7.6.0",
-		"@roenlie/package-toolbox": "^0.0.3",
+		"@roenlie/package-toolbox": "workspace:*",
 		"dotenv": "^16.0.3",
 		"vite": "^4.2.2"
 	}

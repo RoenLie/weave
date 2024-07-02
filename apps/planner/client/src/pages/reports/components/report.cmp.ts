@@ -1,4 +1,4 @@
-import { ContainerModule, InjectableElement, injectableElement, injectProp } from '@roenlie/mimic-lit/injectable';
+import { ContainerModule, InjectableElement, injectableElement, injectProp } from '@roenlie/lit-utilities/injectable';
 import { css, html } from 'lit';
 
 import { componentStyles } from '../../../features/shared-styles/component-styles.js';

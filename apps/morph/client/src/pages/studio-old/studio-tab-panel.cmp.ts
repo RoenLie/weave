@@ -1,6 +1,6 @@
 import { MMButton } from '@roenlie/mimic-elements/button';
 import { MMIcon } from '@roenlie/mimic-elements/icon';
-import { MimicElement, customElement } from '@roenlie/mimic-lit/element';
+import { MimicElement, customElement } from '@roenlie/lit-utilities/element';
 import { css, html } from 'lit';
 import { queryAssignedElements } from 'lit/decorators.js';
 

@@ -20,7 +20,7 @@
 	},
 	"dependencies": {
 		"tslib": "^2.6.2",
-		"@roenlie/mirage-docs": "workspace:^"
+		"@roenlie/mirage-docs": "workspace:*"
 	},
 	"devDependencies": {
 		"vite": "^5.0.10"

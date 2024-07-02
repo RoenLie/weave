@@ -1,5 +1,5 @@
 import { findActiveElement } from '@roenlie/mimic-core/dom';
-import { EventController } from '@roenlie/mimic-lit/controllers';
+import { EventController } from '@roenlie/lit-utilities/controllers';
 import { css, html, LitElement } from 'lit';
 import { customElement, property, queryAssignedElements } from 'lit/decorators.js';
 

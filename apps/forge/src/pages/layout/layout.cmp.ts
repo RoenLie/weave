@@ -5,7 +5,7 @@ import {
 	customElement,
 	inject,
 } from '@roenlie/lit-aegis';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 

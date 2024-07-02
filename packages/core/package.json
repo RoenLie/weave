@@ -1,20 +1,12 @@
 {
 	"name": "@roenlie/mimic-core",
 	"version": "99.99.99",
-	"description": "A versatile collection of TypeScript helper functions and utilities, designed to enhance your development experience with a treasure trove of valuable tools.",
+	"description": "A versatile collection of TypeScript helper functions and utilities",
 	"author": {
 		"name": "Kristoffer Roen-Lie",
 		"url": "https://github.com/RoenLie"
 	},
 	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/RoenLie/mimic.git"
-	},
-	"bugs": {
-		"url": "https://github.com/RoenLie/mimic/issues"
-	},
-	"homepage": "https://github.com/RoenLie/mimic#readme",
 	"type": "module",
 	"types": "./dist/lib/index.d.ts",
 	"main": "./dist/lib/index.js",

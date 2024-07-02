@@ -1,6 +1,6 @@
-import { SlotController } from '@roenlie/mimic-lit/controllers';
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { SlotController } from '@roenlie/lit-utilities/controllers';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html } from 'lit';
 import { property, query } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';

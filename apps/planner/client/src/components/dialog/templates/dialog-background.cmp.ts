@@ -1,5 +1,5 @@
 import { animateTo, getAnimation, setDefaultAnimation, stopAnimations } from '@roenlie/mimic-core/animation';
-import { watch } from '@roenlie/mimic-lit/decorators';
+import { watch } from '@roenlie/lit-utilities/decorators';
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 

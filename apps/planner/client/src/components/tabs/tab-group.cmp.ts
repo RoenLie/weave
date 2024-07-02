@@ -2,8 +2,8 @@ import { animateTo, animationSpeed, stopAnimations } from '@roenlie/mimic-core/a
 import { paintCycle } from '@roenlie/mimic-core/async';
 import { emitEvent, scrollIntoView } from '@roenlie/mimic-core/dom';
 import { oneOf } from '@roenlie/mimic-core/validation';
-import { KeyboardController, LocalizeController } from '@roenlie/mimic-lit/controllers';
-import { watch } from '@roenlie/mimic-lit/decorators';
+import { KeyboardController, LocalizeController } from '@roenlie/lit-utilities/controllers';
+import { watch } from '@roenlie/lit-utilities/decorators';
 import { css, html, LitElement } from 'lit';
 import { customElement, property, query, queryAssignedElements, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

@@ -1,5 +1,5 @@
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, render } from 'lit';
 
 import { MMAlert } from './alert.cmp.js';

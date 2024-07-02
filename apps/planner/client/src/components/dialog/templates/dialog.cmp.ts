@@ -2,7 +2,7 @@ import { paintCycle } from '@roenlie/mimic-core/async';
 import { findActiveElement, getTabbableBoundary } from '@roenlie/mimic-core/dom';
 import { noop } from '@roenlie/mimic-core/function';
 import { typeOf } from '@roenlie/mimic-core/validation';
-import { EventController, KeyboardController } from '@roenlie/mimic-lit/controllers';
+import { EventController, KeyboardController } from '@roenlie/lit-utilities/controllers';
 import { css, html, LitElement, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';

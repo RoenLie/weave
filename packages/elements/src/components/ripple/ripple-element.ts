@@ -1,6 +1,6 @@
 import { emitEvent } from '@roenlie/mimic-core/dom';
 import { type Fn } from '@roenlie/mimic-core/types';
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { css, html } from 'lit';
 import { property } from 'lit/decorators.js';
 

@@ -23,21 +23,20 @@
 		"@faker-js/faker": "^8.4.1",
 		"@floating-ui/dom": "^1.6.5",
 		"@lit-labs/preact-signals": "^1.0.2",
-		"@roenlie/lit-aegis": "^1.0.46",
-		"@roenlie/lit-context": "^1.0.46",
-		"@roenlie/lit-state-store": "^0.0.55",
-		"@roenlie/mimic-core": "^0.0.87",
-		"@roenlie/mimic-elements": "^0.0.82",
-		"@roenlie/mimic-lit": "^0.0.97",
-		"@vaadin/router": "^1.7.5",
+		"@roenlie/lit-aegis": "workspace:*",
+		"@roenlie/lit-context": "workspace:*",
+		"@roenlie/lit-state-store": "workspace:*",
+		"@roenlie/mimic-core": "workspace:*",
+		"@roenlie/mimic-elements": "workspace:*",
+		"@roenlie/lit-utilities": "workspace:*",
 		"lit": "3.1.3",
 		"monaco-editor": "^0.48.0",
 		"socket.io-client": "^4.7.4",
 		"tslib": "^2.6.2"
 	},
 	"devDependencies": {
-		"@roenlie/vite-plugin-html-modules": "workspace:^",
-		"vite-plugin-import-css-sheet": "^1.0.9"
+		"@roenlie/vite-plugin-html-modules": "workspace:*",
+		"@roenlie/vite-plugin-import-css-sheet": "workspace:*"
 	},
 	"vaadin": {
 		"disableUsageStatistics": true

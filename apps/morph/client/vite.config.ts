@@ -1,6 +1,6 @@
 import { htmlModules } from '@roenlie/vite-plugin-html-modules';
 import { defineConfig } from 'vite';
-import { viteImportCssSheet } from 'vite-plugin-import-css-sheet';
+import { viteImportCssSheet } from '@roenlie/vite-plugin-import-css-sheet';
 
 
 export default defineConfig({

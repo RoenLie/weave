@@ -1,5 +1,5 @@
 {
-	"name": "@roenlie/mimic-lit",
+	"name": "@roenlie/lit-utilities",
 	"version": "99.99.99",
 	"description": "Extensions and utilities for the LIT framework.",
 	"author": {
@@ -60,16 +60,13 @@
 	},
 	"dependencies": {
 		"@floating-ui/dom": "^1.6.4",
-		"@roenlie/mimic-core": "workspace:^",
+		"@roenlie/mimic-core": "workspace:*",
 		"fast-equals": "^5.0.1",
-		"nanoid": "^5.0.7"
-	},
-	"peerDependencies": {
-		"lit": "*"
+		"nanoid": "^5.0.7",
+		"lit": "^3.1.3"
 	},
 	"devDependencies": {
-		"happy-dom": "^14.7.1",
-		"lit": "^3.1.3"
+		"happy-dom": "^14.7.1"
 	},
 	"sideEffects": [
 		"dist/injectable/core.js"

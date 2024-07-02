@@ -5,6 +5,12 @@
 	"version": "1.0.0",
 	"type": "module",
 	"main": "pathToMain",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
 	"scripts": {
 		"build": "pnpm run --sequential \"/^build::.*/\"",
 		"build::index": "pkg-toolbox build-indexes",
@@ -18,11 +24,5 @@
 	"devDependencies": {
 		"@types/better-sqlite3": "^7.6.10",
 		"vite": "^5.3.2"
-	},
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"default": "./dist/index.js"
-		}
 	}
 }

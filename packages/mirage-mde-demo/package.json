@@ -7,6 +7,6 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@roenlie/mirage-mde": "workspace:^"
+		"@roenlie/mirage-mde": "workspace:*"
 	}
 }

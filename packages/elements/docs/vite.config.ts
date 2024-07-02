@@ -1,5 +1,5 @@
 import { defineDocConfig } from '@roenlie/mirage-docs/server';
-import { importCSSSheet } from 'vite-plugin-import-css-sheet';
+import { importCSSSheet } from '@roenlie/vite-plugin-import-css-sheet';
 
 
 export default defineDocConfig(

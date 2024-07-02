@@ -1,4 +1,4 @@
-import { ContainerModule } from '@roenlie/mimic-lit/injectable';
+import { ContainerModule } from '@roenlie/lit-utilities/injectable';
 
 import { $EntityView } from '../../../features/entity-view/entity-context.js';
 

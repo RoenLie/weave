@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { range } from '@roenlie/mimic-core/array';
 import { type Column, FragmentTable, type Options } from '@roenlie/mimic-elements/fragment-table';
 import { MMTypeahead } from '@roenlie/mimic-elements/typeahead';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import { map } from 'lit/directives/map.js';

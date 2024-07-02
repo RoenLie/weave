@@ -1,9 +1,9 @@
 import { emitEvent, type EventOf } from '@roenlie/mimic-core/dom';
 import { Enum, type InferEnum } from '@roenlie/mimic-core/enum';
 import { invariant } from '@roenlie/mimic-core/validation';
-import { PopoutController } from '@roenlie/mimic-lit/controllers';
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { PopoutController } from '@roenlie/lit-utilities/controllers';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';

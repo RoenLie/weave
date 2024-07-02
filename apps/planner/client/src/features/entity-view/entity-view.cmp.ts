@@ -1,6 +1,6 @@
-import { provide } from '@roenlie/mimic-lit/context';
-import { watch } from '@roenlie/mimic-lit/decorators';
-import { $Container, InjectableElement, injectableElement, injectProp } from '@roenlie/mimic-lit/injectable';
+import { provide } from '@roenlie/lit-utilities/context';
+import { watch } from '@roenlie/lit-utilities/decorators';
+import { $Container, InjectableElement, injectableElement, injectProp } from '@roenlie/lit-utilities/injectable';
 import { Container, ContainerModule } from 'inversify';
 import { css, html, nothing } from 'lit';
 import { property } from 'lit/decorators.js';

@@ -1,6 +1,6 @@
 import { RecordOf } from '@roenlie/mimic-core/types';
-import { ContainerModule } from '@roenlie/mimic-lit/injectable';
-import { LitStateStore, type Stored, stored } from '@roenlie/mimic-lit/state-store';
+import { ContainerModule } from '@roenlie/lit-utilities/injectable';
+import { LitStateStore, type Stored, stored } from '@roenlie/lit-utilities/state-store';
 import { injectable } from 'inversify';
 
 import { $EntityView } from './entity-context.js';

@@ -2,8 +2,8 @@ import { arrow, autoUpdate, computePosition, flip, offset, type Placement, shift
 import { animateTo, getAnimation, parseDuration, setDefaultAnimation, stopAnimations } from '@roenlie/mimic-core/animation';
 import { createPromiseResolver } from '@roenlie/mimic-core/async';
 import { emitEvent, hasKeyboardFocus, waitForEvent } from '@roenlie/mimic-core/dom';
-import { EventController } from '@roenlie/mimic-lit/controllers';
-import { watch } from '@roenlie/mimic-lit/decorators';
+import { EventController } from '@roenlie/lit-utilities/controllers';
+import { watch } from '@roenlie/lit-utilities/decorators';
 import { html, LitElement, TemplateResult } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

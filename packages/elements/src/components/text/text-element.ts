@@ -1,5 +1,5 @@
 import type { stringliteral } from '@roenlie/mimic-core/types';
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { css, html } from 'lit';
 import { property, state } from 'lit/decorators.js';
 

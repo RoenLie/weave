@@ -28,12 +28,12 @@
 	},
 	"scripts": {
 		"test": "vitest --run",
-		"build": "pnpm run \"/^build-.*/\"",
-		"build-clean": "rimraf dist",
-		"build-indexes": "package-toolbox build-indexes",
-		"build-exports": "package-toolbox build-exports",
-		"build-js": "vite build",
-		"build-ts": "tsc --project ./src/tsconfig.json"
+		"build": "pnpm run \"/^build::.*/\"",
+		"build::clean": "rimraf dist",
+		"build::indexes": "package-toolbox build-indexes",
+		"build::exports": "package-toolbox build-exports",
+		"build::js": "vite build",
+		"build::ts": "tsc --project ./src/tsconfig.json"
 	},
 	"dependencies": {},
 	"peerDependencies": {},

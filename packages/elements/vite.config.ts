@@ -1,6 +1,6 @@
 import { componentAutoImporter, libConfig } from '@roenlie/package-toolbox/vite-utils';
 import { defineConfig } from 'vite';
-import { importCSSSheet } from 'vite-plugin-import-css-sheet';
+import { importCSSSheet } from '@roenlie/vite-plugin-import-css-sheet';
 
 
 export default defineConfig(libConfig({

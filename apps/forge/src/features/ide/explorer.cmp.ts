@@ -6,7 +6,7 @@ import {
 import { MMButton } from '@roenlie/mimic-elements/button';
 import { MMIcon } from '@roenlie/mimic-elements/icon';
 import { MMTooltip } from '@roenlie/mimic-elements/tooltip';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { html } from 'lit';
 import { when } from 'lit/directives/when.js';
 import { join, normalize, parse, sep } from 'posix-path-browser';

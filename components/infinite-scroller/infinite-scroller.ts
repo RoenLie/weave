@@ -1,7 +1,7 @@
 import { debounce, withDebounce } from '@roenlie/mimic-core/timing';
 import type { RecordOf } from '@roenlie/mimic-core/types';
-import { queryId } from '@roenlie/mimic-lit/decorators';
-import { MimicElement, customElement } from '@roenlie/mimic-lit/element';
+import { queryId } from '@roenlie/lit-utilities/decorators';
+import { MimicElement, customElement } from '@roenlie/lit-utilities/element';
 import { type CSSResultGroup, css, html } from 'lit';
 import { property, query } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';

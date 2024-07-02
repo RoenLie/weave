@@ -1,4 +1,4 @@
-import { Route } from '@roenlie/mimic-router';
+import { Route } from '@roenlie/lit-router';
 
 import { routeAnimation } from '../../app/routes/route-animation.js';
 

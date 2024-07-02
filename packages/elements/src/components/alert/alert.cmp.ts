@@ -3,10 +3,10 @@ import {
 	setDefaultAnimation, stopAnimations,
 } from '@roenlie/mimic-core/animation';
 import { emitEvent, waitForEvent } from '@roenlie/mimic-core/dom';
-import { SlotController } from '@roenlie/mimic-lit/controllers';
-import { watch } from '@roenlie/mimic-lit/decorators';
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { SlotController } from '@roenlie/lit-utilities/controllers';
+import { watch } from '@roenlie/lit-utilities/decorators';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html, type PropertyValues } from 'lit';
 import {  property, query } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

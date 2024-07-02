@@ -1,6 +1,6 @@
 import type { PathOf } from '@roenlie/mimic-core/types';
-import { queryId } from '@roenlie/mimic-lit/decorators';
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
+import { queryId } from '@roenlie/lit-utilities/decorators';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { css, CSSResult, html, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 

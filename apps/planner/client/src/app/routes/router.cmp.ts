@@ -1,4 +1,4 @@
-import { RouteHistoryUrl } from '@roenlie/mimic-router';
+import { RouteHistoryUrl } from '@roenlie/lit-router';
 import { css, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 

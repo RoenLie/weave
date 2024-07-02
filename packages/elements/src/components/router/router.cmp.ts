@@ -1,4 +1,4 @@
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { type Context, type Route, Router } from '@vaadin/router';
 import { css } from 'lit';
 import { property } from 'lit/decorators.js';

@@ -10,7 +10,7 @@ import { domId } from '@roenlie/mimic-core/dom';
 import { forOf } from '@roenlie/mimic-core/iterators';
 import { MMIcon } from '@roenlie/mimic-elements/icon';
 import { tooltip } from '@roenlie/mimic-elements/tooltip';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { html } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 import { map } from 'lit/directives/map.js';

@@ -1,4 +1,4 @@
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { html } from 'lit';
 
 @customElement('m-studio-page')

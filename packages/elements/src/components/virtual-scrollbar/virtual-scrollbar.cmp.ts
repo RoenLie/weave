@@ -1,8 +1,8 @@
 import { isPromise } from '@roenlie/mimic-core/async';
 import { debounce } from '@roenlie/mimic-core/timing';
-import { queryId, watch } from '@roenlie/mimic-lit/decorators';
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { queryId, watch } from '@roenlie/lit-utilities/decorators';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, type CSSResultGroup, html } from 'lit';
 import { eventOptions, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

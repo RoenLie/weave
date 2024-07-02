@@ -36,7 +36,7 @@ export const fromList = <
 	TObj extends Rec,
 	TIdProp extends keyof TObj,
 	TParentProp extends keyof TObj,
-	TChildProp extends string,
+	TChildProp extends string
 >(list: TObj[], idProp: TIdProp, parentProp: TParentProp, childProp: TChildProp) => {
 	type Item = TObj & {
 		[key in TIdProp]?: Key;

@@ -1,6 +1,6 @@
 import { MMActionBar } from '@roenlie/mimic-elements/action-bar'
 import { MMButton } from '@roenlie/mimic-elements/button';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 

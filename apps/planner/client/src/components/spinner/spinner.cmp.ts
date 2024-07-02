@@ -1,4 +1,4 @@
-import { LocalizeController } from '@roenlie/mimic-lit/controllers';
+import { LocalizeController } from '@roenlie/lit-utilities/controllers';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 

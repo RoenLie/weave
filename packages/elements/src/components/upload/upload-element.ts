@@ -1,9 +1,9 @@
 import { emitEvent, isTouch } from '@roenlie/mimic-core/dom';
 import { format } from '@roenlie/mimic-core/string';
-import { EventController, SlotController } from '@roenlie/mimic-lit/controllers';
-import { watch } from '@roenlie/mimic-lit/decorators';
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
-import { sharedStyles } from '@roenlie/mimic-lit/styles';
+import { EventController, SlotController } from '@roenlie/lit-utilities/controllers';
+import { watch } from '@roenlie/lit-utilities/decorators';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
+import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { loadTerms } from '@roenlie/mimic-localize/core';
 import { tTerm } from '@roenlie/mimic-localize/directive';
 import { css, html, type PropertyValues } from 'lit';

@@ -12,7 +12,7 @@ export const importCSSSheet = (options?: Partial<{
 
 	return {
 		enforce: 'pre',
-		name:    'vite-plugin-import-css-sheet',
+		name:    '@roenlie/vite-plugin-import-css-sheet',
 		configResolved(config) {
 			importSheet = new ImportCSSSheet(config, transformers, additionalCode);
 		},

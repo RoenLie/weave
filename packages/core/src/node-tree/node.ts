@@ -12,9 +12,9 @@ export class Node<
 		return this.#parent;
 	}
 
-	#parent?: TNode;
-	#proxy: TNode;
-	#original: TObj;
+	#parent?:   TNode;
+	#proxy:     TNode;
+	#original:  TObj;
 	#childProp: TProp;
 
 	constructor(
@@ -50,7 +50,7 @@ export class Node<
 		traverse(this.#proxy);
 	}
 
-	#walkBreath(fn: (node: TNode) => void | false) {
+	#walkBreath(fn: (node: TNode) => undefined | false) {
 		const breadthTraverse = (node: TNode) => {
 			const queue: TNode[] = [];
 			queue.push(...(node[this.#childProp] ?? []) as TNode[]);

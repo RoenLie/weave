@@ -5,9 +5,9 @@ import {
 import { animateTo, getAnimation, parseDuration, stopAnimations } from '@roenlie/mimic-core/animation';
 import { createPromiseResolver } from '@roenlie/mimic-core/async';
 import { emitEvent, hasKeyboardFocus, waitForEvent } from '@roenlie/mimic-core/dom';
-import { EventController } from '@roenlie/mimic-lit/controllers';
-import { watch } from '@roenlie/mimic-lit/decorators';
-import { customElement, MimicElement } from '@roenlie/mimic-lit/element';
+import { EventController } from '@roenlie/lit-utilities/controllers';
+import { watch } from '@roenlie/lit-utilities/decorators';
+import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { html, type TemplateResult } from 'lit';
 import { property, query } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

@@ -1,7 +1,7 @@
 import { type ContextProp, consume } from '@roenlie/lit-context';
 import { maybe } from '@roenlie/mimic-core/async';
 import { MMButton } from '@roenlie/mimic-elements/button';
-import { MimicElement, customElement } from '@roenlie/mimic-lit/element';
+import { MimicElement, customElement } from '@roenlie/lit-utilities/element';
 import { LitElement, html } from 'lit';
 import { query, state } from 'lit/decorators.js';
 import { choose } from 'lit/directives/choose.js';

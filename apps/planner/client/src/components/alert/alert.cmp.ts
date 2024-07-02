@@ -1,7 +1,7 @@
 import { animateTo, animationSpeed, getAnimation, setDefaultAnimation, stopAnimations } from '@roenlie/mimic-core/animation';
 import { emitEvent, waitForEvent } from '@roenlie/mimic-core/dom';
-import { HasSlotController, LocalizeController } from '@roenlie/mimic-lit/controllers';
-import { watch } from '@roenlie/mimic-lit/decorators';
+import { HasSlotController, LocalizeController } from '@roenlie/lit-utilities/controllers';
+import { watch } from '@roenlie/lit-utilities/decorators';
 import { css, html, LitElement, PropertyValues } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

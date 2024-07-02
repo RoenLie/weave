@@ -1,6 +1,6 @@
 import { EventOf } from '@roenlie/mimic-core/dom';
-import { consume } from '@roenlie/mimic-lit/context';
-import { $Container, injectableElement, injectProp } from '@roenlie/mimic-lit/injectable';
+import { consume } from '@roenlie/lit-utilities/context';
+import { $Container, injectableElement, injectProp } from '@roenlie/lit-utilities/injectable';
 import { JournalEntry } from '@rotul/planner-entities';
 import { Container } from 'inversify';
 import { css, html } from 'lit';

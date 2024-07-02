@@ -1,7 +1,7 @@
 import { animateTo, getAnimation, stopAnimations } from '@roenlie/mimic-core/animation';
 import { Hooks } from '@roenlie/mimic-core/coms';
 import { RecordOf } from '@roenlie/mimic-core/types';
-import { EventController, KeyboardController, LocalizeController } from '@roenlie/mimic-lit/controllers';
+import { EventController, KeyboardController, LocalizeController } from '@roenlie/lit-utilities/controllers';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
