@@ -1,0 +1,130 @@
+:host {
+	overflow: hidden;
+	display: grid;
+	margin-block: 10px;
+	background-color: var(--shadow1);
+	border: 1px solid var(--background-strong);
+	border-radius: 12px;
+}
+
+s-tab {
+	cursor: pointer;
+}
+
+s-placeholder {
+	display: grid;
+	place-items: center;
+	opacity: 0.5;
+}
+
+s-editor-placeholder {
+	display: grid;
+	place-items: center;
+	background-color: var(--surface);
+}
+
+s-action-container {
+	overflow: auto;
+	display: grid;
+	grid-auto-rows: max-content;
+	gap: 8px;
+	padding-inline: 8px;
+	margin-top: 40px;
+}
+s-action-container::-webkit-scrollbar-thumb {
+	border-top-right-radius: 8px;
+	border-bottom-right-radius: 8px;
+}
+
+s-large {
+	overflow: hidden;
+	padding: 8px;
+	display: grid;
+	grid-template-columns: auto 15px 1fr 15px auto;
+
+	& s-nav-panel {
+		overflow: hidden;
+		display: grid;
+		grid-template-rows: max-content 15px 1fr;
+		padding-right: 8px;
+		width: 200px;
+	}
+
+	& m-module-nav-selector:first-of-type {
+		height: 250px;
+	}
+
+	& m-module-nav-selector:not(:last-of-type) {
+		padding-bottom: 8px;
+	}
+
+	& m-editor {
+		background-color: var(--surface);
+		border: 1px solid var(--background);
+		border-inline: none;
+	}
+
+	& m-drag-handle {
+		background-color: var(--background);
+
+		&.vertical:first-of-type {
+			border-top-left-radius: 8px;
+			border-bottom-left-radius: 8px;
+		}
+		&.vertical:last-of-type {
+			border-top-right-radius: 8px;
+			border-bottom-right-radius: 8px;
+		}
+		&.horizontal {
+			border-radius: 4px;
+		}
+	}
+
+	& m-studio-tab-panel {
+		padding-left: 8px;
+		width: 25vw;
+	}
+}
+
+
+s-medium {
+	overflow: hidden;
+	padding: 8px;
+	padding-top: 0px;
+	display: grid;
+	grid-template-rows: max-content 15px 1fr;
+
+	& s-nav-panel {
+		overflow: hidden;
+		display: grid;
+		grid-template-columns: max-content 15px 1fr 15px max-content;
+		height: 200px;
+		padding-bottom: 8px;
+	}
+
+	& m-module-nav-selector:nth-of-type(1),
+	& m-module-nav-selector:nth-of-type(3) {
+		width: 300px;
+	}
+	& m-module-nav-selector {
+		padding-right: 8px;
+	}
+
+	& m-module-nav-selector:not(:nth-of-type(1)),
+	& s-action-container {
+		padding-left: 8px;
+	}
+
+	& m-drag-handle {
+		background-color: var(--background);
+
+		&.vertical:first-of-type {
+			border-radius: 4px;
+		}
+		&.horizontal {
+			border-radius: 4px;
+			margin-top: 40px;
+		}
+	}
+
+}

@@ -1,0 +1,32 @@
+{
+	"name": "name",
+	"description": "description",
+	"authors": "author",
+	"version": "1.0.0",
+	"type": "module",
+	"main": "pathToMain",
+	"scripts": {
+		"dev": "vite"
+	},
+	"dependencies": {
+		"@lit-labs/preact-signals": "^1.0.2",
+		"@roenlie/lit-aegis": "^1.0.46",
+		"@roenlie/mimic-core": "^0.0.87",
+		"@roenlie/mimic-elements": "^0.0.82",
+		"@roenlie/mimic-lit": "^0.0.97",
+		"@roenlie/morph-components": "workspace:^",
+		"@vaadin/router": "^1.7.5",
+		"keystone-core": "file:../../../../keystone/packages/keystone-core",
+		"lit": "3.1.2",
+		"posix-path-browser": "workspace:^",
+		"quill": "2.0.1",
+		"tslib": "^2.6.2",
+		"typescript": "^5.4.5"
+	},
+	"devDependencies": {
+		"eslint-plugin-keystone": "file:../../../../keystone/packages/keystone-eslint",
+		"keystone-tsplugin": "file:../../../../keystone/packages/keystone-tsplugin",
+		"keystone-vite": "file:../../../../keystone/packages/keystone-vite",
+		"vite-plugin-import-css-sheet": "^1.0.9"
+	}
+}

@@ -1,0 +1,20 @@
+:host {
+	height: 100%;
+	display: grid;
+	grid-template-rows: max-content 1fr;
+}
+s-explorer-header {
+	display: flex;
+	height: 42px;
+	justify-content: space-between;
+	align-items: center;
+	padding-left: 12px;
+	padding-right: 8px;
+	gap: 8px;
+}
+s-explorer-content {
+	overflow: hidden;
+	display: grid;
+	transition: grid-template-rows 300ms ease-out;
+	grid-auto-rows: min-content;
+}

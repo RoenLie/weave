@@ -1,0 +1,18 @@
+body {
+	display: grid;
+	height: 100dvh;
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+	background-color: cadetblue;
+}
+
+:root {
+	font-family: 'Inter', sans-serif;
+}
+
+@supports (font-variation-settings: normal) {
+	:root {
+		font-family: 'Inter var', sans-serif;
+	}
+}

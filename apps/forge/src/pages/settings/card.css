@@ -1,0 +1,14 @@
+s-card {
+	display: block;
+	height: 200px;
+	aspect-ratio: 1/1;
+	border: 2px solid green;
+}
+
+s-card-body {
+	display: block;
+}
+
+s-card-footer {
+	display: block;
+}

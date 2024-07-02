@@ -1,0 +1,15 @@
+:root { font-family: Inter, sans-serif; }
+@supports (font-variation-settings: normal) {
+	:root { font-family: InterVariable, sans-serif; }
+}
+body {
+	overflow: hidden;
+	padding: 0;
+	margin: 0;
+	display: grid;
+	grid-template-columns: 100dvw;
+	grid-template-rows: 100dvh;
+
+	color: white;
+	background-color: rgb(30 30 30);
+}

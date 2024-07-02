@@ -1,0 +1,34 @@
+{
+	"name": "@roenlie/monaco-editor-wc",
+	"description": "Web component wrapping the monaco editor.",
+	"author": {
+		"name": "Kristoffer Roen-Lie"
+	},
+	"files": [
+		"dist"
+	],
+	"license": "MIT",
+	"version": "1.0.7",
+	"type": "module",
+	"types": "./dist/monaco-editor-wc.d.ts",
+	"main": "./dist/index.js",
+	"exports": {
+		".": {
+			"types": "./dist/monaco-editor-wc.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"dev": "vite --config ./demo/vite.config.ts",
+		"build": "pnpm run --sequential \"/^build::.+/\"",
+		"build::js": "vite build",
+		"build::ts": "tsc --project ./src/tsconfig.build.json",
+		"build::ts-bundle": "api-extractor run"
+	},
+	"devDependencies": {
+		"lit": "^3.1.3",
+		"monaco-editor": "^0.48.0",
+		"tslib": "^2.6.2",
+		"vite": "^5.2.11"
+	}
+}

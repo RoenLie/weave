@@ -1,0 +1,21 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"rootDir": "..",
+		"baseUrl": ".",
+		"types": [
+			"node"
+		],
+		"useDefineForClassFields": true
+	},
+	"include": [
+		"./**/*.ts",
+		"./**/*.d.ts",
+		"../src/**/*.ts",
+		"../src/**/*.d.ts"
+	],
+	"exclude": [
+		"dist",
+		"node_modules"
+	]
+}

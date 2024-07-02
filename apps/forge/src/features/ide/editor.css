@@ -1,0 +1,18 @@
+:host {
+	height: 100%;
+	display: grid;
+	grid-template: "script    preview" 1fr
+	               "component preview" 1fr
+						/ 1fr 1fr;
+}
+m-script-editor {
+	grid-area: script;
+}
+monaco-editor {
+	grid-area: component;
+	border-top: var(--layout-border);
+}
+m-component-preview {
+	grid-area: preview;
+	border-left: var(--layout-border);
+}

@@ -1,0 +1,22 @@
+s-diary-box {
+	display: grid;
+
+	background-color: var(--_box-bg);
+	min-height: 300px;
+	border-radius: 6px;
+	grid-row: span 2;
+}
+.diary-goal-box {
+	grid-template-rows: max-content 1fr;
+
+	& s-quill {
+		display: grid;
+		grid-template-rows: max-content 1fr;
+	}
+
+	& textarea {
+		background-color: transparent;
+		border: none;
+		resize: none;
+	}
+}

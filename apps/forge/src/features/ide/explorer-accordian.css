@@ -1,0 +1,41 @@
+:host {
+	display: contents;
+}
+s-accordian {
+	overflow: hidden;
+	display: grid;
+	grid-template-rows: max-content 1fr;
+
+	&:not(:hover) s-actions {
+		display: none;
+	}
+}
+s-accordian-header {
+	display: grid;
+	grid-template-columns: max-content 1fr max-content;
+	align-items: center;
+	gap: 4px;
+	height: 32px;
+	padding-left: 4px;
+	background-color: rgb(33, 37, 43);
+	border-top: 1px solid rgb(13, 17, 23);
+	text-transform: uppercase;
+	cursor: pointer;
+	user-select: none;
+
+	span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	s-actions {
+		display: flex;
+	}
+}
+s-slot-wrapper {
+	--scrollbar-thumb-bg: rgb(125 125 125 / 20%);
+
+	overflow: auto;
+	overflow-x: hidden;
+}

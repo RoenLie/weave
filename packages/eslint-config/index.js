@@ -278,8 +278,10 @@ const base = tseslint.config({
 				'ignoreRestSiblings':             true,
 			},
 		],
-		'@typescript-eslint/no-namespace':      'off',
-		'@typescript-eslint/no-dynamic-delete': 'off',
+		'@typescript-eslint/no-namespace':           'off',
+		'@typescript-eslint/no-dynamic-delete':      'off',
+		'@typescript-eslint/no-extraneous-class':    'off',
+		'@typescript-eslint/no-useless-constructor': 'off',
 	},
 });
 

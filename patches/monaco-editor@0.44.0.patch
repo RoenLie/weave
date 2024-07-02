@@ -1,0 +1,14 @@
+diff --git a/esm/vs/editor/browser/controller/mouseHandler.js b/esm/vs/editor/browser/controller/mouseHandler.js
+index 6d01d1933e820ed8fd5b4c350a063da54964ad96..67c646a9789df70dc3f76a3ccb20e874952b9f0a 100644
+--- a/esm/vs/editor/browser/controller/mouseHandler.js
++++ b/esm/vs/editor/browser/controller/mouseHandler.js
+@@ -36,7 +36,8 @@ export class MouseHandler extends ViewEventHandler {
+             // remove this listener
+             if (!this._mouseLeaveMonitor) {
+                 this._mouseLeaveMonitor = dom.addDisposableListener(this.viewHelper.viewDomNode.ownerDocument, 'mousemove', (e) => {
+-                    if (!this.viewHelper.viewDomNode.contains(e.target)) {
++						  const target = e.composedPath()[0];
++                    if (!this.viewHelper.viewDomNode.contains(target || e.target)) {
+                         // went outside the editor!
+                         this._onMouseLeave(new EditorMouseEvent(e, false, this.viewHelper.viewDomNode));
+                     }

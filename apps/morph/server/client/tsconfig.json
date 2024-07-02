@@ -1,0 +1,14 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"rootDir": "..",
+		"baseUrl": ".",
+		"allowImportingTsExtensions": true,
+		"types": []
+	},
+	"include": [
+		"./**/*.ts",
+		"./**/*.d.ts",
+		"./**/*.js",
+	]
+}

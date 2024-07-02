@@ -1,0 +1,12 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"rootDir": ".",
+		"baseUrl": ".",
+		"types": [
+			"vite/client",
+			"vite-plugin-import-css-sheet/client",
+			"@roenlie/vite-plugin-html-modules/client"
+		]
+	},
+}

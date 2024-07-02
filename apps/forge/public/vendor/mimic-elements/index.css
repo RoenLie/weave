@@ -1,0 +1,54 @@
+@layer reset;
+
+html,
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+
+	font-family: var(--mm-typescale-body-medium-font-family-name);
+		font-weight: var(--mm-typescale-body-medium-font-weight);
+		font-size: var(--mm-typescale-body-medium-font-size);
+		line-height: var(--mm-typescale-body-medium-line-height);
+		letter-spacing: var(--mm-typescale-body-medium-letter-spacing);
+}
+
+body {
+	overflow: hidden;
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-template-rows: 1fr;
+	height: 100dvh;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	overflow: hidden;
+
+	background-color: var(--mm-background, grey);
+		color: var(--mm-on-background, white);
+}
+
+body.disabled {
+	pointer-events: none;
+	user-select: none;
+}
+
+*::-webkit-scrollbar {
+	width: var(--mm-scrollbar-width, 0.6rem);
+		height: var(--mm-scrollbar-height, 0.6rem);
+}
+
+*::-webkit-scrollbar-track {
+	background: var(--mm-scrollbar-track, inherit);
+}
+
+*::-webkit-scrollbar-thumb {
+	background: var(--mm-scrollbar-thumb-bg, hsl(0, 0%, 70%));
+		border-radius: var(--mm-scrollbar-thumb-border-radius, 0.2rem);
+	-webkit-background-clip: padding-box;
+	background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+	background: var(--mm-scrollbar-corner, rgba(0, 0, 0, 0));
+}

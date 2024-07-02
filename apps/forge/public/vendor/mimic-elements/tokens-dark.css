@@ -1,0 +1,53 @@
+:root[color-scheme="dark"] {
+	--mm-scrollbar-track: var(--mm-background);
+		--mm-scrollbar-thumb-bg: var(--mm-outline-variant);
+		--mm-scrollbar-thumb-border-radius: 1px;
+
+	--mm-color-background: var(--mm-color-background-dark);
+		--mm-color-on-background: var(--mm-color-on-background-dark);
+
+	--mm-color-surface: var(--mm-color-surface-dark);
+		--mm-color-on-surface: var(--mm-color-on-surface-dark);
+
+	--mm-color-primary: var(--mm-color-primary-dark);
+		--mm-color-on-primary: var(--mm-color-on-primary-dark);
+
+	--mm-color-primary-container: var(--mm-color-primary-container-dark);
+		--mm-color-on-primary-container: var(--mm-color-on-primary-container-dark);
+
+	--mm-color-secondary: var(--mm-color-secondary-dark);
+		--mm-color-on-secondary: var(--mm-color-on-secondary-dark);
+
+	--mm-color-secondary-container: var(--mm-color-secondary-container-dark);
+		--mm-color-on-secondary-container: var(--mm-color-on-secondary-container-dark);
+
+	--mm-color-surface-variant: var(--mm-color-surface-variant-dark);
+		--mm-color-on-surface-variant: var(--mm-color-on-surface-variant-dark);
+
+	--mm-color-tertiary: var(--mm-color-tertiary-dark);
+		--mm-color-on-tertiary: var(--mm-color-on-tertiary-dark);
+
+	--mm-color-tertiary-container: var(--mm-color-tertiary-container-dark);
+		--mm-color-on-tertiary-container: var(--mm-color-on-tertiary-container-dark);
+
+	--mm-color-error: var(--mm-color-error-dark);
+		--mm-color-on-error: var(--mm-color-on-error-dark);
+
+	--mm-color-error-container: var(--mm-color-error-container-dark);
+		--mm-color-on-error-container: var(--mm-color-on-error-container-dark);
+
+	--mm-color-warning: var(--mm-color-warning-dark);
+		--mm-color-on-warning: var(--mm-color-on-warning-dark);
+
+	--mm-color-warning-container: var(--mm-color-warning-container-dark);
+		--mm-color-warning-on-container: var(--mm-color-on-warning-container-dark);
+
+	--mm-color-success: var(--mm-color-success-dark);
+		--mm-color-on-success: var(--mm-color-on-success-dark);
+
+	--mm-color-success-container: var(--mm-color-success-container-dark);
+		--mm-color-on-success-container: var(--mm-color-on-success-container-dark);
+
+	--mm-color-outline: var(--mm-color-outline-dark);
+		--mm-color-outline-variant: var(--mm-color-outline-variant-dark);
+}

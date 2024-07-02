@@ -1,0 +1,381 @@
+/* colors */
+:root {
+	/* primary */
+	--mm-palette-primary0: 0 0 0;
+		--mm-palette-primary10: 34 27 0;
+		--mm-palette-primary20: 58 48 0;
+		--mm-palette-primary25: 71 59 0;
+		--mm-palette-primary30: 84 70 0;
+		--mm-palette-primary35: 97 81 0;
+		--mm-palette-primary40: 111 93 0;
+		--mm-palette-primary50: 139 118 0;
+		--mm-palette-primary60: 168 143 20;
+		--mm-palette-primary70: 196 170 49;
+		--mm-palette-primary80: 226 197 75;
+		--mm-palette-primary90: 255 225 101;
+		--mm-palette-primary95: 255 240 192;
+		--mm-palette-primary98: 255 249 238;
+		--mm-palette-primary99: 255 251 255;
+		--mm-palette-primary100: 255 255 255;
+
+	/* secondary */
+	--mm-palette-secondary0: 0 0 0;
+		--mm-palette-secondary10: 0 25 68;
+		--mm-palette-secondary20: 0 45 110;
+		--mm-palette-secondary25: 1 55 131;
+		--mm-palette-secondary30: 24 67 143;
+		--mm-palette-secondary35: 40 80 155;
+		--mm-palette-secondary40: 54 92 168;
+		--mm-palette-secondary50: 81 117 195;
+		--mm-palette-secondary60: 107 143 223;
+		--mm-palette-secondary70: 134 170 252;
+		--mm-palette-secondary80: 176 198 255;
+		--mm-palette-secondary90: 217 226 255;
+		--mm-palette-secondary95: 237 240 255;
+		--mm-palette-secondary98: 250 248 255;
+		--mm-palette-secondary99: 254 251 255;
+		--mm-palette-secondary100: 255 255 255;
+
+	/* tertiary */
+	--mm-palette-tertiary0: 0 0 0;
+		--mm-palette-tertiary10: 0 29 50;
+		--mm-palette-tertiary20: 0 51 83;
+		--mm-palette-tertiary25: 0 63 100;
+		--mm-palette-tertiary30: 0 74 117;
+		--mm-palette-tertiary35: 0 87 135;
+		--mm-palette-tertiary40: 0 99 154;
+		--mm-palette-tertiary50: 32 124 187;
+		--mm-palette-tertiary60: 69 151 214;
+		--mm-palette-tertiary70: 99 177 243;
+		--mm-palette-tertiary80: 150 204 255;
+		--mm-palette-tertiary90: 206 229 255;
+		--mm-palette-tertiary95: 232 242 255;
+		--mm-palette-tertiary98: 247 249 255;
+		--mm-palette-tertiary99: 252 252 255;
+		--mm-palette-tertiary100: 255 255 255;
+
+	/* neutral */
+	--mm-palette-neutral0: 0 0 0;
+		--mm-palette-neutral10: 0 31 37;
+		--mm-palette-neutral20: 0 54 63;
+		--mm-palette-neutral25: 0 66 77;
+		--mm-palette-neutral30: 0 78 91;
+		--mm-palette-neutral35: 0 91 105;
+		--mm-palette-neutral40: 0 104 120;
+		--mm-palette-neutral50: 0 131 150;
+		--mm-palette-neutral60: 0 159 182;
+		--mm-palette-neutral70: 41 187 213;
+		--mm-palette-neutral80: 83 215 241;
+		--mm-palette-neutral90: 166 238 255;
+		--mm-palette-neutral95: 214 246 255;
+		--mm-palette-neutral98: 239 251 255;
+		--mm-palette-neutral99: 248 253 255;
+		--mm-palette-neutral100: 255 255 255;
+
+	/* neutral-variant */
+	--mm-palette-neutral-variant0: 0 0 0;
+		--mm-palette-neutral-variant10: 30 30 30;
+		--mm-palette-neutral-variant20: 52 48 36;
+		--mm-palette-neutral-variant25: 63 59 46;
+		--mm-palette-neutral-variant30: 75 71 57;
+		--mm-palette-neutral-variant35: 87 82 68;
+		--mm-palette-neutral-variant40: 99 94 80;
+		--mm-palette-neutral-variant50: 124 119 103;
+		--mm-palette-neutral-variant60: 150 144 128;
+		--mm-palette-neutral-variant70: 177 171 154;
+		--mm-palette-neutral-variant80: 205 198 180;
+		--mm-palette-neutral-variant90: 234 226 207;
+		--mm-palette-neutral-variant95: 248 240 221;
+		--mm-palette-neutral-variant98: 255 249 238;
+		--mm-palette-neutral-variant99: 255 251 255;
+		--mm-palette-neutral-variant100: 255 255 255;
+
+	/* error */
+	--mm-palette-error0: 0 0 0;
+		--mm-palette-error10: 65 0 2;
+		--mm-palette-error20: 105 0 5;
+		--mm-palette-error25: 126 0 7;
+		--mm-palette-error30: 147 0 10;
+		--mm-palette-error35: 168 7 16;
+		--mm-palette-error40: 186 26 26;
+		--mm-palette-error50: 222 55 48;
+		--mm-palette-error60: 255 84 73;
+		--mm-palette-error70: 255 137 125;
+		--mm-palette-error80: 255 180 171;
+		--mm-palette-error90: 255 218 214;
+		--mm-palette-error95: 255 237 234;
+		--mm-palette-error98: 255 248 247;
+		--mm-palette-error99: 255 251 255;
+		--mm-palette-error100: 255 255 255;
+
+	/* Success */
+	--mm-palette-success0: 0 0 0;
+		--mm-palette-success10: 10 32 0;
+		--mm-palette-success20: 22 56 0;
+		--mm-palette-success25: 29 68 0;
+		--mm-palette-success30: 35 81 0;
+		--mm-palette-success35: 42 94 0;
+		--mm-palette-success40: 49 107 0;
+		--mm-palette-success50: 66 135 10;
+		--mm-palette-success60: 91 162 41;
+		--mm-palette-success70: 117 189 67;
+		--mm-palette-success80: 143 218 91;
+		--mm-palette-success90: 170 247 116;
+		--mm-palette-success95: 207 255 170;
+		--mm-palette-success98: 238 255 220;
+		--mm-palette-success99: 248 255 235;
+		--mm-palette-success100: 255 255 255;
+
+	/* Warning */
+	--mm-palette-warning0: 0 0 0;
+		--mm-palette-warning10: 30 28 0;
+		--mm-palette-warning20: 53 49 0;
+		--mm-palette-warning25: 65 61 0;
+		--mm-palette-warning30: 77 72 0;
+		--mm-palette-warning35: 89 84 0;
+		--mm-palette-warning40: 102 96 0;
+		--mm-palette-warning50: 129 121 0;
+		--mm-palette-warning60: 156 148 0;
+		--mm-palette-warning70: 184 175 0;
+		--mm-palette-warning80: 214 202 0;
+		--mm-palette-warning90: 244 231 0;
+		--mm-palette-warning95: 255 245 112;
+		--mm-palette-warning98: 255 250 224;
+		--mm-palette-warning99: 255 251 255;
+		--mm-palette-warning100: 255 255 255;
+}
+
+/* light */
+:root {
+	--mm-color-primary-light: var(--mm-palette-primary40);
+		--mm-color-on-primary-light: var(--mm-palette-primary100);
+		--mm-color-primary-container-light: var(--mm-palette-primary90);
+		--mm-color-on-primary-container-light: var(--mm-palette-primary10);
+		--mm-color-secondary-light: var(--mm-palette-secondary40);
+		--mm-color-on-secondary-light: var(--mm-palette-secondary100);
+		--mm-color-secondary-container-light: var(--mm-palette-secondary90);
+		--mm-color-on-secondary-container-light: var(--mm-palette-secondary10);
+		--mm-color-tertiary-light: var(--mm-palette-tertiary40);
+		--mm-color-on-tertiary-light: var(--mm-palette-tertiary100);
+		--mm-color-tertiary-container-light: var(--mm-palette-tertiary90);
+		--mm-color-on-tertiary-container-light: var(--mm-palette-tertiary10);
+		--mm-color-error-light: var(--mm-palette-error40);
+		--mm-color-error-container-light: var(--mm-palette-error90);
+		--mm-color-on-error-light: var(--mm-palette-error100);
+		--mm-color-on-error-container-light: var(--mm-palette-error10);
+		--mm-color-background-light: var(--mm-palette-neutral99);
+		--mm-color-on-background-light: var(--mm-palette-neutral10);
+		--mm-color-surface-light: var(--mm-palette-neutral99);
+		--mm-color-on-surface-light: var(--mm-palette-neutral10);
+		--mm-color-surface-variant-light: var(--mm-palette-neutral-variant90);
+		--mm-color-on-surface-variant-light: var(--mm-palette-neutral-variant30);
+		--mm-color-outline-light: var(--mm-palette-neutral-variant50);
+		--mm-color-inverse-on-surface-light: var(--mm-palette-neutral95);
+		--mm-color-inverse-surface-light: var(--mm-palette-neutral20);
+		--mm-color-inverse-primary-light: var(--mm-palette-primary80);
+		--mm-color-shadow-light: var(--mm-palette-neutral0);
+		--mm-color-surface-tint-light: var(--mm-palette-primary40);
+		--mm-color-outline-variant-light: var(--mm-palette-neutral-variant80);
+		--mm-color-scrim-light: var(--mm-palette-neutral0);
+
+	--mm-color-success-light: var(--mm-palette-success40);
+		--mm-color-on-success-light: var(--mm-palette-success100);
+
+	--mm-color-success-container-light: var(--mm-palette-success90);
+		--mm-color-on-success-container-light: var(--mm-palette-success10);
+
+	--mm-color-warning-light: var(--mm-palette-warning40);
+		--mm-color-on-warning-light: var(--mm-palette-warning100);
+
+	--mm-color-warning-container-light: var(--mm-palette-warning90);
+		--mm-color-on-warning-container-light: var(--mm-palette-warning10);
+}
+
+/* dark */
+:root {
+	--mm-color-success-dark: var(--mm-palette-success80);
+		--mm-color-on-success-dark: var(--mm-palette-success20);
+
+	--mm-color-success-container-dark: var(--mm-palette-success30);
+		--mm-color-on-success-container-dark: var(--mm-palette-success90);
+
+	--mm-color-warning-dark: var(--mm-palette-warning80);
+		--mm-color-on-warning-dark: var(--mm-palette-warning20);
+
+	--mm-color-warning-container-dark: var(--mm-palette-warning30);
+		--mm-color-on-warning-container-dark: var(--mm-palette-warning90);
+
+	--mm-color-primary-dark: var(--mm-palette-primary80);
+		--mm-color-on-primary-dark: var(--mm-palette-primary20);
+
+	--mm-color-primary-container-dark: var(--mm-palette-primary30);
+		--mm-color-on-primary-container-dark: var(--mm-palette-primary90);
+
+	--mm-color-secondary-dark: var(--mm-palette-secondary80);
+		--mm-color-on-secondary-dark: var(--mm-palette-secondary20);
+
+	--mm-color-secondary-container-dark: var(--mm-palette-secondary30);
+		--mm-color-on-secondary-container-dark: var(--mm-palette-secondary90);
+
+	--mm-color-tertiary-dark: var(--mm-palette-tertiary80);
+		--mm-color-on-tertiary-dark: var(--mm-palette-tertiary20);
+
+	--mm-color-tertiary-container-dark: var(--mm-palette-tertiary30);
+		--mm-color-on-tertiary-container-dark: var(--mm-palette-tertiary90);
+
+	--mm-color-error-dark: var(--mm-palette-error80);
+		--mm-color-on-error-dark: var(--mm-palette-error20);
+
+	--mm-color-error-container-dark: var(--mm-palette-error30);
+		--mm-color-on-error-container-dark: var(--mm-palette-error90);
+
+	--mm-color-background-dark: var(--mm-palette-neutral-variant10);
+		--mm-color-on-background-dark: var(--mm-palette-neutral-variant98);
+		/*--mm-color-background-dark: var(--mm-palette-neutral10);
+		--mm-color-on-background-dark: var(--mm-palette-neutral90);*/
+
+	--mm-color-surface-dark: var(--mm-palette-neutral10);
+		--mm-color-on-surface-dark: var(--mm-palette-neutral90);
+
+	--mm-color-surface-variant-dark: var(--mm-palette-neutral-variant30);
+		--mm-color-on-surface-variant-dark: var(--mm-palette-neutral-variant80);
+
+	--mm-color-outline-dark: var(--mm-palette-neutral-variant60);
+		--mm-color-outline-variant-dark: var(--mm-palette-neutral-variant30);
+
+	--mm-color-inverse-on-surface-dark: var(--mm-palette-neutral10);
+		--mm-color-inverse-surface-dark: var(--mm-palette-neutral90);
+		--mm-color-inverse-primary-dark: var(--mm-palette-primary40);
+		--mm-color-shadow-dark: var(--mm-palette-neutral0);
+		--mm-color-surface-tint-dark: var(--mm-palette-primary80);
+		--mm-color-scrim-dark: var(--mm-palette-neutral0);
+}
+
+/* tokens */
+:root {
+	--mm-background: rgb(var(--mm-color-background));
+		--mm-on-background: rgb(var(--mm-color-on-background));
+
+	--mm-surface: rgb(var(--mm-color-surface));
+		--mm-surface-press: rgb(var(--mm-color-surface) / var(--mm-press-alpha));
+		--mm-surface-hover: rgb(var(--mm-color-surface) / var(--mm-hover-alpha));
+
+	--mm-on-surface: rgb(var(--mm-color-on-surface));
+		--mm-on-surface-press: rgb(var(--mm-color-on-surface) / var(--mm-press-alpha));
+		--mm-on-surface-hover: rgb(var(--mm-color-on-surface) / var(--mm-hover-alpha));
+
+	--mm-surface-variant: rgb(var(--mm-color-surface-variant));
+		--mm-surface-variant-press: rgb(var(--mm-color-surface-variant) / var(--mm-press-alpha));
+		--mm-surface-variant-hover: rgb(var(--mm-color-surface-variant) / var(--mm-hover-alpha));
+
+	--mm-on-surface-variant: rgb(var(--mm-color-on-surface-variant));
+		--mm-on-surface-variant-press: rgb(var(--mm-color-on-surface-variant) / var(--mm-press-alpha));
+		--mm-on-surface-variant-hover: rgb(var(--mm-color-on-surface-variant) / var(--mm-hover-alpha));
+
+	--mm-primary: rgb(var(--mm-color-primary));
+		--mm-primary-press: rgb(var(--mm-color-primary) / var(--mm-press-alpha));
+		--mm-primary-hover: rgb(var(--mm-color-primary) / var(--mm-hover-alpha));
+
+	--mm-on-primary: rgb(var(--mm-color-on-primary));
+		--mm-on-primary-press: rgb(var(--mm-color-on-primary) / var(--mm-press-alpha));
+		--mm-on-primary-hover: rgb(var(--mm-color-on-primary) / var(--mm-hover-alpha));
+
+	--mm-primary-container: rgb(var(--mm-color-primary-container));
+		--mm-primary-container-press: rgb(var(--mm-color-primary-container) / var(--mm-press-alpha));
+		--mm-primary-container-hover: rgb(var(--mm-color-primary-container) / var(--mm-hover-alpha));
+
+	--mm-on-primary-container: rgb(var(--mm-color-on-primary-container));
+		--mm-on-primary-container-press: rgb(var(--mm-color-on-primary-container) / var(--mm-press-alpha));
+		--mm-on-primary-container-hover: rgb(var(--mm-color-on-primary-container) / var(--mm-hover-alpha));
+
+	--mm-secondary: rgb(var(--mm-color-secondary));
+		--mm-secondary-press: rgb(var(--mm-color-secondary) / var(--mm-press-alpha));
+		--mm-secondary-hover: rgb(var(--mm-color-secondary) / var(--mm-hover-alpha));
+
+	--mm-on-secondary: rgb(var(--mm-color-on-secondary));
+		--mm-on-secondary-press: rgb(var(--mm-color-on-secondary) / var(--mm-press-alpha));
+		--mm-on-secondary-hover: rgb(var(--mm-color-on-secondary) / var(--mm-hover-alpha));
+
+	--mm-secondary-container: rgb(var(--mm-color-secondary-container));
+		--mm-secondary-container-press: rgb(var(--mm-color-secondary-container) / var(--mm-press-alpha));
+		--mm-secondary-container-hover: rgb(var(--mm-color-secondary-container) / var(--mm-hover-alpha));
+
+	--mm-on-secondary-container: rgb(var(--mm-color-on-secondary-container));
+		--mm-on-secondary-container-press: rgb(var(--mm-color-on-secondary-container) / var(--mm-press-alpha));
+		--mm-on-secondary-container-hover: rgb(var(--mm-color-on-secondary-container) / var(--mm-hover-alpha));
+
+	--mm-surface-variant: rgb(var(--mm-color-surface-variant));
+		--mm-surface-variant-press: rgb(var(--mm-color-surface-variant) / var(--mm-press-alpha));
+		--mm-surface-variant-hover: rgb(var(--mm-color-surface-variant) / var(--mm-hover-alpha));
+
+	--mm-on-surface-variant: rgb(var(--mm-color-on-surface-variant));
+		--mm-on-surface-variant-press: rgb(var(--mm-color-on-surface-variant) / var(--mm-press-alpha));
+		--mm-on-surface-variant-hover: rgb(var(--mm-color-on-surface-variant) / var(--mm-hover-alpha));
+
+	--mm-tertiary: rgb(var(--mm-color-tertiary));
+		--mm-tertiary-press: rgb(var(--mm-color-tertiary) / var(--mm-press-alpha));
+		--mm-tertiary-hover: rgb(var(--mm-color-tertiary) / var(--mm-hover-alpha));
+
+	--mm-on-tertiary: rgb(var(--mm-color-on-tertiary));
+		--mm-on-tertiary-press: rgb(var(--mm-color-on-tertiary) / var(--mm-press-alpha));
+		--mm-on-tertiary-hover: rgb(var(--mm-color-on-tertiary) / var(--mm-hover-alpha));
+
+	--mm-tertiary-container: rgb(var(--mm-color-tertiary-container));
+		--mm-tertiary-container-press: rgb(var(--mm-color-tertiary-container) / var(--mm-press-alpha));
+		--mm-tertiary-container-hover: rgb(var(--mm-color-tertiary-container) / var(--mm-hover-alpha));
+
+	--mm-on-tertiary-container: rgb(var(--mm-color-on-tertiary-container));
+		--mm-on-tertiary-container-press: rgb(var(--mm-color-on-tertiary-container) / var(--mm-press-alpha));
+		--mm-on-tertiary-container-hover: rgb(var(--mm-color-on-tertiary-container) / var(--mm-hover-alpha));
+
+	--mm-error: rgb(var(--mm-color-error));
+		--mm-error-press: rgb(var(--mm-color-error) / var(--mm-press-alpha));
+		--mm-error-hover: rgb(var(--mm-color-error) / var(--mm-hover-alpha));
+
+	--mm-on-error: rgb(var(--mm-color-on-error));
+		--mm-on-error-press: rgb(var(--mm-color-on-error) / var(--mm-press-alpha));
+		--mm-on-error-hover: rgb(var(--mm-color-on-error) / var(--mm-hover-alpha));
+
+	--mm-error-container: rgb(var(--mm-color-error-container));
+		--mm-error-container-press: rgb(var(--mm-color-error-container) / var(--mm-press-alpha));
+		--mm-error-container-hover: rgb(var(--mm-color-error-container) / var(--mm-hover-alpha));
+
+	--mm-on-error-container: rgb(var(--mm-color-on-error-container));
+		--mm-on-error-container-press: rgb(var(--mm-color-on-error-container) / var(--mm-press-alpha));
+		--mm-on-error-container-hover: rgb(var(--mm-color-on-error-container) / var(--mm-hover-alpha));
+
+	--mm-warning: rgb(var(--mm-color-warning));
+		--mm-warning-press: rgb(var(--mm-color-warning) / var(--mm-press-alpha));
+		--mm-warning-hover: rgb(var(--mm-color-warning) / var(--mm-hover-alpha));
+
+	--mm-on-warning: rgb(var(--mm-color-on-warning));
+		--mm-on-warning-press: rgb(var(--mm-color-on-warning) / var(--mm-press-alpha));
+		--mm-on-warning-hover: rgb(var(--mm-color-on-warning) / var(--mm-hover-alpha));
+
+	--mm-warning-container: rgb(var(--mm-color-warning-container));
+		--mm-warning-container-press: rgb(var(--mm-color-warning-container) / var(--mm-press-alpha));
+		--mm-warning-container-hover: rgb(var(--mm-color-warning-container) / var(--mm-hover-alpha));
+
+	--mm-on-warning-container: rgb(var(--mm-color-on-warning-container));
+		--mm-on-warning-container-press: rgb(var(--mm-color-on-warning-container) / var(--mm-press-alpha));
+		--mm-on-warning-container-hover: rgb(var(--mm-color-on-warning-container) / var(--mm-hover-alpha));
+
+	--mm-success: rgb(var(--mm-color-success));
+		--mm-success-press: rgb(var(--mm-color-success) / var(--mm-press-alpha));
+		--mm-success-hover: rgb(var(--mm-color-success) / var(--mm-hover-alpha));
+
+	--mm-on-success: rgb(var(--mm-color-on-success));
+		--mm-on-success-press: rgb(var(--mm-color-on-success) / var(--mm-press-alpha));
+		--mm-on-success-hover: rgb(var(--mm-color-on-success) / var(--mm-hover-alpha));
+
+	--mm-success-container: rgb(var(--mm-color-success-container));
+		--mm-success-container-press: rgb(var(--mm-color-success-container) / var(--mm-press-alpha));
+		--mm-success-container-hover: rgb(var(--mm-color-success-container) / var(--mm-hover-alpha));
+
+	--mm-on-success-container: rgb(var(--mm-color-on-success-container));
+		--mm-on-success-container-press: rgb(var(--mm-color-on-success-container) / var(--mm-press-alpha));
+		--mm-on-success-container-hover: rgb(var(--mm-color-on-success-container) / var(--mm-hover-alpha));
+
+	--mm-outline: rgb(var(--mm-color-outline));
+		--mm-outline-variant: rgb(var(--mm-color-outline-variant));
+}

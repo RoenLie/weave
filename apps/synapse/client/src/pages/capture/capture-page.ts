@@ -1,4 +1,4 @@
-import { html, LitElement } from 'lit';
+import { html, LitElement, type PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import capturePageStyles from './capture-page.css' with { type: 'css' };
 import { consume, provide, type ContextProp } from '@roenlie/lit-context';
@@ -67,6 +67,19 @@ export class CapturePageCmp extends LitElement {
 
 	//@state() protected images:                   string[] = Array(100)
 	//	.fill(null).map((_, i) => `https://picsum.photos/seed/${ i + 950 }/600/800`);
+
+	public override connectedCallback(): void {
+		super.connectedCallback();
+
+		// When we open this page, if we don't have a current session of pictures, we need to create a new
+		// random string which is our directory.
+	}
+
+	protected override willUpdate(props: PropertyValues): void {
+		super.willUpdate(props);
+
+		// Whenever images are updated, we save the current images into local database.
+	}
 
 	protected onPicture(ev: CustomEvent<string>) {
 		const srcData = ev.detail;

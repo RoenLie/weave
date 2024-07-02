@@ -1,0 +1,19 @@
+{
+	"name": "posix-path-browser",
+	"description": "Browser friendly version of nodejs path posix implementation.",
+	"author": {
+		"name": "Kristoffer Roen-Lie"
+	},
+	"version": "1.0.1",
+	"type": "module",
+	"types": "./dist/index.d.ts",
+	"main": "./dist/index.js",
+	"scripts": {
+		"build": "pnpm run \"/^build->.+/\"",
+		"build->js": "vite build",
+		"build->ts": "tsc --project ./src/tsconfig.json"
+	},
+	"dependencies": {
+		"tslib": "^2.6.2"
+	}
+}

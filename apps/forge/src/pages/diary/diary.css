@@ -1,0 +1,61 @@
+s-diary-page {
+	/*--_main-bg: rgb(240,241,241);
+	--_box-bg: rgb(255,255,255);
+	--_worklist-bg: rgb(48, 55, 56);*/
+	--_main-bg: rgb(35,35,35);
+	--_box-bg: rgb(20,20,20);
+	--_worklist-bg: rgb(38, 44, 44);
+
+	--_main-gap: 16px;
+	--_worklist-width: 300px;
+	--_box-min-width: 300px;
+
+	container: host / inline-size;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+s-diary-wrapper {
+	overflow: hidden;
+	flex-grow: 1;
+	display: grid;
+	grid-template-columns: var(--_worklist-width) 1fr;
+}
+@container host (width < 600px) {
+	s-diary-wrapper {
+		grid-template-columns: 1fr;
+		grid-template-rows: max-content 1fr;
+	}
+}
+s-worklist {
+	display: flex;
+	flex-direction: column;
+	background-color: var(--_worklist-bg);
+}
+s-diary-container {
+	container: main / inline-size;
+	overflow: hidden;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	background-color: var(--_main-bg);
+}
+s-diary-main {
+	display: grid;
+	grid-auto-flow: row;
+	grid-auto-rows: max-content;
+	grid-template-columns: 1fr;
+	align-content: start;
+	grid-gap: var(--_main-gap);
+	padding: var(--_main-gap);
+}
+@container main (width > 800px) {
+	s-diary-main {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+@container main (width > 1000px) {
+	s-diary-main {
+		grid-template-columns: 1fr 1fr 1fr;
+	}
+}

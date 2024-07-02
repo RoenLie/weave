@@ -1,0 +1,47 @@
+:host {
+	--layout-border: 1px solid rgb(13, 17, 23);
+
+	overflow: hidden;
+	height: 100%;
+	display: grid;
+	grid-template: "primary-sidebar workspace  secondary-sidebar" 1fr
+						"primary-sidebar panel      secondary-sidebar" max-content
+						"status-bar      status-bar status-bar" max-content
+						/ max-content 1fr max-content;
+}
+#nav {
+	grid-area: nav;
+
+	min-width: 60px;
+	border-right: var(--layout-border);
+}
+#primary-sidebar {
+	grid-area: primary-sidebar;
+	display: block;
+
+	min-width: 200px;
+	background-color: rgb(24, 26, 31);
+	border-right: var(--layout-border);
+}
+#workspace {
+	grid-area: workspace;
+	overflow: hidden;
+	display: block;
+	background-color: rgb(33, 37, 43);
+}
+#panel {
+	grid-area: panel;
+	display: block;
+}
+#secondary-sidebar {
+	grid-area: secondary-sidebar;
+	display: block;
+}
+#status-bar {
+	grid-area: status-bar;
+	display: block;
+
+	min-height: 20px;
+	background-color: rgb(30, 30, 30);
+	border-top: var(--layout-border);
+}

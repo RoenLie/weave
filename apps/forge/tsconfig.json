@@ -1,0 +1,23 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"rootDir": ".",
+		"baseUrl": ".",
+		"types": [
+			"vite/client",
+		],
+		"plugins": [
+			{
+				"name": "keystone-tsplugin",
+			}
+		]
+	},
+	"include": [
+		"**/*.ts",
+		"**/*.js",
+	],
+	"exclude": [
+		"dist",
+		"node_modules"
+	]
+}

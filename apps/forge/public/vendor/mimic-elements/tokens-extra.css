@@ -1,0 +1,123 @@
+:root {
+	--mm-press-alpha: .3;
+		--mm-hover-alpha: .8;
+
+	--mm-transparent-1: rgba(0, 0, 0, 0.40);
+
+	--mm-transition-x-slow: 500ms;
+		--mm-transition-slow: 400ms;
+		--mm-transition-medium: 300ms;
+		--mm-transition-fast: 200ms;
+		--mm-transition-x-fast: 100ms;
+
+	--mm-spacing-xxs: 2px;
+		--mm-spacing-xs: 4px;
+		--mm-spacing-s: 8px;
+		--mm-spacing-m: 12px;
+		--mm-spacing-l: 16px;
+		--mm-spacing-xl: 20px;
+		--mm-spacing-xxl: 24px;
+
+	--mm-border-radius-xs: 2px;
+		--mm-border-radius-s: 4px;
+		--mm-border-radius-m: 8px;
+		--mm-border-radius-l: 12px;
+		--mm-border-radius-xl: 16px;
+		--mm-border-pill: 999px;
+
+	--mm-index-drawer: 700;
+		--mm-index-dialog: 800;
+		--mm-index-popout: 900;
+		--mm-index-toast: 950;
+		--mm-index-tooltip: 1000;
+
+	--mm-focus-primary-1-spread: 0.125rem;
+		--mm-focus-primary-1-blur: 0rem;
+		--mm-focus-primary-1-y: 0rem;
+		--mm-focus-primary-1-x: 0rem;
+		--mm-focus-primary-1-color: #191c1a;
+		--mm-focus-primary-0-spread: 0.25rem;
+		--mm-focus-primary-0-blur: 0rem;
+		--mm-focus-primary-0-y: 0rem;
+		--mm-focus-primary-0-x: 0rem;
+		--mm-focus-primary-0-color: #a2cdda;
+
+	--mm-focus-ring: 3px solid var(--mm-focus-primary-0-color);
+		--mm-focus-offset: 3px;
+		--mm-focus-transition: outline var(--mm-transition-fast) ease-out;
+		--mm-focus-index: 2;
+
+	--mm-elevation-color-1: rgba(0, 0, 0, 0.10);
+		--mm-elevation-color-0: rgba(0, 0, 0, 0.25);
+
+	--mm-elevation-5-1-spread: 0px;
+		--mm-elevation-5-0-spread: 0px;
+		--mm-elevation-5-1-blur: 3px;
+		--mm-elevation-5-0-blur: 11px;
+		--mm-elevation-5-1-y: 0.5px;
+		--mm-elevation-5-0-y: 3.75px;
+		--mm-elevation-5-1-x: 0px;
+		--mm-elevation-5-0-x: 0px;
+		--mm-elevation-5-1-color: var(--mm-elevation-color-1);
+		--mm-elevation-5-0-color: var(--mm-elevation-color-0);
+
+	--mm-elevation-4-1-spread: 0px;
+		--mm-elevation-4-0-spread: 0px;
+		--mm-elevation-4-1-blur: 2px;
+		--mm-elevation-4-0-blur: 9px;
+		--mm-elevation-4-1-y: 0.5px;
+		--mm-elevation-4-0-y: 2.75px;
+		--mm-elevation-4-1-x: 0px;
+		--mm-elevation-4-0-x: 0px;
+		--mm-elevation-4-1-color: var(--mm-elevation-color-1);
+		--mm-elevation-4-0-color: var(--mm-elevation-color-0);
+
+	--mm-elevation-3-1-spread: 0px;
+		--mm-elevation-3-0-spread: 2px;
+		--mm-elevation-3-1-blur: 2px;
+		--mm-elevation-3-0-blur: 5px;
+		--mm-elevation-3-1-y: 0.5px;
+		--mm-elevation-3-0-y: 1.25px;
+		--mm-elevation-3-1-x: 0px;
+		--mm-elevation-3-0-x: 0px;
+		--mm-elevation-3-1-color: var(--mm-elevation-color-1);
+		--mm-elevation-3-0-color: var(--mm-elevation-color-0);
+
+	--mm-elevation-2-1-spread: 0px;
+		--mm-elevation-2-0-spread: 1px;
+		--mm-elevation-2-1-blur: 2px;
+		--mm-elevation-2-0-blur: 3px;
+		--mm-elevation-2-1-y: 0px;
+		--mm-elevation-2-0-y: 0.5px;
+		--mm-elevation-2-1-x: 0px;
+		--mm-elevation-2-0-x: 0px;
+		--mm-elevation-2-1-color: var(--mm-elevation-color-1);
+		--mm-elevation-2-0-color: var(--mm-elevation-color-0);
+
+	--mm-elevation-1-1-spread: 0px;
+		--mm-elevation-1-0-spread: 0.5px;
+		--mm-elevation-1-1-blur: 0.5px;
+		--mm-elevation-1-0-blur: 1px;
+		--mm-elevation-1-1-y: 0px;
+		--mm-elevation-1-0-y: 0.5px;
+		--mm-elevation-1-1-x: 0px;
+		--mm-elevation-1-0-x: 0px;
+		--mm-elevation-1-1-color: var(--mm-elevation-color-1);
+		--mm-elevation-1-0-color: var(--mm-elevation-color-0);
+
+	--mm-box-shadow-xs:
+			var(--mm-elevation-1-0-x) var(--mm-elevation-1-0-y) var(--mm-elevation-1-0-blur) var(--mm-elevation-1-0-spread) var(--mm-elevation-1-0-color),
+			var(--mm-elevation-1-1-x) var(--mm-elevation-1-1-y) var(--mm-elevation-1-1-blur) var(--mm-elevation-1-1-spread) var(--mm-elevation-1-1-color);
+		--mm-box-shadow-s:
+			var(--mm-elevation-2-0-x) var(--mm-elevation-2-0-y) var(--mm-elevation-2-0-blur) var(--mm-elevation-2-0-spread) var(--mm-elevation-2-0-color),
+			var(--mm-elevation-2-1-x) var(--mm-elevation-2-1-y) var(--mm-elevation-2-1-blur) var(--mm-elevation-2-1-spread) var(--mm-elevation-2-1-color);
+		--mm-box-shadow-m:
+			var(--mm-elevation-3-0-x) var(--mm-elevation-3-0-y) var(--mm-elevation-3-0-blur) var(--mm-elevation-3-0-spread) var(--mm-elevation-3-0-color),
+			var(--mm-elevation-3-1-x) var(--mm-elevation-3-1-y) var(--mm-elevation-3-1-blur) var(--mm-elevation-3-1-spread) var(--mm-elevation-3-1-color);
+		--mm-box-shadow-l:
+			var(--mm-elevation-4-0-x) var(--mm-elevation-4-0-y) var(--mm-elevation-4-0-blur) var(--mm-elevation-4-0-spread) var(--mm-elevation-4-0-color),
+			var(--mm-elevation-4-1-x) var(--mm-elevation-4-1-y) var(--mm-elevation-4-1-blur) var(--mm-elevation-4-1-spread) var(--mm-elevation-4-1-color);
+		--mm-box-shadow-xl:
+			var(--mm-elevation-5-0-x) var(--mm-elevation-5-0-y) var(--mm-elevation-5-0-blur) var(--mm-elevation-5-0-spread) var(--mm-elevation-5-0-color),
+			var(--mm-elevation-5-1-x) var(--mm-elevation-5-1-y) var(--mm-elevation-5-1-blur) var(--mm-elevation-5-1-spread) var(--mm-elevation-5-1-color);
+}

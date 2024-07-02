@@ -58,4 +58,16 @@
 	},
 	"peacock.color": "#283e4d",
 	"restoreTerminals.runOnStartup": false,
+	"restoreTerminals.terminals": [
+		{
+			"splitTerminals": [
+				{
+					"name": "root",
+					"commands": [
+						"clear"
+					]
+				}
+			]
+		},
+	],
 }

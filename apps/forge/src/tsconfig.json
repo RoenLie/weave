@@ -1,0 +1,16 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"rootDir": ".",
+		"baseUrl": ".",
+		"types": [
+			"vite/client",
+			"vite-plugin-import-css-sheet/client",
+		],
+		"plugins": [
+			{
+				"name": "keystone-tsplugin",
+			}
+		]
+	},
+}
