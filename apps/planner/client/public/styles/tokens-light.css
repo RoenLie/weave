@@ -1,0 +1,56 @@
+:root[color-scheme="light"] {
+	--scrollbar-track: var(--background);
+	--scrollbar-thumb-bg: var(--outline-variant);
+	--scrollbar-thumb-border-radius: 1px;
+
+	--color-background: var(--color-background-light);
+	--color-on-background: var(--color-on-background-light);
+
+	--color-surface: var(--color-surface-light);
+	--color-on-surface: var(--color-on-surface-light);
+
+	--color-surface-variant: var(--color-surface-variant-light);
+	--color-on-surface-variant: var(--color-surface-variant-light);
+
+	--color-primary: var(--color-primary-light);
+	--color-on-primary: var(--color-on-primary-light);
+
+	--color-primary-container: var(--color-primary-container-light);
+	--color-on-primary-container: var(--color-on-primary-container-light);
+
+	--color-secondary: var(--color-secondary-light);
+	--color-on-secondary: var(--color-on-secondary-light);
+
+	--color-secondary-container: var(--color-secondary-container-light);
+	--color-on-secondary-container: var(--color-on-secondary-container-light);
+
+	--color-surface-variant: var(--color-surface-variant-light);
+	--color-on-surface-variant: var(--color-on-surface-variant-light);
+
+	--color-tertiary: var(--color-tertiary-light);
+	--color-on-tertiary: var(--color-on-tertiary-light);
+
+	--color-tertiary-container: var(--color-tertiary-container-light);
+	--color-on-tertiary-container: var(--color-on-tertiary-container-light);
+
+	--color-error: var(--color-error-light);
+	--color-on-error: var(--color-on-error-light);
+
+	--color-error-container: var(--color-error-container-light);
+	--color-on-error-container: var(--color-on-error-container-light);
+
+	--color-warning: var(--color-warning-light);
+	--color-on-warning: var(--color-on-warning-light);
+
+	--color-warning-container: var(--color-warning-container-light);
+	--color-warning-on-container: var(--color-on-warning-container-light);
+
+	--color-success: var(--color-success-light);
+	--color-on-success: var(--color-on-success-light);
+
+	--color-success-container: var(--color-success-container-light);
+	--color-on-success-container: var(--color-on-success-container-light);
+
+	--color-outline: var(--color-outline-light);
+	--color-outline-variant: var(--color-outline-variant-light);
+}

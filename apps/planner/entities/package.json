@@ -1,0 +1,32 @@
+{
+	"name": "@rotul/planner-entities",
+	"version": "0.0.1",
+	"description": "Entities for planner",
+	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Rotul-Solutions/planner.git"
+	},
+	"author": "Kristoffer Roen-Lie",
+	"bugs": {
+		"url": "https://github.com/Rotul-Solutions/planner/issues"
+	},
+	"homepage": "https://github.com/Rotul-Solutions/planner#readme",
+	"main": "./dist/index.js",
+	"typings": "./dist/index.d.ts",
+	"type": "module",
+	"scripts": {
+		"build": "npm run build:prepare && npm run build:index && npm run build:types && vite build",
+		"build:types": "tsc --project ./src/tsconfig.json",
+		"build:index": "package-toolbox build-indexes",
+		"build:prepare": "rimraf dist",
+		"update:deps": "pnpm update --latest --interactive"
+	},
+	"dependencies": {
+		"tslib": "^2.4.1"
+	},
+	"devDependencies": {
+		"@roenlie/package-toolbox": "^0.0.3",
+		"vite": "^4.0.3"
+	}
+}

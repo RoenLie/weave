@@ -1,0 +1,123 @@
+:root {
+	--press-alpha: .3;
+	--hover-alpha: .8;
+
+	--transparent-1: rgba(0, 0, 0, 0.40);
+
+	--transition-x-slow: 500ms;
+	--transition-slow: 400ms;
+	--transition-medium: 300ms;
+	--transition-fast: 200ms;
+	--transition-x-fast: 100ms;
+
+	--spacing-xxs: 2px;
+	--spacing-xs: 4px;
+	--spacing-s: 8px;
+	--spacing-m: 12px;
+	--spacing-l: 16px;
+	--spacing-xl: 20px;
+	--spacing-xxl: 24px;
+
+	--border-radius-xs: 2px;
+	--border-radius-s: 4px;
+	--border-radius-m: 8px;
+	--border-radius-l: 12px;
+	--border-radius-xl: 16px;
+	--border-pill: 999px;
+
+	--index-drawer: 700;
+	--index-dialog: 800;
+	--index-popout: 900;
+	--index-toast: 950;
+	--index-tooltip: 1000;
+
+	--focus-primary-1-spread: 0.125rem;
+	--focus-primary-1-blur: 0rem;
+	--focus-primary-1-y: 0rem;
+	--focus-primary-1-x: 0rem;
+	--focus-primary-1-color: #191c1a;
+	--focus-primary-0-spread: 0.25rem;
+	--focus-primary-0-blur: 0rem;
+	--focus-primary-0-y: 0rem;
+	--focus-primary-0-x: 0rem;
+	--focus-primary-0-color: #a2cdda;
+
+	--focus-ring: 3px solid var(--focus-primary-0-color);
+	--focus-offset: 3px;
+	--focus-transition: outline var(--transition-fast) ease-out;
+	--focus-index: 2;
+
+	--elevation-color-1: rgba(0, 0, 0, 0.10);
+	--elevation-color-0: rgba(0, 0, 0, 0.25);
+
+	--elevation-5-1-spread: 0px;
+	--elevation-5-0-spread: 0px;
+	--elevation-5-1-blur: 3px;
+	--elevation-5-0-blur: 11px;
+	--elevation-5-1-y: 0.5px;
+	--elevation-5-0-y: 3.75px;
+	--elevation-5-1-x: 0px;
+	--elevation-5-0-x: 0px;
+	--elevation-5-1-color: var(--elevation-color-1);
+	--elevation-5-0-color: var(--elevation-color-0);
+
+	--elevation-4-1-spread: 0px;
+	--elevation-4-0-spread: 0px;
+	--elevation-4-1-blur: 2px;
+	--elevation-4-0-blur: 9px;
+	--elevation-4-1-y: 0.5px;
+	--elevation-4-0-y: 2.75px;
+	--elevation-4-1-x: 0px;
+	--elevation-4-0-x: 0px;
+	--elevation-4-1-color: var(--elevation-color-1);
+	--elevation-4-0-color: var(--elevation-color-0);
+
+	--elevation-3-1-spread: 0px;
+	--elevation-3-0-spread: 2px;
+	--elevation-3-1-blur: 2px;
+	--elevation-3-0-blur: 5px;
+	--elevation-3-1-y: 0.5px;
+	--elevation-3-0-y: 1.25px;
+	--elevation-3-1-x: 0px;
+	--elevation-3-0-x: 0px;
+	--elevation-3-1-color: var(--elevation-color-1);
+	--elevation-3-0-color: var(--elevation-color-0);
+
+	--elevation-2-1-spread: 0px;
+	--elevation-2-0-spread: 1px;
+	--elevation-2-1-blur: 2px;
+	--elevation-2-0-blur: 3px;
+	--elevation-2-1-y: 0px;
+	--elevation-2-0-y: 0.5px;
+	--elevation-2-1-x: 0px;
+	--elevation-2-0-x: 0px;
+	--elevation-2-1-color: var(--elevation-color-1);
+	--elevation-2-0-color: var(--elevation-color-0);
+
+	--elevation-1-1-spread: 0px;
+	--elevation-1-0-spread: 0.5px;
+	--elevation-1-1-blur: 0.5px;
+	--elevation-1-0-blur: 1px;
+	--elevation-1-1-y: 0px;
+	--elevation-1-0-y: 0.5px;
+	--elevation-1-1-x: 0px;
+	--elevation-1-0-x: 0px;
+	--elevation-1-1-color: var(--elevation-color-1);
+	--elevation-1-0-color: var(--elevation-color-0);
+
+	--box-shadow-xs:
+		var(--elevation-1-0-x) var(--elevation-1-0-y) var(--elevation-1-0-blur) var(--elevation-1-0-spread) var(--elevation-1-0-color),
+		var(--elevation-1-1-x) var(--elevation-1-1-y) var(--elevation-1-1-blur) var(--elevation-1-1-spread) var(--elevation-1-1-color);
+	--box-shadow-s:
+		var(--elevation-2-0-x) var(--elevation-2-0-y) var(--elevation-2-0-blur) var(--elevation-2-0-spread) var(--elevation-2-0-color),
+		var(--elevation-2-1-x) var(--elevation-2-1-y) var(--elevation-2-1-blur) var(--elevation-2-1-spread) var(--elevation-2-1-color);
+	--box-shadow-m:
+		var(--elevation-3-0-x) var(--elevation-3-0-y) var(--elevation-3-0-blur) var(--elevation-3-0-spread) var(--elevation-3-0-color),
+		var(--elevation-3-1-x) var(--elevation-3-1-y) var(--elevation-3-1-blur) var(--elevation-3-1-spread) var(--elevation-3-1-color);
+	--box-shadow-l:
+		var(--elevation-4-0-x) var(--elevation-4-0-y) var(--elevation-4-0-blur) var(--elevation-4-0-spread) var(--elevation-4-0-color),
+		var(--elevation-4-1-x) var(--elevation-4-1-y) var(--elevation-4-1-blur) var(--elevation-4-1-spread) var(--elevation-4-1-color);
+	--box-shadow-xl:
+		var(--elevation-5-0-x) var(--elevation-5-0-y) var(--elevation-5-0-blur) var(--elevation-5-0-spread) var(--elevation-5-0-color),
+		var(--elevation-5-1-x) var(--elevation-5-1-y) var(--elevation-5-1-blur) var(--elevation-5-1-spread) var(--elevation-5-1-color);
+}

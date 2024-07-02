@@ -1,0 +1,108 @@
+:root {
+	--typescale-font-family-name: Helvetica;
+
+	/* display - large */
+	--typescale-display-large-font-family-name: var(--typescale-font-family-name);
+	--typescale-display-large-font-weight: 400px;
+	--typescale-display-large-font-size: 57px;
+	--typescale-display-large-line-height: 64px;
+	--typescale-display-large-letter-spacing: -0.25px;
+
+	/* display - medium */
+	--typescale-display-medium-font-family-name: var(--typescale-font-family-name);
+	--typescale-display-medium-font-weight: 400px;
+	--typescale-display-medium-font-size: 45px;
+	--typescale-display-medium-line-height: 52px;
+	--typescale-display-medium-letter-spacing: 0px;
+
+	/* display - small */
+	--typescale-display-small-font-family-name: var(--typescale-font-family-name);
+	--typescale-display-small-font-weight: 400px;
+	--typescale-display-small-font-size: 36px;
+	--typescale-display-small-line-height: 44px;
+	--typescale-display-small-letter-spacing: 0px;
+
+	/* headline - large */
+	--typescale-headline-large-font-family-name: var(--typescale-font-family-name);
+	--typescale-headline-large-font-weight: 400px;
+	--typescale-headline-large-font-size: 32px;
+	--typescale-headline-large-line-height: 40px;
+	--typescale-headline-large-letter-spacing: 0px;
+
+	/* headline - medium */
+	--typescale-headline-medium-font-family-name: var(--typescale-font-family-name);
+	--typescale-headline-medium-font-weight: 400px;
+	--typescale-headline-medium-font-size: 28px;
+	--typescale-headline-medium-line-height: 36px;
+	--typescale-headline-medium-letter-spacing: 0px;
+
+	/* headline - small */
+	--typescale-headline-small-font-family-name: var(--typescale-font-family-name);
+	--typescale-headline-small-font-weight: 400px;
+	--typescale-headline-small-font-size: 24px;
+	--typescale-headline-small-line-height: 32px;
+	--typescale-headline-small-letter-spacing: 0px;
+
+	/* body - large */
+	--typescale-body-large-font-family-name: var(--typescale-font-family-name);
+	--typescale-body-large-font-weight: 400px;
+	--typescale-body-large-font-size: 16px;
+	--typescale-body-large-line-height: 24px;
+	--typescale-body-large-letter-spacing: 0.50px;
+
+	/* body - medium */
+	--typescale-body-medium-font-family-name: var(--typescale-font-family-name);
+	--typescale-body-medium-font-weight: 400px;
+	--typescale-body-medium-font-size: 14px;
+	--typescale-body-medium-line-height: 20px;
+	--typescale-body-medium-letter-spacing: 0.25px;
+
+	/* body - small */
+	--typescale-body-small-font-family-name: var(--typescale-font-family-name);
+	--typescale-body-small-font-weight: 400px;
+	--typescale-body-small-font-size: 12px;
+	--typescale-body-small-line-height: 16px;
+	--typescale-body-small-letter-spacing: 0.40px;
+
+	/* label - large */
+	--typescale-label-large-font-family-name: var(--typescale-font-family-name);
+	--typescale-label-large-font-weight: 500px;
+	--typescale-label-large-font-size: 14px;
+	--typescale-label-large-line-height: 20px;
+	--typescale-label-large-letter-spacing: 0.10px;
+
+	/* label - medium */
+	--typescale-label-medium-font-family-name: var(--typescale-font-family-name);
+	--typescale-label-medium-font-weight: 500px;
+	--typescale-label-medium-font-size: 12px;
+	--typescale-label-medium-line-height: 16px;
+	--typescale-label-medium-letter-spacing: 0.50px;
+
+	/* label - small */
+	--typescale-label-small-font-family-name: var(--typescale-font-family-name);
+	--typescale-label-small-font-weight: 500px;
+	--typescale-label-small-font-size: 11px;
+	--typescale-label-small-line-height: 16px;
+	--typescale-label-small-letter-spacing: 0.50px;
+
+	/* title - large */
+	--typescale-title-large-font-family-name: var(--typescale-font-family-name);
+	--typescale-title-large-font-weight: 400px;
+	--typescale-title-large-font-size: 22px;
+	--typescale-title-large-line-height: 28px;
+	--typescale-title-large-letter-spacing: 0px;
+
+	/* title - medium */
+	--typescale-title-medium-font-family-name: var(--typescale-font-family-name);
+	--typescale-title-medium-font-weight: 500px;
+	--typescale-title-medium-font-size: 16px;
+	--typescale-title-medium-line-height: 24px;
+	--typescale-title-medium-letter-spacing: 0.15px;
+
+	/* title - small */
+	--typescale-title-small-font-family-name: var(--typescale-font-family-name);
+	--typescale-title-small-font-weight: 500px;
+	--typescale-title-small-font-size: 14px;
+	--typescale-title-small-line-height: 20px;
+	--typescale-title-small-letter-spacing: 0.10px;
+}

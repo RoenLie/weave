@@ -1,0 +1,65 @@
+@import url(css-reset.css);
+@import url(tokens-typography.css);
+@import url(tokens-extra.css);
+@import url(tokens-colors.css);
+@import url(tokens-dark.css);
+@import url(tokens-light.css);
+@layer reset;
+
+html,
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+
+	font-family: var(--typescale-body-medium-font-family-name);
+	font-weight: var(--typescale-body-medium-font-weight);
+	font-size: var(--typescale-body-medium-font-size);
+	line-height: var(--typescale-body-medium-line-height);
+	letter-spacing: var(--typescale-body-medium-letter-spacing);
+}
+
+body {
+	overflow: hidden;
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-template-rows: 1fr;
+	height: 100dvh;
+	width: 100vw;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+
+	background-color: var(--background, grey);
+	color: var(--on-background, white);
+}
+
+body>* {
+	grid-row: 1/2;
+	grid-column: 1/2;
+}
+
+body.disabled {
+	pointer-events: none;
+	user-select: none;
+}
+
+*::-webkit-scrollbar {
+	width: var(--scrollbar-width, 0.6rem);
+	height: var(--scrollbar-height, 0.6rem);
+}
+
+*::-webkit-scrollbar-track {
+	background: var(--scrollbar-track, inherit);
+}
+
+*::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-thumb-bg, hsl(0, 0%, 70%));
+	border-radius: var(--scrollbar-thumb-border-radius, 0.2rem);
+	-webkit-background-clip: padding-box;
+	background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+	background: var(--scrollbar-corner, rgba(0, 0, 0, 0));
+}

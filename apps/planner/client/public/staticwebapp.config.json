@@ -1,0 +1,39 @@
+{
+	"navigationFallback": {
+		"rewrite": "/index.html"
+	},
+	"routes": [
+		{
+			"route": "/.auth/login/twitter",
+			"statusCode": 200
+		},
+		{
+			"route": "/.auth/login/github",
+			"statusCode": 200
+		},
+		{
+			"route": "/.auth/login/facebook",
+			"statusCode": 200
+		},
+		{
+			"route": "/.auth/login/google",
+			"statusCode": 200
+		},
+		{
+			"route": "/*",
+			"allowedRoles": [
+				"authenticated"
+			]
+		}
+	],
+	"responseOverrides": {
+		"404": {
+			"statusCode": 302,
+			"redirect": "/.auth/login/aad"
+		},
+		"401": {
+			"statusCode": 302,
+			"redirect": "/.auth/login/aad"
+		}
+	}
+}
