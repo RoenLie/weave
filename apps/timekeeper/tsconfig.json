@@ -1,0 +1,24 @@
+{
+	"extends": "@eyeshare/tsconfig",
+	"compilerOptions": {
+		"rootDir": ".",
+		"outDir": "./dist/lib",
+		"baseUrl": ".",
+		"emitDeclarationOnly": true,
+		"types": [
+			"@roenlie/mirage-utils/globals",
+			"vite/client"
+		]
+	},
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.d.ts",
+		"src/**/*.js",
+		"shims/**/*.ts",
+		"shims/**/*.js",
+		"typings/**/*.d.ts",
+	],
+	"exclude": [
+		"src/**/*.test.ts",
+	]
+}

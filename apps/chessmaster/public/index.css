@@ -1,0 +1,11 @@
+:root {
+	--mitm-on-surface: var(--on-surface);
+	--mitm-surface: #0d1117;
+}
+
+body {
+	background-color: var(--mitm-surface);
+	color: var(--mitm-on-surface);
+	font-size: 16px;
+	display: grid;
+}
