@@ -1,0 +1,39 @@
+{
+	"name": "vite-plugin-import-css-sheet",
+	"version": "0.0.0",
+	"description": "Small plugin that enables the use of tc39/proposal-import-attributes for css files in vite.",
+	"license": "MIT",
+	"author": {
+		"name": "Kristoffer Roen-Lie",
+		"url": "https://github.com/RoenLie"
+	},
+	"files": [
+		"dist",
+		"src",
+		"client.d.ts",
+		"README.md"
+	],
+	"type": "module",
+	"types": "./dist/index.d.ts",
+	"main": "./dist/index.js",
+	"scripts": {
+		"build": "vite build && tsc --project ./src/tsconfig.json",
+		"package:local": "pnpm pack --pack-destination ./_packages/"
+	},
+	"peerDependencies": {
+		"vite": ">=5.1.6"
+	},
+	"devDependencies": {
+		"tslib": "^2.6.2",
+		"vite": "^5.1.6",
+		"@roenlie/eslint-config": "^1.3.2",
+		"@roenlie/package-toolbox": "^1.0.7",
+		"@roenlie/tsconfig": "^1.0.4",
+		"@types/node": "^20.11.28",
+		"typescript": "^5.4.2"
+	},
+	"engines": {
+		"node": ">=20.10"
+	},
+	"packageManager": "pnpm@8.15.4"
+}

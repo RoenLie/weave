@@ -1,0 +1,87 @@
+/* primary */
+:root {
+	--midoc-ref-primary-80: #7cda9d;
+	--midoc-ref-primary-40: #006d3b;
+}
+
+/* tertiary */
+:root {
+	--midoc-ref-tertiary-100: #ffffff;
+	--midoc-ref-tertiary-99: #f6fdff;
+	--midoc-ref-tertiary-95: #d5f6ff;
+	--midoc-ref-tertiary-90: #bee9f6;
+	--midoc-ref-tertiary-80: #a2cdda;
+	--midoc-ref-tertiary-70: #88b2be;
+	--midoc-ref-tertiary-60: #6d97a3;
+	--midoc-ref-tertiary-50: #537d89;
+	--midoc-ref-tertiary-40: #3a646f;
+	--midoc-ref-tertiary-30: #214c57;
+	--midoc-ref-tertiary-20: #033640;
+	--midoc-ref-tertiary-10: #001f26;
+	--midoc-ref-tertiary-0: #000000;
+}
+
+/* neutral */
+:root {
+	--midoc-ref-neutral-99: #fbfdf7;
+	--midoc-ref-neutral-80: #c6c7c3;
+	--midoc-ref-neutral-10: #191c1a;
+}
+
+/* neutral variant */
+:root {
+	--midoc-ref-neutral-variant-90: #dce5db;
+	--midoc-ref-neutral-variant-80: #c1c9c0;
+	--midoc-ref-neutral-variant-30: #414942;
+}
+
+/* general tokens */
+:root {
+	--midoc-border-radius-s: 4px;
+	--midoc-border-radius-m: 8px;
+
+	--midoc-spacing-xxs: 4px;
+	--midoc-spacing-xs: 8px;
+	--midoc-spacing-s: 12px;
+	--midoc-spacing-m: 16px;
+	--midoc-spacing-l: 20px;
+	--midoc-spacing-xl: 24px;
+	--midoc-spacing-xxl: 60px;
+
+	--midoc-surface-drag: rgba(25, 28, 26, 0.25);
+	--midoc-surface-press: rgba(25, 28, 26, 0.20);
+	--midoc-surface-hover: rgba(25, 28, 26, 0.15);
+
+	--midoc-tertiary-drag: rgba(162, 205, 218, 0.25);
+	--midoc-tertiary-press: rgba(162, 205, 218, 0.20);
+	--midoc-tertiary-hover: rgba(162, 205, 218, 0.15);
+	--midoc-tertiary-active: rgba(162, 205, 218, 0.10);
+
+	--midoc-on-tertiary-drag: rgba(3, 54, 64, 0.25);
+	--midoc-on-tertiary-press: rgba(3, 54, 64, 0.20);
+	--midoc-on-tertiary-hover: rgba(3, 54, 64, 0.15);
+}
+
+/* dark mode */
+:root[color-scheme="dark"] {
+	--midoc-theme: 'dark';
+	--midoc-background: var(--midoc-ref-neutral-10);
+	--midoc-on-background: var(--midoc-ref-neutral-80);
+	--midoc-surface-variant: var(--midoc-ref-neutral-variant-30);
+	--midoc-on-surface-variant: var(--midoc-ref-neutral-variant-80);
+	--midoc-primary: var(--midoc-ref-primary-80);
+	--midoc-tertiary: var(--midoc-ref-tertiary-70);
+	--midoc-on-tertiary: var(--midoc-ref-tertiary-20);
+}
+
+/* light mode */
+:root[color-scheme="light"] {
+	--midoc-theme: 'light';
+	--midoc-background: var(--midoc-ref-neutral-99);
+	--midoc-on-background: var(--midoc-ref-neutral-10);
+	--midoc-surface-variant: var(--midoc-ref-neutral-variant-90);
+	--midoc-on-surface-variant: var(--midoc-ref-neutral-variant-30);
+	--midoc-primary: var(--midoc-ref-primary-40);
+	--midoc-tertiary: var(--midoc-ref-tertiary-40);
+	--midoc-on-tertiary: var(--midoc-ref-tertiary-100);
+}

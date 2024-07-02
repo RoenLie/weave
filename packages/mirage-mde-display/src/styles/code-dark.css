@@ -1,0 +1,107 @@
+.markdown-body .hljs {
+	display: block;
+	overflow-x: auto;
+	padding: 0.5em;
+
+	color: var(--mmdp-hljs-color);
+	background: var(--mmdp-hljs-bg);
+}
+
+.markdown-body .hljs-comment,
+.markdown-body .hljs-punctuation {
+	color: var(--mmdp-hljs-comment);
+}
+
+.markdown-body .hljs-attr,
+.markdown-body .hljs-attribute,
+.markdown-body .hljs-meta,
+.markdown-body .hljs-selector-attr,
+.markdown-body .hljs-selector-class,
+.markdown-body .hljs-selector-id {
+	color: var(--mmdp-hljs-attr);
+}
+
+.markdown-body .hljs-variable,
+.markdown-body .hljs-literal,
+.markdown-body .hljs-number,
+.markdown-body .hljs-doctag {
+	color: var(--mmdp-hljs-variable);
+}
+
+.markdown-body .hljs-params {
+	color: var(--mmdp-hljs-params);
+}
+
+.markdown-body .hljs-function {
+	color: var(--mmdp-hljs-function);
+}
+
+.markdown-body .hljs-class,
+.markdown-body .hljs-tag,
+.markdown-body .hljs-title,
+.markdown-body .hljs-built_in {
+	color: var(--mmdp-hljs-class);
+}
+
+.markdown-body .hljs-keyword,
+.markdown-body .hljs-type,
+.markdown-body .hljs-builtin-name,
+.markdown-body .hljs-meta-keyword,
+.markdown-body .hljs-template-tag,
+.markdown-body .hljs-template-variable {
+	color: var(--mmdp-hljs-keyword);
+}
+
+.markdown-body .hljs-string,
+.markdown-body .hljs-undefined {
+	color: var(--mmdp-hljs-string);
+}
+
+.markdown-body .hljs-regexp {
+	color: var(--mmdp-hljs-regexp);
+}
+
+.markdown-body .hljs-symbol {
+	color: var(--mmdp-hljs-symbol);
+}
+
+.markdown-body .hljs-bullet {
+	color: var(--mmdp-hljs-bullet);
+}
+
+.markdown-body .hljs-section {
+	color: var(--mmdp-hljs-section);
+	font-weight: bold;
+}
+
+.markdown-body .hljs-quote,
+.markdown-body .hljs-name,
+.markdown-body .hljs-selector-tag,
+.markdown-body .hljs-selector-pseudo {
+	color: var(--mmdp-hljs-quote);
+}
+
+.markdown-body .hljs-emphasis {
+	color: var(--mmdp-hljs-emphasis);
+	font-style: italic;
+}
+
+.markdown-body .hljs-strong {
+	color: var(--mmdp-hljs-strong);
+	font-weight: bold;
+}
+
+.markdown-body .hljs-deletion {
+	color: var(--mmdp-hljs-deletion-color);
+	background-color: var(--mmdp-hljs-deletion-bg);
+}
+
+.markdown-body .hljs-addition {
+	color: var(--mmdp-hljs-addition-color);
+	background-color: var(--mmdp-hljs-addition-bg);
+}
+
+.markdown-body .hljs-link {
+	color: var(--mmdp-hljs-link);
+	font-style: underline;
+}

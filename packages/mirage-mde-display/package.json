@@ -1,0 +1,35 @@
+{
+	"version": "0.0.0",
+	"name": "@roenlie/mirage-mde-display",
+	"description": "",
+	"author": "Kristoffer Roen-Lie",
+	"license": "MIT",
+	"type": "module",
+	"types": "./dist/lib/mirage-mde-display.d.ts",
+	"main": "./dist/lib/mirage-mde-display.js",
+	"exports": {
+		".": {
+			"types": "./dist/lib/mirage-mde-display.d.ts",
+			"default": "./dist/lib/mirage-mde-display.js"
+		}
+	},
+	"files": [
+		"dist/lib",
+		"src",
+		"package.json",
+		"README.md"
+	],
+	"scripts": {
+		"dev": "vite build --watch",
+		"build": "tsc --project ./src/tsconfig.json && vite build",
+		"updatedeps": "pnpm update --latest --interactive",
+		"typecheck": "tsc --project ./src/tsconfig.json --noEmit --emitDeclarationOnly false",
+		"increment-version": "pkg-toolbox increment-version --placeholder 0.0.0",
+		"merge-tsconfig": "pkg-toolbox merge-tsconfig --config ./src/tsconfig.json"
+	},
+	"dependencies": {
+		"lit": "^3.1.0",
+		"tslib": "^2.6.2"
+	},
+	"devDependencies": {}
+}

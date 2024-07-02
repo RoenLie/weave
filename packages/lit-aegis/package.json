@@ -48,6 +48,7 @@
 	"dependencies": {
 		"@roenlie/mimic-core": "workspace:^",
 		"@roenlie/reflect-metadata": "^1.0.3",
+		"@roenlie/mirage-docs": "^2.0.15",
 		"deepmerge-ts": "^7.0.0",
 		"inversify": "^6.0.2"
 	},

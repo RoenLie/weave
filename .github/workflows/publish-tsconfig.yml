@@ -1,7 +1,14 @@
 name: Publish tsconfig
 
 on:
-  workflow_dispatch:
+   # Runs on pushes targeting the default branch
+   push:
+     paths:
+      - 'packages/tsconfig-config/**'
+     branches: ["publish"]
+
+   # Allows you to run this workflow manually from the Actions tab
+   workflow_dispatch:
 
 jobs:
   publish-npm:

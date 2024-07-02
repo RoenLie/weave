@@ -1,0 +1,17 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"outDir": "../dist",
+		"rootDir": ".",
+		"baseUrl": ".",
+		"noEmit": false,
+		"emitDeclarationOnly": true,
+		"types": [
+			"node"
+		]
+	},
+	"exclude": [
+		"node_modules",
+		"dist",
+	]
+}

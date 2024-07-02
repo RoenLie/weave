@@ -1,0 +1,122 @@
+:host,
+* {
+	box-sizing: border-box;
+}
+
+:host {
+	display: grid;
+}
+
+.editor-toolbar {
+	position: relative;
+	user-select: none;
+	min-height: 32px;
+	padding-inline: 10px;
+	padding-block: 4px;
+	border: var(--_mmde-border);
+	border-top-left-radius: var(--_mmde-border-radius);
+	border-top-right-radius: var(--_mmde-border-radius);
+	border-bottom: none;
+	background-color: var(--_mmde-toolbar-bg);
+
+	display: flex;
+	align-items: center;
+	flex-flow: row wrap;
+	gap: 6px;
+
+	.miragemde-dropdown,
+	button {
+		all: unset;
+		display: inline-grid;
+		place-items: center;
+		width: max-content;
+		gap: 4px;
+		grid-auto-flow: column;
+		padding-inline: 4px;
+
+		height: 30px;
+		border-radius: 3px;
+		cursor: pointer;
+	}
+
+	button {
+		font-weight: 700;
+		min-width: 22px;
+		white-space: nowrap;
+		color: rgb(255 255 255 / 80%);
+
+		&:disabled {
+			opacity: .6;
+			pointer-events: none;
+		}
+
+		&::after {
+			font-size: 65%;
+			vertical-align: text-bottom;
+			position: relative;
+			top: 2px;
+		}
+
+		&.active {
+			background: rgb(52, 70, 88);
+		}
+
+		&:hover {
+			background: rgb(74, 100, 126)
+		}
+	}
+
+	mirage-mde-icon {
+		color: rgb(255 255 255 / 80%);
+		height: 20px;
+		width: 20px;
+	}
+
+	i.separator {
+		display: inline-block;
+		background-color: var(--_mmde-scrollthumb);
+		width: 2px;
+		color: transparent;
+		text-indent: -10px;
+		margin: 0px;
+	}
+}
+
+@media only screen and (max-width:700px) {
+	.editor-toolbar i.no-mobile {
+		display: none;
+	}
+}
+
+.editor-toolbar .miragemde-dropdown {
+	position: relative;
+	background: linear-gradient(to bottom right, #fff 0, #fff 84%, #333 50%, #333 100%);
+	border-radius: 0;
+	border: 1px solid #fff;
+}
+
+.editor-toolbar .miragemde-dropdown:hover {
+	background: linear-gradient(to bottom right, #fff 0, #fff 84%, #333 50%, #333 100%);
+}
+
+.miragemde-dropdown-content {
+	display: block;
+	visibility: hidden;
+	position: absolute;
+	background-color: #f9f9f9;
+	box-shadow: 0 8px 16px 0 rgb(0 0 0 / 20%);
+	padding: 8px;
+	z-index: 2;
+	top: 30px;
+}
+
+.miragemde-dropdown:active .miragemde-dropdown-content,
+.miragemde-dropdown:focus .miragemde-dropdown-content,
+.miragemde-dropdown:focus-within .miragemde-dropdown-content {
+	visibility: visible;
+}
+
+.miragemde-dropdown-content button {
+	display: block;
+	color: white;
+}

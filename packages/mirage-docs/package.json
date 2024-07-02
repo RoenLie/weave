@@ -1,0 +1,81 @@
+{
+	"name": "@roenlie/mirage-docs",
+	"version": "2.0.0",
+	"description": "",
+	"author": "Kristoffer Roen-Lie",
+	"license": "MIT",
+	"repository": "github/roenlie/mirage-docs",
+	"bugs": {
+		"url": "https://github.com/RoenLie/mirage-docs/issues",
+		"email": "KristofferRoenLie@gmail.com"
+	},
+	"files": [
+		"./dist",
+		"./src",
+		"./LICENSE",
+		"./package.json",
+		"./README.md"
+	],
+	"type": "module",
+	"main": "./dist/app/index.js",
+	"types": "./dist/app/index.d.ts",
+	"exports": {
+		"./server": "./dist/server/index.js",
+		"./app": "./dist/app/index.js",
+		"./app/*": "./dist/app/*",
+		"./workers/*": "./dist/workers/*",
+		"./assets/*": "./src/assets/*"
+	},
+	"scripts": {
+		"test": "vitest --config ./tests/vite.config.ts",
+		"dev": "pnpm run --parallel \"/^watch:.+/\"",
+		"watch:js": "vite build --watch --config ./vite.config.ts --logLevel silent",
+		"watch:ts-app": "tsc --watch --project ./src/app/tsconfig.json",
+		"watch:ts-server": "tsc --watch --project ./src/server/tsconfig.json",
+		"compile": "pnpm build-pre && pnpm build && pnpm build-post",
+		"build-pre": "pnpm run \"/^build-pre:.+/\"",
+		"build-pre:clean": "rimraf dist",
+		"build-pre:indexes": "package-toolbox build-indexes",
+		"build-pre:test": "vitest run --config ./tests/vite.config.ts",
+		"build": "pnpm run \"/^build:.+/\"",
+		"build:server": "vite build --config ./vite.config.ts",
+		"build:workers": "vite build --config ./vite-workers.config.ts",
+		"build:types": "tsc --project ./src/app/tsconfig.json && tsc --project ./src/server/tsconfig.json",
+		"build-post": "pnpm run \"/^build-post:.+/\"",
+		"build-post:cleanup": "rimraf --glob dist/**/*.tsbuildinfo",
+		"updatedeps": "pnpm update --latest",
+		"increment-version": "package-toolbox increment-version",
+		"package:local": "pnpm pack --pack-destination ../../_packages/"
+	},
+	"dependencies": {
+		"@custom-elements-manifest/analyzer": "^0.9.0",
+		"@monaco-editor/loader": "^1.4.0",
+		"@orama/orama": "2.0.1",
+		"@orama/plugin-data-persistence": "2.0.1",
+		"@orama/plugin-match-highlight": "2.0.1",
+		"@orama/plugin-parsedoc": "2.0.1",
+		"@roenlie/lit-aegis": "^1.0.36",
+		"@roenlie/mimic-core": "^0.0.77",
+		"@sindresorhus/slugify": "^2.2.1",
+		"deepmerge-ts": "^5.1.0",
+		"globby": "^14.0.0",
+		"highlight.js": "^11.9.0",
+		"markdown-it": "^14.0.0",
+		"markdown-it-anchor": "^8.6.7",
+		"monaco-editor": "^0.45.0",
+		"rollup-plugin-copy": "^3.5.0",
+		"tabbable": "^6.2.0",
+		"tslib": "^2.6.2"
+	},
+	"peerDependencies": {
+		"lit": "^3.1.0",
+		"vite": "^5.0.10"
+	},
+	"devDependencies": {
+		"@types/markdown-it": "^13.0.7",
+		"@types/sharedworker": "^0.0.111",
+		"bootstrap-icons": "^1.11.3",
+		"vitest": "^1.2.1"
+	},
+	"sideEffects": []
+}

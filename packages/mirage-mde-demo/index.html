@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- browser tab icon -->
+	<link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+
+	<title>Mirage MDE</title>
+
+	<style>
+		body {
+			font-family: Arial, Helvetica, sans-serif;
+			padding: 0;
+			margin: 0;
+			min-height: 100dvh;
+
+			background-color: rgb(40,40,40);
+		}
+		.header {
+			display: grid;
+			place-items: center;
+			color: goldenrod;
+			padding-top: 32px;
+		}
+		.header h1, .header a {
+			margin: 0;
+			padding: 0;
+		}
+		.header a {
+			padding-top: 8px;
+			opacity: 0.5;
+			color: inherit;
+		}
+		.wrapper {
+			padding: 12px;
+			display: grid;
+			padding-inline: 7vw;
+			height: 70dvh;
+		}
+		.footer {
+			position: fixed;
+			display: grid;
+			place-items: center;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			padding-block: 4px;
+		}
+		a {
+			color: cadetblue;
+		}
+	</style>
+</head>
+<body>
+	<div class="header">
+		<h1>Mirage MDE</h1>
+	</div>
+
+	<div class="wrapper">
+	</div>
+
+	<div class="footer">
+		<a href="https://github.com/roenlie/mirage-mde">
+			https://github.com/roenlie/mirage-mde
+		</a>
+	</div>
+
+	<script type="module" src="./src/main.ts"></script>
+</body>
+</html>

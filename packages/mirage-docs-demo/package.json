@@ -1,0 +1,28 @@
+{
+	"private": true,
+	"version": "1.0.0",
+	"description": "",
+	"author": {
+		"name": "Kristoffer Roen-Lie"
+	},
+	"license": "MIT",
+	"repository": "github/roenlie/mirage-docs",
+	"bugs": {
+		"url": "https://github.com/RoenLie/mirage-docs/issues",
+		"email": "KristofferRoenLie@gmail.com"
+	},
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"preview": "vite preview",
+		"updatedeps": "pnpm update --latest"
+	},
+	"dependencies": {
+		"tslib": "^2.6.2",
+		"@roenlie/mirage-docs": "workspace:^"
+	},
+	"devDependencies": {
+		"vite": "^5.0.10"
+	}
+}
