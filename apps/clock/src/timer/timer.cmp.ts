@@ -5,9 +5,9 @@ import '@roenlie/mimic-elements/input';
 
 import { component } from '@roenlie/lit-fabric/core';
 import { useDisconnected, useProperty, useState, useWillUpdate } from '@roenlie/lit-fabric/hooks';
-import { askForNotificationPermissions, emitEvent, type EventOf, notification } from '@roenlie/mimic-core/dom';
-import { accurateTimer } from '@roenlie/mimic-core/timing';
-import type { stringliteral } from '@roenlie/mimic-core/types';
+import { askForNotificationPermissions, emitEvent, type EventOf, notification } from '@roenlie/core/dom';
+import { accurateTimer } from '@roenlie/core/timing';
+import type { stringliteral } from '@roenlie/core/types';
 import { DialogConfig } from '@roenlie/mimic-elements/dialog';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html, LitElement } from 'lit';

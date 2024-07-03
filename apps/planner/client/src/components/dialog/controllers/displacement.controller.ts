@@ -1,5 +1,5 @@
-import { arraySum } from '@roenlie/mimic-core/array';
-import { resolveValueProvider } from '@roenlie/mimic-core/function';
+import { arraySum } from '@roenlie/core/array';
+import { resolveValueProvider } from '@roenlie/core/function';
 import { LitElement, ReactiveController, ReactiveControllerHost } from 'lit';
 
 import { IConstraints } from './controller.types.js';

@@ -22,7 +22,7 @@
 		"@faker-js/faker": "^8.4.1",
 		"@lit-labs/preact-signals": "^1.0.2",
 		"@roenlie/live-ts-imports": "workspace:*",
-		"@roenlie/mimic-core": "workspace:*",
+		"@roenlie/core": "workspace:*",
 		"@roenlie/monaco-editor-wc": "workspace:*",
 		"@roenlie/morph": "workspace:*",
 		"@types/cors": "^2.8.17",

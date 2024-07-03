@@ -1,4 +1,4 @@
-import { lazyMap, lazyWeakmap } from '@roenlie/mimic-core/structs';
+import { lazyMap, lazyWeakmap } from '@roenlie/core/structs';
 import type { ReactiveControllerHost } from 'lit';
 
 

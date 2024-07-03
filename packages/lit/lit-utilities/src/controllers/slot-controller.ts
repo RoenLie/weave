@@ -1,4 +1,4 @@
-import type { ComputedFlat, stringliteral } from '@roenlie/mimic-core/types';
+import type { ComputedFlat, stringliteral } from '@roenlie/core/types';
 import { LitElement, type ReactiveController, type ReactiveControllerHost } from 'lit';
 
 

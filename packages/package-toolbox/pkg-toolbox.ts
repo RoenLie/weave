@@ -9,9 +9,12 @@ export default defineToolbox(async () => {
 		indexBuilder: {
 			entrypoints: [
 				{
-					path:            './src/vite-utils/index.ts',
-					packagePath:     './vite-utils',
-					includeWildcard: true,
+					path:        './src/vite-utils/index.ts',
+					packagePath: './vite-utils',
+				},
+				{
+					path:        './src/filesystem/index.ts',
+					packagePath: './filesystem',
 				},
 			],
 			defaultFilters:             [ exclude ],
@@ -22,18 +25,6 @@ export default defineToolbox(async () => {
 		},
 		incrementPackage: {
 			registry: 'npmjs',
-		},
-		exportsBuilder: {
-			entries: [
-				{
-					path:    './toolbox',
-					default: './dist/toolbox/define-toolbox.js',
-				},
-				{
-					path:    './filesystem/*',
-					default: './dist/filesystem/*',
-				},
-			],
 		},
 	};
 });

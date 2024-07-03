@@ -1,5 +1,5 @@
-import { debounce, withDebounce } from '@roenlie/mimic-core/timing';
-import type { RecordOf } from '@roenlie/mimic-core/types';
+import { debounce, withDebounce } from '@roenlie/core/timing';
+import type { RecordOf } from '@roenlie/core/types';
 import { queryId } from '@roenlie/lit-utilities/decorators';
 import { MimicElement, customElement } from '@roenlie/lit-utilities/element';
 import { type CSSResultGroup, css, html } from 'lit';

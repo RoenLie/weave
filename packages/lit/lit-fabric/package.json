@@ -34,7 +34,7 @@
 		"increment-version": "pkg-toolbox increment-version --placeholder 99.99.99"
 	},
 	"dependencies": {
-		"@roenlie/mimic-core": "workspace:*",
+		"@roenlie/core": "workspace:*",
 		"lit": "^3.1.3"
 	},
 	"devDependencies": {

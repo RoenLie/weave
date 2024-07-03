@@ -55,7 +55,7 @@
 		"@orama/plugin-match-highlight": "2.0.21",
 		"@orama/plugin-parsedoc": "2.0.21",
 		"@roenlie/lit-aegis": "workspace:*",
-		"@roenlie/mimic-core": "workspace:*",
+		"@roenlie/core": "workspace:*",
 		"@sindresorhus/slugify": "^2.2.1",
 		"deepmerge-ts": "^7.0.3",
 		"globby": "^14.0.0",

@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { range } from '@roenlie/mimic-core/array';
+import { range } from '@roenlie/core/array';
 import { User } from '@rotul/planner-entities';
 
 

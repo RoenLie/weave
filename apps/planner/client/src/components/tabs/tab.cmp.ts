@@ -1,4 +1,4 @@
-import { domId, emitEvent, focusVisibleSelector } from '@roenlie/mimic-core/dom';
+import { domId, emitEvent, focusVisibleSelector } from '@roenlie/core/dom';
 import { LocalizeController } from '@roenlie/lit-utilities/controllers';
 import { css, html, LitElement } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';

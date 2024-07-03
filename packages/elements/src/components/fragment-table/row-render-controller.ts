@@ -1,7 +1,7 @@
-import { range } from '@roenlie/mimic-core/array';
-import type { EventOf } from '@roenlie/mimic-core/dom';
-import { readPath } from '@roenlie/mimic-core/structs';
-import { throttle, withDebounce } from '@roenlie/mimic-core/timing';
+import { range } from '@roenlie/core/array';
+import type { EventOf } from '@roenlie/core/dom';
+import { readPath } from '@roenlie/core/structs';
+import { throttle, withDebounce } from '@roenlie/core/timing';
 import { css, html, nothing, type ReactiveController } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { keyed } from 'lit/directives/keyed.js';

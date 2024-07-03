@@ -1,7 +1,7 @@
-import { paintCycle } from '@roenlie/mimic-core/async';
-import { findActiveElement, getTabbableBoundary } from '@roenlie/mimic-core/dom';
-import { noop } from '@roenlie/mimic-core/function';
-import { typeOf } from '@roenlie/mimic-core/validation';
+import { paintCycle } from '@roenlie/core/async';
+import { findActiveElement, getTabbableBoundary } from '@roenlie/core/dom';
+import { noop } from '@roenlie/core/function';
+import { typeOf } from '@roenlie/core/validation';
 import { EventController, KeyboardController } from '@roenlie/lit-utilities/controllers';
 import { css, html, LitElement, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';

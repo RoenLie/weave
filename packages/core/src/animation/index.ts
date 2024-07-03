@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { ElementAnimation, ElementAnimationMap, Direction, GetAnimationOptions } from './animation-registry.js';
 export { animateTo, parseDuration, prefersReducedMotion, stopAnimations, shimKeyframesHeightAuto } from './animate.js';

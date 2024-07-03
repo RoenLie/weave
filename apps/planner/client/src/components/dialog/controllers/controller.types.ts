@@ -1,4 +1,4 @@
-import { ValueProvider } from '@roenlie/mimic-core/types';
+import { ValueProvider } from '@roenlie/core/types';
 
 
 /** @internalexport */

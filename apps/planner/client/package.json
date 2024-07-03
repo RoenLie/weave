@@ -29,7 +29,7 @@
 		"@lukeed/uuid": "^2.0.1",
 		"@roenlie/lit-router": "workspace:*",
 		"@roenlie/lit-utilities": "workspace:*",
-		"@roenlie/mimic-core": "workspace:*",
+		"@roenlie/core": "workspace:*",
 		"@roenlie/planner-entities": "workspace:*",
 		"@roenlie/reflect-metadata": "workspace:*",
 		"deepmerge-ts": "^7.0.3",

@@ -1,4 +1,4 @@
-import { paintCycle } from '@roenlie/mimic-core/async';
+import { paintCycle } from '@roenlie/core/async';
 import { css, LitElement, render } from 'lit';
 import { customElement } from 'lit/decorators.js';
 

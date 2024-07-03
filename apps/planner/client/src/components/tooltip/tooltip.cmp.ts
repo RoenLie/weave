@@ -1,7 +1,7 @@
 import { arrow, autoUpdate, computePosition, flip, offset, type Placement, shift } from '@floating-ui/dom';
-import { animateTo, getAnimation, parseDuration, setDefaultAnimation, stopAnimations } from '@roenlie/mimic-core/animation';
-import { createPromiseResolver } from '@roenlie/mimic-core/async';
-import { emitEvent, hasKeyboardFocus, waitForEvent } from '@roenlie/mimic-core/dom';
+import { animateTo, getAnimation, parseDuration, setDefaultAnimation, stopAnimations } from '@roenlie/core/animation';
+import { createPromiseResolver } from '@roenlie/core/async';
+import { emitEvent, hasKeyboardFocus, waitForEvent } from '@roenlie/core/dom';
 import { EventController } from '@roenlie/lit-utilities/controllers';
 import { watch } from '@roenlie/lit-utilities/decorators';
 import { html, LitElement, TemplateResult } from 'lit';

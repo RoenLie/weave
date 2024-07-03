@@ -1,6 +1,6 @@
 import '@roenlie/mimic-elements/styles';
 
-import { sleep } from '@roenlie/mimic-core/async';
+import { sleep } from '@roenlie/core/async';
 import { LangBlockStore } from '@roenlie/mimic-localize/implement';
 import { appendToLangMap, createLangMapFromJson } from '@roenlie/mimic-localize/utilities';
 

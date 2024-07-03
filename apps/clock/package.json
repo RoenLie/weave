@@ -18,7 +18,7 @@
 	"dependencies": {
 		"@roenlie/lit-fabric": "workspace:*",
 		"@roenlie/lit-utilities": "workspace:*",
-		"@roenlie/mimic-core": "workspace:*",
+		"@roenlie/core": "workspace:*",
 		"@roenlie/mimic-elements": "workspace:*",
 		"lit": "^3.1.4",
 		"tslib": "^2.6.2"

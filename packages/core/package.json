@@ -1,5 +1,5 @@
 {
-	"name": "@roenlie/mimic-core",
+	"name": "@roenlie/core",
 	"version": "99.99.99",
 	"description": "A versatile collection of TypeScript helper functions and utilities",
 	"author": {
@@ -11,77 +11,65 @@
 	"types": "./dist/lib/index.d.ts",
 	"main": "./dist/lib/index.js",
 	"exports": {
-		".": {
-			"types": "./dist/lib/index.d.ts",
-			"default": "./dist/lib/index.js"
-		},
 		"./animation": {
 			"types": "./dist/lib/animation/index.d.ts",
 			"default": "./dist/lib/animation/index.js"
 		},
-		"./localize": {
-			"types": "./dist/lib/localize/index.d.ts",
-			"default": "./dist/lib/localize/index.js"
-		},
-		"./node-tree": {
-			"types": "./dist/lib/node-tree/index.d.ts",
-			"default": "./dist/lib/node-tree/index.js"
-		},
-		"./types": {
-			"types": "./dist/lib/types/index.d.ts",
-			"default": "./dist/lib/types/index.js"
-		},
 		"./array": {
-			"types": "./dist/lib/utils/array/index.d.ts",
-			"default": "./dist/lib/utils/array/index.js"
+			"types": "./dist/lib/array/index.d.ts",
+			"default": "./dist/lib/array/index.js"
 		},
 		"./async": {
-			"types": "./dist/lib/utils/async/index.d.ts",
-			"default": "./dist/lib/utils/async/index.js"
+			"types": "./dist/lib/async/index.d.ts",
+			"default": "./dist/lib/async/index.js"
 		},
 		"./coms": {
-			"types": "./dist/lib/utils/coms/index.d.ts",
-			"default": "./dist/lib/utils/coms/index.js"
+			"types": "./dist/lib/coms/index.d.ts",
+			"default": "./dist/lib/coms/index.js"
 		},
 		"./dom": {
-			"types": "./dist/lib/utils/dom/index.d.ts",
-			"default": "./dist/lib/utils/dom/index.js"
-		},
-		"./function": {
-			"types": "./dist/lib/utils/function/index.d.ts",
-			"default": "./dist/lib/utils/function/index.js"
-		},
-		"./iterators": {
-			"types": "./dist/lib/utils/iterators/index.d.ts",
-			"default": "./dist/lib/utils/iterators/index.js"
-		},
-		"./math": {
-			"types": "./dist/lib/utils/math/index.d.ts",
-			"default": "./dist/lib/utils/math/index.js"
-		},
-		"./string": {
-			"types": "./dist/lib/utils/string/index.d.ts",
-			"default": "./dist/lib/utils/string/index.js"
-		},
-		"./structs": {
-			"types": "./dist/lib/utils/structs/index.d.ts",
-			"default": "./dist/lib/utils/structs/index.js"
-		},
-		"./timing": {
-			"types": "./dist/lib/utils/timing/index.d.ts",
-			"default": "./dist/lib/utils/timing/index.js"
-		},
-		"./validation": {
-			"types": "./dist/lib/utils/validation/index.d.ts",
-			"default": "./dist/lib/utils/validation/index.js"
+			"types": "./dist/lib/dom/index.d.ts",
+			"default": "./dist/lib/dom/index.js"
 		},
 		"./enum": {
 			"types": "./dist/lib/enum/index.d.ts",
 			"default": "./dist/lib/enum/index.js"
 		},
-		"./sudoku": {
-			"types": "./dist/lib/sudoku/index.d.ts",
-			"default": "./dist/lib/sudoku/index.js"
+		"./function": {
+			"types": "./dist/lib/function/index.d.ts",
+			"default": "./dist/lib/function/index.js"
+		},
+		"./iterators": {
+			"types": "./dist/lib/iterators/index.d.ts",
+			"default": "./dist/lib/iterators/index.js"
+		},
+		"./math": {
+			"types": "./dist/lib/math/index.d.ts",
+			"default": "./dist/lib/math/index.js"
+		},
+		"./node-tree": {
+			"types": "./dist/lib/node-tree/index.d.ts",
+			"default": "./dist/lib/node-tree/index.js"
+		},
+		"./string": {
+			"types": "./dist/lib/string/index.d.ts",
+			"default": "./dist/lib/string/index.js"
+		},
+		"./structs": {
+			"types": "./dist/lib/structs/index.d.ts",
+			"default": "./dist/lib/structs/index.js"
+		},
+		"./timing": {
+			"types": "./dist/lib/timing/index.d.ts",
+			"default": "./dist/lib/timing/index.js"
+		},
+		"./types": {
+			"types": "./dist/lib/types/index.d.ts",
+			"default": "./dist/lib/types/index.js"
+		},
+		"./validation": {
+			"types": "./dist/lib/validation/index.d.ts",
+			"default": "./dist/lib/validation/index.js"
 		}
 	},
 	"sideEffects": false,
@@ -92,17 +80,22 @@
 		"README.md"
 	],
 	"scripts": {
-		"typecheck": "tsc --project ./tsconfig.json",
+		"typecheck": "tsc --project ./src/tsconfig.json",
 		"test": "vitest --config ./vite.config.test.ts",
-		"build": "pnpm build:prepare && pnpm build:index && pnpm build:types && vite build",
-		"build:prepare": "rimraf dist",
-		"build:index": "pkg-toolbox build-indexes",
-		"build:types": "tsc --project ./src/tsconfig.build.json",
+		"build": "pnpm run --sequential \"/^build::.*/\"",
+		"build::prepare": "rimraf dist",
+		"build::index": "pkg-toolbox build-indexes",
+		"build::ts": "tsc --project ./src/tsconfig.build.json",
+		"build::js": "vite build",
 		"updatedeps": "pnpm update --latest",
 		"increment-version": "pkg-toolbox increment-version --placeholder 99.99.99"
 	},
 	"dependencies": {
 		"nanoid": "^5.0.7",
-		"ts-toolbelt": "^9.6.0"
+		"ts-toolbelt": "^9.6.0",
+		"tslib": "^2.6.3"
+	},
+	"devDependencies": {
+		"vite": "^5.3.3"
 	}
 }

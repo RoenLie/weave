@@ -4,8 +4,8 @@ import '@roenlie/mimic-elements/text';
 
 import { component } from '@roenlie/lit-fabric/core';
 import { useConnected, useDisconnected, useState } from '@roenlie/lit-fabric/hooks';
-import { domId } from '@roenlie/mimic-core/dom';
-import { accurateTimer } from '@roenlie/mimic-core/timing';
+import { domId } from '@roenlie/core/dom';
+import { accurateTimer } from '@roenlie/core/timing';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html, nothing } from 'lit';
 import { map } from 'lit/directives/map.js';

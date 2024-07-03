@@ -6,8 +6,8 @@ import {
 	inject,
 	state,
 } from '@roenlie/lit-aegis';
-import { domId } from '@roenlie/mimic-core/dom';
-import { forOf } from '@roenlie/mimic-core/iterators';
+import { domId } from '@roenlie/core/dom';
+import { forOf } from '@roenlie/core/iterators';
 import { MMIcon } from '@roenlie/mimic-elements/icon';
 import { tooltip } from '@roenlie/mimic-elements/tooltip';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';

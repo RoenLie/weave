@@ -1,6 +1,6 @@
 import { EditorView } from '@codemirror/view';
-import { deepMerge } from '@roenlie/mimic-core/structs';
-import type { stringliteral } from '@roenlie/mimic-core/types';
+import { deepMerge } from '@roenlie/core/structs';
+import type { stringliteral } from '@roenlie/core/types';
 import { LitElement } from 'lit';
 import { type Ref } from 'lit/directives/ref.js';
 

@@ -1,7 +1,7 @@
-import { TrackedPromise } from '@roenlie/mimic-core/async';
-import { catalogToList, clone } from '@roenlie/mimic-core/structs';
-import { RecordOf } from '@roenlie/mimic-core/types';
-import { ifDefined } from '@roenlie/mimic-core/validation';
+import { TrackedPromise } from '@roenlie/core/async';
+import { catalogToList, clone } from '@roenlie/core/structs';
+import { RecordOf } from '@roenlie/core/types';
+import { ifDefined } from '@roenlie/core/validation';
 import { consume } from '@roenlie/lit-utilities/context';
 import { watch } from '@roenlie/lit-utilities/decorators';
 import { $Container, injectableElement, injectProp } from '@roenlie/lit-utilities/injectable';

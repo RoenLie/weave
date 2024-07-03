@@ -1,7 +1,7 @@
 import { type ChangeSpec, EditorSelection } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { arrayObjSum } from '@roenlie/mimic-core/array';
-import { isRangeInRanges } from '@roenlie/mimic-core/validation';
+import { arrayObjSum } from '@roenlie/core/array';
+import { isRangeInRanges } from '@roenlie/core/validation';
 
 import { type MMDECommand } from '../../registry/action-registry.js';
 import { getNodesInRange, type TextMarker, textMarkerValue } from '../listeners/get-state.js';

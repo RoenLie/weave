@@ -1,4 +1,4 @@
-import { invariant } from '@roenlie/mimic-core/validation';
+import { invariant } from '@roenlie/core/validation';
 import type { PropertyValues } from 'lit';
 
 import { getCurrentRef } from '../core/component.js';

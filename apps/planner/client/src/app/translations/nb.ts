@@ -1,4 +1,4 @@
-import { DefaultTranslation, registerTranslation } from '@roenlie/mimic-core/localize';
+import { DefaultTranslation, registerTranslation } from '@roenlie/core/localize';
 
 
 const translation: DefaultTranslation = {

@@ -1,4 +1,4 @@
-import { emitEvent } from '@roenlie/mimic-core/dom';
+import { emitEvent } from '@roenlie/core/dom';
 import { css, html, LitElement, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { cache } from 'lit/directives/cache.js';

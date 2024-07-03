@@ -1,4 +1,4 @@
-import type { RecordOf } from '@roenlie/mimic-core/types';
+import type { RecordOf } from '@roenlie/core/types';
 import { css, html, LitElement, type PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
 

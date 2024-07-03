@@ -1,4 +1,4 @@
-import { EventOf } from '@roenlie/mimic-core/dom';
+import { EventOf } from '@roenlie/core/dom';
 import { consume } from '@roenlie/lit-utilities/context';
 import { $Container, injectableElement, injectProp } from '@roenlie/lit-utilities/injectable';
 import { JournalEntry } from '@rotul/planner-entities';

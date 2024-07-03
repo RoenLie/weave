@@ -1,5 +1,5 @@
 import { EditorView, ViewUpdate } from '@codemirror/view';
-import { lazyWeakmap } from '@roenlie/mimic-core/structs';
+import { lazyWeakmap } from '@roenlie/core/structs';
 
 import { MirageMDE } from '../../mirage-mde.js';
 

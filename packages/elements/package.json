@@ -125,7 +125,7 @@
 	"dependencies": {
 		"@floating-ui/dom": "^1.6.4",
 		"@roenlie/lit-aegis": "workspace:*",
-		"@roenlie/mimic-core": "workspace:*",
+		"@roenlie/core": "workspace:*",
 		"@roenlie/lit-utilities": "workspace:*",
 		"@roenlie/lit-localize": "workspace:*",
 		"lit": "^3.1.3"

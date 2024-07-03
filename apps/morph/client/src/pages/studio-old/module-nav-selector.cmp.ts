@@ -1,4 +1,4 @@
-import { type EventOf, emitEvent } from '@roenlie/mimic-core/dom';
+import { type EventOf, emitEvent } from '@roenlie/core/dom';
 import { MimicElement, customElement } from '@roenlie/lit-utilities/element';
 import { css, html } from 'lit';
 import { property } from 'lit/decorators.js';

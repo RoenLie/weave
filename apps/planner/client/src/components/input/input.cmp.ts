@@ -1,5 +1,5 @@
-import { paintCycle } from '@roenlie/mimic-core/async';
-import { emitEvent, EventOf, hasKeyboardFocus } from '@roenlie/mimic-core/dom';
+import { paintCycle } from '@roenlie/core/async';
+import { emitEvent, EventOf, hasKeyboardFocus } from '@roenlie/core/dom';
 import { css, html, LitElement } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

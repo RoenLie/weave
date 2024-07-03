@@ -1,5 +1,5 @@
 import { type ContextProp, consume } from '@roenlie/lit-context';
-import { maybe } from '@roenlie/mimic-core/async';
+import { maybe } from '@roenlie/core/async';
 import { Alerts } from '@roenlie/mimic-elements/alert';
 import { MimicElement, customElement } from '@roenlie/lit-utilities/element';
 import { css, html } from 'lit';

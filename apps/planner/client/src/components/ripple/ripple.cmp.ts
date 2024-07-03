@@ -1,5 +1,5 @@
-import { emitEvent } from '@roenlie/mimic-core/dom';
-import { Fn } from '@roenlie/mimic-core/types';
+import { emitEvent } from '@roenlie/core/dom';
+import { Fn } from '@roenlie/core/types';
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 

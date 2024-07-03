@@ -1,4 +1,4 @@
-import { drag } from '@roenlie/mimic-core/dom';
+import { drag } from '@roenlie/core/dom';
 import { css, html, LitElement, type PropertyValues } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 

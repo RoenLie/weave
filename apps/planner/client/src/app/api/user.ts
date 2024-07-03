@@ -1,4 +1,4 @@
-import { maybe } from '@roenlie/mimic-core/async';
+import { maybe } from '@roenlie/core/async';
 import { NewUser, User } from '@rotul/planner-entities';
 
 import { Interact } from '../../features/interact/interact.js';

@@ -1,4 +1,4 @@
-import { emitEvent, type EventOf, hasKeyboardFocus } from '@roenlie/mimic-core/dom';
+import { emitEvent, type EventOf, hasKeyboardFocus } from '@roenlie/core/dom';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html } from 'lit';

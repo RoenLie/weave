@@ -1,4 +1,4 @@
-import { EventOf } from '@roenlie/mimic-core/dom';
+import { EventOf } from '@roenlie/core/dom';
 import { html } from 'lit';
 
 import { Dialogs } from '../../components/dialog/dialog-setup-api.js';

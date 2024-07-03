@@ -1,5 +1,5 @@
 import { type EditorView } from '@codemirror/view';
-import { type stringliteral } from '@roenlie/mimic-core/types';
+import { type stringliteral } from '@roenlie/core/types';
 
 import { cleanBlock } from '../codemirror/commands/clean-block.js';
 import { drawHorizontalRule } from '../codemirror/commands/draw-horizontal-rule.js';

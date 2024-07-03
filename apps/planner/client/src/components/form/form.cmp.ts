@@ -1,4 +1,4 @@
-import { EventOf } from '@roenlie/mimic-core/dom';
+import { EventOf } from '@roenlie/core/dom';
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';

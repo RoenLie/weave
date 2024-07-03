@@ -1,6 +1,6 @@
-import { animateTo, getAnimation, stopAnimations } from '@roenlie/mimic-core/animation';
-import { emitEvent, findActiveElement, lockBodyScrolling, Modal, unlockBodyScrolling, waitForEvent } from '@roenlie/mimic-core/dom';
-import { uppercaseFirstLetter } from '@roenlie/mimic-core/string';
+import { animateTo, getAnimation, stopAnimations } from '@roenlie/core/animation';
+import { emitEvent, findActiveElement, lockBodyScrolling, Modal, unlockBodyScrolling, waitForEvent } from '@roenlie/core/dom';
+import { uppercaseFirstLetter } from '@roenlie/core/string';
 import { SlotController } from '@roenlie/lit-utilities/controllers';
 import { watch } from '@roenlie/lit-utilities/decorators';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';

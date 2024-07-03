@@ -32,24 +32,30 @@
 	"types": "./dist/types/index.d.ts",
 	"main": "./dist/index.js",
 	"exports": {
-		"./vite-utils/*": "./dist/vite-utils/*",
-		"./vite-utils": {
-			"types": "./dist/vite-utils/index.d.ts",
-			"default": "./dist/vite-utils/index.js"
-		},
 		"./toolbox": {
 			"types": "./dist/toolbox/define-toolbox.d.ts",
 			"default": "./dist/toolbox/define-toolbox.js"
 		},
-		"./filesystem/*": "./dist/filesystem/*"
+		"./vite-utils": {
+			"types": "./dist/vite-utils/index.d.ts",
+			"default": "./dist/vite-utils/index.js"
+		},
+		"./filesystem": {
+			"types": "./dist/filesystem/index.d.ts",
+			"default": "./dist/filesystem/index.js"
+		},
+		"./kakakakkak": {
+			"types": "./dist/tester/deep/doesnotexist/index.d.ts",
+			"default": "./dist/tester/deep/doesnotexist/index.js"
+		}
 	},
 	"scripts": {
+		"test-build": "rimraf dist && vite build && node ./bin/index.js build-indexes",
 		"lint": "eslint src --fix",
 		"build": "pnpm run --sequential \"/^build::.*/\"",
 		"build::prepare": "rimraf dist",
 		"build::js1": "vite build",
 		"build::index": "node ./bin/index.js build-indexes",
-		"build::exports": "node ./bin/index.js build-exports",
 		"build::js2": "vite build",
 		"build::types": "tsc --project ./src/tsconfig.json",
 		"update:deps": "pnpm update --latest --interactive",
@@ -63,16 +69,15 @@
 		"globby": "^14.0.0",
 		"semver": "^7.6.0",
 		"tslib": "^2.6.2",
-		"tsup": "^8.0.1",
 		"typescript": "^5.5.2",
-		"yargs": "^17.7.2"
+		"yargs": "^17.7.2",
+		"vite": "^5.3.1"
 	},
 	"devDependencies": {
 		"@types/fs-extra": "^11.0.4",
 		"@types/semver": "^7.5.8",
 		"@types/yargs": "^17.0.32",
 		"rimraf": "^5.0.5",
-		"tsx": "^4.15.7",
-		"vite": "^5.3.1"
+		"tsx": "^4.15.7"
 	}
 }

@@ -1,5 +1,5 @@
 import { AegisElement, customElement } from '@roenlie/lit-aegis';
-import { emitEvent } from '@roenlie/mimic-core/dom';
+import { emitEvent } from '@roenlie/core/dom';
 import { tooltip } from '@roenlie/mimic-elements/tooltip';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { html } from 'lit';

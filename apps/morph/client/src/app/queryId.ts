@@ -1,4 +1,4 @@
-import type { RecordOf } from '@roenlie/mimic-core/types';
+import type { RecordOf } from '@roenlie/core/types';
 import type { ReactiveElement } from 'lit';
 
 import { decorateProperty } from './decorator-utility.js';

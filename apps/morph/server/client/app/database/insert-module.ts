@@ -1,4 +1,4 @@
-import { maybe } from '@roenlie/mimic-core/async';
+import { maybe } from '@roenlie/core/async';
 
 import { type IModule, Module } from '../../../models/modules-model.ts';
 

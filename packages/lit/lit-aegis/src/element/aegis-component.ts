@@ -1,5 +1,5 @@
-import { isPromise } from '@roenlie/mimic-core/async';
-import type { Ctor } from '@roenlie/mimic-core/types';
+import { isPromise } from '@roenlie/core/async';
+import type { Ctor } from '@roenlie/core/types';
 import { adoptStyles, type CSSResultOrNative, nothing, type PropertyValues } from 'lit';
 
 import type { Adapter } from '../adapter/adapter.js';

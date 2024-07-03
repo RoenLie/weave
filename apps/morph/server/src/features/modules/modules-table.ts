@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { range } from '@roenlie/mimic-core/array';
+import { range } from '@roenlie/core/array';
 import { type IModule, Module } from '@roenlie/morph/models/modules-model.js';
 
 import { SQLite } from '../sqlite/database.js';

@@ -1,7 +1,7 @@
-import { PauseableEvent, pauseableEvent } from '@roenlie/mimic-core/async';
-import { emitEvent, findActiveElement } from '@roenlie/mimic-core/dom';
-import { noop } from '@roenlie/mimic-core/function';
-import { Fn } from '@roenlie/mimic-core/types';
+import { PauseableEvent, pauseableEvent } from '@roenlie/core/async';
+import { emitEvent, findActiveElement } from '@roenlie/core/dom';
+import { noop } from '@roenlie/core/function';
+import { Fn } from '@roenlie/core/types';
 import { EventController } from '@roenlie/lit-utilities/controllers';
 import { css, html, LitElement, TemplateResult } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';

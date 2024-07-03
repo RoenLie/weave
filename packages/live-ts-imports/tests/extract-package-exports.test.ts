@@ -34,7 +34,7 @@ test('Wierd nested exports', () => {
 
 
 test('Single level nested with correct default', () => {
-	const packageName = '@roenlie/mimic-core';
+	const packageName = '@roenlie/core';
 	const exports = {
 		'.': {
 			'types':   './dist/lib/index.d.ts',
@@ -57,9 +57,9 @@ test('Single level nested with correct default', () => {
 	const parsed = extractExports(packageName, exports);
 
 	expect([ ...parsed ]).to.be.deep.equal([
-		[ '@roenlie/mimic-core',           '@roenlie/mimic-core/dist/lib/index.js' ],
-		[ '@roenlie/mimic-core/animation', '@roenlie/mimic-core/dist/lib/animation/index.js' ],
-		[ '@roenlie/mimic-core/localize',  '@roenlie/mimic-core/dist/lib/localize/index.js' ],
-		[ '@roenlie/mimic-core/node-tree', '@roenlie/mimic-core/dist/lib/node-tree/index.js' ],
+		[ '@roenlie/core',           '@roenlie/core/dist/lib/index.js' ],
+		[ '@roenlie/core/animation', '@roenlie/core/dist/lib/animation/index.js' ],
+		[ '@roenlie/core/localize',  '@roenlie/core/dist/lib/localize/index.js' ],
+		[ '@roenlie/core/node-tree', '@roenlie/core/dist/lib/node-tree/index.js' ],
 	]);
 });

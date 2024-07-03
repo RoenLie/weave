@@ -1,4 +1,4 @@
-import { domId } from '@roenlie/mimic-core/dom';
+import { domId } from '@roenlie/core/dom';
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 

@@ -1,5 +1,5 @@
-import { emitEvent, isTouch } from '@roenlie/mimic-core/dom';
-import { format } from '@roenlie/mimic-core/string';
+import { emitEvent, isTouch } from '@roenlie/core/dom';
+import { format } from '@roenlie/core/string';
 import { EventController, SlotController } from '@roenlie/lit-utilities/controllers';
 import { watch } from '@roenlie/lit-utilities/decorators';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';

@@ -1,5 +1,5 @@
-import { isPromise } from '@roenlie/mimic-core/async';
-import { debounce } from '@roenlie/mimic-core/timing';
+import { isPromise } from '@roenlie/core/async';
+import { debounce } from '@roenlie/core/timing';
 import { queryId, watch } from '@roenlie/lit-utilities/decorators';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';

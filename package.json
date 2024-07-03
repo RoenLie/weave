@@ -11,10 +11,11 @@
 		"@roenlie/eslint-config": "workspace:*",
 		"@roenlie/package-toolbox": "workspace:*",
 		"@roenlie/tsconfig": "workspace:*",
+		"@types/node": "^20.14.9",
+		"rimraf": "^5.0.7",
 		"turbo": "^2.0.5",
 		"typescript": "^5.5.2",
-		"vitest": "^1.6.0",
-		"@types/node": "^20.14.9"
+		"vitest": "^1.6.0"
 	},
 	"packageManager": "pnpm@9.0.6",
 	"engines": {

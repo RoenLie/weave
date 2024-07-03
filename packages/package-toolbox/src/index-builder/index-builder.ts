@@ -1,10 +1,10 @@
-import fs from 'node:fs';
 import { parse, resolve } from 'node:path';
 
 import ts from 'typescript';
 
 import { getFiles } from '../filesystem/get-files.js';
 import { genToArray } from '../utils/gen-to-array.js';
+import { access, readFile, writeFile } from 'node:fs/promises';
 
 
 /**
@@ -30,6 +30,10 @@ export const indexBuilder = async (
 	/* Get the target directory path, for use in creating relative paths */
 	const dirTarget = parse(pathTarget).dir;
 
+	const dirExists = await exists(dirTarget);
+	if (!dirExists)
+		return console.error('Directory does not exist!', dirTarget);
+
 	/* Retrieve, map, filter and sort the file paths */
 	const filePaths = (await genToArray(getFiles(dirTarget, /\.ts/)))
 		.map(rawPath => ({ rawPath, path: rawPath.replaceAll('\\', '/') }))
@@ -40,7 +44,7 @@ export const indexBuilder = async (
 		if (path.endsWith('/index.ts') || path.endsWith('/index.js'))
 			return { path,	symbols: [], types: [] };
 
-		const content: string = await fs.promises.readFile(rawPath, { encoding: 'utf8' });
+		const content: string = await readFile(rawPath, { encoding: 'utf8' });
 		const fileName = path.split('/').at(-1) ?? path;
 
 		const symbols = new Set<string>();
@@ -80,47 +84,44 @@ export const indexBuilder = async (
 	}, [] as string[]);
 
 	/* Check if there is an existing index file, and retrieve the contents */
-	fs.mkdirSync(dirTarget, { recursive: true });
-
-	const existingIndex = fs.existsSync(pathTarget)
-		? await fs.promises.readFile(pathTarget, { encoding: 'utf8' })
+	const existingIndex = await exists(pathTarget)
+		? await readFile(pathTarget, { encoding: 'utf8' })
 		: '';
 
-	const existingLines = existingIndex.split('\n').filter(l => l.startsWith('export'));
+	lines.sort((a, b) => {
+		let aSort = a.length;
+		let bSort = b.length;
 
-	/* compares two arrays and returns if they have the same entries, does not care about sort */
-	const arrayEqualEntries = (a: string[], b: string[]) => {
-		const sameNumberOfEntries = a.length === b.length;
-		const cacheHasSameEntries = a.every(cache => b.includes(cache));
+		if (a.includes('export type'))
+			aSort = aSort + 1000;
+		if (b.includes('export type'))
+			bSort = bSort + 1000;
 
-		return sameNumberOfEntries && cacheHasSameEntries;
-	};
+		return bSort - aSort;
+	});
+
+	lines.unshift('/* auto generated */');
+	lines.unshift('/* eslint-disable */');
+	lines.push('');
+
+	const indexContent = lines.join('\n');
 
 	/* only write the index file if it is different from what exists */
-	const filesEqual = arrayEqualEntries(lines, existingLines);
-	if (!filesEqual) {
-		lines.sort((a, b) => {
-			let aSort = a.length;
-			let bSort = b.length;
-
-			if (a.includes('export type'))
-				aSort = aSort + 1000;
-			if (b.includes('export type'))
-				bSort = bSort + 1000;
-
-			return bSort - aSort;
-		});
-
-		console.log('\n', 'create-index: Index updated');
-
-		lines.unshift('/* auto generated */');
-		lines.unshift('/* eslint-disable max-len */');
-		lines.unshift('/* eslint-disable simple-import-sort/exports */');
-		lines.push('');
-
-		/* Write the new index file. */
-		await fs.promises.writeFile(pathTarget, lines.join('\n'));
+	if (indexContent !== existingIndex) {
+		console.log('\n', 'create-index:', pathTarget);
+		await writeFile(pathTarget, lines.join('\n'));
 	}
+};
+
+
+const exists = async (path: string) => {
+	let exists = false;
+
+	await access(path)
+		.then(() => exists = true)
+		.catch(() => exists = false);
+
+	return exists;
 };
 
 

@@ -1,7 +1,7 @@
 import { SignalWatcher } from '@lit-labs/preact-signals';
 import { Adapter, AegisComponent, AegisElement, customElement, inject } from '@roenlie/lit-aegis';
-import { domId } from '@roenlie/mimic-core/dom';
-import { debounce } from '@roenlie/mimic-core/timing';
+import { domId } from '@roenlie/core/dom';
+import { debounce } from '@roenlie/core/timing';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { type editor, MonacoEditorCmp } from '@roenlie/morph-components/monaco';
 import { css, html } from 'lit';

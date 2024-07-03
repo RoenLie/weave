@@ -1,4 +1,4 @@
-import type { Fn } from '@roenlie/mimic-core/types';
+import type { Fn } from '@roenlie/core/types';
 import { deepmerge } from 'deepmerge-ts';
 import { Container as iContainer, type interfaces } from 'inversify';
 

@@ -1,13 +1,6 @@
 {
 	"extends": "@roenlie/tsconfig",
-	"compilerOptions": {
-		"outDir": "../dist/lib",
-		"rootDir": ".",
-		"baseUrl": ".",
-		"types": [
-			"vite/client"
-		]
-	},
+	"compilerOptions": {},
 	"include": [
 		"./**/*.ts",
 		"./**/*.d.ts",

@@ -1,5 +1,5 @@
-import { animateTo, animationSpeed, getAnimation, setDefaultAnimation, stopAnimations } from '@roenlie/mimic-core/animation';
-import { AsyncFn, Fn } from '@roenlie/mimic-core/types';
+import { animateTo, animationSpeed, getAnimation, setDefaultAnimation, stopAnimations } from '@roenlie/core/animation';
+import { AsyncFn, Fn } from '@roenlie/core/types';
 import { LitElement } from 'lit';
 
 

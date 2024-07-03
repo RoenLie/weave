@@ -1,5 +1,5 @@
 import { ViewUpdate } from '@codemirror/view';
-import { debounce } from '@roenlie/mimic-core/timing';
+import { debounce } from '@roenlie/core/timing';
 
 import { MirageMDE } from '../../mirage-mde.js';
 import { editorToPreview } from '../commands/toggle-sidebyside.js';

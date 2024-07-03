@@ -12,7 +12,7 @@
 		"@lit-labs/preact-signals": "^1.0.2",
 		"@roenlie/lit-aegis": "workspace:*",
 		"@roenlie/lit-utilities": "workspace:*",
-		"@roenlie/mimic-core": "workspace:*",
+		"@roenlie/core": "workspace:*",
 		"@roenlie/mimic-elements": "workspace:*",
 		"lit": "3.1.4",
 		"posix-path-browser": "workspace:*",

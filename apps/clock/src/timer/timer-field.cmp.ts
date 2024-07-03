@@ -3,8 +3,8 @@ import {
 	useController, useProperty,
 	useState, useWillUpdate,
 } from '@roenlie/lit-fabric/hooks';
-import { emitEvent } from '@roenlie/mimic-core/dom';
-import { curryDebounce } from '@roenlie/mimic-core/timing';
+import { emitEvent } from '@roenlie/core/dom';
+import { curryDebounce } from '@roenlie/core/timing';
 import { KeyboardController } from '@roenlie/lit-utilities/controllers';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html, LitElement } from 'lit';

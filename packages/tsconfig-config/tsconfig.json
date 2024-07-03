@@ -9,6 +9,7 @@
 			"DOM",
 			"DOM.Iterable",
 		],
+		"types": [],
 		"outDir": "${configDir}/../dist",
 		"rootDir": "${configDir}",
 		"baseUrl": "${configDir}",

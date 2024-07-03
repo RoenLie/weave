@@ -1,4 +1,4 @@
-import { getDefaultAnimation } from '@roenlie/mimic-core/animation';
+import { getDefaultAnimation } from '@roenlie/core/animation';
 
 
 export const routeAnimation = () => {

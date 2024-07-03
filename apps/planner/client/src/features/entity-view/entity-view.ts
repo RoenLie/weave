@@ -1,4 +1,4 @@
-import { Catalog } from '@roenlie/mimic-core/structs';
+import { Catalog } from '@roenlie/core/structs';
 import { TemplateResult } from 'lit';
 
 import { EntityListStore, EntityPanelStore, EntityViewStore } from './entity-view-store.js';

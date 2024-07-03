@@ -1,4 +1,4 @@
-import { setDefaultAnimation } from '@roenlie/mimic-core/animation';
+import { setDefaultAnimation } from '@roenlie/core/animation';
 
 
 export const registerTooltipAnimations = () => {

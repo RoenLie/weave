@@ -1,6 +1,6 @@
-import { animateTo, animationSpeed, getAnimation, setDefaultAnimation, stopAnimations } from '@roenlie/mimic-core/animation';
-import { emitEvent, findActiveElement, lockBodyScrolling, Modal, unlockBodyScrolling, waitForEvent } from '@roenlie/mimic-core/dom';
-import { uppercaseFirstLetter } from '@roenlie/mimic-core/string';
+import { animateTo, animationSpeed, getAnimation, setDefaultAnimation, stopAnimations } from '@roenlie/core/animation';
+import { emitEvent, findActiveElement, lockBodyScrolling, Modal, unlockBodyScrolling, waitForEvent } from '@roenlie/core/dom';
+import { uppercaseFirstLetter } from '@roenlie/core/string';
 import { HasSlotController, LocalizeController } from '@roenlie/lit-utilities/controllers';
 import { watch } from '@roenlie/lit-utilities/decorators';
 import { html, LitElement } from 'lit';

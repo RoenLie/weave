@@ -3,8 +3,8 @@ import '@roenlie/mimic-elements/icon';
 
 import { component } from '@roenlie/lit-fabric/core';
 import { useOnEvent } from '@roenlie/lit-fabric/hooks';
-import { swapItems } from '@roenlie/mimic-core/array';
-import { domId, type EventOf } from '@roenlie/mimic-core/dom';
+import { swapItems } from '@roenlie/core/array';
+import { domId, type EventOf } from '@roenlie/core/dom';
 import { DialogConfig } from '@roenlie/mimic-elements/dialog';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html } from 'lit';

@@ -1,4 +1,4 @@
-import type { Fn } from '@roenlie/mimic-core/types';
+import type { Fn } from '@roenlie/core/types';
 import type { ReactiveController } from 'lit';
 
 import type { LitHost } from '../types/lit.js';

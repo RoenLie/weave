@@ -1,4 +1,4 @@
-import { resolveValueProvider } from '@roenlie/mimic-core/function';
+import { resolveValueProvider } from '@roenlie/core/function';
 import { LitElement, ReactiveController, ReactiveControllerHost } from 'lit';
 
 import { IConstraints } from './controller.types.js';

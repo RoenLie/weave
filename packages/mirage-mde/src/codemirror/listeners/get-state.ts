@@ -1,6 +1,6 @@
 import { syntaxTree } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
-import { isRangeInRanges, type Range } from '@roenlie/mimic-core/validation';
+import { isRangeInRanges, type Range } from '@roenlie/core/validation';
 
 
 export type Marker = TextMarker | LineMarker | [

@@ -1,5 +1,5 @@
-import { animateTo, getAnimation, setDefaultAnimation, shimKeyframesHeightAuto, stopAnimations } from '@roenlie/mimic-core/animation';
-import { sleep, waitForPromiseSet } from '@roenlie/mimic-core/async';
+import { animateTo, getAnimation, setDefaultAnimation, shimKeyframesHeightAuto, stopAnimations } from '@roenlie/core/animation';
+import { sleep, waitForPromiseSet } from '@roenlie/core/async';
 import { Submission } from '@rotul/planner-entities';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';

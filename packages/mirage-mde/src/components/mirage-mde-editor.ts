@@ -35,7 +35,7 @@ import {
 } from '@codemirror/view';
 import { styleTags, Tag, tags } from '@lezer/highlight';
 import { type MarkdownConfig } from '@lezer/markdown';
-import { iterate } from '@roenlie/mimic-core/iterators';
+import { iterate } from '@roenlie/core/iterators';
 import { basicDark } from 'cm6-theme-basic-dark';
 import { css, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';

@@ -1,5 +1,5 @@
-import { animateTo, animationSpeed, getAnimation, setDefaultAnimation, stopAnimations } from '@roenlie/mimic-core/animation';
-import { emitEvent, waitForEvent } from '@roenlie/mimic-core/dom';
+import { animateTo, animationSpeed, getAnimation, setDefaultAnimation, stopAnimations } from '@roenlie/core/animation';
+import { emitEvent, waitForEvent } from '@roenlie/core/dom';
 import { HasSlotController, LocalizeController } from '@roenlie/lit-utilities/controllers';
 import { watch } from '@roenlie/lit-utilities/decorators';
 import { css, html, LitElement, PropertyValues } from 'lit';

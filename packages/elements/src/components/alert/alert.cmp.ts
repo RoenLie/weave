@@ -1,8 +1,8 @@
 import {
 	animateTo, getAnimation,
 	setDefaultAnimation, stopAnimations,
-} from '@roenlie/mimic-core/animation';
-import { emitEvent, waitForEvent } from '@roenlie/mimic-core/dom';
+} from '@roenlie/core/animation';
+import { emitEvent, waitForEvent } from '@roenlie/core/dom';
 import { SlotController } from '@roenlie/lit-utilities/controllers';
 import { watch } from '@roenlie/lit-utilities/decorators';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';

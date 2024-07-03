@@ -1,7 +1,7 @@
 import { promises } from 'node:fs';
 
-import { type ITrackedPromise, TrackedPromise } from '@roenlie/mimic-core/async';
-import { withDebounce } from '@roenlie/mimic-core/timing';
+import { type ITrackedPromise, TrackedPromise } from '@roenlie/core/async';
+import { withDebounce } from '@roenlie/core/timing';
 import type { ModuleNode, Plugin, ResolvedConfig } from 'vite';
 
 import { getCache } from './build/cache/cache-registry.js';

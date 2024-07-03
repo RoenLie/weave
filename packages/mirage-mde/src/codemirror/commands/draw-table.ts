@@ -1,4 +1,4 @@
-import { deIndent } from '@roenlie/mimic-core/string';
+import { deIndent } from '@roenlie/core/string';
 
 import { type MMDECommand } from '../../registry/action-registry.js';
 import { replaceSelection } from '../../utilities/replace-selection.js';

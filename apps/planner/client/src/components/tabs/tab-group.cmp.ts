@@ -1,7 +1,7 @@
-import { animateTo, animationSpeed, stopAnimations } from '@roenlie/mimic-core/animation';
-import { paintCycle } from '@roenlie/mimic-core/async';
-import { emitEvent, scrollIntoView } from '@roenlie/mimic-core/dom';
-import { oneOf } from '@roenlie/mimic-core/validation';
+import { animateTo, animationSpeed, stopAnimations } from '@roenlie/core/animation';
+import { paintCycle } from '@roenlie/core/async';
+import { emitEvent, scrollIntoView } from '@roenlie/core/dom';
+import { oneOf } from '@roenlie/core/validation';
 import { KeyboardController, LocalizeController } from '@roenlie/lit-utilities/controllers';
 import { watch } from '@roenlie/lit-utilities/decorators';
 import { css, html, LitElement } from 'lit';

@@ -1,4 +1,4 @@
-import { nameof } from '@roenlie/mimic-core/function';
+import { nameof } from '@roenlie/core/function';
 import { useReflectMetadata } from '@roenlie/reflect-metadata';
 import { type interfaces, METADATA_KEY } from 'inversify';
 import type { DecoratorTarget } from 'inversify/lib/annotation/decorator_utils.js';

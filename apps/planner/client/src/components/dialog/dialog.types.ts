@@ -1,6 +1,6 @@
-import { Hooks } from '@roenlie/mimic-core/coms';
-import { Localize } from '@roenlie/mimic-core/localize';
-import { RecordOf } from '@roenlie/mimic-core/types';
+import { Hooks } from '@roenlie/core/coms';
+import { Localize } from '@roenlie/core/localize';
+import { RecordOf } from '@roenlie/core/types';
 import type { TemplateResult } from 'lit';
 
 import type { Coordinates, IConstraints } from './controllers/controller.types.js';

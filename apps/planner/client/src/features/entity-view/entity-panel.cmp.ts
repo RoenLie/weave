@@ -1,7 +1,7 @@
-import { ITrackedPromise, TrackedPromise } from '@roenlie/mimic-core/async';
-import { breadthTraverseDOM } from '@roenlie/mimic-core/dom';
-import { removeSegments } from '@roenlie/mimic-core/string';
-import { catalogToList } from '@roenlie/mimic-core/structs';
+import { ITrackedPromise, TrackedPromise } from '@roenlie/core/async';
+import { breadthTraverseDOM } from '@roenlie/core/dom';
+import { removeSegments } from '@roenlie/core/string';
+import { catalogToList } from '@roenlie/core/structs';
 import { consume } from '@roenlie/lit-utilities/context';
 import { $Container, InjectableElement, injectableElement, injectProp } from '@roenlie/lit-utilities/injectable';
 import { Container } from 'inversify';

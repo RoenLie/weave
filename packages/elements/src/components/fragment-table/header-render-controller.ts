@@ -1,4 +1,4 @@
-import type { EventOf } from '@roenlie/mimic-core/dom';
+import type { EventOf } from '@roenlie/core/dom';
 import { css, html, nothing, type ReactiveController } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { map } from 'lit/directives/map.js';

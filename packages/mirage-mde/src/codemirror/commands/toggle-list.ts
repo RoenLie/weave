@@ -1,6 +1,6 @@
 import { type ChangeSpec, EditorSelection } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { range as createRange } from '@roenlie/mimic-core/array';
+import { range as createRange } from '@roenlie/core/array';
 
 import { type MMDECommand } from '../../registry/action-registry.js';
 import { getNodesInRange } from '../listeners/get-state.js';

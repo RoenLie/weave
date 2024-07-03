@@ -1,38 +1,47 @@
 import fsp from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
-import { build } from 'tsup';
-
 import { type ToolboxConfig } from './define-toolbox.js';
+import { build } from 'vite';
 
 
 export const loadConfigWithTsup = async (filePath: string) => {
 	const ext = '.mjs';
-	const fileBase = `${ filePath }.timestamp-${ Date.now() }-${ Math.random()
-		.toString(16)
-		.slice(2) }`;
+	const fileBase = filePath.replace('.ts', '.')
+		+ crypto.randomUUID().split('-').at(-1);
 
-	const fileNameTmp = `${ fileBase }`;
+	const fileNameTmp = fileBase.replace(/^\.+\//, '') + ext;
 	const fileUrl = `${ pathToFileURL(fileBase) }${ ext }`;
 
-	const pathIn = filePath;
-
 	await build({
-		entry:        { [fileNameTmp]: pathIn },
-		format:       'esm',
-		outDir:       './',
-		splitting:    false,
-		outExtension: () => ({ js: ext }),
-		silent:       true,
-		treeshake:    true,
+		logLevel: 'silent',
+		build:    {
+			outDir:      '.',
+			emptyOutDir: false,
+			lib:         {
+				entry:    filePath,
+				formats:  [ 'es' ],
+				fileName: () => fileNameTmp,
+			},
+			rollupOptions: {
+				treeshake: true,
+				input:     filePath,
+				output:    {
+					manualChunks:    () => fileNameTmp,
+					preserveModules: false,
+					sourcemap:       false,
+				},
+			},
+		},
 	});
 
-	const imp: () => Promise<ToolboxConfig> = await import(fileUrl).then(m => m.default);
+	const imp: () => Promise<ToolboxConfig> = await import(fileUrl)
+		.then(m => m.default);
 
 	try {
 		return await imp();
 	}
 	finally {
-		fsp.unlink(fileNameTmp + ext);
+		fsp.unlink(fileNameTmp);
 	}
 };

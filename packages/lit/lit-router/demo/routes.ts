@@ -1,4 +1,4 @@
-import { getAnimation, setDefaultAnimation } from '@roenlie/mimic-core/animation';
+import { getAnimation, setDefaultAnimation } from '@roenlie/core/animation';
 
 export const generateRoutes = (el: Element) => {
 	return [

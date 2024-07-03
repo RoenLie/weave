@@ -1,6 +1,6 @@
 import './mirage-mde-icon.js';
 
-import { hasCommonElement } from '@roenlie/mimic-core/array';
+import { hasCommonElement } from '@roenlie/core/array';
 import { html, LitElement, nothing, type TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

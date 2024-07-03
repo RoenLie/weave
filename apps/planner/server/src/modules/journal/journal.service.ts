@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { maybe } from '@roenlie/mimic-core/async';
+import { maybe } from '@roenlie/core/async';
 import { JournalEntry, NewJournalEntry, newJournalEntry } from '@rotul/planner-entities';
 
 import { BaseService } from '../app/base-service.js';

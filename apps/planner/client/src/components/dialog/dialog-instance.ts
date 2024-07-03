@@ -1,7 +1,7 @@
-import { ITrackedPromise, TrackedPromise } from '@roenlie/mimic-core/async';
-import { Hooks } from '@roenlie/mimic-core/coms';
-import { domId } from '@roenlie/mimic-core/dom';
-import { RecordOf } from '@roenlie/mimic-core/types';
+import { ITrackedPromise, TrackedPromise } from '@roenlie/core/async';
+import { Hooks } from '@roenlie/core/coms';
+import { domId } from '@roenlie/core/dom';
+import { RecordOf } from '@roenlie/core/types';
 import { TemplateResult } from 'lit';
 
 import { DialogHooks, IDialogDef, IDialogInstanceCtrl, IDialogPortalCtrl, IDialogProps } from './dialog.types.js';

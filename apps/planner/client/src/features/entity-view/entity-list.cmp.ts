@@ -1,9 +1,9 @@
-import { paintCycle, sleep } from '@roenlie/mimic-core/async';
-import { findActiveElement, getFirstSelector } from '@roenlie/mimic-core/dom';
-import { catalogToList, clone } from '@roenlie/mimic-core/structs';
-import { curryDebounce } from '@roenlie/mimic-core/timing';
-import { RecordOf } from '@roenlie/mimic-core/types';
-import { ifDefined } from '@roenlie/mimic-core/validation';
+import { paintCycle, sleep } from '@roenlie/core/async';
+import { findActiveElement, getFirstSelector } from '@roenlie/core/dom';
+import { catalogToList, clone } from '@roenlie/core/structs';
+import { curryDebounce } from '@roenlie/core/timing';
+import { RecordOf } from '@roenlie/core/types';
+import { ifDefined } from '@roenlie/core/validation';
 import { consume } from '@roenlie/lit-utilities/context';
 import { $Container, InjectableElement, injectableElement, injectProp } from '@roenlie/lit-utilities/injectable';
 import { Container } from 'inversify';

@@ -21,6 +21,9 @@ const base = tseslint.config({
 			ecmaVersion:           'latest',
 		},
 	},
+	linterOptions: {
+		reportUnusedDisableDirectives: 'off',
+	},
 	rules: {
 		'curly': [
 			'warn',
@@ -243,15 +246,6 @@ const base = tseslint.config({
 		],
 
 		// Typescript spesific things.
-		'@typescript-eslint/ban-types': [
-			'warn',
-			{
-				types: {
-					Function: false,
-				},
-				extendDefaults: true,
-			},
-		],
 		'@typescript-eslint/explicit-member-accessibility': [
 			'warn',
 			{

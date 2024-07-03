@@ -1,4 +1,4 @@
-import { RecordOf } from '@roenlie/mimic-core/types';
+import { RecordOf } from '@roenlie/core/types';
 import { ContainerModule } from '@roenlie/lit-utilities/injectable';
 import { LitStateStore, type Stored, stored } from '@roenlie/lit-utilities/state-store';
 import { injectable } from 'inversify';

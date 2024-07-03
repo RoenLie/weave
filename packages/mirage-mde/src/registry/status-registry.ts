@@ -1,6 +1,6 @@
 import { type EditorView, type ViewUpdate } from '@codemirror/view';
-import { wordCount } from '@roenlie/mimic-core/string';
-import { type stringliteral } from '@roenlie/mimic-core/types';
+import { wordCount } from '@roenlie/core/string';
+import { type stringliteral } from '@roenlie/core/types';
 
 import { type MirageMDE } from '../mirage-mde.js';
 

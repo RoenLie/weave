@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { randomElement } from '@roenlie/mimic-core/array';
-import { domId } from '@roenlie/mimic-core/dom';
+import { randomElement } from '@roenlie/core/array';
+import { domId } from '@roenlie/core/dom';
 import { ABSENCE_TYPE, AbsenceType, Submission, SUBMISSION_STATUS, SubmissionStatus } from '@rotul/planner-entities';
 
 

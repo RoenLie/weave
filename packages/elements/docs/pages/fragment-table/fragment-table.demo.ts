@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { range } from '@roenlie/mimic-core/array';
+import { range } from '@roenlie/core/array';
 import { type Column, FragmentTable, type Options } from '@roenlie/mimic-elements/fragment-table';
 import { MMTypeahead } from '@roenlie/mimic-elements/typeahead';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';

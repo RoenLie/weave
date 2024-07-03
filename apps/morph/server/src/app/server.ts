@@ -11,7 +11,7 @@ liveTsImports({
 	packages:   [
 		'lit',
 		'@lit-labs/preact-signals',
-		'@roenlie/mimic-core',
+		'@roenlie/core',
 		'@roenlie/monaco-editor-wc',
 	],
 	client: [

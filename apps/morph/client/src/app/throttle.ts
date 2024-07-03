@@ -1,4 +1,4 @@
-import type { Fn } from '@roenlie/mimic-core/types';
+import type { Fn } from '@roenlie/core/types';
 
 /**
  * Takes in a `func`, returns a new function that performs the same task as the original,

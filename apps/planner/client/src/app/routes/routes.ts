@@ -1,4 +1,4 @@
-import { setDefaultAnimation } from '@roenlie/mimic-core/animation';
+import { setDefaultAnimation } from '@roenlie/core/animation';
 import { Route } from '@roenlie/lit-router';
 
 import { routeAnimation } from './route-animation.js';

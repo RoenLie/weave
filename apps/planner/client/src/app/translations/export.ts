@@ -1,4 +1,4 @@
-import { LanguageExport } from '@roenlie/mimic-core/localize';
+import { LanguageExport } from '@roenlie/core/localize';
 
 
 export const translationFiles: LanguageExport = {

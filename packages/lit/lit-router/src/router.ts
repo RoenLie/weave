@@ -1,9 +1,9 @@
 import './utilities/polyfills.js';
 
-import { animateTo, type ElementAnimation, stopAnimations } from '@roenlie/mimic-core/animation';
-import { createPromiseResolver } from '@roenlie/mimic-core/async';
-import { trimPostfix } from '@roenlie/mimic-core/string';
-import { clone } from '@roenlie/mimic-core/structs';
+import { animateTo, type ElementAnimation, stopAnimations } from '@roenlie/core/animation';
+import { createPromiseResolver } from '@roenlie/core/async';
+import { trimPostfix } from '@roenlie/core/string';
+import { clone } from '@roenlie/core/structs';
 
 import { RouteHistory } from './route-history-base.js';
 

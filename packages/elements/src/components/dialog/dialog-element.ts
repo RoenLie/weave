@@ -1,4 +1,4 @@
-import { TrackedPromise } from '@roenlie/mimic-core/async';
+import { TrackedPromise } from '@roenlie/core/async';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, CSSResult, html } from 'lit';

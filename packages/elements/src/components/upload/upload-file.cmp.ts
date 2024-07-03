@@ -1,4 +1,4 @@
-import { emitEvent } from '@roenlie/mimic-core/dom';
+import { emitEvent } from '@roenlie/core/dom';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, type CSSResultGroup, html, type PropertyValueMap } from 'lit';

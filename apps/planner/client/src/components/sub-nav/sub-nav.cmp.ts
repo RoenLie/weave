@@ -1,4 +1,4 @@
-import { findActiveElement } from '@roenlie/mimic-core/dom';
+import { findActiveElement } from '@roenlie/core/dom';
 import { EventController } from '@roenlie/lit-utilities/controllers';
 import { css, html, LitElement } from 'lit';
 import { customElement, property, queryAssignedElements } from 'lit/decorators.js';

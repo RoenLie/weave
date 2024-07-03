@@ -2,22 +2,19 @@ import { type stringliteral } from '../types/strings.types.js';
 
 
 export interface ElementAnimation {
-	keyframes: Keyframe[];
+	keyframes:     Keyframe[];
 	rtlKeyframes?: Keyframe[];
-	options?: KeyframeAnimationOptions;
+	options?:      KeyframeAnimationOptions;
 }
 
-
-export interface ElementAnimationMap {
-	[animationName: string]: ElementAnimation;
-}
-
+export type ElementAnimationMap = Record<string, ElementAnimation>;
 
 export type Direction = 'ltr' | 'rtl' | stringliteral;
 
 export interface GetAnimationOptions {
 	/**
-	 * The component's directionality. When set to "rtl", `rtlKeyframes` will be preferred over `keyframes` where
+	 * The component's directionality.
+	 * When set to "rtl", `rtlKeyframes` will be preferred over `keyframes` where
 	 * available using getAnimation().
 	 */
 	dir?: Direction;
@@ -33,7 +30,8 @@ const ensureAnimation = (animation: ElementAnimation | null) => {
 
 
 /**
- * Given an ElementAnimation, this function returns a new ElementAnimation where the keyframes property reflects either
+ * Given an ElementAnimation,
+ * this function returns a new ElementAnimation where the keyframes property reflects either
  * keyframes or rtlKeyframes depending on the specified directionality.
  */
 const getLogicalAnimation = (animation: ElementAnimation, dir: Direction = 'ltr') => {
@@ -49,8 +47,10 @@ const getLogicalAnimation = (animation: ElementAnimation, dir: Direction = 'ltr'
 
 
 /**
- * Sets a default animation. Components should use the `name.animation` for primary animations and `name.part.animation`
- * for secondary animations, e.g. `dialog.show` and `dialog.overlay.show`. For modifiers, use `drawer.showTop`.
+ * Sets a default animation. Components should use the `name.animation`
+ * for primary animations and `name.part.animation`
+ * for secondary animations, e.g. `dialog.show` and `dialog.overlay.show`.
+ * For modifiers, use `drawer.showTop`.
  */
 export const setDefaultAnimation = (animationName: string, animation: ElementAnimation | null) => {
 	defaultAnimationRegistry.set(animationName, ensureAnimation(animation));

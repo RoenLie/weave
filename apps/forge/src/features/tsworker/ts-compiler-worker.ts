@@ -1,4 +1,4 @@
-import { domId } from '@roenlie/mimic-core/dom';
+import { domId } from '@roenlie/core/dom';
 import { ScriptTarget, transpile } from 'typescript';
 
 import { ForgeFile, ForgeFileDB } from '../filesystem/forge-file.js';

@@ -1,5 +1,5 @@
 import { Container, CosmosClient } from '@azure/cosmos';
-import { createPromiseResolver } from '@roenlie/mimic-core/async';
+import { createPromiseResolver } from '@roenlie/core/async';
 
 const endpoint = process.env.COSMOS_ENDPOINT;
 const key = process.env.COSMOS_KEY;
