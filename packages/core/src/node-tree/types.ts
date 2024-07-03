@@ -7,7 +7,7 @@ export type Key = keyof any;
 
 export type RootNode<TObj extends Rec, TProp extends Key> = {
 	[key in TProp]?: TreeNode<TObj, TProp>[]
-} & Node<TObj, TProp, TreeNode<TObj, TProp>>
+} & Node<TObj, TProp, TreeNode<TObj, TProp>>;
 
 
 export type TreeNode<

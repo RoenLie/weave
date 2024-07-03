@@ -1,4 +1,10 @@
 /**
+ * Await a single render cycle.
+ */
+export const paintCycle = () => new Promise(resolve => requestAnimationFrame(resolve));
+
+
+/**
  * Await a timeout.
  *
  * @param delay The delay in milliseconds.

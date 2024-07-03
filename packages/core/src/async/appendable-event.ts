@@ -4,9 +4,9 @@ import { waitForPromiseSet } from './wait-for-promise.js';
 
 
 export type PauseableEvent = CustomEvent<{
-	id: string;
+	id:         string;
 	addPromise: (promise: Promise<any>) => void;
-}>
+}>;
 
 
 export const pauseableEvent = async (element: HTMLElement, eventName: string) => {
@@ -19,7 +19,7 @@ export const pauseableEvent = async (element: HTMLElement, eventName: string) =>
 		promise.finally(() => promises.delete(promise));
 	};
 
-	const windowResolve = (ev: CustomEvent<{id: string;}>) => ev.detail.id === id && resolve();
+	const windowResolve = (ev: CustomEvent<{ id: string; }>) => ev.detail.id === id && resolve();
 
 	window.addEventListener(eventName, windowResolve as any);
 

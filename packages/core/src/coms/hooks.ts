@@ -10,7 +10,8 @@ type Handlers = ReflectMap<string, Fn>;
 /**
  * Provide hooks for the `TEvents`; a type-map of events to handlers.
  *
- * Knows how to track handlers for different events and allow the consumer to trigger that event, causing each handler to run.
+ * Knows how to track handlers for different events and
+ * allow the consumer to trigger that event, causing each handler to run.
  */
 export class Hooks<TEvents extends Record<string, Fn>> {
 
@@ -29,7 +30,10 @@ export class Hooks<TEvents extends Record<string, Fn>> {
 	}
 
 	/** Add a handler from the `event` by either providing it or its ID (returned from this.Add). */
-	public remove<TEvent extends keyof TEvents>(event: TEvent, handlerOrId: TEvents[TEvent] | string): void {
+	public remove<TEvent extends keyof TEvents>(
+		event: TEvent,
+		handlerOrId: TEvents[TEvent] | string,
+	): void {
 		const handlers = this.handlersFor(event);
 
 		if (typeof handlerOrId === 'string')

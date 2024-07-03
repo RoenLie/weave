@@ -1,13 +1,13 @@
 /* eslint-disable */
 /* auto generated */
-export type { ITrackedPromise, ITrackedPromiseConstructor } from './tracked-promise.js';
-export type { Promised, Promiser, DynamicPromise } from './is-promise.js';
+export type { Promised, Promiser, PromiseOrFunc } from './is-promise.js';
+export type { ResolvablePromise } from './resolvable-promise.js';
 export type { PauseableEvent } from './appendable-event.js';
+export type { Maybe } from './maybe.js';
+export { shimPromiseWithResolvers, resolvablePromise } from './resolvable-promise.js';
 export { waitForPromiseMap, waitForPromiseSet } from './wait-for-promise.js';
 export { createPromiseResolver } from './create-promise-resolver.js';
-export { isPromise, resolveDynamicPromise } from './is-promise.js';
+export { maybe, maybeAll, maybeSome, maybeSync } from './maybe.js';
 export { pauseableEvent } from './appendable-event.js';
-export { TrackedPromise } from './tracked-promise.js';
-export { maybe, maybeSync } from './maybe.js';
-export { paintCycle } from './paint-cycle.js';
-export { sleep } from './sleep.js';
+export { resolvePromiseOrFunc } from './is-promise.js';
+export { paintCycle, sleep } from './delay.js';

@@ -50,7 +50,7 @@ export class Node<
 		traverse(this.#proxy);
 	}
 
-	#walkBreath(fn: (node: TNode) => undefined | false) {
+	#walkBreath(fn: (node: TNode) => void | false) {
 		const breadthTraverse = (node: TNode) => {
 			const queue: TNode[] = [];
 			queue.push(...(node[this.#childProp] ?? []) as TNode[]);

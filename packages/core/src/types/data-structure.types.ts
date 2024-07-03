@@ -1,7 +1,7 @@
-export interface Vector2 {x: number; y: number}
+export interface Vector2 { x: number; y: number }
 
 
-export interface Vector3 {x: number; y: number; z: number;}
+export interface Vector3 { x: number; y: number; z: number; }
 
 
 export type Json = string | number | boolean | null | Json[] | { [key: string]: Json };

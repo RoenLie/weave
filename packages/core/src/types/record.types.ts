@@ -24,7 +24,7 @@ export type ValueOf<T> = T[keyof T];
 /**
  * Turns a unclean object type into a singel object.
  */
-export type ComputedFlat<A> = { [K in keyof A]: A[K]; } & unknown
+export type ComputedFlat<A> = { [K in keyof A]: A[K]; } & unknown;
 
 
 /** Mirrors the object key names as the object key value types. */
@@ -34,9 +34,9 @@ export type ObjectKeyToType<T> = { [Key in keyof T]: Key };
 /** Takes all the types of the values in an object and returns it as a union type. */
 export type ObjectTypesToUnion<T> = T extends Record<keyof any, never>
 	? never
-	: T extends {[Key in keyof T]: infer Type}
+	: T extends { [Key in keyof T]: infer Type }
 		? Type
-		: never
+		: never;
 
 
 /** Takes all the keys in an object and returns them as a union type. */

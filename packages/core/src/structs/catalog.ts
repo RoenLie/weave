@@ -3,18 +3,18 @@ import { type RecordOf } from '../types/record.types.js';
 
 export interface Catalog<TObj extends object, TValue> {
 	catalog: { [P in keyof TObj]: TValue; } & Record<string, TValue>;
-	use: RecordOf<Use<TObj>>;
+	use:     RecordOf<Use<TObj>>;
 }
 
 
 /** Describes sorting and inclusion of TCatalog entries as a list of items. */
 export type Use<TCatalog extends object = Record<string, any>> = {
 	[P in string & keyof TCatalog]?: boolean | number;
-}
+};
 
 
 /** Build a list of items based on the record and use supplied. */
-export const catalogToList = <TRec extends {catalog: Record<string, any>, use?: Use<TRec>}>(
+export const catalogToList = <TRec extends { catalog: Record<string, any>, use?: Use<TRec> }>(
 	record: TRec,
 ): TRec['catalog'][keyof TRec['catalog']][] => {
 	const keys = record.use

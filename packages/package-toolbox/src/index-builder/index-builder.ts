@@ -4,7 +4,8 @@ import ts from 'typescript';
 
 import { getFiles } from '../filesystem/get-files.js';
 import { genToArray } from '../utils/gen-to-array.js';
-import { access, readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
+import { exists } from '../filesystem/path-exists.js';
 
 
 /**
@@ -30,8 +31,8 @@ export const indexBuilder = async (
 	/* Get the target directory path, for use in creating relative paths */
 	const dirTarget = parse(pathTarget).dir;
 
-	const dirExists = await exists(dirTarget);
-	if (!dirExists)
+	const directoryExists = await exists(dirTarget);
+	if (!directoryExists)
 		return console.error('Directory does not exist!', dirTarget);
 
 	/* Retrieve, map, filter and sort the file paths */
@@ -111,17 +112,6 @@ export const indexBuilder = async (
 		console.log('\n', 'create-index:', pathTarget);
 		await writeFile(pathTarget, lines.join('\n'));
 	}
-};
-
-
-const exists = async (path: string) => {
-	let exists = false;
-
-	await access(path)
-		.then(() => exists = true)
-		.catch(() => exists = false);
-
-	return exists;
 };
 
 

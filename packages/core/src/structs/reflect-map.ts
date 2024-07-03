@@ -1,6 +1,8 @@
 /**
- * A ReflectMap<K, V> is a Map<K, V> which also tracks the reflected or reverse Map<V, K> internally.
- * It allows you to directly access a value without knowing its key, without having to loop through the map.
+ * A ReflectMap<K, V> is a Map<K, V> which also tracks
+ * the reflected or reverse Map<V, K> internally.
+ * It allows you to directly access a value without
+ * knowing its key, without having to loop through the map.
  */
 export class ReflectMap<K, V> extends Map<K, V> {
 
@@ -19,7 +21,8 @@ export class ReflectMap<K, V> extends Map<K, V> {
 	}
 
 	/**
-	 * @returns true if an element in the Map existed and has been removed, or false if the element does not exist.
+	 * @returns true if an element in the Map existed
+	 * and has been removed, or false if the element does not exist.
 	 */
 	public deleteByValue(value: V): boolean {
 		if (this._reflected.has(value)) {
@@ -34,9 +37,12 @@ export class ReflectMap<K, V> extends Map<K, V> {
 	}
 
 	/**
-	 * Returns a specified key from the ReflectMap object. If the key that is associated to the provided value is an object,
-	 * then you will get a reference to that object and any change made to that object will effectively modify it inside the Map.
-	 * @returns Returns the element associated with the specified value. If no element is associated with the specified value, undefined is returned.
+	 * Returns a specified key from the ReflectMap object.
+	 * If the key that is associated to the provided value is an object,
+	 * then you will get a reference to that object and any change
+	 * made to that object will effectively modify it inside the Map.
+	 * @returns Returns the element associated with the specified value.
+	 * If no element is associated with the specified value, undefined is returned.
 	 */
 	public getKeyByValue(value: V): K | undefined {
 		return this._reflected.get(value);
@@ -50,7 +56,8 @@ export class ReflectMap<K, V> extends Map<K, V> {
 	}
 
 	/**
-	 * Adds a new element with a specified key and value to the Map. If an element with the same key already exists, the element will be updated.
+	 * Adds a new element with a specified key and value to the Map.
+	 * If an element with the same key already exists, the element will be updated.
 	 */
 	public override set(key: K, value: V): this {
 		super.set(key, value);

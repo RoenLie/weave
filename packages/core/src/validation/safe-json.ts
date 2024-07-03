@@ -1,33 +1,18 @@
-const jsonStringify = (val: any) => {
-	try {
-		return JSON.stringify(val);
-	}
-	catch (error) {
-		return false;
-	}
-};
+import { maybeSync } from '../async/maybe.ts';
 
 
-const jsonParse = <T>(str: string) => {
-	try {
-		return JSON.parse(str) as T;
-	}
-	catch (e) {
-		return undefined;
-	}
-};
-
-
-export const safeStringify = (val: any) => {
+export const safeJsonStringify = (val: any) => {
 	if (typeof val === 'string')
 		return val;
 
-	return jsonStringify(val) || String(val);
+	const [ data ] = maybeSync(() => JSON.stringify(val));
+
+	return data || String(val);
 };
 
 
-export const safeParse = <T>(val: string, def?: T) => {
-	const parsed = jsonParse(val);
+export const safeJsonParse = <T>(val: string, def?: T) => {
+	const [ parsed ] = maybeSync(() => JSON.parse(val));
 	let value: unknown = parsed ?? def;
 
 	if (val === 'true')

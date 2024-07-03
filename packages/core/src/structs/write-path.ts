@@ -6,13 +6,15 @@ import type { PathOf, PathValue } from '../types/path-types.js';
  * @param object The object to write to.
  * @param path The object path to write to.
  * @param value The value to write.
- * @returns Whether the value could be written to the path. (When part of the path is null | undefined it cannot be written.)
- * @remarks You're not supposed to pass type parameters explicitly. They should be inferred from the `target` argument.
+ * @returns Whether the value could be written to the path.
+ * (When part of the path is null | undefined it cannot be written.)
+ * @remarks You're not supposed to pass type parameters explicitly.
+ * They should be inferred from the `target` argument.
  */
 export const writePath = <
 	TObject extends object,
 	TPath extends PathOf<TObject>,
-	TValue extends PathValue<TObject, TPath>,
+	TValue extends PathValue<TObject, TPath>
 >(
 	object: TObject,
 	path: TPath,

@@ -1,47 +1,40 @@
-class TypeOf {
-
-	private _type: string;
-	constructor(obj: any) {
-		this._type = Object.prototype
-			.toString.call(obj)
-			.replace(/^\[object (.+)\]$/, '$1')
-			.toLowerCase();
-	}
-
-	public string() {
-		return this._type === 'string';
-	}
-
-	public number() {
-		return this._type === 'number';
-	}
-
-	public array() {
-		return this._type === 'array';
-	}
-
-	public object() {
-		return this._type === 'object';
-	}
-
-	public symbol() {
-		return this._type === 'symbol';
-	}
-
-}
-
+const getTypeAsString = (obj: any) => {
+	return Object.prototype
+		.toString.call(obj)
+		.replace(/^\[object (.+)\]$/, '$1')
+		.toLowerCase();
+};
 
 /**
- * Wrapper for toString.call(var) to more easily and reliably get the correct
- * type from a variable.
- * @example
- * ```ts
- * 	if ( typeOf(variable).string() ) {
- * 		doSomething();
- * 	}
- * ```
- * .
+ * Wrapper for toString.call(var) to more easily and reliably get the correct type from a variable.
+ * Also asserts the type for better typings.
  */
-export const typeOf = function(obj: any) {
-	return new TypeOf(obj);
+export const typeOf = {
+	string: (value: any): value is string => {
+		return getTypeAsString(value) === 'string';
+	},
+	number: (value: any): value is number => {
+		return getTypeAsString(value) === 'number';
+	},
+	array: (value: any): value is any[] => {
+		return getTypeAsString(value) === 'array';
+	},
+	object: (value: any): value is object => {
+		return getTypeAsString(value) === 'object';
+	},
+	record: (value: any): value is Record<keyof any, any> => {
+		return getTypeAsString(value) === 'object';
+	},
+	objectLike: (value: any): value is object => {
+		return typeof value === 'object';
+	},
+	function: (value: any): value is (...args: any) => any => {
+		return getTypeAsString(value) === 'function';
+	},
+	symbol: (value: any): value is symbol => {
+		return getTypeAsString(value) === 'symbol';
+	},
+	custom: <T>(value: any, condition: (value: T) => boolean): value is T => {
+		return condition(value);
+	},
 };

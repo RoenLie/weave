@@ -1,7 +1,10 @@
 /**
  * Creator function which may optionally take a `key: TKey` parameter.
  */
-export type CreatorFn<TValue, TKey = unknown> = unknown extends TKey ? () => TValue : (key: TKey) => TValue;
+export type CreatorFn<TValue, TKey = unknown> = unknown extends TKey
+	? () => TValue
+	: (key: TKey) => TValue;
+
 
 /**
  * Provides a value, either as is or through a `CreatorFn`.

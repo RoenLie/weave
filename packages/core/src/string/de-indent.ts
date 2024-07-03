@@ -14,7 +14,8 @@ export const deIndent = (multilineString: string) => {
 		const currentIndent = leadingWhitespace?.length ?? 0;
 		shortestIndent = Math.min(shortestIndent, currentIndent);
 
-		// Normalize the line by removing the shortest indent and add it to the normalizedLines array
+		// Normalize the line by removing the shortest indent
+		// and add it to the normalizedLines array
 		normalizedLines.push(line.slice(currentIndent));
 	}
 

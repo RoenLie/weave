@@ -3,7 +3,7 @@
 export type { SearchParamValue, SearchParamConfig } from './search-params.js';
 export type { EventOf, CustomEventOf } from './event.js';
 export type { DragOptions } from './drag.js';
-export { normalizeSearchParam, configureSearchParams, hasSearchParam, getSearchParam, setSearchParam, deleteSearchParams, getSearchParams, setSearchParams, getSearchParamPairs, setSearchParamPairs } from './search-params.js';
+export { normalizeSearchParam, configureSearchParams, createSearchParams, pushSearchState, replaceSearchState } from './search-params.js';
 export { findDocumentOrShadowRoot, elementHasAncestor, elementHasDescendant, findActiveElement } from './elements.js';
 export { lockBodyScrolling, unlockBodyScrolling, scrollIntoView } from './scroll.js';
 export { askForNotificationPermissions, notification } from './notification.js';

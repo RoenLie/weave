@@ -1,17 +1,21 @@
-type _IncDigit = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
-type IncDigit = _IncDigit[number];
-type _Inc<T extends string> = T extends `${ infer F }${ IncDigit }`
-	? T extends `${ F }${ infer L extends IncDigit }`
-		? `${ L extends 9 ? _Inc<F> : F }${ _IncDigit[L] }`
-		: never
-	: 1
+// eslint-disable-next-line @stylistic/max-len
+// https://stackoverflow.com/questions/54243431/how-can-i-produce-an-incremented-version-of-a-numeric-literal-type-in-typescript
+// https://github.com/microsoft/TypeScript/issues/26382
+
+export type Increment<N extends number> = [
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+	...number[] // bail out with number
+][N];
 
 
-/** Increments the numeric type by one. */
-export type Increment<T extends number> = number extends T
-	? number
-	: `${ T }` extends `${ string }${ '.' | '+' | '-' | 'e' }${ string }`
-		? number
-		: _Inc<`${ T }`> extends `${ infer N extends number }`
-			? N
-			: never
+export type Decrement<N extends number> = [
+	-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+	...number[] // bail out with number
+][N];
+
+/**
+ * Creates a tuple of `T` with a length of `N`.
+ */
+export type Repeat<N extends number, T> = N extends 0
+	? []
+	: [T, ...Repeat<Decrement<N>, T>];

@@ -1,11 +1,12 @@
+/* eslint-disable @stylistic/max-len */
 import type { O, U } from 'ts-toolbelt';
 import type { Greater } from 'ts-toolbelt/out/Number/Greater.js';
-
-import type { ObjectHasKeys, ObjectHasLiteralKeys, ObjectTypesToUnion } from './record.types.js';
+import type { ObjectHasKeys, ObjectHasLiteralKeys, ObjectTypesToUnion } from './record.types.ts';
 
 
 /** A `Path` is a dot-separated string of segments representing nested properties in an object graph. */
 export type Path = string;
+
 
 /**
  * Get the type of the property specified by the path
@@ -16,10 +17,7 @@ export type Path = string;
  * // { c: string }
  * ```
  */
-export type PathValue<
-	TTarget extends Record<PropertyKey, any>,
-	TPath extends string
-> = ObjectHasLiteralKeys<TTarget> extends false
+export type PathValue<TTarget extends Record<keyof any, any>, TPath extends string> = ObjectHasLiteralKeys<TTarget> extends false
 	? any
 	: TPath extends `${ infer Head }.${ infer Tail }`
 		? MergeObjectUnion<TTarget[Head]> extends object
@@ -45,9 +43,10 @@ export type PathValue<
  *
  * Depth of search can be set using the third parameter `TDepth` (default 6).
  */
-export type PathOf<TTarget extends Record<PropertyKey, any>> = ObjectHasLiteralKeys<TTarget> extends true
+export type PathOf<TTarget extends Record<keyof any, any>> = ObjectHasLiteralKeys<TTarget> extends true
 	? PathOfInternal<TTarget, false, []>
 	: Path;
+
 
 /**
  * Extracts out the keys of the given type as dot separated paths. Includes only paths to the leaf nodes.
@@ -67,34 +66,48 @@ export type PathOf<TTarget extends Record<PropertyKey, any>> = ObjectHasLiteralK
  *
  * Depth of search can be set using the third parameter `TDepth` (default 6).
  */
-export type PathOfLeaf<TTarget extends Record<PropertyKey, any>> = ObjectHasLiteralKeys<TTarget> extends true
+export type PathOfLeaf<TTarget extends Record<keyof any, any>> = ObjectHasLiteralKeys<TTarget> extends true
 	? PathOfInternal<TTarget, true, []>
 	: Path;
 
 
 /** Internal recursive implementation of dotted paths. */
 type PathOfInternal<
-	TTarget extends Record<PropertyKey, any>,
+	TTarget extends Record<keyof any, any>,
 	TLeafOnly extends boolean,
-	IIteration extends number[],
+	IIteration extends number[]
 > = ObjectTypesToUnion<PropertyNameMap<TTarget, TLeafOnly, [...IIteration, 1]>> & Path;
+
 
 /** Merge a union of objects so that we can iterate the keys. */
 type MergeObjectUnion<T extends object> = O.MergeAll<object, U.ListOf<T>, 'flat'>;
 
+
 /** Creates a piece of the property path of a given key (key) in the given object (T) */
 type SubPathsOf<
-	TTarget extends Record<PropertyKey, any>,
+	TTarget extends Record<keyof any, any>,
 	TKey extends keyof TTarget,
 	TLeafOnly extends boolean,
-	IIteration extends number[],
+	IIteration extends number[]
 > = `${ (string | number) & TKey }.${ (string | number) & PathOfInternal<Extract<TTarget[TKey], object>, TLeafOnly, IIteration> }`;
 
-/** It works, not able to explain the details.. */
+
+/**
+ * Takes in an object, returns a type where the value of each top level
+ * key is all the possible paths to the leaf nodes of that keys object.
+ *
+ * @example
+   type tester = {
+	child1: "child1" | "child1.deadEnd" | "child1.leaf.end" | "child1.leaf.finish" | "child1.leaf.complete" | "child1.leaf.a" | "child1.leaf.123" | "child1.leaf";
+	child2: "child2" | ... 6 more ... | "child2.leaf";
+	child3: "child3" | ... 6 more ... | "child3.leaf";
+	123: "123";
+	}
+ */
 type PropertyNameMap<
-	TTarget extends Record<PropertyKey, any>,
+	TTarget extends Record<keyof any, any>,
 	TLeafOnly extends boolean = false,
-	IIteration extends number[] = [],
+	IIteration extends number[] = []
 > = {
 	[Key in keyof TTarget]-?: [Extract<Required<TTarget>[Key], object>] extends [never]
 		? `${ (string | number) & Key }`
@@ -135,7 +148,7 @@ type PropertyNameMap<
 //export const getChild3LeafA = returnType(parent, 'child3.leaf.a');
 //export const getChild3LeafFinish = returnType(parent, 'child3.leaf.finish');
 //export const getChild3Leaf123 = returnType(parent, 'child1.leaf.123');
-//export const getDynamicRec = returnType({} as Record<PropertyKey, any>, 'some.dynamic.path');
+//export const getDynamicRec = returnType({} as Record<keyof any, any>, 'some.dynamic.path');
 
 
 //// Valid

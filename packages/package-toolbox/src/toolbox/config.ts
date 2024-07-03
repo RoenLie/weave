@@ -5,7 +5,7 @@ import { type ToolboxConfig } from './define-toolbox.js';
 import { build } from 'vite';
 
 
-export const loadConfigWithTsup = async (filePath: string) => {
+export const loadConfig = async (filePath: string) => {
 	const ext = '.mjs';
 	const fileBase = filePath.replace('.ts', '.')
 		+ crypto.randomUUID().split('-').at(-1);
@@ -19,7 +19,7 @@ export const loadConfigWithTsup = async (filePath: string) => {
 			outDir:      '.',
 			emptyOutDir: false,
 			lib:         {
-				entry:    filePath,
+				entry:    '',
 				formats:  [ 'es' ],
 				fileName: () => fileNameTmp,
 			},

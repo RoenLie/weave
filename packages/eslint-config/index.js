@@ -30,9 +30,10 @@ const base = tseslint.config({
 			'multi-or-nest',
 			'consistent',
 		],
-		'prefer-arrow-callback': 'warn',
-		'prefer-const':          'warn',
-		'no-prototype-builtins': 'off',
+		'prefer-arrow-callback':           'warn',
+		'prefer-const':                    'warn',
+		'no-prototype-builtins':           'off',
+		'no-unused-private-class-members': 'off',
 
 		// Stylistic things.
 		'@stylistic/nonblock-statement-body-position': [
@@ -276,6 +277,8 @@ const base = tseslint.config({
 		'@typescript-eslint/no-dynamic-delete':      'off',
 		'@typescript-eslint/no-extraneous-class':    'off',
 		'@typescript-eslint/no-useless-constructor': 'off',
+		'@typescript-eslint/no-unused-expressions':  'off',
+		'@typescript-eslint/no-invalid-void-type':   'off',
 	},
 });
 

@@ -7,7 +7,7 @@ let activeModals: HTMLElement[] = [];
 
 export class Modal {
 
-	public element: HTMLElement;
+	public element:      HTMLElement;
 	public tabDirection: 'forward' | 'backward' = 'forward';
 	protected trapFocus = false;
 

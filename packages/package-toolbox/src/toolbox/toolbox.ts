@@ -10,7 +10,7 @@ import {
 	type ExportEntry,
 } from '../package-exports/package-exports.js';
 import { incrementVersion } from '../versioning/increment-version.js';
-import { loadConfigWithTsup } from './config.js';
+import { loadConfig } from './config.js';
 
 
 export const toolbox = async (filePath = './pkg-toolbox.ts') => {
@@ -27,7 +27,7 @@ export const toolbox = async (filePath = './pkg-toolbox.ts') => {
 		};
 	}
 
-	const config = await loadConfigWithTsup(filePath);
+	const config = await loadConfig(filePath);
 
 	return {
 		indexBuilder: async () => {

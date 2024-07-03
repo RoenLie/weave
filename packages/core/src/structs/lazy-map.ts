@@ -1,5 +1,6 @@
 import { resolveValueProvider } from '../function/value-provider.js';
 
+
 type Provider<T> = T | (() => T);
 
 
@@ -13,8 +14,10 @@ const createWeakSet = <T extends object>() => new WeakSet<T>();
  * Get a `TValue` from the `map`, and add it first if it doesn't already exist in the map.
  * @param map - The map containing values.
  * @param key - The key to use when retrieving a value.
- * @param valueProvider - The creator function or value to use when the key does not already exist in the map.
- * @param retrieveAction - An optional action to perform on the value when it already exists in the map.
+ * @param valueProvider - The creator function or value to
+ * use when the key does not already exist in the map.
+ * @param retrieveAction - An optional action to
+ * perform on the value when it already exists in the map.
  */
 export const lazyMap = <TMap extends Map<any, any>>(
 	map: TMap,
