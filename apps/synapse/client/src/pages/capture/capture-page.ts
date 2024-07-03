@@ -83,7 +83,7 @@ export class CapturePageCmp extends LitElement {
 		if (this.sessionRestored && props.has('images')) {
 			IndexDBWrapper.connect('synapse')
 				.collection(CaptureSession)
-				.put(new CaptureSession({ hash: this.hash, images: this.images }), 'current');
+				.put(new CaptureSession({ id: 'current', hash: this.hash, images: this.images }));
 		}
 	}
 
@@ -101,12 +101,12 @@ export class CapturePageCmp extends LitElement {
 			await this.updateComplete;
 		}
 		else {
-			this.hash = domId();
+			this.hash = domId().toLocaleLowerCase();
 			this.images = [
 				{
-					directory: this.hash,
-					name:      'demo1',
-					datauri:   demofile,
+					hash:    this.hash,
+					name:    'demo1',
+					datauri: demofile,
 				},
 			];
 		}
@@ -119,9 +119,9 @@ export class CapturePageCmp extends LitElement {
 		this.images = [
 			...this.images,
 			{
-				directory: this.hash,
-				name:      (Math.random()).toString().split('.')[1]!,
-				datauri:   srcData,
+				hash:    this.hash,
+				name:    (Math.random()).toString().split('.')[1]!,
+				datauri: srcData,
 			},
 		];
 	}

@@ -464,6 +464,9 @@ importers:
 
   apps/synapse/server:
     dependencies:
+      '@roenlie/core':
+        specifier: workspace:*
+        version: link:../../../packages/core
       '@roenlie/sqlite-wrapper':
         specifier: workspace:*
         version: link:../../../packages/sqlite-wrapper

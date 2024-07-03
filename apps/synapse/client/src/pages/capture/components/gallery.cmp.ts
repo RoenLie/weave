@@ -14,9 +14,9 @@ import { emitEvent } from '@roenlie/core/dom';
 
 
 export interface Image {
-	directory: string;
-	name:      string;
-	datauri:   string;
+	hash:    string;
+	name:    string;
+	datauri: string;
 };
 
 
@@ -132,9 +132,11 @@ export class CaptureGalleryCmp extends LitElement {
 
 	protected async onSubmit(): Promise<void> {
 		const formData = new FormData();
+		formData.set('hash', this.images[0]?.hash ?? '');
+
 		this.images.map(img => {
 			const blob = dataURItoBlob(img.datauri);
-			formData.append(img.name, blob);
+			formData.append(img.name, blob, img.name);
 		});
 
 		const [ result, error ] = await maybe(fetch(

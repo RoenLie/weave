@@ -1,15 +1,15 @@
 import { type Fn } from '../types/function.types.js';
 
 
-export type Maybe<T> = readonly [data: T, error: undefined] | [data: undefined, error: Error];
+export type Maybe<T> = readonly [data: T, error: undefined]
+	| readonly [data: undefined, error: Error];
 
 
 /**
- * Simplifies code by providing a helper that reduces the amount of try catch
- * that needs to be done.
- * @returns A [data: T, error: unknown] tuple.
- * When the `promise` throws this will be [undefined, error]
- * and when it does not throw it will be [data, undefined].
+ * When it succeeds it will be `[data, undefined]`
+ *
+ *
+ * When it throws this will be `[undefined, error]`
  */
 export const maybe = async <T>(
 	promise: Promise<T>,
@@ -32,6 +32,12 @@ export const maybe = async <T>(
 };
 
 
+/**
+ * When it succeeds it will be `[data, undefined]`
+ *
+ *
+ * When it throws this will be `[undefined, error]`
+ */
 export const maybeAll = async <T>(
 	promises: Promise<T>[],
 	catchCb?: Fn<unknown, void>,
@@ -53,6 +59,10 @@ export const maybeAll = async <T>(
 };
 
 
+/**
+ * Returns a tuple with an array of the successfull data results
+ * and another with the error messages.
+ */
 export const maybeSome = async <T>(
 	promises: Promise<T>[],
 ): Promise<readonly [data: T[], error: any[]]> => {
@@ -72,12 +82,10 @@ export const maybeSome = async <T>(
 
 
 /**
- * Allows for calling a function that might throw
- * and receiving its error message for further processing.
- * @returns A [data: T, error: unknown] tuple.
+ * When it succeeds it will be `[data, undefined]`
  *
- * When the `invoker` throws this will be [undefined, error]
- * and when it does not throw it will be [data, undefined].
+ *
+ * When it throws this will be `[undefined, error]`
  */
 export const maybeSync = <T extends Fn>(
 	invoker: T,

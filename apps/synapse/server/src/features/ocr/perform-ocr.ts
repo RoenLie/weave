@@ -81,7 +81,13 @@ const getScheduler = async (lang: string) => {
 };
 
 
-export const performOCR = async (lang: string, ...images: Tesseract.ImageLike[]) => {
+export const performOCR = async (
+	lang: string,
+	images: Tesseract.ImageLike | Tesseract.ImageLike[],
+) => {
+	if (!Array.isArray(images))
+		images = [ images ];
+
 	const scheduler = await getScheduler(lang);
 	const jobs: Promise<Tesseract.RecognizeResult>[] = Array(images.length);
 

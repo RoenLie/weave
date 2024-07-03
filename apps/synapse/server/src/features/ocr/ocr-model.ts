@@ -1,9 +1,13 @@
 import { DataModel } from '@roenlie/sqlite-wrapper';
+import { createOcrTable } from './ocr-table.ts';
+
+createOcrTable();
 
 
 export interface IOCRModel {
 	ocr_id: string;
-	path:   string;
+	hash:   string;
+	name:   string;
 	text:   string;
 }
 
@@ -15,7 +19,8 @@ export class OCRModel extends DataModel implements IOCRModel {
 	protected constructor(values: any) { super(values); }
 
 	public ocr_id: string;
-	public path:   string;
+	public hash:   string;
+	public name:   string;
 	public text:   string;
 
 }
