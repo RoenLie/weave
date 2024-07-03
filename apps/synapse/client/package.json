@@ -13,7 +13,8 @@
 		"@roenlie/lit-context": "^1.0.47",
 		"bootstrap-icons": "^1.11.3",
 		"lit": "^3.1.4",
-		"tslib": "^2.6.3"
+		"tslib": "^2.6.3",
+		"@roenlie/core": "workspace:*"
 	},
 	"devDependencies": {
 		"vite": "^5.3.1",

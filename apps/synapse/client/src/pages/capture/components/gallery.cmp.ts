@@ -8,10 +8,13 @@ import { sharedStyles } from '../../../app/utils/shared-styles.ts';
 import { captureRoutesID } from '../capture-page.ts';
 import { maybe } from '../../../app/utils/maybe.ts';
 import { dataURItoBlob } from '../../../app/utils/datauri-to-blob.ts';
+import { IndexDBWrapper } from '@roenlie/core/indexdb';
+import { CaptureSession } from '../capture-session.ts';
+import { emitEvent } from '@roenlie/core/dom';
 
 
 export interface Image {
-	directory: string[];
+	directory: string;
 	name:      string;
 	datauri:   string;
 };
@@ -134,16 +137,24 @@ export class CaptureGalleryCmp extends LitElement {
 			formData.append(img.name, blob);
 		});
 
-		const [ result, error ] = await maybe(fetch('http://localhost:42069/api/capture/upload', {
-			method: 'post',
-			body:   formData,
-		}));
+		const [ result, error ] = await maybe(fetch(
+			'http://localhost:42069/api/capture/upload', {
+				method: 'post',
+				body:   formData,
+			},
+		));
 
 		if (error)
 			return;
 
 		const json = await result?.json();
 		console.log(json);
+
+		emitEvent(this, 'submit');
+
+		IndexDBWrapper.connect('synapse')
+			.collection(CaptureSession)
+			.delete('current');
 	}
 
 	protected override render(): unknown {

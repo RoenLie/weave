@@ -4,7 +4,7 @@ import { ImportCSSSheet } from './import-css-sheet.js';
 
 
 export const importCSSSheet = (options?: Partial<{
-	transformers: ((code: string, id: string) => string)[];
+	transformers:   ((code: string, id: string) => string)[];
 	additionalCode: string[],
 }>): Plugin => {
 	const { transformers = [], additionalCode = [] } = options ?? {};

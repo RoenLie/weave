@@ -70,6 +70,10 @@
 		"./validation": {
 			"types": "./dist/lib/validation/index.d.ts",
 			"default": "./dist/lib/validation/index.js"
+		},
+		"./indexdb": {
+			"types": "./dist/lib/indexdb/index.d.ts",
+			"default": "./dist/lib/indexdb/index.js"
 		}
 	},
 	"sideEffects": false,

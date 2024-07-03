@@ -39,9 +39,9 @@ export class ImportCSSSheet {
 		importer: string | undefined,
 		options: {
 			attributes: Record<string, string>;
-			custom?: CustomPluginOptions | undefined;
-			ssr?: boolean | undefined;
-			isEntry: boolean;
+			custom?:    CustomPluginOptions | undefined;
+			ssr?:       boolean | undefined;
+			isEntry:    boolean;
 		},
 	) {
 		if (!source.endsWith('.css') || !importer)

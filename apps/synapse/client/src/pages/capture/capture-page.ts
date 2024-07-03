@@ -8,6 +8,9 @@ import { mainRoutesID } from '../../layout/main.cmp.ts';
 import demofile from './components/demo-file.txt?raw';
 import './components/camera.cmp.ts';
 import type { Image } from './components/gallery.cmp.ts';
+import { domId } from '@roenlie/core/dom';
+import { IndexDBWrapper } from '@roenlie/core/indexdb';
+import { CaptureSession } from './capture-session.ts';
 
 
 export const captureRoutesID = 'capture-routes';
@@ -21,9 +24,7 @@ export class CapturePageCmp extends LitElement {
 			path:   'camera',
 			enter:  () => !!import('./components/camera.cmp.ts'),
 			render: () => html`
-			<syn-capture-camera
-				@picture=${ this.onPicture }
-			>
+			<syn-capture-camera @picture=${ this.onPicture }>
 				<a slot="action-start"
 					tabindex="-1"
 					href=${ this.routes.link('gallery') }
@@ -57,28 +58,60 @@ export class CapturePageCmp extends LitElement {
 			render: () => html`
 			<syn-capture-gallery
 				.images=${ this.images }
+				@submit=${ this.onSubmit }
 			></syn-capture-gallery>
 			`,
 		},
 	]);
 
 	@consume(mainRoutesID) protected mainRoutes: ContextProp<Routes>;
-	@state() protected images:                   Image[] = [ { name: 'demo1', datauri: demofile } ];
+	@state() protected images:                   Image[] = [];
+	protected hash:                              string = domId();
+	protected sessionRestored = false;
 
 	//@state() protected images:                   string[] = Array(100)
 	//	.fill(null).map((_, i) => `https://picsum.photos/seed/${ i + 950 }/600/800`);
 
 	public override connectedCallback(): void {
 		super.connectedCallback();
-
-		// When we open this page, if we don't have a current session of pictures, we need to create a new
-		// random string which is our directory.
+		this.restoreSession();
 	}
 
 	protected override willUpdate(props: PropertyValues): void {
 		super.willUpdate(props);
 
-		// Whenever images are updated, we save the current images into local database.
+		if (this.sessionRestored && props.has('images')) {
+			IndexDBWrapper.connect('synapse')
+				.collection(CaptureSession)
+				.put(new CaptureSession({ hash: this.hash, images: this.images }), 'current');
+		}
+	}
+
+	protected async restoreSession() {
+		const col = IndexDBWrapper.connect('synapse')
+			.collection(CaptureSession);
+
+		const currentSession = await col.get('current');
+
+		if (currentSession) {
+			this.hash = currentSession.hash;
+			this.images = currentSession.images;
+
+			// we await, to avoid saving the already cached session.
+			await this.updateComplete;
+		}
+		else {
+			this.hash = domId();
+			this.images = [
+				{
+					directory: this.hash,
+					name:      'demo1',
+					datauri:   demofile,
+				},
+			];
+		}
+
+		this.sessionRestored = true;
 	}
 
 	protected onPicture(ev: CustomEvent<string>) {
@@ -86,10 +119,16 @@ export class CapturePageCmp extends LitElement {
 		this.images = [
 			...this.images,
 			{
-				name:    (Math.random()).toString().split('.')[1]!,
-				datauri: srcData,
+				directory: this.hash,
+				name:      (Math.random()).toString().split('.')[1]!,
+				datauri:   srcData,
 			},
 		];
+	}
+
+	protected onSubmit() {
+		history.pushState(undefined, '', this.mainRoutes.value.link(''));
+		window.dispatchEvent(new PopStateEvent('popstate'));
 	}
 
 	protected override render(): unknown {
