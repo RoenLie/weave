@@ -1,4 +1,4 @@
-import { IndexDBSchema, IndexDBWrapper } from '@roenlie/core/indexdb';
+import { IndexDBSchema } from '@roenlie/core/indexdb';
 import type { Image } from './components/gallery.cmp.ts';
 
 
@@ -12,10 +12,3 @@ export class CaptureSession extends IndexDBSchema<CaptureSession> {
 	public images: Image[];
 
 }
-
-
-IndexDBWrapper.setup('synapse', (setup) => {
-	setup.createCollection(CaptureSession, 'sessions', { autoIncrement: true })
-		.createIndex('id', 'id')
-		.mutate(() => {});
-});

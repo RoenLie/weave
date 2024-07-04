@@ -3,7 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import capturePageStyles from './capture-page.css' with { type: 'css' };
 import { consume, provide, type ContextProp } from '@roenlie/lit-context';
 import { Routes } from '@lit-labs/router';
-import { sharedStyles } from '../../app/utils/shared-styles.ts';
+import { sharedStyles } from '../../app/shared-styles.ts';
 import { mainRoutesID } from '../../layout/main.cmp.ts';
 import demofile from './components/demo-file.txt?raw';
 import './components/camera.cmp.ts';
@@ -11,6 +11,7 @@ import type { Image } from './components/gallery.cmp.ts';
 import { domId } from '@roenlie/core/dom';
 import { IndexDBWrapper } from '@roenlie/core/indexdb';
 import { CaptureSession } from './capture-session.ts';
+import { synapseIndexDB } from '../../app/index-db.ts';
 
 
 export const captureRoutesID = 'capture-routes';
@@ -66,7 +67,7 @@ export class CapturePageCmp extends LitElement {
 
 	@consume(mainRoutesID) protected mainRoutes: ContextProp<Routes>;
 	@state() protected images:                   Image[] = [];
-	protected hash:                              string = domId();
+	protected hash:                              string;
 	protected sessionRestored = false;
 
 	//@state() protected images:                   string[] = Array(100)
@@ -81,14 +82,14 @@ export class CapturePageCmp extends LitElement {
 		super.willUpdate(props);
 
 		if (this.sessionRestored && props.has('images')) {
-			IndexDBWrapper.connect('synapse')
+			IndexDBWrapper.connect(synapseIndexDB)
 				.collection(CaptureSession)
 				.put(new CaptureSession({ id: 'current', hash: this.hash, images: this.images }));
 		}
 	}
 
 	protected async restoreSession() {
-		const col = IndexDBWrapper.connect('synapse')
+		const col = IndexDBWrapper.connect(synapseIndexDB)
 			.collection(CaptureSession);
 
 		const currentSession = await col.get('current');

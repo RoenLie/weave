@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import searchPageStyles from './search.css' with { type: 'css' };
-import { sharedStyles } from '../../app/utils/shared-styles.ts';
+import { sharedStyles } from '../../app/shared-styles.ts';
 
 
 @customElement('syn-search-page')

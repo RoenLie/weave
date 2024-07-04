@@ -16,6 +16,7 @@ export { hasKeyboardFocus } from './has-keyboard-focus.js';
 export { copyTextToClipboard } from './clipboard.js';
 export { storageHandler } from './storageHandler.js';
 export { domId, alphabetId } from './dom-id.js';
+export { isMobile } from './is-mobile.js';
 export { isTouch } from './is-touch.js';
 export { getOffset } from './offset.js';
 export { Modal } from './modal.js';

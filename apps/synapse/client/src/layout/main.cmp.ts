@@ -1,10 +1,11 @@
 import { html, LitElement } from 'lit';
 
 import { customElement } from 'lit/decorators.js';
-import { Routes } from '@lit-labs/router';
+import { Routes, type RouteConfig } from '@lit-labs/router';
 import { provide } from '@roenlie/lit-context';
-import { sharedStyles } from '../app/utils/shared-styles.ts';
+import { sharedStyles } from '../app/shared-styles.ts';
 import mainStyles from './main.css' with { type: 'css' };
+import { isMobile } from '@roenlie/core/dom';
 
 
 export const mainRoutesID = 'main-routes';
@@ -13,31 +14,52 @@ export const mainRoutesID = 'main-routes';
 @customElement('syn-main')
 export class MainCmp extends LitElement {
 
-	@provide(mainRoutesID) protected routes = new Routes(this, [
+	protected mobileRoutes: RouteConfig[] = [
 		{
 			path:   '',
+			name:   'Search',
 			enter:  () => !!import('../pages/search/search-page.ts'),
 			render: () => html`<syn-search-page></syn-search-page>`,
 		},
 		{
-			path:   'capture/*',
+			path:   'upload',
+			name:   'upload',
 			enter:  () => !!import('../pages/capture/capture-page.ts'),
 			render: () => html`<syn-capture-page></syn-capture-page>`,
 		},
-	], {
-		fallback: {
-			render: () => html`Not Found`,
+		{
+			path:   'capture/*',
+			name:   'Capture',
+			enter:  () => !!import('../pages/capture/capture-page.ts'),
+			render: () => html`<syn-capture-page></syn-capture-page>`,
 		},
-	});
+	];
 
-	protected override render() {
-	  	return html`
+	protected desktopRoutes: RouteConfig[] = [
+		{
+			path:   '',
+			enter:  () => true,
+			render: () => html``,
+		},
+	];
+
+	@provide(mainRoutesID) protected routes = new Routes(
+		this, isMobile ? this.mobileRoutes : this.desktopRoutes,
+		{
+			fallback: {
+				render: () => html`Not Found`,
+			},
+		},
+	);
+
+	protected renderMobile() {
+		return html`
 		${ this.routes.outlet() }
 
 		<nav>
-			<a tabindex="-1" href=${ this.routes.link('') }>
+			<a tabindex="-1" href=${ this.routes.link('upload') }>
 				<button synapse outlined>
-					Home
+					Upload
 				</button>
 			</a>
 			<a tabindex="-1" href=${ this.routes.link('capture/camera') }>
@@ -47,6 +69,14 @@ export class MainCmp extends LitElement {
 			</a>
 		</nav>
 		`;
+	}
+
+	protected renderDesktop() {
+		return html``;
+	}
+
+	protected override render() {
+	  	return isMobile ? this.renderMobile() : this.renderDesktop();
 	}
 
 	public static override styles = [

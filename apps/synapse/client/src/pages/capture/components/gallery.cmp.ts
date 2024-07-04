@@ -4,13 +4,14 @@ import galleryStyles from './gallery.css' with { type: 'css' };
 import { map } from 'lit/directives/map.js';
 import { consume, type ContextProp } from '@roenlie/lit-context';
 import type { Routes } from '@lit-labs/router';
-import { sharedStyles } from '../../../app/utils/shared-styles.ts';
+import { sharedStyles } from '../../../app/shared-styles.ts';
 import { captureRoutesID } from '../capture-page.ts';
-import { maybe } from '../../../app/utils/maybe.ts';
-import { dataURItoBlob } from '../../../app/utils/datauri-to-blob.ts';
+import { maybe } from '../../../app/maybe.ts';
+import { dataURItoBlob } from '../../../app/datauri-to-blob.ts';
 import { IndexDBWrapper } from '@roenlie/core/indexdb';
 import { CaptureSession } from '../capture-session.ts';
 import { emitEvent } from '@roenlie/core/dom';
+import { synapseIndexDB } from '../../../app/index-db.ts';
 
 
 export interface Image {
@@ -149,12 +150,11 @@ export class CaptureGalleryCmp extends LitElement {
 		if (error)
 			return;
 
-		const json = await result?.json();
-		console.log(json);
+		await result?.json();
 
 		emitEvent(this, 'submit');
 
-		IndexDBWrapper.connect('synapse')
+		IndexDBWrapper.connect(synapseIndexDB)
 			.collection(CaptureSession)
 			.delete('current');
 	}
