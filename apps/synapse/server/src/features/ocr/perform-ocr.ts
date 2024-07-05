@@ -1,3 +1,4 @@
+import { maybeAll } from '@roenlie/core/async';
 import Tesseract from 'tesseract.js';
 
 
@@ -94,5 +95,5 @@ export const performOCR = async (
 	for (let i = 0; i < images.length; i++)
 		jobs[i] = scheduler.addJob('recognize', images[i]!);
 
-	return await Promise.all(jobs);
+	return await maybeAll(jobs);
 };

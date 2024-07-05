@@ -1,5 +1,6 @@
 import { css } from 'lit';
 
+
 export const displayFontStyles = css`
 .display-large {
 	font-family:    var(--font-family-name);
@@ -23,6 +24,7 @@ export const displayFontStyles = css`
 	letter-spacing: var(--display-small-letter-spacing);
 }
 `;
+
 
 export const headlineFontStyles = css`
 .headline-large {
@@ -48,6 +50,7 @@ export const headlineFontStyles = css`
 }
 `;
 
+
 export const bodyFontStyles = css`
 .body-large {
 	font-family:    var(--font-family-name);
@@ -72,6 +75,7 @@ export const bodyFontStyles = css`
 }
 `;
 
+
 export const labelFontStyles = css`
 .label-large {
 	font-family:    var(--font-family-name);
@@ -95,6 +99,7 @@ export const labelFontStyles = css`
 	letter-spacing: var(--label-small-letter-spacing);
 }
 `;
+
 
 export const titleFontStyles = css`
 .title-large {

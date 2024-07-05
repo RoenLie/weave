@@ -4,7 +4,7 @@ import {
 	customElement,
 	inject,
 } from '@roenlie/lit-aegis';
-import { FragmentTable } from '@roenlie/mimic-elements/fragment-table';
+import { FragmentTable } from '@roenlie/elements/fragment-table';
 import { css, html } from 'lit';
 import { HandoverRowScrollerCmp } from './handover-row.js';
 

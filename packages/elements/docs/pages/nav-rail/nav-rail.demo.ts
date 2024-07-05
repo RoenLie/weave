@@ -1,6 +1,6 @@
-import { MMIcon } from '@roenlie/mimic-elements/icon';
-import { MMNavRail } from '@roenlie/mimic-elements/nav-rail';
-import { systemIcons } from '@roenlie/mimic-elements/utilities';
+import { MMIcon } from '@roenlie/elements/icon';
+import { MMNavRail } from '@roenlie/elements/nav-rail';
+import { systemIcons } from '@roenlie/elements/utilities';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators/custom-element.js';
 

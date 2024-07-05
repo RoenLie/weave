@@ -1,5 +1,5 @@
 {
-	"name": "name",
+	"name": "@roenlie/synapse-server",
 	"description": "description",
 	"authors": "author",
 	"version": "1.0.0",
@@ -9,9 +9,14 @@
 		"dev": "tsx watch ./src/index.ts",
 		"start": "tsx ./src/index.ts"
 	},
+	"exports": {
+		"./*": "./src/*",
+		"./api/*": "./api/*"
+	},
 	"dependencies": {
 		"@roenlie/core": "workspace:*",
 		"@roenlie/sqlite-wrapper": "workspace:*",
+		"@roenlie/synapse-server": "workspace:*",
 		"better-sqlite3": "^11.1.1",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.5",

@@ -1,6 +1,6 @@
-import '@roenlie/mimic-elements/button';
-import '@roenlie/mimic-elements/icon';
-import '@roenlie/mimic-elements/text';
+import '@roenlie/elements/button';
+import '@roenlie/elements/icon';
+import '@roenlie/elements/text';
 
 import { component } from '@roenlie/lit-fabric/core';
 import { useConnected, useDisconnected, useState } from '@roenlie/lit-fabric/hooks';

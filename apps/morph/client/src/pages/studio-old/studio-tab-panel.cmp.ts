@@ -1,5 +1,5 @@
-import { MMButton } from '@roenlie/mimic-elements/button';
-import { MMIcon } from '@roenlie/mimic-elements/icon';
+import { MMButton } from '@roenlie/elements/button';
+import { MMIcon } from '@roenlie/elements/icon';
 import { MimicElement, customElement } from '@roenlie/lit-utilities/element';
 import { css, html } from 'lit';
 import { queryAssignedElements } from 'lit/decorators.js';

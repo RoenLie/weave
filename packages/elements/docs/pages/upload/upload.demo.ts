@@ -1,4 +1,4 @@
-import { MMUpload } from '@roenlie/mimic-elements/upload';
+import { MMUpload } from '@roenlie/elements/upload';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators/custom-element.js';
 

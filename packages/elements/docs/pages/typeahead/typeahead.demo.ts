@@ -1,5 +1,5 @@
 import { format } from '@roenlie/core/string';
-import { MMTypeahead } from '@roenlie/mimic-elements/typeahead';
+import { MMTypeahead } from '@roenlie/elements/typeahead';
 import { tTerm } from '@roenlie/mimic-localize/directive';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';

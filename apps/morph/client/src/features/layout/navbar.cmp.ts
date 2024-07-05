@@ -1,5 +1,5 @@
 import { AegisElement, customElement, query, state } from '@roenlie/lit-aegis';
-import { MMIcon } from '@roenlie/mimic-elements/icon';
+import { MMIcon } from '@roenlie/elements/icon';
 import { type CSSResultGroup, html } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 import { when } from 'lit/directives/when.js';

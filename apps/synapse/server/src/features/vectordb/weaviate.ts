@@ -1,16 +1,8 @@
-import weaviate from 'weaviate-client';
+import { getWeaviateDb } from './get-weaviate-db.ts';
 
 
-const huggingFaceApiKey = process.env['HUGGING_FACE_API_KEY'];
-if (!huggingFaceApiKey)
-	throw new Error('Missing Api key from .env');
-
-
-const client = await weaviate.connectToLocal({
-	headers: {
-		'X-huggingface-Api-Key': huggingFaceApiKey,
-	},
-});
+await using db = await getWeaviateDb();
+const { client } = db;
 
 
 async function similaritySearchNearText(concepts: string[]) {
@@ -144,6 +136,7 @@ async function createCollection() {
 		 },
 	  ],
 	};
+
 	// let's create it
 	const new_class = await client.collections.createFromSchema(schema_definition);
 

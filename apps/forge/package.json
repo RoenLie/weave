@@ -13,7 +13,7 @@
 		"@roenlie/lit-aegis": "workspace:*",
 		"@roenlie/lit-utilities": "workspace:*",
 		"@roenlie/core": "workspace:*",
-		"@roenlie/mimic-elements": "workspace:*",
+		"@roenlie/elements": "workspace:*",
 		"lit": "3.1.4",
 		"posix-path-browser": "workspace:*",
 		"quill": "2.0.2",

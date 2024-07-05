@@ -1,4 +1,4 @@
-import { MMProgressBar } from '@roenlie/mimic-elements/progress-bar';
+import { MMProgressBar } from '@roenlie/elements/progress-bar';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 

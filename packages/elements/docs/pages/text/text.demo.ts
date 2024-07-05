@@ -1,4 +1,4 @@
-import { MMText } from '@roenlie/mimic-elements/text';
+import { MMText } from '@roenlie/elements/text';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 

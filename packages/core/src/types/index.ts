@@ -9,4 +9,6 @@ export type { Increment, Decrement, Repeat } from './math.types.js';
 export type { CompatibilityOf, Timeout } from './utility-types.js';
 export type { stringliteral } from './strings.types.js';
 export type { Fn, AsyncFn } from './function.types.js';
+export type { Mandatory } from './mandatory.js';
+export type { Optional } from './optional.js';
 export type { Ctor } from './class.types.js';

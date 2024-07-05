@@ -3,9 +3,9 @@ import {
 	Adapter, AegisComponent, customElement,
 	inject, query, queryAll, state,
 } from '@roenlie/lit-aegis';
-import { MMButton } from '@roenlie/mimic-elements/button';
-import { MMIcon } from '@roenlie/mimic-elements/icon';
-import { MMTooltip } from '@roenlie/mimic-elements/tooltip';
+import { MMButton } from '@roenlie/elements/button';
+import { MMIcon } from '@roenlie/elements/icon';
+import { MMTooltip } from '@roenlie/elements/tooltip';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { html } from 'lit';
 import { when } from 'lit/directives/when.js';

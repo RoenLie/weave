@@ -1,6 +1,6 @@
 import { range } from '@roenlie/core/array';
 import { domId } from '@roenlie/core/dom';
-import { type ListTemplateConfig, MMTemplateList } from '@roenlie/mimic-elements/template-list';
+import { type ListTemplateConfig, MMTemplateList } from '@roenlie/elements/template-list';
 import { css, html, LitElement, type TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 

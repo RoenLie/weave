@@ -1,4 +1,4 @@
-import { MMRipple } from '@roenlie/mimic-elements/ripple';
+import { MMRipple } from '@roenlie/elements/ripple';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators/custom-element.js';
 

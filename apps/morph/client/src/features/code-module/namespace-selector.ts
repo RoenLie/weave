@@ -1,6 +1,6 @@
 import { type ContextProp, consume } from '@roenlie/lit-context';
 import { maybe } from '@roenlie/core/async';
-import { Alerts } from '@roenlie/mimic-elements/alert';
+import { Alerts } from '@roenlie/elements/alert';
 import { MimicElement, customElement } from '@roenlie/lit-utilities/element';
 import { css, html } from 'lit';
 import { state } from 'lit/decorators.js';

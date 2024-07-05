@@ -1,4 +1,4 @@
-import { MMTabGroup } from '@roenlie/mimic-elements/tabs';
+import { MMTabGroup } from '@roenlie/elements/tabs';
 import { css, html, LitElement, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
 

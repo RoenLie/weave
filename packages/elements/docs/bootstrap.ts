@@ -1,4 +1,4 @@
-import '@roenlie/mimic-elements/styles';
+import '@roenlie/elements/styles';
 
 import { sleep } from '@roenlie/core/async';
 import { LangBlockStore } from '@roenlie/mimic-localize/implement';

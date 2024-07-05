@@ -1,4 +1,4 @@
-import { AppRouterCmp } from '@roenlie/mimic-elements/router';
+import { AppRouterCmp } from '@roenlie/elements/router';
 import type { Route } from '@vaadin/router';
 import { html, render } from 'lit';
 

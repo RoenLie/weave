@@ -36,6 +36,10 @@ export class Query {
 		return new DefineBuilder<T>(this.#db, table);
 	}
 
+	public transaction(transaction: (query: Query) => void) {
+		this.#db.transaction(() => void transaction(this));
+	}
+
 	public [Symbol.dispose] = () => {
 		this.#db.close();
 	};

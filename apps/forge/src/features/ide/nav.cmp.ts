@@ -8,8 +8,8 @@ import {
 } from '@roenlie/lit-aegis';
 import { domId } from '@roenlie/core/dom';
 import { forOf } from '@roenlie/core/iterators';
-import { MMIcon } from '@roenlie/mimic-elements/icon';
-import { tooltip } from '@roenlie/mimic-elements/tooltip';
+import { MMIcon } from '@roenlie/elements/icon';
+import { tooltip } from '@roenlie/elements/tooltip';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { html } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';

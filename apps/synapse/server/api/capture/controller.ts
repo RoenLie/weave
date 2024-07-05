@@ -1,14 +1,17 @@
-import type { ControllerMethod, ExpressController } from '../../src/utilities/file-routes.ts';
+import type {
+	ControllerMethod,
+	ExpressController,
+} from '@roenlie/synapse-server/utilities/file-routes.ts';
 import { join } from 'path/posix';
 import formidable from 'formidable';
 import { mkdir, rename } from 'fs/promises';
-import { maybe } from '../../src/utilities/maybe.ts';
-import { paths } from '../../src/app/paths.ts';
-import { performOCR } from '../../src/features/ocr/perform-ocr.ts';
-import { OCRModel, type IOCRModel } from '../../src/features/ocr/ocr-model.ts';
 import { Query } from '@roenlie/sqlite-wrapper';
-import { ocrDbPath, ocrTable } from '../../src/features/ocr/ocr-table.ts';
-import { maybeAll } from '@roenlie/core/async';
+import { maybe, maybeAll } from '@roenlie/core/async';
+import { paths } from '@roenlie/synapse-server/app/paths.ts';
+import { performOCR } from '@roenlie/synapse-server/features/ocr/perform-ocr.ts';
+import { OCRModel, type IOCRModel } from '@roenlie/synapse-server/features/ocr/ocr-model.ts';
+import { ocrDbPath, ocrTable } from '@roenlie/synapse-server/features/ocr/ocr-table.ts';
+import { insertOCRDataToWeaviate } from '@roenlie/synapse-server/features/ocr/ocr-weaviate.ts';
 
 
 const upload: ControllerMethod = {
@@ -62,7 +65,10 @@ const upload: ControllerMethod = {
 				})),
 			});
 
-			const ocrResult = await performOCR('eng', resolvedFiles.map(f => f.filepath));
+			const [ ocrResult, ocrErr ] = await performOCR('eng', resolvedFiles.map(f => f.filepath));
+			if (ocrErr)
+				return console.error(ocrErr);
+
 			const ocrData = ocrResult.map((result, i) => OCRModel.initialize({
 				hash,
 				name: resolvedFiles[i]!.newFilename,
@@ -70,8 +76,12 @@ const upload: ControllerMethod = {
 			}));
 
 			using query = new Query(ocrDbPath);
-			ocrData.forEach(data =>
-				query.insert<IOCRModel>(ocrTable).values(data).query());
+			query.transaction(query =>
+				ocrData.forEach(data =>
+					query.insert<IOCRModel>(ocrTable).values(data).query()));
+
+			await insertOCRDataToWeaviate(ocrData
+				.map(({ hash, text, name }) => ({ hash, text, name })));
 		},
 	],
 };

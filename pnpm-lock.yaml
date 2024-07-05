@@ -84,15 +84,15 @@ importers:
       '@roenlie/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@roenlie/elements':
+        specifier: workspace:*
+        version: link:../../packages/elements
       '@roenlie/lit-fabric':
         specifier: workspace:*
         version: link:../../packages/lit/lit-fabric
       '@roenlie/lit-utilities':
         specifier: workspace:*
         version: link:../../packages/lit/lit-utilities
-      '@roenlie/mimic-elements':
-        specifier: workspace:*
-        version: link:../../packages/elements
       lit:
         specifier: ^3.1.4
         version: 3.1.4
@@ -124,15 +124,15 @@ importers:
       '@roenlie/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@roenlie/elements':
+        specifier: workspace:*
+        version: link:../../packages/elements
       '@roenlie/lit-aegis':
         specifier: workspace:*
         version: link:../../packages/lit/lit-aegis
       '@roenlie/lit-utilities':
         specifier: workspace:*
         version: link:../../packages/lit/lit-utilities
-      '@roenlie/mimic-elements':
-        specifier: workspace:*
-        version: link:../../packages/elements
       lit:
         specifier: 3.1.4
         version: 3.1.4
@@ -167,6 +167,9 @@ importers:
       '@roenlie/core':
         specifier: workspace:*
         version: link:../../../packages/core
+      '@roenlie/elements':
+        specifier: workspace:*
+        version: link:../../../packages/elements
       '@roenlie/lit-aegis':
         specifier: workspace:*
         version: link:../../../packages/lit/lit-aegis
@@ -179,9 +182,6 @@ importers:
       '@roenlie/lit-utilities':
         specifier: workspace:*
         version: link:../../../packages/lit/lit-utilities
-      '@roenlie/mimic-elements':
-        specifier: workspace:*
-        version: link:../../../packages/elements
       lit:
         specifier: 3.1.4
         version: 3.1.4
@@ -470,6 +470,9 @@ importers:
       '@roenlie/sqlite-wrapper':
         specifier: workspace:*
         version: link:../../../packages/sqlite-wrapper
+      '@roenlie/synapse-server':
+        specifier: workspace:*
+        version: 'link:'
       better-sqlite3:
         specifier: ^11.1.1
         version: 11.1.2
@@ -622,7 +625,7 @@ importers:
       '@faker-js/faker':
         specifier: ^8.4.1
         version: 8.4.1
-      '@roenlie/mimic-elements':
+      '@roenlie/elements':
         specifier: workspace:*
         version: 'link:'
       '@roenlie/mirage-docs':
@@ -631,6 +634,9 @@ importers:
       '@roenlie/vite-plugin-import-css-sheet':
         specifier: workspace:*
         version: link:../vite-plugins/import-css-sheet
+      vite:
+        specifier: ^5.3.3
+        version: 5.3.3(@types/node@20.14.9)(terser@5.31.1)
 
   packages/eslint-config:
     dependencies:

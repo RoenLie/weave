@@ -13,7 +13,7 @@ export default defineConfig((env) => ({
 		viteCopy({
 			targets: [
 				{
-					from: './node_modules/@roenlie/mimic-elements/styles/*',
+					from: './node_modules/@roenlie/elements/styles/*',
 					to:   './public/vendor/mimic-elements',
 				},
 			],

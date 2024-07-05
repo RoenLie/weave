@@ -1,11 +1,11 @@
-import '@roenlie/mimic-elements/button';
-import '@roenlie/mimic-elements/icon';
+import '@roenlie/elements/button';
+import '@roenlie/elements/icon';
 
 import { component } from '@roenlie/lit-fabric/core';
 import { useOnEvent } from '@roenlie/lit-fabric/hooks';
 import { swapItems } from '@roenlie/core/array';
 import { domId, type EventOf } from '@roenlie/core/dom';
-import { DialogConfig } from '@roenlie/mimic-elements/dialog';
+import { DialogConfig } from '@roenlie/elements/dialog';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html } from 'lit';
 import { map } from 'lit/directives/map.js';

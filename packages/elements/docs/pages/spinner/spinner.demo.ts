@@ -1,4 +1,4 @@
-import { MMSpinner } from '@roenlie/mimic-elements/spinner';
+import { MMSpinner } from '@roenlie/elements/spinner';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 

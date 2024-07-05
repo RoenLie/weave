@@ -151,8 +151,13 @@ const base = tseslint.config({
 			'warn',
 			{
 				code:                   100,
-				ignoreStrings:          false,
-				ignoreTemplateLiterals: false,
+				ignoreStrings:          true,
+				ignoreTemplateLiterals: true,
+				ignoreRegExpLiterals:   true,
+				ignoreComments:         true,
+				ignoreUrls:             true,
+				// This allows imports to be longer than 100ch
+				ignorePattern:          'import .*?;',
 			},
 		],
 		'@stylistic/brace-style': [

@@ -1,5 +1,5 @@
-import { type ButtonShape, type ButtonSize, type ButtonVariant, MMButton } from '@roenlie/mimic-elements/button';
-import { MMIcon } from '@roenlie/mimic-elements/icon';
+import { type ButtonShape, type ButtonSize, type ButtonVariant, MMButton } from '@roenlie/elements/button';
+import { MMIcon } from '@roenlie/elements/icon';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
