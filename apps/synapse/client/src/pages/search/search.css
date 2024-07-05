@@ -1,8 +1,47 @@
 :host {
+	overflow: hidden;
 	display: grid;
 	grid-template-rows: 1fr auto;
 	padding-bottom: 32px;
 	border-bottom: 2px solid var(--outline);
+}
+s-results {
+	overflow: hidden;
+	overflow-y: auto;
+	scrollbar-gutter: stable;
+
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: center;
+	align-content: start;
+	gap: 12px;
+	padding-top: 12px;
+	padding-left: 16px;
+	padding-right: 8px;
+
+	&::-webkit-scrollbar {
+		width: 8px;
+		background-color: transparent;
+	}
+	&::-webkit-scrollbar-thumb {
+		background-color: var(--outline);
+		border-radius: 2px;
+	}
+	> * {
+		cursor: pointer;
+		&:hover {
+			transform: scale(1.1);
+		}
+	}
+
+	s-img-wrapper {
+		overflow: hidden;
+		display: block;
+		border: 1px solid var(--outline);
+		border-radius: 16px;
+		width: 175px;
+		height: 200px;
+	}
 }
 s-search {
 	display: flex;

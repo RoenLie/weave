@@ -6,12 +6,13 @@ import { consume, type ContextProp } from '@roenlie/lit-context';
 import type { Routes } from '@lit-labs/router';
 import { sharedStyles } from '../../../app/shared-styles.ts';
 import { captureRoutesID } from '../capture-page.ts';
-import { maybe } from '../../../app/maybe.ts';
 import { dataURItoBlob } from '../../../app/datauri-to-blob.ts';
 import { IndexDBWrapper } from '@roenlie/core/indexdb';
 import { CaptureSession } from '../capture-session.ts';
 import { emitEvent } from '@roenlie/core/dom';
 import { synapseIndexDB } from '../../../app/index-db.ts';
+import { maybe } from '@roenlie/core/async';
+import { serverUrl } from '../../../app/constants.ts';
 
 
 export interface Image {
@@ -141,7 +142,7 @@ export class CaptureGalleryCmp extends LitElement {
 		});
 
 		const [ result, error ] = await maybe(fetch(
-			'http://localhost:42069/api/capture/upload', {
+			serverUrl + '/api/capture/upload', {
 				method: 'post',
 				body:   formData,
 			},

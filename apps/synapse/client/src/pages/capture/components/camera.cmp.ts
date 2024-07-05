@@ -1,10 +1,10 @@
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import cameraStyles from './camera.css' with { type: 'css' };
-import { maybe } from '../../../app/maybe.ts';
 import { map } from 'lit/directives/map.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { sharedStyles } from '../../../app/shared-styles.ts';
+import { maybe } from '@roenlie/core/async';
 
 
 @customElement('syn-capture-camera')

@@ -4,14 +4,14 @@ import type {
 } from '@roenlie/synapse-server/utilities/file-routes.ts';
 import { join } from 'path/posix';
 import formidable from 'formidable';
-import { mkdir, rename } from 'fs/promises';
+import { mkdir, readFile, rename } from 'fs/promises';
 import { Query } from '@roenlie/sqlite-wrapper';
 import { maybe, maybeAll } from '@roenlie/core/async';
 import { paths } from '@roenlie/synapse-server/app/paths.ts';
 import { performOCR } from '@roenlie/synapse-server/features/ocr/perform-ocr.ts';
 import { OCRModel, type IOCRModel } from '@roenlie/synapse-server/features/ocr/ocr-model.ts';
 import { ocrDbPath, ocrTable } from '@roenlie/synapse-server/features/ocr/ocr-table.ts';
-import { insertOCRDataToWeaviate } from '@roenlie/synapse-server/features/ocr/ocr-weaviate.ts';
+import { insertOCRDataToWeaviate, searchOCRData } from '@roenlie/synapse-server/features/ocr/ocr-weaviate.ts';
 
 
 const upload: ControllerMethod = {
@@ -87,4 +87,44 @@ const upload: ControllerMethod = {
 };
 
 
-export default [ upload ] as ExpressController;
+const search: ControllerMethod = {
+	path:     '/api/search',
+	method:   'get',
+	handlers: [
+		async (req, res, _next) => {
+			const { query } = req.query as {
+				query: string;
+			};
+
+			const [ searchResult, searchErr ] = await maybe(searchOCRData(query));
+			if (searchErr)
+				return res.sendStatus(500);
+
+			const [ files, err ] = await maybeAll(searchResult.objects.map(async result => {
+				const { hash, name } = result.properties;
+				const path = join(paths.uploads, hash, name);
+
+				return readFile(path, 'base64');
+			}));
+
+			if (err) {
+				console.log(err);
+
+				return res.sendStatus(500);
+			}
+
+			console.dir(searchResult.objects.map(obj => ({
+				...obj,
+				properties: [],
+			})), { depth: 5 });
+
+			res.send({ query, files, error: undefined });
+		},
+	],
+};
+
+
+export default [
+	upload,
+	search,
+] as ExpressController;

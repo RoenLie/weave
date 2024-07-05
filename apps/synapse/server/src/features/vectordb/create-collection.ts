@@ -2,7 +2,7 @@ import { type WeaviateClass as WClass } from '../../../node_modules/weaviate-cli
 import type { WeaviateClient } from 'weaviate-client';
 
 
-type WeaviateClass = WClass & {
+export type WeaviateClass = WClass & {
 	class: Capitalize<NonNullable<WClass['class']>>
 };
 
@@ -31,11 +31,14 @@ export const createCollection = async (
 ) => {
 	const exists = await collectionExists(client, schema.class);
 
-	if (override && exists)
+	if (override && exists) {
 		await client.collections.delete(schema.class);
 
-	if (!exists)
 		return await client.collections.createFromSchema(schema);
+	}
+	else if (!exists) {
+		return await client.collections.createFromSchema(schema);
+	}
 
 	return client.collections.get(schema.class);
 };
@@ -44,10 +47,16 @@ export const createCollection = async (
 export const moduleConfigs = {
 	'text2vec-huggingface': {
 		'model':   'sentence-transformers/all-MiniLM-L6-v2',
+		//'model':   'facebook/bart-large-cnn',
+		//'model':   'deepset/roberta-base-squad2',
 		'options': {
-			'waitForModel': 'true',
-			'useGPU':       'true',
-			'useCache':     'true',
+			'waitForModel': true,
+			'useGPU':       true,
+			'useCache':     true,
 		},
+	},
+	'text2vec-contextionary': {
+		'skip':                  true,
+		'vectorizePropertyName': true,
 	},
 };

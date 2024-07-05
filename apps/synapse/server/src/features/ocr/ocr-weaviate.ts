@@ -1,39 +1,50 @@
-import type { DataObject } from 'weaviate-client';
-import { createCollection, deleteCollection, moduleConfigs } from '../vectordb/create-collection.ts';
+import type { DataObject, WeaviateReturn } from 'weaviate-client';
+import { createCollection, moduleConfigs, type WeaviateClass } from '../vectordb/create-collection.ts';
 import { getWeaviateDb } from '../vectordb/get-weaviate-db.ts';
+
+
+const ocrDataSchema: WeaviateClass = {
+	class:        'Ocr_data',
+	description:  'OCR document data',
+	vectorizer:   'text2vec-huggingface',
+	moduleConfig: moduleConfigs['text2vec-huggingface'],
+	properties:   [
+		{
+			name:         'name',
+			dataType:     [ 'text' ],
+			description:  'name of the document.',
+			moduleConfig: {
+				'text2vec-huggingface': {
+					skip: true,
+				},
+			},
+		},
+		{
+			name:        'text',
+			dataType:    [ 'text' ],
+			description: 'Text extracted from document.',
+		},
+		{
+			name:         'hash',
+			dataType:     [ 'text' ],
+			description:  'hash refering to the documents physical location.',
+			moduleConfig: {
+				'text2vec-huggingface': {
+					skip: true,
+				},
+			},
+		},
+	],
+};
 
 
 (async () => {
 	await using db = await getWeaviateDb();
-	await createCollection(db.client, {
-		class:        'Ocr_data',
-		description:  'OCR document data',
-		vectorizer:   'text2vec-huggingface',
-		moduleConfig: moduleConfigs['text2vec-huggingface'],
-		properties:   [
-			{
-				  name:        'name',
-				  dataType:    [ 'text' ],
-				  description: 'name of the document.',
-			},
-			{
-				  name:        'text',
-				  dataType:    [ 'text' ],
-				  description: 'Text extracted from document.',
-			},
-			{
-				  name:        'hash',
-				  dataType:    [ 'text' ],
-				  description: 'hash refering to the documents physical location.',
-			},
-		 ],
-	});
-
-	await deleteCollection(db.client, 'JeopardyQuestion');
+	await createCollection(db.client, ocrDataSchema);
 })();
 
 
-interface OCRWeaviateProps {
+export interface OCRWeaviateProps {
 	text: string;
 	hash: string;
 	name: string;
@@ -51,8 +62,21 @@ export const insertOCRDataToWeaviate = async (data: OCRWeaviateProps | OCRWeavia
 
 	await using db = await getWeaviateDb();
 	await db.client.collections
-		.get('Ocr_data')
+		.get(ocrDataSchema.class)
 		.data.insertMany(dataObj);
 
 	console.log('finished inserting ocr data to weaviate');
+};
+
+
+export const searchOCRData = async (text: string) => {
+	await using weaviate = await getWeaviateDb();
+
+	return await weaviate.client.collections
+		.get(ocrDataSchema.class)
+		.query.nearText(text, {
+			limit:          10,
+			distance:       0.6,
+			returnMetadata: [ 'distance' ],
+		}) as WeaviateReturn<OCRWeaviateProps>;
 };

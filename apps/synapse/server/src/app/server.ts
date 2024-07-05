@@ -4,8 +4,7 @@ import { server } from './main.js';
 
 await registerControllers('api');
 
-server.listen(Number(process.env.PORT), process.env.HOST, () => {
-	console.log(`⚡️[server]: Server is running at http://${ process.env.HOST }:${
-		Number(process.env.PORT)
-	}`);
+const url = new URL(process.env.URL);
+server.listen(Number(url.port), url.hostname, () => {
+	console.log(`⚡️[server]: Server is running at ${ process.env.URL }`);
 });

@@ -12,6 +12,11 @@ interface SynapsePaths extends Paths {
 	uploads: string;
 
 	/**
+	 * Directory to put uploads before they are picked up by ocr and vectorization.
+	 */
+	tempUploads: string;
+
+	/**
 	 * Directory for sqlite databases.
 	 */
 	databases: string;

@@ -97,6 +97,3 @@ export const withDebounce = <
 
 	return fn;
 };
-
-
-withDebounce(() => {}, () => {}, 500).cancel();
