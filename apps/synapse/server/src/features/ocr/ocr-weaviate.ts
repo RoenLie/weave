@@ -1,9 +1,10 @@
 import type { DataObject, WeaviateReturn } from 'weaviate-client';
 import { createCollection, moduleConfigs, type WeaviateClass } from '../vectordb/create-collection.ts';
 import { getWeaviateDb } from '../vectordb/get-weaviate-db.ts';
+import { maybe } from '@roenlie/core/async';
 
 
-const ocrDataSchema: WeaviateClass = {
+export const ocrDataSchema: WeaviateClass = {
 	class:        'Ocr_data',
 	description:  'OCR document data',
 	vectorizer:   'text2vec-huggingface',
@@ -58,14 +59,13 @@ export const insertOCRDataToWeaviate = async (data: OCRWeaviateProps | OCRWeavia
 	const dataObj: DataObject<OCRWeaviateProps>[] = data
 		.map(properties => ({ properties	}));
 
-	console.log('inserting ocr data to weaviate');
-
 	await using db = await getWeaviateDb();
-	await db.client.collections
-		.get(ocrDataSchema.class)
-		.data.insertMany(dataObj);
 
-	console.log('finished inserting ocr data to weaviate');
+	return await maybe(
+		db.client.collections
+			.get(ocrDataSchema.class)
+			.data.insertMany(dataObj),
+	);
 };
 
 

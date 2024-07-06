@@ -54,6 +54,10 @@ abstract class Builder {
 		protected table: string,
 	) {}
 
+	public get queryAsString() {
+		return this.build();
+	}
+
 	protected abstract build(): string;
 
 	public abstract query(): unknown;
@@ -384,7 +388,7 @@ class DeleteBuilder<T extends object = object> extends Builder {
 	protected build() {
 		return `
 		DELETE FROM ${ this.table }
-		WHERE ${ this.#where }
+		${ this.#where ? `WHERE ${ this.#where }` : '' }
 		`;
 	}
 
@@ -440,7 +444,13 @@ export class Filter<T = Record<string, string | number>> {
 	}
 
 	public oneOf<K extends Extract<keyof T, string>>(field: K, ...values: T[K][]) {
-		return `${ field } IN (${ values.join(',') })` as FilterCondition;
+		const escapedValues = values.map(v => {
+			return typeof v === 'string'
+				? `'${ v }'`
+				: v;
+		}).join(',');
+
+		return `${ field } IN (${ escapedValues })` as FilterCondition;
 	}
 
 	public notOneOf<K extends Extract<keyof T, string>>(field: K, ...values: T[K][]) {

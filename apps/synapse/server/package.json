@@ -17,7 +17,6 @@
 		"@roenlie/core": "workspace:*",
 		"@roenlie/sqlite-wrapper": "workspace:*",
 		"@roenlie/synapse-server": "workspace:*",
-		"@roenlie/package-toolbox": "workspace:*",
 		"better-sqlite3": "^11.1.1",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.5",
@@ -27,6 +26,8 @@
 		"globby": "^14.0.0",
 		"mime": "^4.0.3",
 		"nodemon": "^3.1.4",
+		"pino": "^9.2.0",
+		"rotating-file-stream": "^3.2.3",
 		"tesseract.js": "^5.1.0",
 		"tslib": "^2.6.2",
 		"weaviate-client": "^3.0.8"

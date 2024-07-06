@@ -4,8 +4,32 @@ import formidable from 'formidable';
 import { mkdir, readFile, rename } from 'fs/promises';
 import { maybe, maybeAll } from '@roenlie/core/async';
 import { paths } from '@roenlie/synapse-server/app/paths.ts';
-import { searchOCRData } from '@roenlie/synapse-server/features/ocr/ocr-weaviate.ts';
-import { parseUploads } from './parse-uploads.ts';
+import { searchOCRData, ocrDataSchema } from '@roenlie/synapse-server/features/ocr/ocr-weaviate.ts';
+import { parseUploads } from '../../src/features/capture/parse-uploads.ts';
+import { logger } from '../../src/features/logger/logger.ts';
+
+
+const clearAllData = async () => {
+	const [
+		{ Query },
+		{ deleteCollection },
+		{ getWeaviateDb },
+		{ ocrDbPath, ocrTable },
+		{ uploadQueueTable },
+	] = await Promise.all([
+		import('@roenlie/sqlite-wrapper'),
+		import('../../src/features/vectordb/create-collection.ts'),
+		import('../../src/features/vectordb/get-weaviate-db.ts'),
+		import('../../src/features/ocr/ocr-table.ts'),
+		import('../../src/features/capture/upload-queue.ts'),
+	]);
+
+	using query = new Query(ocrDbPath);
+	query.delete(ocrTable).query();
+	query.delete(uploadQueueTable).query();
+	await using weaviate  = await getWeaviateDb();
+	deleteCollection(weaviate.client, ocrDataSchema.class);
+};
 
 
 const upload: ControllerMethod = {
@@ -97,8 +121,21 @@ const search: ControllerMethod = {
 	],
 };
 
+const logging: ControllerMethod = {
+	path:     '/api/capture/log',
+	method:   'get',
+	handlers: [
+		(req, res) => {
+			logger.info('what about this?');
+
+			res.sendStatus(200);
+		},
+	],
+};
+
 
 export default [
 	upload,
 	search,
+	logging,
 ] as ExpressController;

@@ -8,6 +8,7 @@
 	"include": [
 		"./**/*.ts",
 		"./**/*.d.ts",
+		"src/features/logger/logger-transport.mjs",
 	],
 	"exclude": [
 		"./**/*.test.ts",
