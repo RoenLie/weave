@@ -12,7 +12,7 @@ import { CaptureSession } from '../capture-session.ts';
 import { emitEvent } from '@roenlie/core/dom';
 import { synapseIndexDB } from '../../../app/index-db.ts';
 import { maybe } from '@roenlie/core/async';
-import { serverUrl } from '../../../app/constants.ts';
+import { ServerURL } from '../../../app/server-url.ts';
 
 
 export interface Image {
@@ -141,17 +141,14 @@ export class CaptureGalleryCmp extends LitElement {
 			formData.append(img.name, blob, img.name);
 		});
 
-		const [ result, error ] = await maybe(fetch(
-			serverUrl + '/api/capture/upload', {
-				method: 'post',
-				body:   formData,
-			},
-		));
+		const url = new ServerURL('/api/capture/upload');
+		const [ _, error ] = await maybe(fetch(url, {
+			method: 'post',
+			body:   formData,
+		}).then(r => r.status));
 
 		if (error)
 			return;
-
-		await result?.json();
 
 		emitEvent(this, 'submit');
 

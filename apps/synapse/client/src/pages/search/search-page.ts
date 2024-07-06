@@ -2,10 +2,10 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import searchPageStyles from './search.css' with { type: 'css' };
 import { sharedStyles } from '../../app/shared-styles.ts';
-import { maybe, maybeAll, type Maybe } from '@roenlie/core/async';
+import { maybe } from '@roenlie/core/async';
 import { debounce } from '@roenlie/core/timing';
 import { live } from 'lit/directives/live.js';
-import { serverUrl } from '../../app/constants.ts';
+import { ServerURL } from '../../app/server-url.ts';
 import type { Image } from '../capture/components/gallery.cmp.ts';
 import { map } from 'lit/directives/map.js';
 
@@ -32,7 +32,7 @@ export class SearchPageCmp extends LitElement {
 		if (!this.searchValue)
 			return this.searchResult = [];
 
-		const url = new URL(serverUrl + '/api/search', location.origin);
+		const url = new ServerURL('/api/search');
 		url.searchParams.set('query', this.searchValue);
 
 		interface SearchResult {

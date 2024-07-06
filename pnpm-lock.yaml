@@ -467,6 +467,9 @@ importers:
       '@roenlie/core':
         specifier: workspace:*
         version: link:../../../packages/core
+      '@roenlie/package-toolbox':
+        specifier: workspace:*
+        version: link:../../../packages/package-toolbox
       '@roenlie/sqlite-wrapper':
         specifier: workspace:*
         version: link:../../../packages/sqlite-wrapper
