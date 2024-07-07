@@ -34,7 +34,7 @@
 	},
 	"scripts": {
 		"test": "vitest",
-		"dev": "pnpm vite --config ./src/_demo/vite.config.ts",
+		"dev": "pnpm vite --config ./demo/vite.config.ts",
 		"build": "pnpm run --sequential \"/^build::.*/\"",
 		"build::clean": "rimraf dist",
 		"build::indexes": "pkg-toolbox build-indexes",
@@ -47,14 +47,16 @@
 	},
 	"dependencies": {
 		"@roenlie/core": "workspace:*",
-		"@roenlie/reflect-metadata": "workspace:*",
 		"@roenlie/mirage-docs": "workspace:*",
+		"@roenlie/reflect-metadata": "workspace:*",
 		"deepmerge-ts": "^7.0.0",
 		"inversify": "^6.0.2",
-		"lit": "^3.1.3"
+		"lit": "^3.1.3",
+		"tslib": "^2.6.3"
 	},
 	"devDependencies": {
-		"@roenlie/mirage-docs": "workspace:*"
+		"@roenlie/mirage-docs": "workspace:*",
+		"vite": "^5.3.3"
 	},
 	"sideEffects": [
 		"./dist/lib/annotations/annotations.js",

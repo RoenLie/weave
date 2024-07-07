@@ -51,7 +51,8 @@ export class Adapter<T extends object = Record<keyof any, any>> {
 
 	/** {@link AegisComponent.querySelectorAll} */
 	public querySelectorAll<T extends HTMLElement>(...args: Parameters<DocumentFragment['querySelectorAll']>) {
-		return (this.element.shadowRoot?.querySelectorAll(...args) ?? undefined) as NodeListOf<T> | undefined;
+		return (this.element.shadowRoot
+			?.querySelectorAll(...args) ?? undefined) as NodeListOf<T> | undefined;
 	}
 
 	/** {@link AegisComponent.getElementById} */

@@ -121,11 +121,12 @@ const search: ControllerMethod = {
 	],
 };
 
+
 const logging: ControllerMethod = {
 	path:     '/api/capture/log',
 	method:   'get',
 	handlers: [
-		(req, res) => {
+		(_req, res) => {
 			logger.info('what about this?');
 
 			res.sendStatus(200);

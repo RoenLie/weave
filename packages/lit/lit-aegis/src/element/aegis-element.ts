@@ -1,4 +1,4 @@
-import { LitElement, type PropertyValues } from 'lit';
+import { LitElement } from 'lit';
 
 
 /**
@@ -11,10 +11,10 @@ import { LitElement, type PropertyValues } from 'lit';
  * as there are metadata libs that use the supplied tagname to extract data.
  */
 export const customElement = (tagname: string, registerOnImport = false) => {
-	return <TBase extends {tagName: string, register: () => void}>(base: TBase, _?: any) => {
+	return <TBase extends { tagName: string, register: () => void }>(base: TBase, _?: any) => {
 		base.tagName = tagname;
 		if (registerOnImport)
-			base.register();
+			queueMicrotask(() => base.register());
 
 		return base;
 	};
@@ -35,9 +35,6 @@ export class AegisElement extends LitElement {
 			globalThis.customElements.define(tagName, this);
 	}
 
-	/** Is true immediatly after connectedCallback and set to false after the first updated hook. */
-	#firstUpdateAfterConnected = false;
-
 	/**
 	 * Is called on every connection of this element, after the first updated hook as been called.
 	 *
@@ -50,21 +47,10 @@ export class AegisElement extends LitElement {
 	 */
 	public afterConnectedCallback(): void { }
 
-
 	public override connectedCallback(): void {
 		super.connectedCallback();
 
-		this.#firstUpdateAfterConnected = true;
-	}
-
-	protected override updated(changedProperties: PropertyValues<any>): void {
-		super.updated(changedProperties);
-
-		if (this.#firstUpdateAfterConnected) {
-			this.#firstUpdateAfterConnected = false;
-
-			requestAnimationFrame(() => this.afterConnectedCallback());
-		}
+		this.updateComplete.then(() => void this.afterConnectedCallback());
 	}
 
 }

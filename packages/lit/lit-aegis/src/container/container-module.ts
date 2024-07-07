@@ -3,7 +3,7 @@ import { id, type interfaces } from 'inversify';
 import type { Container } from './container.js';
 
 
-export type OverrideFunction<T extends (...args: any[]) => any> = (base: T | undefined) => T
+export type OverrideFunction<T extends (...args: any[]) => any> = (base: T | undefined) => T;
 
 
 export type PureRecord<T> = T extends CallableFunction ? never : T;
@@ -17,23 +17,27 @@ export interface ExtendedBindingToSyntax<T> extends interfaces.BindingToSyntax<T
 
 
 export interface ModuleOptions {
-	bind: <T = unknown>(serviceIdentifier: interfaces.ServiceIdentifier<T>) => ExtendedBindingToSyntax<T>;
-	bindOnce: <T = unknown>(serviceIdentifier: interfaces.ServiceIdentifier<T>) => interfaces.BindingToSyntax<T> | undefined;
-	unbind: interfaces.Unbind;
-	isBound: interfaces.IsBound;
+	bind:           <T = unknown>(
+		serviceIdentifier: interfaces.ServiceIdentifier<T>
+	) => ExtendedBindingToSyntax<T>;
+	bindOnce:       <T = unknown>(
+		serviceIdentifier: interfaces.ServiceIdentifier<T>
+	) => interfaces.BindingToSyntax<T> | undefined;
+	unbind:         interfaces.Unbind;
+	isBound:        interfaces.IsBound;
 	isCurrentBound: interfaces.IsBound;
-	rebind: interfaces.Rebind;
-	unbindAsync: interfaces.UnbindAsync;
-	onActivation: interfaces.Container['onActivation'];
+	rebind:         interfaces.Rebind;
+	unbindAsync:    interfaces.UnbindAsync;
+	onActivation:   interfaces.Container['onActivation'];
 	onDeactivation: interfaces.Container['onDeactivation'];
 }
 
 
 export class ContainerModule implements interfaces.ContainerModule {
 
-	public id: number;
+	public id:       number;
 	public registry: any; /** Not using inversify default registry func */
-	public load: (methods: ModuleOptions) => void;
+	public load:     (methods: ModuleOptions) => void;
 
 	constructor(registry: (options: ModuleOptions) => void) {
 		this.id = id();

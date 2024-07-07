@@ -1,12 +1,30 @@
 import { css, html } from 'lit';
 
-import { Adapter, AegisComponent, customElement } from '../index.js';
+import { Adapter, AegisComponent, ContainerModule, customElement } from '../src/index.js';
+
+
+const moduleTest = async () => new ContainerModule(({ bind }) => {
+	bind('kake').toConstantValue('kake2');
+});
+
+
+@customElement('ae-main', true)
+export class MainCmp extends AegisComponent {
+
+	constructor() { super(() => MainAdapter, async () => [ moduleTest ]); }
+
+}
 
 
 export class MainAdapter extends Adapter {
 
+	public override connectedCallback(): void {
+		console.log('adapter connected');
+	}
 
 	public override render(): unknown {
+		console.log(this.container.get('kake'));
+
 		return html`
 		HELLO FROM ADAPTER
 		`;
@@ -37,13 +55,5 @@ export class MainAdapter extends Adapter {
 			return sheet;
 		})(),
 	];
-
-}
-
-
-@customElement('ae-main', true)
-export class MainCmp extends AegisComponent {
-
-	constructor() { super(MainAdapter); }
 
 }

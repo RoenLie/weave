@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { OverrideFunction, PureRecord, ExtendedBindingToSyntax, ModuleOptions } from './container/container-module.js';
 export type { QueryAsyncDecorator } from './adapter/decorators/adapter-query-async.js';

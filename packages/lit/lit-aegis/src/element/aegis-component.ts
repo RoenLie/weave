@@ -1,79 +1,67 @@
-import { isPromise } from '@roenlie/core/async';
-import type { Ctor } from '@roenlie/core/types';
-import { adoptStyles, type CSSResultOrNative, nothing, type PropertyValues } from 'lit';
+import { resolvablePromise, resolvePromiseOrFunc, type PromiseOrFunc } from '@roenlie/core/async';
+import { adoptStyles, type CSSResultOrNative, type PropertyValues } from 'lit';
 
 import type { Adapter } from '../adapter/adapter.js';
 import { injectable } from '../annotations/annotations.js';
 import type { ContainerModule } from '../container/container-module.js';
 import { ContainerLoader } from '../container/loader.js';
 import { AegisElement } from './aegis-element.js';
+import { typeOf } from '@roenlie/core/validation';
 
 
-type AdapterCtor = Ctor<typeof Adapter> | (abstract new(...args: any) => Adapter);
-type Modules =
-	| ContainerModule
-	| ContainerModule[]
-	| Promise<ContainerModule | ContainerModule[]>
-	| (() => (ContainerModule | ContainerModule[] | Promise<ContainerModule> | Promise<ContainerModule[]>));
+type Modules = PromiseOrFunc<ContainerModule | PromiseOrFunc<ContainerModule>[]>;
 
 
 export let currentAdapterElement: AegisComponent | undefined;
 
 
-export abstract class AegisComponent extends AegisElement {
+export class AegisComponent extends AegisElement {
 
 	/** Resolves after the containerConnectedCallback has been resolved. */
-	public containerConnected: Promise<void> & { finished?: true; };
+	public containerConnected = resolvablePromise();
 
-	protected readonly adapterId: string | symbol = this.localName;
-	protected readonly adapterCtor: Ctor<typeof Adapter>;
-	protected readonly modules: Modules;
-	protected adapter: Adapter;
-	protected sheet = new CSSStyleSheet();
+	protected readonly adapterId:   string | symbol = this.localName;
+	protected readonly adapterCtor: typeof Adapter;
+	protected readonly modules:     Modules;
+	protected adapter:              Adapter;
 
+	//protected sheet = new CSSStyleSheet();
 
-	constructor(adapterCtor: AdapterCtor, modules: Modules = []) {
+	protected constructor(
+		adapterCtor: (() => typeof Adapter) | typeof Adapter,
+		modules: Modules = [],
+	) {
 		super();
 
-		injectable()(adapterCtor as unknown as Ctor<typeof Adapter>);
-		this.adapterCtor = adapterCtor as Ctor<typeof Adapter>;
+		if (typeOf.function(adapterCtor))
+			adapterCtor = (adapterCtor)();
+
+		injectable()(adapterCtor as unknown as typeof Adapter);
+		this.adapterCtor = adapterCtor as typeof Adapter;
 		this.modules = modules;
-	}
-
-	protected override createRenderRoot(): HTMLElement | DocumentFragment {
-		const root = super.createRenderRoot();
-
-
-		return root;
 	}
 
 	public override connectedCallback(): void {
 		super.connectedCallback();
 
-		this.containerConnected = this.containerConnectedCallback();
-		this.containerConnected.then(() => {
-			this.containerConnected.finished = true;
-
-			if (this.isConnected)
-				this.adapter?.connectedCallback?.();
-		});
+		this.containerConnectedCallback();
+		this.containerConnected.then(() =>
+			this.adapter?.connectedCallback?.());
 	}
 
 	public async containerConnectedCallback(): Promise<void> {
 		if (this.hasUpdated)
 			return;
 
-		let modules: Modules = this.modules;
-		if (isPromise(modules))
-			modules = await modules;
-		else if (typeof modules === 'function')
-			modules = await modules();
-
+		let modules = await resolvePromiseOrFunc(this.modules);
 		if (!Array.isArray(modules))
 			modules = [ modules ];
 
-		ContainerLoader.unload(...modules);
-		ContainerLoader.load(...modules);
+		const resolvedModules = await Promise
+			.all(modules.map(async module => resolvePromiseOrFunc(module)));
+
+		ContainerLoader.unload(...resolvedModules);
+		ContainerLoader.load(...resolvedModules);
 
 		// Binds current element to be picked up by adapter injector.
 		currentAdapterElement = this as any;
@@ -91,27 +79,20 @@ export abstract class AegisComponent extends AegisElement {
 		const elementBase = this.constructor as typeof AegisComponent;
 		const adapterBase = this.adapter.constructor as typeof Adapter;
 		if (this.shadowRoot) {
-			const styles = adapterBase.styles
-				? Array.isArray(adapterBase.styles)
-					? adapterBase.styles
-					: [ adapterBase.styles ]
-				: [];
-
-			const baseStyles = elementBase.styles
-				? Array.isArray(elementBase.styles)
-					? elementBase.styles
-					: [ elementBase.styles ]
-				: [];
+			const styles = resolveArrayable(adapterBase.styles);
+			const baseStyles =  resolveArrayable(elementBase.styles);
 
 			adoptStyles(this.shadowRoot,
 				[ ...baseStyles, ...styles ] as CSSResultOrNative[]);
 		}
+
+		this.containerConnected.resolve();
 	}
 
 	protected override scheduleUpdate(): void | Promise<unknown> {
-		if (!this.containerConnected.finished) {
+		if (!this.containerConnected.done) {
 			return this.containerConnected
-				.then(() => this.isConnected && super.scheduleUpdate());
+				.then(() => super.scheduleUpdate());
 		}
 
 		super.scheduleUpdate();
@@ -148,7 +129,15 @@ export abstract class AegisComponent extends AegisElement {
 	}
 
 	protected override render(): unknown {
-		return this.adapter.render?.() ?? nothing;
+		return this.adapter.render?.();
 	}
 
 }
+
+
+const resolveArrayable = <T>(possibleArray?: T): T[] => {
+	return possibleArray
+		? Array.isArray(possibleArray) ? possibleArray
+			: [ possibleArray ]
+		: [];
+};
