@@ -10,6 +10,22 @@ export class ContainerFacility {
 
 export class ContainerLoader {
 
+	public static loadingQueue: Promise<any>[] = [];
+
+	public static async waitForQueue() {
+		while (ContainerLoader.loadingQueue.length)
+			await ContainerLoader.loadingQueue[0];
+	}
+
+	public static addToLoadingQueue(promise: Promise<any>) {
+		this.loadingQueue.push(promise);
+	}
+
+	public static removeFromLoadingQueue(promise: Promise<any>) {
+		this.loadingQueue
+			.splice(this.loadingQueue.indexOf(promise), 1);
+	}
+
 	public static get load() {
 		return ContainerFacility.container.load
 			.bind(ContainerFacility.container);

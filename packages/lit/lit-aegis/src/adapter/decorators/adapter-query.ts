@@ -24,8 +24,13 @@ export const query = (selector: string, cache?: boolean) => {
 		nameOrContext: PropertyKey | ClassAccessorDecoratorContext<C, V>,
 		descriptor?: PropertyDescriptor,
 	) => {
-		if (protoOrTarget instanceof ReactiveElement)
-			return litQuery(selector, cache)(protoOrTarget, nameOrContext as PropertyKey, descriptor);
+		if (protoOrTarget instanceof ReactiveElement) {
+			return litQuery(selector, cache)(
+				protoOrTarget,
+				nameOrContext as PropertyKey,
+				descriptor,
+			);
+		}
 
 		const doQuery = (el: Adapter): V => (el.querySelector(selector) ?? undefined) as V;
 

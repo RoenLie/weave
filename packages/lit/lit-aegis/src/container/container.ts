@@ -24,7 +24,9 @@ export class Container extends iContainer {
 		}
 	}
 
-	public override bind<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>): ExtendedBindingToSyntax<T> {
+	public override bind<T>(
+		serviceIdentifier: interfaces.ServiceIdentifier<T>,
+	): ExtendedBindingToSyntax<T> {
 		const bindingTo = super.bind(serviceIdentifier) as ExtendedBindingToSyntax<T>;
 
 		bindingTo.toConfig = <C extends object>(value: PureRecord<C>) =>
@@ -76,7 +78,9 @@ export class Container extends iContainer {
 	 * Returns a new function that loops over these functions
 	 * and calls each one with the same arguments.
 	 */
-	public getHook<T extends(...args: any[]) => void>(serviceIdentifier: interfaces.ServiceIdentifier<T>) {
+	public getHook<T extends(...args: any[]) => void>(
+		serviceIdentifier: interfaces.ServiceIdentifier<T>,
+	) {
 		const functions = this.getAll(serviceIdentifier);
 
 		return ((...args: any[]) => {
@@ -89,9 +93,12 @@ export class Container extends iContainer {
 	 * Resolves all functions bound to this identifier
 	 * Returns a new function that mimics the super concept of a class method.
 	 */
-	public getOverride<T extends(...args: any[]) => void>(serviceIdentifier: interfaces.ServiceIdentifier<T>) {
+	public getOverride<T extends(...args: any[]) => void>(
+		serviceIdentifier: interfaces.ServiceIdentifier<T>,
+	) {
 		const overrides = this.getAll<(base: Fn | undefined, ...args: any[]) => Fn>(
-			serviceIdentifier as any);
+			serviceIdentifier as any,
+		);
 
 		return ((...args: any[]) => {
 			let func: Fn | undefined = undefined;

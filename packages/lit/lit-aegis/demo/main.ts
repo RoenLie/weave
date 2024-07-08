@@ -1,6 +1,7 @@
 import { css, html } from 'lit';
 
 import { Adapter, AegisComponent, ContainerModule, customElement } from '../src/index.js';
+import { sleep } from '@roenlie/core/async';
 
 
 const moduleTest = async () => new ContainerModule(({ bind }) => {
@@ -11,7 +12,13 @@ const moduleTest = async () => new ContainerModule(({ bind }) => {
 @customElement('ae-main', true)
 export class MainCmp extends AegisComponent {
 
-	constructor() { super(() => MainAdapter, async () => [ moduleTest ]); }
+	constructor() {
+		super(() => MainAdapter, async () => {
+			await sleep(2000);
+
+			return [ moduleTest ];
+		});
+	}
 
 }
 

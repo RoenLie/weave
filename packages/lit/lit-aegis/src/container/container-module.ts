@@ -12,7 +12,9 @@ export type PureRecord<T> = T extends CallableFunction ? never : T;
 export interface ExtendedBindingToSyntax<T> extends interfaces.BindingToSyntax<T> {
 	toHook<C extends (...args: any[]) => void>(value: C): interfaces.BindingWhenOnSyntax<T>;
 	toConfig<C extends object>(value: PureRecord<C>): interfaces.BindingWhenOnSyntax<T>;
-	toOverride<C extends OverrideFunction<(...args: any[]) => any>>(value: C): interfaces.BindingWhenOnSyntax<T>;
+	toOverride<C extends OverrideFunction<(...args: any[]) => any>>(
+		value: C
+	): interfaces.BindingWhenOnSyntax<T>;
 }
 
 
@@ -112,17 +114,27 @@ export class ContainerModuleMethodsFactory {
 	}
 
 	protected onActivationFunction<T = unknown>(moduleId: interfaces.ContainerModuleBase['id']) {
-		return (serviceIdentifier: interfaces.ServiceIdentifier<T>, onActivation: interfaces.BindingActivation<T>) => {
+		return (
+			serviceIdentifier: interfaces.ServiceIdentifier<T>,
+			onActivation: interfaces.BindingActivation<T>,
+		) => {
 			//@ts-expect-error
-			this.container._moduleActivationStore.addActivation(moduleId, serviceIdentifier, onActivation);
+			this.container._moduleActivationStore
+				.addActivation(moduleId, serviceIdentifier, onActivation);
+
 			this.container.onActivation<T>(serviceIdentifier, onActivation);
 		};
 	}
 
 	protected onDeactivationFunction<T = unknown>(moduleId: interfaces.ContainerModuleBase['id']) {
-		return (serviceIdentifier: interfaces.ServiceIdentifier<T>, onDeactivation: interfaces.BindingDeactivation<T>) => {
+		return (
+			serviceIdentifier: interfaces.ServiceIdentifier<T>,
+			onDeactivation: interfaces.BindingDeactivation<T>,
+		) => {
 			//@ts-expect-error
-			this.container._moduleActivationStore.addDeactivation(moduleId, serviceIdentifier, onDeactivation);
+			this.container._moduleActivationStore
+				.addDeactivation(moduleId, serviceIdentifier, onDeactivation);
+
 			this.container.onDeactivation(serviceIdentifier, onDeactivation);
 		};
 	}

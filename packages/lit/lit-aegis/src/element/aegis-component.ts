@@ -7,6 +7,7 @@ import type { ContainerModule } from '../container/container-module.js';
 import { ContainerLoader } from '../container/loader.js';
 import { AegisElement } from './aegis-element.js';
 import { typeOf } from '@roenlie/core/validation';
+import { property } from 'lit/decorators.js';
 
 
 type Modules = PromiseOrFunc<ContainerModule | PromiseOrFunc<ContainerModule>[]>;
@@ -17,15 +18,18 @@ export let currentAdapterElement: AegisComponent | undefined;
 
 export class AegisComponent extends AegisElement {
 
-	/** Resolves after the containerConnectedCallback has been resolved. */
-	public containerConnected = resolvablePromise();
+	/** True if this component has loaded its modules,
+	 * meaning they will not be loaded again. */
+	public static modulesResolved = false;
+
+	/** Allows supplying css as a prop which will be added to the components styles. */
+	@property({ type: String }) public sheet: string;
+	protected _sheet = new CSSStyleSheet();
 
 	protected readonly adapterId:   string | symbol = this.localName;
 	protected readonly adapterCtor: typeof Adapter;
 	protected readonly modules:     Modules;
 	protected adapter:              Adapter;
-
-	//protected sheet = new CSSStyleSheet();
 
 	protected constructor(
 		adapterCtor: (() => typeof Adapter) | typeof Adapter,
@@ -34,10 +38,10 @@ export class AegisComponent extends AegisElement {
 		super();
 
 		if (typeOf.function(adapterCtor))
-			adapterCtor = (adapterCtor)();
+			adapterCtor = adapterCtor();
 
-		injectable()(adapterCtor as unknown as typeof Adapter);
-		this.adapterCtor = adapterCtor as typeof Adapter;
+		injectable()(adapterCtor);
+		this.adapterCtor = adapterCtor;
 		this.modules = modules;
 	}
 
@@ -45,7 +49,8 @@ export class AegisComponent extends AegisElement {
 		super.connectedCallback();
 
 		this.containerConnectedCallback();
-		this.containerConnected.then(() =>
+
+		ContainerLoader.waitForQueue().then(() =>
 			this.adapter?.connectedCallback?.());
 	}
 
@@ -53,15 +58,27 @@ export class AegisComponent extends AegisElement {
 		if (this.hasUpdated)
 			return;
 
-		let modules = await resolvePromiseOrFunc(this.modules);
-		if (!Array.isArray(modules))
-			modules = [ modules ];
+		const elementBase = this.constructor as typeof AegisComponent;
+		if (!elementBase.modulesResolved) {
+			elementBase.modulesResolved = true;
 
-		const resolvedModules = await Promise
-			.all(modules.map(async module => resolvePromiseOrFunc(module)));
+			const promise = resolvablePromise();
+			ContainerLoader.addToLoadingQueue(promise);
 
-		ContainerLoader.unload(...resolvedModules);
-		ContainerLoader.load(...resolvedModules);
+			let modules = await resolvePromiseOrFunc(this.modules);
+			if (!Array.isArray(modules))
+				modules = [ modules ];
+
+			const resolvedModules = await Promise
+				.all(modules.map(async module => resolvePromiseOrFunc(module)));
+
+			ContainerLoader.load(...resolvedModules);
+			ContainerLoader.removeFromLoadingQueue(promise);
+
+			promise.resolve();
+		}
+
+		await ContainerLoader.waitForQueue();
 
 		// Binds current element to be picked up by adapter injector.
 		currentAdapterElement = this as any;
@@ -76,22 +93,19 @@ export class AegisComponent extends AegisElement {
 		// Unbind current element so no other adapters get this element.
 		currentAdapterElement = undefined;
 
-		const elementBase = this.constructor as typeof AegisComponent;
 		const adapterBase = this.adapter.constructor as typeof Adapter;
 		if (this.shadowRoot) {
-			const styles = resolveArrayable(adapterBase.styles);
-			const baseStyles =  resolveArrayable(elementBase.styles);
+			const styles = ensureArray(adapterBase.styles);
+			const baseStyles =  ensureArray(elementBase.styles);
 
 			adoptStyles(this.shadowRoot,
-				[ ...baseStyles, ...styles ] as CSSResultOrNative[]);
+				[ ...baseStyles, ...styles, this._sheet ] as CSSResultOrNative[]);
 		}
-
-		this.containerConnected.resolve();
 	}
 
 	protected override scheduleUpdate(): void | Promise<unknown> {
-		if (!this.containerConnected.done) {
-			return this.containerConnected
+		if (ContainerLoader.loadingQueue.length) {
+			return ContainerLoader.waitForQueue()
 				.then(() => super.scheduleUpdate());
 		}
 
@@ -115,6 +129,10 @@ export class AegisComponent extends AegisElement {
 
 	protected override willUpdate(changedProps: PropertyValues): void {
 		super.willUpdate(changedProps);
+
+		if (changedProps.has('sheet'))
+			this._sheet.replaceSync(this.sheet);
+
 		this.adapter?.willUpdate?.(changedProps);
 	}
 
@@ -135,7 +153,7 @@ export class AegisComponent extends AegisElement {
 }
 
 
-const resolveArrayable = <T>(possibleArray?: T): T[] => {
+const ensureArray = <T>(possibleArray?: T): T[] => {
 	return possibleArray
 		? Array.isArray(possibleArray) ? possibleArray
 			: [ possibleArray ]
