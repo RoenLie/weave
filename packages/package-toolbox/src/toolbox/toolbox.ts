@@ -19,10 +19,9 @@ export const toolbox = async (filePath = './pkg-toolbox.ts') => {
 
 		return {
 			incrementVersion: (
-				placeholder: string | undefined,
 				release: ReleaseType | undefined,
 			) => {
-				incrementVersion({ placeholder, release });
+				incrementVersion({ release });
 			},
 		};
 	}
@@ -103,10 +102,9 @@ export const toolbox = async (filePath = './pkg-toolbox.ts') => {
 		},
 
 		incrementVersion: (
-			placeholder: string | undefined,
 			release: ReleaseType | undefined,
 		) => {
-			incrementVersion({ placeholder, release });
+			incrementVersion({ release });
 		},
 	};
 };

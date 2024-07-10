@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/lit-aegis",
-	"version": "99.99.99",
+	"version": "1.0.0",
 	"description": "Dependency injection framework based on LIT and inversify.",
 	"author": {
 		"name": "Kristoffer Roen-Lie",
@@ -43,7 +43,7 @@
 		"build::ts": "tsc --project ./src/tsconfig.json",
 		"build::cleanup": "rimraf dist/.tsbuildinfo",
 		"updatedeps": "pnpm update --latest",
-		"increment-version": "pkg-toolbox increment-version --placeholder 99.99.99"
+		"increment-version": "pkg-toolbox increment-version"
 	},
 	"dependencies": {
 		"@roenlie/core": "workspace:*",

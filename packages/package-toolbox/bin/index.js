@@ -15,8 +15,8 @@ yargs(hideBin(process.argv)).demandCommand(
 	'increment the package.json version.',
 	noop,
 	(args) => {
-		const { placeholder, release } = args;
-		cmds.incrementVersion(placeholder, release);
+		const { release } = args;
+		cmds.incrementVersion(release);
 	},
 ).command(
 	'build-indexes',

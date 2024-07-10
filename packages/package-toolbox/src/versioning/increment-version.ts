@@ -5,18 +5,15 @@ import { inc, type ReleaseType } from 'semver';
 
 
 export const incrementVersion = (options?: {
-	placeholder?: string;
-	release?:     ReleaseType
+	release?: ReleaseType
 }) => {
-	const {
-		placeholder = '1.0.semver-replace',
-		release = 'patch',
-	} = options ?? {};
+	const { release = 'patch' } = options ?? {};
 
 	const packageJsonInput = readFileSync('./package.json', { encoding: 'utf-8' });
 
 	const parsedPackage = JSON.parse(packageJsonInput);
 	const packageName = parsedPackage['name'];
+	const packageVersion = parsedPackage['version'];
 
 	let currentVersion = '0.0.0';
 	try {
@@ -28,7 +25,10 @@ export const incrementVersion = (options?: {
 	if (!nextVersion)
 		throw new Error(`Failed to increment version from ${ currentVersion }`);
 
-	const packageJsonOutput = packageJsonInput.replace(placeholder, nextVersion);
+	const packageJsonOutput = packageJsonInput.replace(packageVersion, nextVersion);
 
 	writeFileSync('./package.json', packageJsonOutput);
+
+	console.log('Package-Toolbox: Increment Version');
+	console.log('Changed version from:', packageVersion, '→', nextVersion);
 };
