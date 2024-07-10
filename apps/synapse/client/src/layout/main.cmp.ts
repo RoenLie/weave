@@ -38,8 +38,9 @@ export class MainCmp extends LitElement {
 	protected desktopRoutes: RouteConfig[] = [
 		{
 			path:   '',
-			enter:  () => true,
-			render: () => html``,
+			name:   'Search',
+			enter:  () => !!import('../pages/search/search-page.ts'),
+			render: () => html`<syn-search-page></syn-search-page>`,
 		},
 	];
 
@@ -72,7 +73,9 @@ export class MainCmp extends LitElement {
 	}
 
 	protected renderDesktop() {
-		return html``;
+		return html`
+		${ this.routes.outlet() }
+		`;
 	}
 
 	protected override render() {

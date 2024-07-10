@@ -14,7 +14,8 @@
 		"bootstrap-icons": "^1.11.3",
 		"lit": "^3.1.4",
 		"tslib": "^2.6.3",
-		"@roenlie/core": "workspace:*"
+		"@roenlie/core": "workspace:*",
+		"@roenlie/lit-aegis": "workspace:*"
 	},
 	"devDependencies": {
 		"vite": "^5.3.1",

@@ -1,86 +1,23 @@
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import searchPageStyles from './search.css' with { type: 'css' };
 import { sharedStyles } from '../../app/shared-styles.ts';
-import { maybe } from '@roenlie/core/async';
-import { debounce } from '@roenlie/core/timing';
-import { live } from 'lit/directives/live.js';
-import { ServerURL } from '../../app/server-url.ts';
-import type { Image } from '../capture/components/gallery.cmp.ts';
-import { map } from 'lit/directives/map.js';
+import { AegisComponent, ContainerModule, customElement } from '@roenlie/lit-aegis';
+import { isMobile } from '@roenlie/core/dom';
 
-@customElement('syn-search-page')
-export class SearchPageCmp extends LitElement {
 
-	@state() protected searchResult: Image[] = [];
-	protected searchValue = '';
+@customElement('syn-search-page', true)
+export class SearchPageCmp extends AegisComponent {
 
-	public override connectedCallback(): void {
-		super.connectedCallback();
-
-		this.updateComplete.then(() =>
-			this.shadowRoot!.querySelector('input')?.focus());
-	}
-
-	protected async onSearch(ev: InputEvent) {
-		const target = ev.target as HTMLInputElement;
-		this.searchValue = target.value;
-		this.vectorSearch();
-	}
-
-	protected vectorSearch = debounce(async () => {
-		if (!this.searchValue)
-			return this.searchResult = [];
-
-		const url = new ServerURL('/api/search');
-		url.searchParams.set('query', this.searchValue);
-
-		interface SearchResult {
-			query:  string;
-			files:  string[];
-			error?: unknown;
-		}
-
-		const [ searchResult, err ] = await maybe<SearchResult>(
-			fetch(url).then(r => r.json()),
-		);
-
-		if (err)
-			return;
-
-		this.searchResult = searchResult.files.map(f => {
-			return {
-				datauri: 'data:image/png;base64,' + f,
-				hash:    '',
-				name:    '',
-			};
-		});
-	}, 500);
-
-	protected override render(): unknown {
-		return html`
-		<s-results>
-			${ map(this.searchResult, res => html`
-			<s-img-wrapper>
-				<img .src=${ res.datauri }>
-			</s-img-wrapper>
-			`) }
-		</s-results>
-
-		<s-search>
-			<input
-				synapse
-				type="search"
-				value=${ live(this.searchValue) }
-				@input=${ this.onSearch }
-			>
-		</s-search>
-		`;
-	}
-
-	public static override styles = [
-		sharedStyles,
-		searchPageStyles,
-	];
+	constructor() { super(undefined, searchPageModule); }
+	public static override styles = sharedStyles;
 
 }
+
+
+const searchPageModule = new ContainerModule(({ bind }) => {
+	bind('syn-search-page').toDynamicValue(async () => {
+		const ctor = await (isMobile
+			? import('./search-adapter-mobile.ts').then(m => m.SearchPageMobileAdapter)
+			: import('./search-adapter-desktop.ts').then(m => m.SearchPageDesktopAdapter));
+
+		return ctor;
+	}).inTransientScope();
+});

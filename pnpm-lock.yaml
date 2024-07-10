@@ -439,6 +439,9 @@ importers:
       '@roenlie/core':
         specifier: workspace:*
         version: link:../../../packages/core
+      '@roenlie/lit-aegis':
+        specifier: workspace:*
+        version: link:../../../packages/lit/lit-aegis
       '@roenlie/lit-context':
         specifier: ^1.0.47
         version: 1.0.47(lit@3.1.4)

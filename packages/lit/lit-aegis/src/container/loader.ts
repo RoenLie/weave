@@ -10,7 +10,7 @@ export class ContainerFacility {
 
 export class ContainerLoader {
 
-	public static loadingQueue: Promise<any>[] = [];
+	public static readonly loadingQueue: Promise<any>[] = [];
 
 	public static async waitForQueue() {
 		while (ContainerLoader.loadingQueue.length)
