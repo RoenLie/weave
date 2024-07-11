@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { UploadTranslation } from './upload.types.js';
 export type { EnhancedFile } from './enhanced-file.js';

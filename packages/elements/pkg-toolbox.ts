@@ -1,4 +1,4 @@
-import { createEntrypointsFromDirectories } from '@roenlie/package-toolbox/filesystem/create-index-entries.js';
+import { createEntrypointsFromDirectories } from '@roenlie/package-toolbox/filesystem';
 import { defineToolbox } from '@roenlie/package-toolbox/toolbox';
 
 

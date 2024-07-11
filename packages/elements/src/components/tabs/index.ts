@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export { MMTabGroup } from './tab-group-element.js';
 export { MMTabPanel } from './tab-panel-element.js';

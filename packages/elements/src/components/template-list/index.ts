@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { HeaderTemplate, HeaderFieldTemplate, RowTemplate, RowFieldTemplate, ListTemplateConfig } from './template-list-element.js';
 export { MMTemplateList } from './template-list-element.js';

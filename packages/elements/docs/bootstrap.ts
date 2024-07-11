@@ -1,8 +1,8 @@
 import '@roenlie/elements/styles';
 
 import { sleep } from '@roenlie/core/async';
-import { LangBlockStore } from '@roenlie/mimic-localize/implement';
-import { appendToLangMap, createLangMapFromJson } from '@roenlie/mimic-localize/utilities';
+import { LangBlockStore } from '@roenlie/lit-localize/implement';
+import { appendToLangMap, createLangMapFromJson } from '@roenlie/lit-localize/utilities';
 
 import codes from './misc/language-en.json';
 
@@ -22,4 +22,4 @@ class EsTermStore extends LangBlockStore {
 
 }
 
-new EsTermStore();
+EsTermStore.start();

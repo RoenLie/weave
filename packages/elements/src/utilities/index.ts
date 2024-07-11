@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export { displayFontStyles, headlineFontStyles, bodyFontStyles, labelFontStyles, titleFontStyles } from './font-styles.js';
 export { DynamicStyle } from './dynamic-styles.js';

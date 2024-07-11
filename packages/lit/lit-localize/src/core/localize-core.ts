@@ -1,6 +1,9 @@
 import type { Dynamic } from './localize-types.js';
 
 
+type Func = (...args: any) => any;
+
+
 export abstract class TermStore {
 
 	public static loadTerms(...args: Parameters<TermStore['setTerms']>) {
@@ -15,16 +18,25 @@ export abstract class TermStore {
 		return termFunctionRefs.toggleRef!(...args);
 	}
 
+	public static start() {
+		if (!this.instance)
+			return void (this.instance = new (this as any)());
+
+		console.error('Term store instance already active.');
+	}
+
+	public static instance: TermStore;
+
 	protected store = new Map<string, string>();
-	protected listeners = new Map<string, Set<WeakRef<Function>>>();
+	protected listeners = new Map<string, Set<WeakRef<Func>>>();
 	protected gcRegistry = new FinalizationRegistry<{
-		ref: WeakRef<Function>;
-		set: Set<WeakRef<Function>>;
+		ref: WeakRef<Func>;
+		set: Set<WeakRef<Func>>;
 	}>(({ set, ref }) => void set.delete(ref));
 
 	protected langChangeObs = new MutationObserver(() => this.onLanguageChange());
 
-	constructor() {
+	protected constructor() {
 		termFunctionRefs.requestRef = this.requestTerm.bind(this);
 		termFunctionRefs.toggleRef = this.toggleListener.bind(this);
 		termFunctionRefs.loadRef = this.setTerms.bind(this);
@@ -53,9 +65,9 @@ export abstract class TermStore {
 		return text;
 	}
 
-	protected toggleListener(term: string, callback: Function, state: boolean): void {
+	protected toggleListener(term: string, callback: Func, state: boolean): void {
 		const set = this.listeners.get(term) ?? (() => {
-			const set = new Set<WeakRef<Function>>();
+			const set = new Set<WeakRef<Func>>();
 
 			return this.listeners.set(term, set), set;
 		})();

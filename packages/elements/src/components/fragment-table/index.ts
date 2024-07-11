@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { IntersectDirective } from './intersect-directive.js';
 export type { Options, Column } from './fragment-table.js';

@@ -1,7 +1,7 @@
 import { emitEvent } from '@roenlie/core/dom';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
-import { css, type CSSResultGroup, html, type PropertyValueMap } from 'lit';
+import { css, html, type PropertyValueMap } from 'lit';
 import { property } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
 
@@ -296,14 +296,14 @@ declare global {
 		 *
 		 * It is listened by `mm-upload` which will start a new upload process of this file.
 		 */
-		'mm-file-start': CustomEvent<{file: EnhancedFile}>;
+		'mm-file-start': CustomEvent<{ file: EnhancedFile }>;
 
 		/**
 		 * Fired when the retry button is pressed.
 		 *
 		 * It is listened by `mm-upload` which will start a new upload process of this file.
 		 */
-		'mm-file-retry': CustomEvent<{file: EnhancedFile}>;
+		'mm-file-retry': CustomEvent<{ file: EnhancedFile }>;
 
 		/**
 		 * Fired when abort button is pressed.
@@ -311,13 +311,13 @@ declare global {
 		 * It is listened by `mm-upload` which will abort the upload in progress,
 		 * but will not remove the file from the list to allow the animation to hide the element to be run.
 	 	 */
-		'mm-file-abort': CustomEvent<{file: EnhancedFile}>;
+		'mm-file-abort': CustomEvent<{ file: EnhancedFile }>;
 
 		/**
 		 * Fired after the animation to hide the element has finished.
 		 *
 		 * It is listened by `mm-upload` which will actually remove the file from the upload file list.
 		 */
-		'mm-file-remove': CustomEvent<{file: EnhancedFile}>;
+		'mm-file-remove': CustomEvent<{ file: EnhancedFile }>;
 	}
 }

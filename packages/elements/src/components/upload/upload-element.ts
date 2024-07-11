@@ -4,8 +4,8 @@ import { EventController, SlotController } from '@roenlie/lit-utilities/controll
 import { watch } from '@roenlie/lit-utilities/decorators';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
-import { loadTerms } from '@roenlie/mimic-localize/core';
-import { tTerm } from '@roenlie/mimic-localize/directive';
+import { loadTerms } from '@roenlie/lit-localize/core';
+import { tTerm } from '@roenlie/lit-localize/directive';
 import { css, html, type PropertyValues } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
@@ -14,7 +14,6 @@ import { when } from 'lit/directives/when.js';
 
 import { systemIcons } from '../../utilities/system-icons.js';
 import { MMButton } from '../button/button.cmp.js';
-import { MMProgressBar } from '../progress-bar/progress-bar-element.js';
 import { type EnhancedFile, enhanceFile } from './enhanced-file.js';
 import { MMUploadFile } from './upload-file.cmp.js';
 import { uploadTerms } from './upload-lang-en.js';
@@ -35,7 +34,7 @@ declare global {
 		 * Fired before the XHR is opened. Could be used for changing the request
 		 * URL. If the default is prevented, then XHR would not be opened.
 		 */
-		'mm-upload-before': CustomEvent<{xhr: XMLHttpRequest; file: EnhancedFile; uploadTarget: string}>;
+		'mm-upload-before': CustomEvent<{ xhr: XMLHttpRequest; file: EnhancedFile; uploadTarget: string }>;
 
 		/**
 		 * Fired when the XHR has been opened but not sent yet.
@@ -46,17 +45,17 @@ declare global {
 		 * If the event is defaultPrevented, `mm-upload` will not
 		 * send the request allowing the user to do something on his own.
 		 */
-		'mm-upload-request': CustomEvent<{xhr: XMLHttpRequest; file: EnhancedFile; formData: FormData}>;
+		'mm-upload-request': CustomEvent<{ xhr: XMLHttpRequest; file: EnhancedFile; formData: FormData }>;
 
 		/**
 		 * Fired when the XHR is sent.
 		 */
-		'mm-upload-start': CustomEvent<{xhr: XMLHttpRequest; file: EnhancedFile;}>;
+		'mm-upload-start': CustomEvent<{ xhr: XMLHttpRequest; file: EnhancedFile; }>;
 
 		/**
 		 * Fired as many times as the progress is updated.
 		 */
-		'mm-upload-progress': CustomEvent<{xhr: XMLHttpRequest; file: EnhancedFile;}>;
+		'mm-upload-progress': CustomEvent<{ xhr: XMLHttpRequest; file: EnhancedFile; }>;
 
 		/**
 		 * Fired when we have the actual server response, and before the component analyses it.
@@ -71,29 +70,29 @@ declare global {
 		 * with the normal workflow checking the `xhr.status` and `file.error`
 		 * which also might be modified by the user to force a customized response.
 		 */
-		'mm-upload-response': CustomEvent<{xhr: XMLHttpRequest; file: EnhancedFile;}>;
+		'mm-upload-response': CustomEvent<{ xhr: XMLHttpRequest; file: EnhancedFile; }>;
 
 		/**
 		 * Fired in case the upload process succeed.
 		 */
-		'mm-upload-success': CustomEvent<{xhr: XMLHttpRequest; file: EnhancedFile;}>;
+		'mm-upload-success': CustomEvent<{ xhr: XMLHttpRequest; file: EnhancedFile; }>;
 
 		/**
 		 * Fired in case the upload process failed.
 		 */
-		'mm-upload-error': CustomEvent<{xhr: XMLHttpRequest; file: EnhancedFile}>;
+		'mm-upload-error': CustomEvent<{ xhr: XMLHttpRequest; file: EnhancedFile }>;
 
 		/**
 		 * Fired when retry upload is requested. If the default is prevented, then
 		 * retry would not be performed.
 		 */
-		'mm-upload-retry': CustomEvent<{xhr: XMLHttpRequest; file: EnhancedFile}>;
+		'mm-upload-retry': CustomEvent<{ xhr: XMLHttpRequest; file: EnhancedFile }>;
 
 		/**
 		 * Fired when retry abort is requested. If the default is prevented, then the
 		 * file upload would not be aborted.
 		 */
-		'mm-upload-abort': CustomEvent<{xhr: XMLHttpRequest; file: EnhancedFile}>;
+		'mm-upload-abort': CustomEvent<{ xhr: XMLHttpRequest; file: EnhancedFile }>;
 
 		/**
 		 * Fired when a file cannot be added to the queue due to a constrain:

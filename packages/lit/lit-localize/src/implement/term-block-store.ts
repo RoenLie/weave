@@ -8,7 +8,7 @@ export abstract class LangBlockStore extends TermStore {
 	public abstract retrieveLangBlock(
 		block: string,
 		lang: string
-	): Promise<Map<string, string> | undefined>
+	): Promise<Map<string, string> | undefined>;
 
 	public override async onTermDoesNotExist(requestedTerm: string, lang: string) {
 		const head = requestedTerm.split('.').slice(0, -1).join('.');

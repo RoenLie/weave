@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { IAlertDefinition, IAlertProps, IAlertPortal } from './alert-setup-api.js';
 export { MMAlertPortal, alertPortal } from './alert-portal.cmp.js';

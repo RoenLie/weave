@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { TooltipPart, TooltipRef, TooltipDirectiveOptions, TooltipDirective } from './tooltip-directive.js';
 export type { TooltipProperties } from './tooltip-element.js';

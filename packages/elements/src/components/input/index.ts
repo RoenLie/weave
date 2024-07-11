@@ -1,4 +1,3 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export { MMInput } from './input.cmp.js';

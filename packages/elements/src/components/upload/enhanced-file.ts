@@ -1,42 +1,42 @@
 export interface EnhancedFile extends File {
 	/** The target URL used to upload this file. */
-	uploadTarget: string;
+	uploadTarget:  string;
 	/** Elapsed time since the upload started. */
-	elapsed: number;
+	elapsed:       number;
 	/** Human-readable elapsed time. */
-	elapsedStr: string;
+	elapsedStr:    string;
 	/** Number of seconds remaining for the upload to finish. */
-	remaining: number;
+	remaining:     number;
 	/** Human-readable remaining time for the upload to finish. */
-	remainingStr: string;
+	remainingStr:  string;
 	/** Percentage of the file already uploaded. */
-	progress: number;
+	progress:      number;
 	/** Upload speed in kB/s. */
-	speed: number;
+	speed:         number;
 	/** Human-readable total size of the file. */
-	totalStr: string;
+	totalStr:      string;
 	/** Bytes transferred so far. */
-	loaded: number;
+	loaded:        number;
 	/** Human-readable uploaded size at the moment. */
-	loadedStr: string;
+	loadedStr:     string;
 	/** Status of the upload process. */
-	status: string;
+	status:        string;
 	/** Error message in case the upload failed. */
-	error: string;
+	error:         string;
 	/** True if the file was canceled by the user. */
-	abort: boolean;
+	abort:         boolean;
 	/** True when the file was transferred to the server. */
-	complete: boolean;
+	complete:      boolean;
 	/** True while transferring data to the server. */
-	uploading: boolean;
+	uploading:     boolean;
 	/** True when the data transfer is on hold. */
-	held: boolean;
+	held:          boolean;
 	/** True when the data transfer is in the process of starting. */
 	indeterminate: boolean;
 	/** Specifies the 'name' property at Content-Disposition. */
-	formDataName: string;
+	formDataName:  string;
 	/** The request object for this file. */
-	xhr: XMLHttpRequest
+	xhr:           XMLHttpRequest
 }
 
 

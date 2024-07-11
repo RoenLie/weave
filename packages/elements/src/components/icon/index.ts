@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export { requestIcon, requestInclude } from './helpers.js';
 export { SymbolElement } from './symbol-element.js';

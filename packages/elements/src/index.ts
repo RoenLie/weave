@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { HeaderTemplate, HeaderFieldTemplate, RowTemplate, RowFieldTemplate, ListTemplateConfig } from './components/template-list/template-list-element.js';
 export type { TooltipPart, TooltipRef, TooltipDirectiveOptions, TooltipDirective } from './components/tooltip/tooltip-directive.js';
@@ -13,7 +12,6 @@ export type { TypeaheadEvents } from './components/typeahead/typeahead-element.j
 export type { TooltipProperties } from './components/tooltip/tooltip-element.js';
 export type { UploadTranslation } from './components/upload/upload.types.js';
 export type { EnhancedFile } from './components/upload/enhanced-file.js';
-export type { Route } from './components/router/router.cmp.js';
 export { displayFontStyles, headlineFontStyles, bodyFontStyles, labelFontStyles, titleFontStyles } from './utilities/font-styles.js';
 export { typeaheadEvents, MMTypeahead, MMTypeaheadItem } from './components/typeahead/typeahead-element.js';
 export { HeaderRenderController } from './components/fragment-table/header-render-controller.js';
@@ -46,7 +44,6 @@ export { enhanceFile } from './components/upload/enhanced-file.js';
 export { MMRow } from './components/template-list/row-element.js';
 export { MMDrawer } from './components/drawer/drawer-element.js';
 export { MMRipple } from './components/ripple/ripple-element.js';
-export { AppRouterCmp } from './components/router/router.cmp.js';
 export { MMUpload } from './components/upload/upload-element.js';
 export { initializeStyleTokens } from './styles/token-styles.js';
 export { Alerts } from './components/alert/alert-setup-api.js';

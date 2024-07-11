@@ -54,8 +54,8 @@ export class AegisComponent extends AegisElement {
 
 		this.containerConnectedCallback();
 
-		Promise.all([ ContainerLoader.waitForQueue(), this.adapterResolved ]).then(() =>
-			this.adapter?.connectedCallback?.());
+		Promise.all([ ContainerLoader.waitForQueue(), this.adapterResolved ])
+			.then(() => this.adapter?.connectedCallback?.());
 	}
 
 	public async containerConnectedCallback(): Promise<void> {
@@ -86,16 +86,13 @@ export class AegisComponent extends AegisElement {
 
 		await ContainerLoader.waitForQueue();
 
-		let adapterCtor: typeof Adapter;
-
 		// If there is a supplied adapter and no adapter currently bound.
 		// resolve the supplied adapter through the container.
-		if (!ContainerLoader.isBound(this.adapterId) && this.adapterCtor)
-			adapterCtor = this.adapterCtor;
-		else
-			adapterCtor = await ContainerLoader.getAsync<typeof Adapter>(this.adapterId);
+		const adapterCtor = !ContainerLoader.isBound(this.adapterId) && this.adapterCtor
+			? this.adapterCtor
+			: await ContainerLoader.getAsync<typeof Adapter>(this.adapterId);
 
-		// Binds current element to be picked up by adapter injector.
+		// Binds current element to be picked up by adapter constructor
 		currentAdapterElement = this as any;
 
 		this.adapter = ContainerLoader.resolve<Adapter>(adapterCtor);
@@ -106,7 +103,7 @@ export class AegisComponent extends AegisElement {
 		const adapterBase = this.adapter.constructor as typeof Adapter;
 		if (this.shadowRoot) {
 			const styles = ensureArray(adapterBase.styles);
-			const baseStyles =  ensureArray(elementBase.styles);
+			const baseStyles = ensureArray(elementBase.styles);
 
 			adoptStyles(this.shadowRoot,
 				[ ...baseStyles, ...styles, this._sheet ] as CSSResultOrNative[]);
