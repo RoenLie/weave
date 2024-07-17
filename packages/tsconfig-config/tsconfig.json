@@ -7,7 +7,7 @@
 		"lib": [
 			"ESNext",
 			"DOM",
-			"DOM.Iterable",
+			"DOM.Iterable"
 		],
 		"types": [],
 		"outDir": "${configDir}/../dist",
