@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 
 import { genToArray } from '../utils/gen-to-array.js';
 import { getFiles } from './get-files.js';

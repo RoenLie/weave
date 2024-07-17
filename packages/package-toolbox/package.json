@@ -43,7 +43,8 @@
 		"./filesystem": {
 			"types": "./dist/filesystem/index.d.ts",
 			"default": "./dist/filesystem/index.js"
-		}
+		},
+		"./filesystem/*": "./dist/filesystem/*"
 	},
 	"scripts": {
 		"lint": "eslint src --fix",

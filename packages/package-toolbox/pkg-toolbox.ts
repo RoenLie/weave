@@ -13,8 +13,9 @@ export default defineToolbox(async () => {
 					packagePath: './vite-utils',
 				},
 				{
-					path:        './src/filesystem/index.ts',
-					packagePath: './filesystem',
+					path:            './src/filesystem/index.ts',
+					packagePath:     './filesystem',
+					includeWildcard: true,
 				},
 			],
 			defaultFilters:             [ exclude ],

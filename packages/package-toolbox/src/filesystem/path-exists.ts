@@ -1,5 +1,4 @@
-import { access } from 'fs/promises';
-import { dirname } from 'path';
+import { access } from 'node:fs/promises';
 
 
 export const exists = async (path: string) => {
