@@ -3,14 +3,14 @@
 	"compilerOptions": {
 		"types": [
 			"node"
-		],
+		]
 	},
 	"include": [
 		"./**/*.ts",
-		"./**/*.d.ts",
+		"./**/*.d.ts"
 	],
 	"exclude": [
 		"./**/*.test.ts",
-		"./**/*.bench.ts",
+		"./**/*.bench.ts"
 	]
 }

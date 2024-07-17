@@ -89,12 +89,19 @@ const getTSConfig = (path: string) => {
 		.replaceAll(/\t/g, '')
 		.replaceAll(/,([}\]])/g, '$1');
 
-	const tsConfig: TSConfig = JSON.parse(processed);
+	try {
+		const tsConfig: TSConfig = JSON.parse(processed);
 
-	return tsConfig;
+		return tsConfig;
+	}
+	catch (error) {
+		console.error('Could not parse tsconfig. ' + path);
+		console.error(error);
+
+		return {};
+	}
 };
 
-export const getTSConfigFromPath = (path: string) =>
-	getTSConfig(path);
+export const getTSConfigFromPath = (path: string) => getTSConfig(path);
 export const getTSConfigFromModule = (module: string) =>
 	getTSConfig(import.meta.resolve(module).replace(/^file:\/\//, ''));
