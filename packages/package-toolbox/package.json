@@ -43,14 +43,9 @@
 		"./filesystem": {
 			"types": "./dist/filesystem/index.d.ts",
 			"default": "./dist/filesystem/index.js"
-		},
-		"./kakakakkak": {
-			"types": "./dist/tester/deep/doesnotexist/index.d.ts",
-			"default": "./dist/tester/deep/doesnotexist/index.js"
 		}
 	},
 	"scripts": {
-		"test-build": "rimraf dist && vite build && node ./bin/index.js build-indexes",
 		"lint": "eslint src --fix",
 		"build": "pnpm run --sequential \"/^build::.*/\"",
 		"build::prepare": "rimraf dist",
