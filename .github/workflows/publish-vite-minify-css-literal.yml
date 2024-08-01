@@ -1,4 +1,4 @@
-name: Publish vite-import-css-sheet
+name: Publish vite-minify-css-literal
 
 on:
    # Runs on pushes targeting the default branch
