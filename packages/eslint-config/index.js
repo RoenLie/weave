@@ -284,6 +284,7 @@ const base = tseslint.config({
 		'@typescript-eslint/no-useless-constructor': 'off',
 		'@typescript-eslint/no-unused-expressions':  'off',
 		'@typescript-eslint/no-invalid-void-type':   'off',
+		'@typescript-eslint/no-empty-object-type':   'off',
 	},
 });
 

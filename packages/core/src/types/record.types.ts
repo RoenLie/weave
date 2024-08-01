@@ -67,3 +67,11 @@ export type ObjectHasLiteralKeys<T extends object> = HasLiteralKey<keyof T>;
 export type ObjectOfKeys<TKeys extends readonly string[], TVal = any> = TKeys extends []
 	? Record<string, TVal>
 	: ComputedFlat<Record<TKeys[number], TVal>>;
+
+
+/**
+ * A recursive object which has the same structure at all depths.
+ */
+export type RecursiveRecord<T = any> = {
+	[P in keyof T]: RecursiveRecord<T[P]>;
+};

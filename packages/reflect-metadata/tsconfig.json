@@ -1,15 +1,6 @@
 {
 	"extends": "@roenlie/tsconfig",
-	"compilerOptions": {
-		"rootDir": ".",
-		"baseUrl": ".",
-		"noEmit": true,
-		"emitDeclarationOnly": false,
-		"incremental": false,
-		"types": [
-			"vite/client",
-		]
-	},
+	"compilerOptions": {},
 	"include": [
 		"./**/*.ts",
 		"./**/*.mts",

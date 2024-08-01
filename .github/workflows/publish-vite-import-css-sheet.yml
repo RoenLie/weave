@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org/
 
       - name: Setup pnpm
@@ -26,12 +26,24 @@ jobs:
       - name: Install dependencies.
         run: pnpm install
 
-      - name: Build project.
-        run: pnpm build
+      - name: Build package toolbox.
+        run: |
+         cd packages/package-toolbox
+         pnpm build
 
-      - name: Change package version
-        run: pnpm pkg-toolbox increment-version --placeholder 0.0.0
+      - name: Change package version.
+        run: |
+         cd packages/vite-plugins/import-css-sheet
+         pnpm increment-version
 
-      - run: npm publish --access public
+      - name: Merge tsconfig.
+        run: |
+         cd packages/vite-plugins/import-css-sheet
+         pnpm merge-tsconfig
+
+      - name: Publish package.
+        run: |
+         cd packages/vite-plugins/import-css-sheet
+         pnpm publish --access public --no-git-checks
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

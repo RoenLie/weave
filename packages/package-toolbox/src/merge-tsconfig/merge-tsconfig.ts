@@ -11,6 +11,7 @@ export const mergeTSConfig = (config: string, outFile: string) => {
 	const localDir = process.cwd();
 
 	const entrypointPath = join(resolve(localDir, dirname(config)), basename(config));
+
 	const tsConfig = getTSConfigFromPath(entrypointPath);
 	if (!tsConfig)
 		throw new Error('Could not get initial tsconfig. ' + entrypointPath);
@@ -27,5 +28,6 @@ export const mergeTSConfig = (config: string, outFile: string) => {
 	delete merged.extends;
 
 	const outPath = join(resolve(localDir, dirname(outFile), basename(outFile)));
+
 	writeFileSync(outPath, JSON.stringify(merged, undefined, 3));
 };

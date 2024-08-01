@@ -4,7 +4,6 @@
 		"rootDir": ".",
 		"baseUrl": ".",
 		"types": [
-			"vite/client",
 			"node",
 		],
 		"useDefineForClassFields": true,

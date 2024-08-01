@@ -30,10 +30,13 @@
 		"test": "vitest --run",
 		"build": "pnpm run \"/^build::.*/\"",
 		"build::clean": "rimraf dist",
-		"build::indexes": "package-toolbox build-indexes",
-		"build::exports": "package-toolbox build-exports",
+		"build::indexes": "pkg-toolbox build-indexes",
+		"build::exports": "pkg-toolbox build-exports",
 		"build::js": "vite build",
 		"build::ts": "tsc --project ./src/tsconfig.json"
 	},
-	"sideEffects": false
+	"sideEffects": false,
+	"devDependencies": {
+		"vite": "^5.3.5"
+	}
 }

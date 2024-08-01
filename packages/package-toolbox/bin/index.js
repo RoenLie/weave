@@ -8,6 +8,7 @@ import { toolbox } from '../dist/toolbox/toolbox.js';
 const cmds = await toolbox();
 const noop = () => { /*  */ };
 
+// eslint-disable-next-line no-undef
 yargs(hideBin(process.argv)).demandCommand(
 	1,
 ).command(

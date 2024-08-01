@@ -4,7 +4,6 @@
 		"rootDir": ".",
 		"baseUrl": ".",
 		"types": [
-			"vite/client",
 			"@roenlie/vite-plugin-import-css-sheet/client",
 			"@roenlie/vite-plugin-html-modules/client"
 		]

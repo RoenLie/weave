@@ -1,0 +1,10 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"rootDir": "..",
+	},
+	"exclude": [
+		"node_modules",
+		"dist",
+	]
+}

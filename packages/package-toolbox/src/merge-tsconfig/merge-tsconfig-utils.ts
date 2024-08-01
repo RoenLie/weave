@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 
 const errors = {
@@ -104,4 +105,4 @@ const getTSConfig = (path: string) => {
 
 export const getTSConfigFromPath = (path: string) => getTSConfig(path);
 export const getTSConfigFromModule = (module: string) =>
-	getTSConfig(import.meta.resolve(module).replace(/^file:\/\//, ''));
+	getTSConfig(fileURLToPath(import.meta.resolve(module)));

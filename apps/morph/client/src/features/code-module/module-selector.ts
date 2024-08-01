@@ -14,7 +14,7 @@ import type { ModuleNamespace } from './namespace-model.js';
 export class ModuleSelectorCmp extends MimicElement {
 
 	@consume('store') protected store: ContextProp<StudioStore>;
-	@state() protected moduleList: ModuleNamespace[];
+	@state() protected moduleList:     ModuleNamespace[];
 
 	public override connectedCallback(): void {
 		super.connectedCallback();

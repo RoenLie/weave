@@ -17,8 +17,13 @@
 	"types": "./dist/index.d.ts",
 	"main": "./dist/index.js",
 	"scripts": {
+		"dev": "pnpm vite --config ./demo/vite.config.ts",
 		"build": "vite build && tsc --project ./src/tsconfig.json",
-		"package:local": "pnpm pack --pack-destination ./_packages/"
+		"increment-version": "pkg-toolbox increment-version",
+		"merge-tsconfig": "pkg-toolbox merge-tsconfig --config ./src/tsconfig.json"
+	},
+	"dependencies": {
+		"lightningcss": "^1.25.1"
 	},
 	"peerDependencies": {
 		"vite": ">=5.3.3"
@@ -27,6 +32,7 @@
 		"@roenlie/eslint-config": "workspace:*",
 		"@roenlie/package-toolbox": "workspace:*",
 		"@roenlie/tsconfig": "workspace:*",
+		"lit": "^3.1.4",
 		"rollup": "^4.18.0",
 		"tslib": "^2.6.2",
 		"vite": "^5.3.3"

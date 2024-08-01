@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
-
+import { transform } from 'lightningcss';
 import type { CustomPluginOptions, PluginContext } from 'rollup';
 import type { ResolvedConfig } from 'vite';
 
@@ -19,6 +19,7 @@ export class ImportCSSSheet {
 		public config: ResolvedConfig,
 		public transformers: ((code: string, id: string) => string)[],
 		public additionalCode: string[],
+		public minify: boolean,
 	) {}
 
 	public convert(str: string) {
@@ -83,6 +84,17 @@ export class ImportCSSSheet {
 
 		for (const transform of this.transformers)
 			fileContent = transform(fileContent, realId);
+
+		if (this.minify) {
+			const { code } = transform({
+				code:     Buffer.from(fileContent),
+				filename: realId,
+				minify:   true,
+			});
+
+			const decoder = new TextDecoder();
+			fileContent = decoder.decode(code);
+		}
 
 		const createCode =
 		`const styles = ${ this.convert(fileContent) }`

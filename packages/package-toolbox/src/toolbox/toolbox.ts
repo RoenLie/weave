@@ -18,6 +18,9 @@ export const toolbox = async (filePath = './pkg-toolbox.ts') => {
 		console.warn('No pkg-toolbox.ts file found. Only certain actions available.');
 
 		return {
+			mergeTSConfig: (config: string, outFile: string) => {
+				mergeTSConfig(config, outFile);
+			},
 			incrementVersion: (
 				release: ReleaseType | undefined,
 			) => {

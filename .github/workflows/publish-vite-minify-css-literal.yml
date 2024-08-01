@@ -1,0 +1,49 @@
+name: Publish vite-import-css-sheet
+
+on:
+   # Runs on pushes targeting the default branch
+   push:
+     paths:
+      - 'packages/vite-plugins/minify-css-literal/**'
+     branches: ["publish"]
+
+   # Allows you to run this workflow manually from the Actions tab
+   workflow_dispatch:
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org/
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3.0.0
+
+      - name: Install dependencies.
+        run: pnpm install
+
+      - name: Build package toolbox.
+        run: |
+         cd packages/package-toolbox
+         pnpm build
+
+      - name: Change package version.
+        run: |
+         cd packages/vite-plugins/minify-css-literal
+         pnpm increment-version
+
+      - name: Merge tsconfig.
+        run: |
+         cd packages/vite-plugins/minify-css-literal
+         pnpm merge-tsconfig
+
+      - name: Publish package.
+        run: |
+         cd packages/vite-plugins/minify-css-literal
+         pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
