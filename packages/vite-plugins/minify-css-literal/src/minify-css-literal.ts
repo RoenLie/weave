@@ -6,7 +6,7 @@ import { transform } from 'lightningcss';
 const traverse = (_traverse as unknown as { default: typeof _traverse }).default;
 
 
-export const minifyCssLiteral = (): Plugin => {
+export const minifyCssLiteral = (debugLevel: 'error' | 'silent' = 'silent'): Plugin => {
 	const fileExt = [ '.ts', '.js' ];
 	const identifierNames = [ 'css' ];
 	const decoder = new TextDecoder();
@@ -53,7 +53,12 @@ export const minifyCssLiteral = (): Plugin => {
 						// so we gather the text changes that need to be done.
 						replacements.push({ from: text, to: minified });
 					}
-					finally { /*  */ }
+					catch(err) {
+						if (debugLevel !== 'silent') {
+							console.error("Failed to minify css literal");
+							console.error(err);
+						}
+					}
 				},
 			});
 
