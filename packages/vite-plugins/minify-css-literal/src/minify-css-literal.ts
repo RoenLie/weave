@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite';
+import type { Plugin, ResolvedConfig } from 'vite';
 import * as parser from '@babel/parser';
 import _traverse from '@babel/traverse';
 import { transform } from 'lightningcss';
@@ -7,12 +7,26 @@ const traverse = (_traverse as unknown as { default: typeof _traverse }).default
 
 
 export const minifyCssLiteral = (debugLevel: 'error' | 'silent' = 'silent'): Plugin => {
+	let config: ResolvedConfig;
 	const fileExt = [ '.ts', '.js' ];
 	const identifierNames = [ 'css' ];
 	const decoder = new TextDecoder();
 
+	let totalBeforeMinify = 0;
+	let totalAfterMinify = 0;
+
 	return {
 		name: '@roenlie/vite-plugin-minify-css-literal',
+		configResolved(cfg) {
+			config = cfg;
+		},
+		buildEnd() {
+			if (config.mode !== 'development') {
+				console.log('@roenlie/vite-plugin-minify-css-literal');
+				console.log('Minified css literals by ', totalBeforeMinify - totalAfterMinify, 'characters.');
+				console.log('Before minify:', totalBeforeMinify, '. After minify:', totalAfterMinify);
+			}
+		},
 		transform(code, id, _options) {
 			if (!fileExt.some(e => id.endsWith(e)))
 				return;
@@ -49,6 +63,11 @@ export const minifyCssLiteral = (debugLevel: 'error' | 'silent' = 'silent'): Plu
 						});
 						const minified = decoder.decode(output);
 
+						if (config.mode !== 'development') {
+							totalBeforeMinify += text.length;
+							totalAfterMinify += minified.length;
+						}
+						
 						// we cannot mutate the code string while traversing.
 						// so we gather the text changes that need to be done.
 						replacements.push({ from: text, to: minified });
