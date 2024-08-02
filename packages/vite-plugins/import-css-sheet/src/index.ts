@@ -36,7 +36,7 @@ export const importCSSSheet = (options?: Partial<{
 		buildEnd() {
 			if (importSheet.config.mode !== 'development') {
 				const { totalBeforeMinify, totalAfterMinify } = importSheet;
-				console.log('@roenlie/vite-plugin-import-css-sheet');
+				console.log('\n@roenlie/vite-plugin-import-css-sheet');
 				console.log('Minified css sheet by', totalBeforeMinify - totalAfterMinify, 'characters.');
 				console.log('Before minify:', totalBeforeMinify, '. After minify:', totalAfterMinify);
 			}
