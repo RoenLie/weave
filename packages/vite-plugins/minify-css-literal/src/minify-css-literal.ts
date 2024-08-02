@@ -2,6 +2,7 @@ import type { Plugin, ResolvedConfig } from 'vite';
 import * as parser from '@babel/parser';
 import _traverse from '@babel/traverse';
 import { transform } from 'lightningcss';
+import MagicString from 'magic-string';
 
 const traverse = (_traverse as unknown as { default: typeof _traverse }).default;
 
@@ -20,14 +21,9 @@ export const minifyCssLiteral = (debugLevel: 'error' | 'silent' = 'silent'): Plu
 		configResolved(cfg) {
 			config = cfg;
 		},
-		buildEnd() {
-			if (config.mode !== 'development') {
-				console.log('@roenlie/vite-plugin-minify-css-literal');
-				console.log('Minified css literals by', totalBeforeMinify - totalAfterMinify, 'characters.');
-				console.log('Before minify:', totalBeforeMinify, '. After minify:', totalAfterMinify);
-			}
-		},
 		transform(code, id, _options) {
+			if (config.mode === 'development')
+				return;
 			if (!fileExt.some(e => id.endsWith(e)))
 				return;
 			if (!identifierNames.some(name => code.includes(name)))
@@ -67,23 +63,38 @@ export const minifyCssLiteral = (debugLevel: 'error' | 'silent' = 'silent'): Plu
 							totalBeforeMinify += text.length;
 							totalAfterMinify += minified.length;
 						}
-						
+
 						// we cannot mutate the code string while traversing.
 						// so we gather the text changes that need to be done.
 						replacements.push({ from: text, to: minified });
 					}
-					catch(err) {
+					catch (err) {
 						if (debugLevel !== 'silent') {
-							console.error("Failed to minify css literal");
+							console.error('Failed to minify css literal');
 							console.error(err);
 						}
 					}
 				},
 			});
 
-			replacements.forEach(({ from, to }) => code = code.replace(from, to));
+			if (!replacements.length)
+				return;
 
-			return code;
+			const str = new MagicString(code);
+			replacements.forEach(({ from, to }) => str.replace(from, to));
+
+			return {
+				code: str.toString(),
+				map:  str.generateMap({ file: id }),
+			};
+		},
+		buildEnd() {
+			if (config.mode === 'development')
+				return;
+
+			console.log('\n@roenlie/vite-plugin-minify-css-literal');
+			console.log('Minified css literals by', totalBeforeMinify - totalAfterMinify, 'characters.');
+			console.log('Before minify:', totalBeforeMinify, '.\nAfter minify:', totalAfterMinify);
 		},
 	};
 };

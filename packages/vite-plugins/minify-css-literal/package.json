@@ -29,19 +29,20 @@
 		"vite": ">=5.3.3"
 	},
 	"dependencies": {
-		"lightningcss": "^1.25.1",
 		"@babel/parser": "^7.24.8",
 		"@babel/traverse": "^7.24.8",
-		"@babel/types": "^7.24.9"
+		"@babel/types": "^7.24.9",
+		"lightningcss": "^1.25.1",
+		"magic-string": "^0.30.11"
 	},
 	"devDependencies": {
 		"@roenlie/eslint-config": "workspace:*",
 		"@roenlie/package-toolbox": "workspace:*",
 		"@roenlie/tsconfig": "workspace:*",
+		"@types/babel__traverse": "^7.20.6",
 		"lit": "^3.1.4",
 		"rollup": "^4.18.0",
 		"tslib": "^2.6.2",
-		"vite": "^5.3.3",
-		"@types/babel__traverse": "^7.20.6"
+		"vite": "^5.3.3"
 	}
 }
