@@ -86,14 +86,19 @@ export class ImportCSSSheet {
 			fileContent = transform(fileContent, realId);
 
 		if (this.minify) {
-			const { code } = transform({
-				code:     Buffer.from(fileContent),
-				filename: realId,
-				minify:   true,
-			});
-
-			const decoder = new TextDecoder();
-			fileContent = decoder.decode(code);
+			try {
+				const { code } = transform({
+					code:     Buffer.from(fileContent),
+					filename: realId,
+					minify:   true,
+				});
+				
+				const decoder = new TextDecoder();
+				fileContent = decoder.decode(code);
+			} catch(err) {
+				console.error("Failed to minify css sheet");
+				console.error(err);
+			}
 		}
 
 		const createCode =
