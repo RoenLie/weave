@@ -15,6 +15,9 @@ export class ImportCSSSheet {
 		[ '$', '\\$' ],
 	]);
 
+	public totalBeforeMinify = 0;
+	public totalAfterMinify = 0;
+
 	constructor(
 		public config: ResolvedConfig,
 		public transformers: ((code: string, id: string) => string)[],
@@ -87,6 +90,9 @@ export class ImportCSSSheet {
 
 		if (this.minify) {
 			try {
+				if (this.config.mode !== 'development')
+					this.totalBeforeMinify += fileContent.length;
+				
 				const { code } = transform({
 					code:     Buffer.from(fileContent),
 					filename: realId,
@@ -95,6 +101,9 @@ export class ImportCSSSheet {
 				
 				const decoder = new TextDecoder();
 				fileContent = decoder.decode(code);
+
+				if (this.config.mode !== 'development')
+					this.totalAfterMinify += fileContent.length;
 			} catch(err) {
 				console.error("Failed to minify css sheet");
 				console.error(err);
