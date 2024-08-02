@@ -49,7 +49,10 @@ export const minifyCssLiteral = (debugLevel: 'error' | 'silent' = 'silent'): Plu
 
 					const start = path.node.start! + 1;
 					const end = path.node.end! - 1;
+
 					const text = code.slice(start, end);
+					if (!text)
+						return;
 
 					try {
 						const { code: output } = transform({
