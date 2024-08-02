@@ -23,7 +23,7 @@ export const minifyCssLiteral = (debugLevel: 'error' | 'silent' = 'silent'): Plu
 		buildEnd() {
 			if (config.mode !== 'development') {
 				console.log('@roenlie/vite-plugin-minify-css-literal');
-				console.log('Minified css literals by ', totalBeforeMinify - totalAfterMinify, 'characters.');
+				console.log('Minified css literals by', totalBeforeMinify - totalAfterMinify, 'characters.');
 				console.log('Before minify:', totalBeforeMinify, '. After minify:', totalAfterMinify);
 			}
 		},
