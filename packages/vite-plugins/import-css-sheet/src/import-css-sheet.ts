@@ -54,7 +54,7 @@ export class ImportCSSSheet {
 		// Remove query string part of path.
 		// Vite sometimes adds this to .html files.
 		if (importer.includes('?'))
-	 		importer = importer.split('?')[0];
+	 		importer = importer.split('?')[0]!;
 		
 		const ext = extname(importer);
 		if (!this.filetypes.has(ext))
