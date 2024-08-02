@@ -47,10 +47,15 @@ export class ImportCSSSheet {
 			ssr?:       boolean | undefined;
 			isEntry:    boolean;
 		},
-	) {
+	) {	
 		if (!source.endsWith('.css') || !importer)
 			return;
 
+		// Remove query string part of path.
+		// Vite sometimes adds this to .html files.
+		if (importer.includes('?'))
+	 		importer = importer.split('?')[0];
+		
 		const ext = extname(importer);
 		if (!this.filetypes.has(ext))
 			return;
