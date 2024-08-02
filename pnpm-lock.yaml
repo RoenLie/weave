@@ -151,7 +151,7 @@ importers:
     devDependencies:
       '@roenlie/vite-plugin-import-css-sheet':
         specifier: workspace:*
-        version: link:../../packages/vite-plugins/minify-css-literal
+        version: link:../../packages/vite-plugins/import-css-sheet
 
   apps/morph/client:
     dependencies:
@@ -200,7 +200,7 @@ importers:
         version: link:../../../packages/vite-plugins/html-module-plugin
       '@roenlie/vite-plugin-import-css-sheet':
         specifier: workspace:*
-        version: link:../../../packages/vite-plugins/minify-css-literal
+        version: link:../../../packages/vite-plugins/import-css-sheet
 
   apps/morph/server:
     dependencies:
@@ -457,7 +457,7 @@ importers:
     devDependencies:
       '@roenlie/vite-plugin-import-css-sheet':
         specifier: workspace:*
-        version: link:../../../packages/vite-plugins/minify-css-literal
+        version: link:../../../packages/vite-plugins/import-css-sheet
       vite:
         specifier: ^5.3.1
         version: 5.3.2(@types/node@20.14.9)(lightningcss@1.25.1)(terser@5.31.1)
@@ -645,7 +645,7 @@ importers:
         version: link:../mirage-docs
       '@roenlie/vite-plugin-import-css-sheet':
         specifier: workspace:*
-        version: link:../vite-plugins/minify-css-literal
+        version: link:../vite-plugins/import-css-sheet
       vite:
         specifier: ^5.3.3
         version: 5.3.3(@types/node@20.14.9)(lightningcss@1.25.1)(terser@5.31.1)
@@ -1152,10 +1152,6 @@ importers:
 
   packages/vite-plugins/minify-css-literal:
     dependencies:
-      lightningcss:
-        specifier: ^1.25.1
-        version: 1.25.1
-    devDependencies:
       '@babel/parser':
         specifier: ^7.24.8
         version: 7.25.3
@@ -1165,6 +1161,10 @@ importers:
       '@babel/types':
         specifier: ^7.24.9
         version: 7.25.2
+      lightningcss:
+        specifier: ^1.25.1
+        version: 1.25.1
+    devDependencies:
       '@roenlie/eslint-config':
         specifier: workspace:*
         version: link:../../eslint-config
