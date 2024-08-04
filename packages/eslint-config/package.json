@@ -21,9 +21,9 @@
 		"eslint": "^9.5.0",
 		"eslint-plugin-lit": "^1.13.0",
 		"typescript": "^5.5.2",
-		"typescript-eslint": "^8.0.0-alpha.28"
+		"typescript-eslint": "^8.0.0"
 	},
 	"engines": {
-		"node": ">=20.10"
+		"node": ">=22.5.1"
 	}
 }
