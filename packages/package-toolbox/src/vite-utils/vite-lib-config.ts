@@ -31,8 +31,8 @@ export interface ConfigOptions {
 export const libConfig = (
 	customConfig?: ConfigOverrides,
 	options?: ConfigOptions,
-) => {
-	return async (env: ConfigEnv) => {
+): (env: ConfigEnv) => Promise<UserConfig> => {
+	return async (env: ConfigEnv): Promise<UserConfig> => {
 		const {
 			filter,
 			expression = /^(?!\w+:[/\\])@?[\w]+[\w\-/.:]+$/,
