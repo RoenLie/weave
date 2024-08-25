@@ -56,8 +56,8 @@ export class CaptureCameraCmp extends LitElement {
 						{ width: { exact: 800 } },
 						{ width: { exact: 640 } },
 						{ width: { exact: 320 } },
-					 ],
-				 },
+					],
+				},
 				audio: false,
 			}),
 		);

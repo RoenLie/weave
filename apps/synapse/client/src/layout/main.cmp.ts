@@ -79,7 +79,7 @@ export class MainCmp extends LitElement {
 	}
 
 	protected override render() {
-	  	return isMobile ? this.renderMobile() : this.renderDesktop();
+		return isMobile ? this.renderMobile() : this.renderDesktop();
 	}
 
 	public static override styles = [

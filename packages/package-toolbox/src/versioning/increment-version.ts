@@ -15,15 +15,15 @@ export const incrementVersion = (options?: {
 	const packageName = parsedPackage['name'];
 	const packageVersion = parsedPackage['version'];
 
-	let currentVersion = '0.0.0';
+	let currentVersion = '1.0.0';
+	let nextVersion = currentVersion;
 	try {
 		currentVersion = execSync(`npm view ${ packageName }@latest version`).toString();
+		nextVersion = inc(currentVersion, release) || currentVersion;
+		if (!nextVersion)
+			throw new Error(`Failed to increment version from ${ currentVersion }`);
 	}
 	catch { /*  */ }
-
-	const nextVersion = inc(currentVersion, release);
-	if (!nextVersion)
-		throw new Error(`Failed to increment version from ${ currentVersion }`);
 
 	const packageJsonOutput = packageJsonInput.replace(packageVersion, nextVersion);
 

@@ -6,8 +6,5 @@
 		"outDir": "../dist",
 		"noEmit": false,
 		"emitDeclarationOnly": true,
-		"types": [
-			"vite/client",
-		]
 	},
 }
