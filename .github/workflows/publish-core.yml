@@ -1,4 +1,4 @@
-name: Publish package-toolbox
+name: Publish core
 
 on:
    # Runs on pushes targeting the default branch
