@@ -1,9 +1,17 @@
 name: Publish to NPM with auto-incremented patch release.
 
 on:
-  push:
-    branches:
-      - main
+   push:
+      branches:
+        - main
+   #push:
+   #   paths:
+   #      - 'packages/mirage-docs/**'
+   #   branches: ["publish"]
+
+   ## Allows you to run this workflow manually from the Actions tab
+   #workflow_dispatch:
+
 
 jobs:
   publish-npm:
@@ -25,10 +33,11 @@ jobs:
 
       - name: Build all requires dependencies and project.
         run: |
-          cd packages/package-toolbox && pnpm build
-          cd ../core && pnpm build
-          cd ../lit/lit-aegis && pnpm build
-          cd ../../components/editor && pnpm build
+          cd packages/package-toolbox   && pnpm build
+          cd ../core                    && pnpm build
+          cd ../reflect-metadata        && pnpm build
+          cd ../lit/lit-aegis           && pnpm build
+          cd ../../components/editor    && pnpm build
           cd ../../packages/mirage-docs && pnpm build
 
       - name: Change package version
