@@ -3,9 +3,10 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "turbo build",
-		"dev": "turbo dev",
-		"lint": "turbo lint"
+		"build": "pnpm build:toolbox && tsx ./scripts/build-package.ts",
+		"build:toolbox": "tsx ./scripts/build-package.ts @roenlie/package-toolbox",
+		"build:core": "pnpm build @roenlie/core",
+		"build:mirage-docs": "pnpm build @roenlie/mirage-docs"
 	},
 	"devDependencies": {
 		"@roenlie/eslint-config": "workspace:^",
@@ -14,7 +15,8 @@
 		"@types/node": "^22.5.0",
 		"rimraf": "^6.0.1",
 		"typescript": "^5.5.2",
-		"vitest": "^2.0.5"
+		"vitest": "^2.0.5",
+		"tsx": "^4.19.0"
 	},
 	"packageManager": "pnpm@9.0.6",
 	"engines": {

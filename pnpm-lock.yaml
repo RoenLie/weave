@@ -23,6 +23,9 @@ importers:
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
+      tsx:
+        specifier: ^4.19.0
+        version: 4.19.0
       typescript:
         specifier: ^5.5.2
         version: 5.5.4
@@ -698,9 +701,6 @@ importers:
         specifier: ^2.6.3
         version: 2.7.0
     devDependencies:
-      '@roenlie/mirage-docs':
-        specifier: workspace:^
-        version: link:../../mirage-docs
       vite:
         specifier: ^5.3.3
         version: 5.4.2(@types/node@22.5.1)(lightningcss@1.26.0)(terser@5.31.6)
@@ -1017,12 +1017,6 @@ importers:
       tslib:
         specifier: ^2.6.2
         version: 2.7.0
-
-  packages/mirage-mde-demo:
-    dependencies:
-      '@roenlie/mirage-mde':
-        specifier: workspace:^
-        version: link:../mirage-mde
 
   packages/mirage-mde-display:
     dependencies:

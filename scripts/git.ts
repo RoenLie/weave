@@ -6,11 +6,11 @@ import { getPackagePaths } from './utilities/get-package-paths.js';
 
 
 const entries: {
-	hash: string;
-	author: string;
-	date: string;
+	hash:    string;
+	author:  string;
+	date:    string;
 	message: string;
-	paths: string[];
+	paths:   string[];
 }[] = [];
 
 await execPromise('git log --raw -1', (data: string) => {
