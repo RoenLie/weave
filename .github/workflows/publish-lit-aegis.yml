@@ -36,7 +36,7 @@ jobs:
 
       - name: Change package version and publish package
         run: |
-         cd packages/mirage-docs && pnpm increment-version
+         cd packages/lit/lit-aegis && pnpm increment-version
          pnpm publish --access public --no-git-checks
         env:
          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
