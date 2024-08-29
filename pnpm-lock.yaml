@@ -9,13 +9,13 @@ importers:
   .:
     devDependencies:
       '@roenlie/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:packages/eslint-config
       '@roenlie/package-toolbox':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:packages/package-toolbox
       '@roenlie/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:packages/tsconfig-config
       '@types/node':
         specifier: ^22.5.0
@@ -79,16 +79,16 @@ importers:
   apps/clock:
     dependencies:
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/core
       '@roenlie/elements':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/elements
       '@roenlie/lit-fabric':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/lit/lit-fabric
       '@roenlie/lit-utilities':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/lit/lit-utilities
       lit:
         specifier: ^3.1.4
@@ -98,13 +98,13 @@ importers:
         version: 2.7.0
     devDependencies:
       '@roenlie/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/eslint-config
       '@roenlie/package-toolbox':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/package-toolbox
       '@roenlie/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/tsconfig-config
       dotenv:
         specifier: ^16.3.1
@@ -119,22 +119,22 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/core
       '@roenlie/elements':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/elements
       '@roenlie/lit-aegis':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/lit/lit-aegis
       '@roenlie/lit-utilities':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/lit/lit-utilities
       lit:
         specifier: 3.1.4
         version: 3.1.4
       posix-path-browser:
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/posix-path-browser
       quill:
         specifier: 2.0.2
@@ -147,7 +147,7 @@ importers:
         version: 5.5.4
     devDependencies:
       '@roenlie/vite-plugin-import-css-sheet':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/vite-plugins/import-css-sheet
 
   apps/morph/client:
@@ -162,22 +162,22 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/core
       '@roenlie/elements':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/elements
       '@roenlie/lit-aegis':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/lit/lit-aegis
       '@roenlie/lit-context':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/lit/lit-context
       '@roenlie/lit-state-store':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/lit/lit-state-store
       '@roenlie/lit-utilities':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/lit/lit-utilities
       lit:
         specifier: 3.1.4
@@ -193,10 +193,10 @@ importers:
         version: 2.7.0
     devDependencies:
       '@roenlie/vite-plugin-html-modules':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/vite-plugins/html-module-plugin
       '@roenlie/vite-plugin-import-css-sheet':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/vite-plugins/import-css-sheet
 
   apps/morph/server:
@@ -208,16 +208,16 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/core
       '@roenlie/live-ts-imports':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/live-ts-imports
       '@roenlie/monaco-editor-wc':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../components/editor
       '@roenlie/morph':
-        specifier: workspace:*
+        specifier: workspace:^
         version: 'link:'
       '@types/cors':
         specifier: ^2.8.17
@@ -308,19 +308,19 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/core
       '@roenlie/lit-router':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/lit/lit-router
       '@roenlie/lit-utilities':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/lit/lit-utilities
       '@roenlie/planner-entities':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../entities
       '@roenlie/reflect-metadata':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/reflect-metadata
       deepmerge-ts:
         specifier: ^7.0.3
@@ -351,7 +351,7 @@ importers:
         specifier: ^8.4.1
         version: 8.4.1
       '@roenlie/package-toolbox':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/package-toolbox
       dotenv:
         specifier: ^16.0.3
@@ -367,7 +367,7 @@ importers:
         version: 2.7.0
     devDependencies:
       '@roenlie/package-toolbox':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/package-toolbox
       vite:
         specifier: ^5.3.2
@@ -394,13 +394,13 @@ importers:
         specifier: ^5.2.0
         version: 5.2.0(@nestjs/common@10.4.1(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.1(@nestjs/common@10.4.1(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.1)(reflect-metadata@0.2.2)(rxjs@7.8.1))(reflect-metadata@0.2.2)
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/core
       '@roenlie/planner-entities':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../entities
       '@roenlie/reflect-metadata':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/reflect-metadata
       dotenv:
         specifier: ^16.0.3
@@ -425,7 +425,7 @@ importers:
         specifier: ^10.3.10
         version: 10.4.1(@nestjs/common@10.4.1(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.1(@nestjs/common@10.4.1(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.1)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.1(@nestjs/common@10.4.1(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.1))
       '@roenlie/package-toolbox':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/package-toolbox
 
   apps/synapse/client:
@@ -434,10 +434,10 @@ importers:
         specifier: ^0.1.3
         version: 0.1.3
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/core
       '@roenlie/lit-aegis':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/lit/lit-aegis
       '@roenlie/lit-context':
         specifier: ^1.0.47
@@ -453,7 +453,7 @@ importers:
         version: 2.7.0
     devDependencies:
       '@roenlie/vite-plugin-import-css-sheet':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/vite-plugins/import-css-sheet
       vite:
         specifier: ^5.3.1
@@ -465,13 +465,13 @@ importers:
   apps/synapse/server:
     dependencies:
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/core
       '@roenlie/sqlite-wrapper':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../../packages/sqlite-wrapper
       '@roenlie/synapse-server':
-        specifier: workspace:*
+        specifier: workspace:^
         version: 'link:'
       better-sqlite3:
         specifier: ^11.1.1
@@ -619,16 +619,16 @@ importers:
         specifier: ^1.6.4
         version: 1.6.10
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@roenlie/lit-aegis':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lit/lit-aegis
       '@roenlie/lit-localize':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lit/lit-localize
       '@roenlie/lit-utilities':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lit/lit-utilities
       lit:
         specifier: ^3.1.3
@@ -641,13 +641,13 @@ importers:
         specifier: ^8.4.1
         version: 8.4.1
       '@roenlie/elements':
-        specifier: workspace:*
+        specifier: workspace:^
         version: 'link:'
       '@roenlie/mirage-docs':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../mirage-docs
       '@roenlie/vite-plugin-import-css-sheet':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../vite-plugins/import-css-sheet
       vite:
         specifier: ^5.3.3
@@ -680,10 +680,10 @@ importers:
   packages/lit/lit-aegis:
     dependencies:
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
       '@roenlie/reflect-metadata':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../reflect-metadata
       deepmerge-ts:
         specifier: ^7.0.0
@@ -699,7 +699,7 @@ importers:
         version: 2.7.0
     devDependencies:
       '@roenlie/mirage-docs':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../mirage-docs
       vite:
         specifier: ^5.3.3
@@ -708,10 +708,10 @@ importers:
   packages/lit/lit-aegis2:
     devDependencies:
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
       '@roenlie/reflect-metadata':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../reflect-metadata
       deepmerge-ts:
         specifier: ^7.1.0
@@ -729,14 +729,14 @@ importers:
   packages/lit/lit-context:
     dependencies:
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
       lit:
         specifier: ^3.1.3
         version: 3.2.0
     devDependencies:
       '@roenlie/mirage-docs':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../mirage-docs
       happy-dom:
         specifier: ^14.7.1
@@ -745,20 +745,20 @@ importers:
   packages/lit/lit-fabric:
     dependencies:
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
       lit:
         specifier: ^3.1.3
         version: 3.2.0
     devDependencies:
       '@roenlie/mirage-docs':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../mirage-docs
 
   packages/lit/lit-localize:
     dependencies:
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
     devDependencies:
       '@lit-labs/preact-signals':
@@ -777,7 +777,7 @@ importers:
   packages/lit/lit-router:
     dependencies:
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
       lit:
         specifier: ^3.1.3
@@ -792,7 +792,7 @@ importers:
   packages/lit/lit-state-store:
     dependencies:
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
       lit:
         specifier: ^3.1.3
@@ -804,7 +804,7 @@ importers:
         specifier: ^1.6.4
         version: 1.6.10
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
       fast-equals:
         specifier: ^5.0.1
@@ -878,13 +878,13 @@ importers:
         specifier: 2.0.23
         version: 2.0.23
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@roenlie/lit-aegis':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lit/lit-aegis
       '@roenlie/monaco-editor-wc':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../components/editor
       '@sindresorhus/slugify':
         specifier: ^2.2.1
@@ -936,7 +936,7 @@ importers:
   packages/mirage-docs-demo:
     dependencies:
       '@roenlie/mirage-docs':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../mirage-docs
       lit:
         specifier: 3.2.0
@@ -985,10 +985,10 @@ importers:
         specifier: ^1.2.0
         version: 1.3.0
       '@roenlie/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@roenlie/mirage-mde-display':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../mirage-mde-display
       cm6-theme-basic-dark:
         specifier: ^0.2.0
@@ -1021,7 +1021,7 @@ importers:
   packages/mirage-mde-demo:
     dependencies:
       '@roenlie/mirage-mde':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../mirage-mde
 
   packages/mirage-mde-display:
@@ -1132,13 +1132,13 @@ importers:
         version: 1.26.0
     devDependencies:
       '@roenlie/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../eslint-config
       '@roenlie/package-toolbox':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../package-toolbox
       '@roenlie/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tsconfig-config
       lit:
         specifier: ^3.1.4
@@ -1172,13 +1172,13 @@ importers:
         version: 0.30.11
     devDependencies:
       '@roenlie/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../eslint-config
       '@roenlie/package-toolbox':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../package-toolbox
       '@roenlie/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tsconfig-config
       '@types/babel__traverse':
         specifier: ^7.20.6
