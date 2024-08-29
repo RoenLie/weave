@@ -37,7 +37,7 @@ jobs:
           cd ../core                    && pnpm build
           cd ../reflect-metadata        && pnpm build
           cd ../lit/lit-aegis           && pnpm build
-          cd ../../components/editor    && pnpm build
+          cd ../../../components/editor    && pnpm build
           cd ../../packages/mirage-docs && pnpm build
 
       - name: Change package version
