@@ -2,15 +2,12 @@ name: Publish to NPM with auto-incremented patch release.
 
 on:
    push:
-      branches:
-        - main
-   #push:
-   #   paths:
-   #      - 'packages/mirage-docs/**'
-   #   branches: ["publish"]
+      paths:
+         - 'packages/mirage-docs/**'
+      branches: ["publish"]
 
-   ## Allows you to run this workflow manually from the Actions tab
-   #workflow_dispatch:
+   # Allows you to run this workflow manually from the Actions tab
+   workflow_dispatch:
 
 
 jobs:
@@ -43,9 +40,9 @@ jobs:
       - name: Change package version
         run: cd packages/mirage-docs && pnpm increment-version
 
-      #- name: Publish package
-      #  run: |
-      #    cd packages/mirage-docs
-      #    pnpm publish --access public --no-git-checks
-      #  env:
-      #    NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      - name: Publish package
+        run: |
+          cd packages/mirage-docs
+          pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
