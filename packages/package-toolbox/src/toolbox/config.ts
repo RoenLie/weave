@@ -20,14 +20,23 @@ export const loadConfig = async (filePath: string) => {
 			outDir:      '.',
 			emptyOutDir: false,
 			lib:         {
-				entry:    filePath,
+				entry:    '',
 				formats:  [ 'es' ],
 				fileName: () => fileNameTmp,
 			},
 			rollupOptions: {
 				treeshake: true,
 				input:     filePath,
-				output:    {
+
+				external(source) {
+					// Returns true for any import using the standard external package syntax.
+					// Returns false for any absolute or relative path.
+					const expression = /^(?!\w+:[/\\])@?[\w]+[\w\-/.:]+$/;
+
+					return expression.test(source);
+				},
+
+				output: {
 					manualChunks:    () => fileNameTmp,
 					preserveModules: false,
 					sourcemap:       false,
@@ -38,6 +47,9 @@ export const loadConfig = async (filePath: string) => {
 
 	const imp: () => Promise<ToolboxConfig> = await import(fileUrl)
 		.then(m => m.default);
+
+	console.log(fileUrl, imp);
+
 
 	try {
 		return await imp();
