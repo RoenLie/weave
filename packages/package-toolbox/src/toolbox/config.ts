@@ -48,9 +48,6 @@ export const loadConfig = async (filePath: string) => {
 	const imp: () => Promise<ToolboxConfig> = await import(fileUrl)
 		.then(m => m.default);
 
-	console.log(fileUrl, imp);
-
-
 	try {
 		return await imp();
 	}
