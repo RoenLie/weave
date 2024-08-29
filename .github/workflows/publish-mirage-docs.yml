@@ -26,10 +26,10 @@ jobs:
       - name: Build all requires dependencies and project.
         run: |
           cd packages/package-toolbox && pnpm build
-          cd packages/core && pnpm build
-          cd packages/lit/lit-aegis && pnpm build
-          cd components/editor && pnpm build
-          cd packages/mirage-docs && pnpm build
+          cd ../core && pnpm build
+          cd ../lit/lit-aegis && pnpm build
+          cd ../../components/editor && pnpm build
+          cd ../../packages/mirage-docs && pnpm build
 
       - name: Change package version
         run: cd packages/mirage-docs && pnpm increment-version
