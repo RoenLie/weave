@@ -3,10 +3,10 @@ import { randomString } from '../build/helpers/string.js';
 
 
 export const editorPageTemplate = (props: {
-	tag:      string;
-	code:     string;
-	class:    string;
-	codeId:   string;
+	tag:    string;
+	code:   string;
+	class:  string;
+	codeId: string;
 }) => {
 	const className = randomString(10);
 
@@ -40,7 +40,7 @@ class ${ className } extends PageAdapter {
 }
 
 const module = new ContainerModule(({rebind}) => {
-	rebind('midoc-page').to(${ className });
+	rebind('midoc-page').toConstantValue(${ className });
 });
 
 ContainerLoader.load(module);

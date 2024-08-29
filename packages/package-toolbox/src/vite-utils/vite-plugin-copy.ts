@@ -36,5 +36,5 @@ export const viteCopy = (options: ViteCopyOptions = {}) => {
 			copied = true;
 			await copy(options);
 		},
-	} satisfies Plugin;
+	}satisfies Plugin;
 };

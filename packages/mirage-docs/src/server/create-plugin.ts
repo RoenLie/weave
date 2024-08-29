@@ -1,8 +1,8 @@
 import { promises } from 'node:fs';
 
-import { type ITrackedPromise, TrackedPromise } from '@roenlie/core/async';
+import { resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
 import { withDebounce } from '@roenlie/core/timing';
-import type { ModuleNode, Plugin, ResolvedConfig } from 'vite';
+import type { HtmlTagDescriptor, ModuleNode, Plugin, ResolvedConfig } from 'vite';
 
 import { getCache } from './build/cache/cache-registry.js';
 import { componentAutoImportLoad } from './build/component/auto-import.js';
@@ -13,11 +13,11 @@ import { MarkdownComponentFactory } from './create-markdown-cmp.js';
 
 
 export const createPlugin = (args: {
-	props: InternalConfigProperties;
+	props:                  InternalConfigProperties;
 	markdownComponentPaths: Set<string>;
-	siteconfigImportPath: string;
-	absoluteLibDir: string;
-	absoluteSourceDir: string;
+	siteconfigImportPath:   string;
+	absoluteLibDir:         string;
+	absoluteSourceDir:      string;
 }): Plugin => {
 	let config: ResolvedConfig;
 	const cache = getCache();
@@ -29,7 +29,7 @@ export const createPlugin = (args: {
 		absoluteSourceDir,
 	} = args;
 
-	let reloadPromise: ITrackedPromise<ModuleNode[]> | undefined = undefined;
+	let reloadPromise: ResolvablePromise<ModuleNode[]> | undefined = undefined;
 	let hmrModules: ModuleNode[] = [];
 	const debounceHotReload = withDebounce(
 		(modules: ModuleNode[]) => hmrModules.push(...modules),
@@ -55,36 +55,43 @@ export const createPlugin = (args: {
 				if (!ctx.filename.endsWith('index.html'))
 					return;
 
-				return {
-					html,
-					tags: [
-						{
-							tag:      'script',
-							attrs:    { type: 'module' },
-							injectTo: 'head-prepend',
-							children: 'import "@roenlie/mirage-docs/assets/index.css"',
+				const tags = [
+					{
+						tag:      'script',
+						attrs:    { type: 'module' },
+						injectTo: 'head-prepend',
+						children: 'import "@roenlie/mirage-docs/assets/index.css"',
+					},
+					{
+						tag:   'script',
+						attrs: {
+							id:   'site-config',
+							type: 'module',
+							src:  siteconfigImportPath,
 						},
-						{
-							tag:   'script',
-							attrs: {
-								id:   'site-config',
-								type: 'module',
-								src:  siteconfigImportPath,
-							},
-							injectTo: 'head-prepend',
-						},
-						{
-							tag:      'script',
-							attrs:    { type: 'module' },
-							injectTo: 'head',
-							children: `
-							import { LayoutCmp } from "@roenlie/mirage-docs/app/components/layout/layout.cmp.${ fileExt() }"
-							LayoutCmp.register();
-							document.body.appendChild(document.createElement('midoc-layout'));
-							`,
-						},
-					],
-				};
+						injectTo: 'head-prepend',
+					},
+					{
+						tag:      'script',
+						attrs:    { type: 'module' },
+						injectTo: 'head',
+						children: `
+						import { LayoutCmp } from "@roenlie/mirage-docs/app/components/layout/layout.cmp.${ fileExt() }"
+						LayoutCmp.register();
+						document.body.appendChild(document.createElement('midoc-layout'));
+						`,
+					},
+				] as HtmlTagDescriptor[];
+
+				props.siteConfig.root.styleImports.forEach(imp => {
+					tags.push({
+						tag:      'link',
+						attrs:    { rel: 'stylesheet', href: imp.src },
+						injectTo: 'head',
+					});
+				});
+
+				return { html, tags };
 			},
 		},
 		buildStart() {
@@ -144,7 +151,7 @@ export const createPlugin = (args: {
 				if (reloadPromise)
 					return [];
 
-				return await (reloadPromise = new TrackedPromise());
+				return await (reloadPromise = resolvablePromise());
 			}
 		},
 		async watchChange(id) {

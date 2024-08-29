@@ -1,7 +1,7 @@
-import type mdIt from 'markdown-it';
+import type { PluginWithOptions } from 'markdown-it';
 
 
-export const anchorEnhancePlugin: mdIt.PluginWithOptions<{class: string}> = (md) => {
+export const anchorEnhancePlugin: PluginWithOptions<{ class: string }> = (md) => {
 	md.core.ruler.push('anchor_internalizer', (state) => {
 		const tokens = state.tokens;
 

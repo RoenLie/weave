@@ -15,14 +15,24 @@ import { PathTreeCmp } from './path-tree.cmp.js';
 PathTreeCmp.register();
 
 
+@customElement('midoc-sidebar')
+export class SidebarCmp extends AegisComponent {
+
+	constructor() {
+		super(SidebarAdapter);
+	}
+
+}
+
+
 export class SidebarAdapter extends Adapter<SidebarCmp> {
 
 	//#region properties
-	@inject('site-config') protected siteConfig: SiteConfig;
-	@inject('routes') protected routes: string[];
+	@inject('site-config') protected siteConfig:     SiteConfig;
+	@inject('routes') protected routes:              string[];
 	@state() protected toggleAllValue = false;
 	@state() protected toggleIndeterminate = false;
-	@state() protected filteredRoutes: string[] = [];
+	@state() protected filteredRoutes:               string[] = [];
 	@query('midoc-path-tree') protected pathTreeQry: PathTreeCmp;
 	protected scrollValue = 0;
 	protected searchValue = localStorage.getItem('midocSidebarSearch') ?? '';
@@ -68,14 +78,14 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 
 	protected handleLoad = () => {
 		setTimeout(() => {
-			this.element.scrollTop	= Number(localStorage.getItem('midocSidebarScrollValue')) ?? 0;
+			this.element.scrollTop = Number(localStorage.getItem('midocSidebarScrollValue') ?? '0');
 
 			if (this.searchValue)
 				this.pathTreeQry?.toggleAll(this.toggleAllValue);
 		});
 	};
 
-	protected handleToggle = (ev: CustomEvent<{state: Record<string, boolean>}>) => {
+	protected handleToggle = (ev: CustomEvent<{ state: Record<string, boolean> }>) => {
 		this.setIndeterminateState(Object.values(ev.detail.state).some(Boolean));
 	};
 
@@ -229,16 +239,6 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 			this.styles.push(unsafeCSS(style));
 	}
 	//#endregion
-
-}
-
-
-@customElement('midoc-sidebar')
-export class SidebarCmp extends AegisComponent {
-
-	constructor() {
-		super(SidebarAdapter);
-	}
 
 }
 

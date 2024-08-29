@@ -1,0 +1,42 @@
+name: Publish to NPM with auto-incremented patch release.
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org/
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3.0.0
+        with:
+          version: latest
+
+      - name: Install workspace dependencies.
+        run: pnpm install
+
+      - name: Build all requires dependencies and project.
+        run: |
+          cd packages/package-toolbox && pnpm build
+          cd packages/core && pnpm build
+          cd packages/lit/lit-aegis && pnpm build
+          cd components/editor && pnpm build
+          cd packages/mirage-docs && pnpm build
+
+      - name: Change package version
+        run: cd packages/mirage-docs && pnpm increment-version
+
+      #- name: Publish package
+      #  run: |
+      #    cd packages/mirage-docs
+      #    pnpm publish --access public --no-git-checks
+      #  env:
+      #    NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

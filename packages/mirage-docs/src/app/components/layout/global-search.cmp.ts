@@ -14,24 +14,24 @@ import { Icon, xIcon } from './icons.js';
 
 interface CustomResult {
 	/** The number of all the matched documents. */
-	count: number;
+	count:   number;
 	/** An array of matched documents taking `limit` and `offset` into account. */
-	hits: ExpandedDoc[];
+	hits:    ExpandedDoc[];
 	/** The time taken to search. */
 	elapsed: ElapsedTime;
 }
 
 
 interface ExpandedDoc {
-	id: string;
-	score: number;
+	id:       string;
+	score:    number;
 	document: {
-		readonly type: string;
+		readonly type:    string;
 		readonly content: string;
-		readonly path: string;
-		modifiedPath: string;
-		displayPath: string;
-		displayText: string;
+		readonly path:    string;
+		modifiedPath:     string;
+		displayPath:      string;
+		displayText:      string;
 	};
 }
 
@@ -39,10 +39,10 @@ interface ExpandedDoc {
 export class GlobalSearchAdapter extends Adapter {
 
 	@state() protected searchValue = '';
-	@state() protected searchResult: any[] = [];
+	@state() protected searchResult:    any[] = [];
 	@state() protected activeSearchEl?: HTMLElement;
-	@query('dialog') public dialogQry: HTMLDialogElement;
-	protected searchWorker: Worker;
+	@query('dialog') public dialogQry:  HTMLDialogElement;
+	protected searchWorker:             Worker;
 	protected get colorScheme() {
 		return document.documentElement.getAttribute('color-scheme') ?? '';
 	}
@@ -69,7 +69,9 @@ export class GlobalSearchAdapter extends Adapter {
 			}
 			else {
 				this.activeSearchEl.classList.toggle('active', false);
-				this.activeSearchEl = this.activeSearchEl.previousElementSibling as HTMLElement ?? allEls.at(-1)!;
+				this.activeSearchEl = this.activeSearchEl
+					.previousElementSibling as HTMLElement ?? allEls.at(-1)!;
+
 				this.activeSearchEl?.classList?.toggle('active', true);
 			}
 		}
@@ -82,7 +84,9 @@ export class GlobalSearchAdapter extends Adapter {
 			}
 			else {
 				this.activeSearchEl.classList.toggle('active', false);
-				this.activeSearchEl = this.activeSearchEl.nextElementSibling as HTMLElement ?? allEls[0]!;
+				this.activeSearchEl = this.activeSearchEl
+					.nextElementSibling as HTMLElement ?? allEls[0]!;
+
 				this.activeSearchEl?.classList?.toggle('active', true);
 			}
 		}
@@ -135,7 +139,7 @@ export class GlobalSearchAdapter extends Adapter {
 		}
 	}
 
-	protected handleDialogInput(ev: InputEvent & {target: HTMLInputElement}) {
+	protected handleDialogInput(ev: InputEvent & { target: HTMLInputElement }) {
 		const value = ev.target.value;
 		this.searchValue = value;
 

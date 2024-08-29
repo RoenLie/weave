@@ -1,4 +1,4 @@
-import { resolvablePromise, resolvePromiseOrFunc, type PromiseOrFunc, type ResolvablePromise } from '@roenlie/core/async';
+import { resolvablePromise, resolvePromiseOrFunc, type PromiseOrFunc } from '@roenlie/core/async';
 import { adoptStyles, type CSSResultOrNative, type PropertyValues } from 'lit';
 
 import type { Adapter } from '../adapter/adapter.js';
@@ -6,7 +6,7 @@ import { injectable } from '../annotations/annotations.js';
 import type { ContainerModule } from '../container/container-module.js';
 import { ContainerLoader } from '../container/loader.js';
 import { AegisElement } from './aegis-element.js';
-import { typeOf } from '@roenlie/core/validation';
+import { isClass, typeOf } from '@roenlie/core/validation';
 import { property } from 'lit/decorators.js';
 
 
@@ -30,16 +30,16 @@ export class AegisComponent extends AegisElement {
 	protected readonly adapterCtor: typeof Adapter;
 	protected readonly modules:     Modules;
 	protected adapter:              Adapter;
-	protected adapterResolved:      ResolvablePromise<void>;
+	protected adapterResolved = resolvablePromise();
 
 	protected constructor(
-		adapterCtor?: (() => typeof Adapter) | typeof Adapter,
+		adapterCtor?: (() => typeof Adapter<any>) | typeof Adapter<any>,
 		modules: Modules = [],
 	) {
 		super();
 
 		if (adapterCtor) {
-			if (typeOf.function(adapterCtor))
+			if (typeOf.function(adapterCtor) && !isClass(adapterCtor))
 				adapterCtor = adapterCtor();
 
 			injectable()(adapterCtor);
@@ -51,18 +51,15 @@ export class AegisComponent extends AegisElement {
 
 	public override connectedCallback(): void {
 		super.connectedCallback();
-
 		this.containerConnectedCallback();
-
-		Promise.all([ ContainerLoader.waitForQueue(), this.adapterResolved ])
-			.then(() => this.adapter?.connectedCallback?.());
 	}
 
 	public async containerConnectedCallback(): Promise<void> {
 		if (this.hasUpdated)
-			return;
+			return this.adapter?.connectedCallback?.();
 
-		this.adapterResolved = resolvablePromise();
+		if (this.adapterResolved.done)
+			this.adapterResolved = resolvablePromise();
 
 		const elementBase = this.constructor as typeof AegisComponent;
 		if (!elementBase.modulesResolved) {
@@ -110,12 +107,21 @@ export class AegisComponent extends AegisElement {
 		}
 
 		this.adapterResolved.resolve();
+		this.adapter?.connectedCallback?.();
 	}
 
+	protected scheduledUpdate?: Promise<any>;
 	protected override scheduleUpdate(): void | Promise<unknown> {
-		if (ContainerLoader.loadingQueue.length || !this.adapterResolved.done) {
-			return Promise.all([ ContainerLoader.waitForQueue(), this.adapterResolved ])
-				.then(() => super.scheduleUpdate());
+		if (this.scheduledUpdate)
+			return this.scheduledUpdate;
+
+		if (!this.adapterResolved.done) {
+			this.scheduledUpdate = this.adapterResolved.then(() => {
+				this.scheduledUpdate = undefined;
+				super.scheduleUpdate();
+			});
+
+			return this.scheduledUpdate;
 		}
 
 		super.scheduleUpdate();

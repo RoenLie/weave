@@ -13,7 +13,7 @@ import { componentStyles } from '../../styles/component.styles.js';
 export class MiDocHeaderCmp extends LitElement {
 
 	//#region properties
-	@property({ type: Boolean }) public editor?: boolean;
+	@property({ type: Boolean }) public editor?:    boolean;
 	@property({ type: Object }) public declaration: Declarations;
 
 	@property({ attribute: 'component-name' }) public set componentName(v: string) {

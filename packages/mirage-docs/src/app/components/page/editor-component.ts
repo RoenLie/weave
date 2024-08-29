@@ -3,7 +3,7 @@ import { css, CSSResult, type CSSResultGroup, html, type TemplateResult } from '
 
 type EditorComponentBuilder = (api: {
 	html: (strings: TemplateStringsArray, ...values: unknown[]) => TemplateResult;
-	css: (strings: TemplateStringsArray, ...values: (CSSResultGroup | number)[]) => CSSResult;
+	css:  (strings: TemplateStringsArray, ...values: (CSSResultGroup | number)[]) => CSSResult;
 }) => ({
 	connectedCallback?(this: EditorElement): void;
 	disconnectedCallback?(this: EditorElement): void;
@@ -14,7 +14,7 @@ type EditorComponentBuilder = (api: {
 
 export const editorComponent = (builder: EditorComponentBuilder) => (api: {
 	html: typeof html,
-	css: typeof css,
+	css:  typeof css,
 }) => {
 	return builder(api);
 };

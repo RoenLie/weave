@@ -78,7 +78,7 @@ section {
 	display: grid;
 }
 iframe {
-	transition: opacity 0.2s linear;
+	transition: opacity 0.2s ease-out;
 	opacity: 1;
 	height: 100%;
 	width: 100%;

@@ -14,7 +14,7 @@ export class MiDocMetadataViewerCmp extends LitElement {
 
 	//#region properties
 	@property({ type: Object }) public declaration: Declarations;
-	protected sanitizedDeclarations: Declarations;
+	protected sanitizedDeclarations:                Declarations;
 	//#endregion properties
 
 

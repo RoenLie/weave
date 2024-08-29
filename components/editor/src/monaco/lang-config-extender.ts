@@ -4,19 +4,19 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 export type MonarchObject = {
 	defaultToken: string;
 	tokenPostfix: string;
-	keywords: string[];
+	keywords:     string[];
 	typeKeywords: string[];
-	operators: string[];
-	symbols: RegExp;
-	escapes: RegExp;
-	digits: RegExp;
-	octaldigits: RegExp;
+	operators:    string[];
+	symbols:      RegExp;
+	escapes:      RegExp;
+	digits:       RegExp;
+	octaldigits:  RegExp;
 	binarydigits: RegExp;
-	hexdigits: RegExp;
-	regexpctl: RegExp;
-	regexpesc: RegExp;
-	tokenizer: MonarchTokenizer;
-} & Record<string, any>
+	hexdigits:    RegExp;
+	regexpctl:    RegExp;
+	regexpesc:    RegExp;
+	tokenizer:    MonarchTokenizer;
+} & Record<string, any>;
 
 export type MonarchTokenizer = Record<string, TokenizerEntry[]>;
 
@@ -27,29 +27,29 @@ export type TokenizerEntry = [
 ] | [
 	regex: string | RegExp,
 	action: string | string[],
-	next: string,
+	next: string
 ] | [
 	regex: string | RegExp,
 	{
-		token?: string;
+		token?:  string;
 		goBack?: number;
-		cases?: Record<string, TokenizerEntry | string>;
-		log?: string;
-		next?: string;
+		cases?:  Record<string, TokenizerEntry | string>;
+		log?:    string;
+		next?:   string;
 	}
 ] | {
-	token?: string;
+	token?:  string;
 	goBack?: number;
-	cases?: Record<string, TokenizerEntry | string>;
-	log?: string;
-	next?: string;
+	cases?:  Record<string, TokenizerEntry | string>;
+	log?:    string;
+	next?:   string;
 } | {
 	include: string;
-}
+};
 
-export type LanguageExtension = monaco.languages.ILanguageExtensionPoint & {loader: () => Promise<{
+export type LanguageExtension = monaco.languages.ILanguageExtensionPoint & { loader: () => Promise<{
 	language: MonarchObject;
-}>};
+}> };
 
 
 export const isTokenizer = (value: any, key: string): value is MonarchTokenizer => {

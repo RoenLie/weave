@@ -3,11 +3,11 @@ import { randomString } from '../build/helpers/string.js';
 
 
 export const docPageTemplate = (props: {
-	hoisted:       string;
-	imports:       string;
-	examples:      string;
-	metadata:      string;
-	markdown:      string;
+	hoisted:  string;
+	imports:  string;
+	examples: string;
+	metadata: string;
+	markdown: string;
 }) => {
 	const className = randomString(10);
 
@@ -42,7 +42,7 @@ class ${ className } extends PageAdapter {
 }
 
 const module = new ContainerModule(({rebind}) => {
-	rebind('midoc-page').to(${ className });
+	rebind('midoc-page').toConstantValue(${ className });
 });
 
 ContainerLoader.load(module);

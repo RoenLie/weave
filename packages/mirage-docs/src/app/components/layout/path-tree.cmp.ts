@@ -18,13 +18,30 @@ import { pathsToTree, type TreeRecord } from '../../utilities/paths-to-tree.js';
 import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
 
 
+@customElement('midoc-path-tree')
+export class PathTreeCmp extends AegisComponent {
+
+	@property({ type: Array }) public paths: string[] = [];
+	protected override adapter:              PathTreeAdapter;
+
+	constructor() {
+		super(PathTreeAdapter);
+	}
+
+	public toggleAll(value: boolean) {
+		this.adapter.toggleAll(value);
+	}
+
+}
+
+
 export class PathTreeAdapter extends Adapter<PathTreeCmp> {
 
 	//#region properties
 	@inject('site-config') protected siteConfig: SiteConfig;
-	@state() protected groupState: Record<string, boolean> = {};
+	@state() protected groupState:               Record<string, boolean> = {};
 	@state() protected activeHref = '';
-	protected hierarchy: TreeRecord = {};
+	protected hierarchy:                         TreeRecord = {};
 	//#endregion
 
 
@@ -317,22 +334,5 @@ export class PathTreeAdapter extends Adapter<PathTreeCmp> {
 		this.styles.push(unsafeCSS(style));
 	}
 	//#endregion
-
-}
-
-
-@customElement('midoc-path-tree')
-export class PathTreeCmp extends AegisComponent {
-
-	@property({ type: Array }) public paths: string[] = [];
-	protected override adapter: PathTreeAdapter;
-
-	constructor() {
-		super(PathTreeAdapter);
-	}
-
-	public toggleAll(value: boolean) {
-		this.adapter.toggleAll(value);
-	}
 
 }

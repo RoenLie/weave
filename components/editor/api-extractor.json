@@ -109,7 +109,7 @@
      * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
      * DEFAULT VALUE: "<projectFolder>/tsconfig.json"
      */
-		// "tsconfigFilePath": "<projectFolder>/tsconfig.json",
+		"tsconfigFilePath": "<projectFolder>/src/tsconfig.json"
 		/**
      * Provides a compiler configuration that will be used instead of reading the tsconfig.json file from disk.
      * The object must conform to the TypeScript tsconfig schema:
@@ -140,7 +140,7 @@
 		/**
      * (REQUIRED) Whether to generate an API report.
      */
-		"enabled": false
+		"enabled": false,
 		/**
      * The filename for the API report files.  It will be combined with "reportFolder" or "reportTempFolder" to produce
      * a full file path.
@@ -186,7 +186,7 @@
      *
      * DEFAULT VALUE: "false"
      */
-		// "includeForgottenExports": false
+		"includeForgottenExports": true
 	},
 	/**
    * Configures how the doc model file (*.api.json) will be generated.
@@ -302,20 +302,20 @@
      *
      * DEFAULT VALUE: true
      */
-		// "enabled": true,
+		"enabled": false
 		/**
-     * Specifies where the TSDoc metadata file should be written.
-     *
-     * The path is resolved relative to the folder of the config file that contains the setting; to change this,
-     * prepend a folder token such as "<projectFolder>".
-     *
-     * The default value is "<lookup>", which causes the path to be automatically inferred from the "tsdocMetadata",
-     * "typings" or "main" fields of the project's package.json.  If none of these fields are set, the lookup
-     * falls back to "tsdoc-metadata.json" in the package folder.
-     *
-     * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
-     * DEFAULT VALUE: "<lookup>"
-     */
+		* Specifies where the TSDoc metadata file should be written.
+		*
+		* The path is resolved relative to the folder of the config file that contains the setting; to change this,
+		* prepend a folder token such as "<projectFolder>".
+		*
+		* The default value is "<lookup>", which causes the path to be automatically inferred from the "tsdocMetadata",
+		* "typings" or "main" fields of the project's package.json.  If none of these fields are set, the lookup
+		* falls back to "tsdoc-metadata.json" in the package folder.
+		*
+		* SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
+		* DEFAULT VALUE: "<lookup>"
+		*/
 		// "tsdocMetadataFilePath": "<projectFolder>/dist/tsdoc-metadata.json"
 	},
 	/**
@@ -341,15 +341,15 @@
          * Specifies whether the message should be written to the the tool's output log.  Note that
          * the "addToApiReportFile" property may supersede this option.
          *
-         * Possible values: "error", "warning", "none"
+         * Possible values: "error", "none", "none"
          *
          * Errors cause the build to fail and return a nonzero exit code.  Warnings cause a production build fail
          * and return a nonzero exit code.  For a non-production build (e.g. when "api-extractor run" includes
          * the "--local" option), the warning is displayed but the build will not fail.
          *
-         * DEFAULT VALUE: "warning"
+         * DEFAULT VALUE: "none"
          */
-				"logLevel": "warning"
+				"logLevel": "none"
 				/**
          * When addToApiReportFile is true:  If API Extractor is configured to write an API report file (.api.md),
          * then the message will be written inside that file; otherwise, the message is instead logged according to
@@ -360,7 +360,7 @@
 				// "addToApiReportFile": false
 			}
 			// "TS2551": {
-			//   "logLevel": "warning",
+			//   "logLevel": "none",
 			//   "addToApiReportFile": true
 			// },
 			//
@@ -375,11 +375,11 @@
      */
 		"extractorMessageReporting": {
 			"default": {
-				"logLevel": "warning"
+				"logLevel": "none"
 				// "addToApiReportFile": false
 			}
 			// "ae-extra-release-tag": {
-			//   "logLevel": "warning",
+			//   "logLevel": "none",
 			//   "addToApiReportFile": true
 			// },
 			//
@@ -394,11 +394,11 @@
      */
 		"tsdocMessageReporting": {
 			"default": {
-				"logLevel": "warning"
+				"logLevel": "none"
 				// "addToApiReportFile": false
 			}
 			// "tsdoc-link-tag-unescaped-text": {
-			//   "logLevel": "warning",
+			//   "logLevel": "none",
 			//   "addToApiReportFile": true
 			// },
 			//

@@ -1,5 +1,6 @@
 export * from './monaco/index.js';
 
+
 (async () => {
 	if (document.head.querySelector('#monaco-styles'))
 		return;

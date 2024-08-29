@@ -13,6 +13,7 @@ import {
 } from './icons.js';
 import { layoutStyles } from './layout.styles.js';
 import { SidebarCmp } from './sidebar.cmp.js';
+import { waitForPromises } from '@roenlie/core/async';
 
 SidebarCmp.register();
 GlobalSearchCmp.register();
@@ -22,8 +23,8 @@ export class LayoutAdapter extends Adapter {
 
 	//#region properties
 	@state() protected loading = false;
-	@query('iframe') protected frameQry: HTMLIFrameElement;
-	@query('midoc-sidebar') protected sidebarQry: LitElement;
+	@query('iframe') protected frameQry:           HTMLIFrameElement;
+	@query('midoc-sidebar') protected sidebarQry:  LitElement;
 	@query('.scrollback') protected scrollbackQry: HTMLElement;
 
 	protected activeFrame = '';
@@ -104,25 +105,6 @@ export class LayoutAdapter extends Adapter {
 		}
 	};
 
-	protected handleTransitionEnd = () => {
-		const hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
-		if (hash) {
-			this.loading = true;
-			this.activeFrame = hash + '.html';
-
-			const { base, libDir } = ContainerLoader.get<SiteConfig>('site-config').env;
-			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
-			frame.src = [ base, libDir, this.activeFrame ].join('/').replaceAll(/\/+/g, '/');
-
-			this.frameQry.replaceWith(frame);
-			this.frameQry.addEventListener('load', this.handleFrameLoad, { once: true });
-		}
-		else {
-			this.loading = false;
-			Object.assign(this.frameQry.style, { opacity: 1 });
-		}
-	};
-
 	protected blockTransition = () => {
 		const promise = new Promise<void>(resolve => {
 			this.frameQry.addEventListener(
@@ -141,7 +123,7 @@ export class LayoutAdapter extends Adapter {
 	};
 
 	protected handleHashChange = async (_ev?: HashChangeEvent) => {
-		let hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
+		let hash = location.hash.slice(1);
 		if (!hash) {
 			const { base } = ContainerLoader.get<SiteConfig>('site-config').env;
 			const routes = ContainerLoader.get<string[]>('routes');
@@ -156,6 +138,7 @@ export class LayoutAdapter extends Adapter {
 		if (this.activeFrame === (hash + '.html'))
 			return;
 
+		this.requestUpdate();
 		await this.updateComplete;
 
 		this.startFrameReload();
@@ -164,8 +147,10 @@ export class LayoutAdapter extends Adapter {
 	protected startFrameReload = async () => {
 		console.clear();
 
-		while (this.transitionSet.size)
-			await Promise.all([ ...this.transitionSet ]);
+		await waitForPromises(this.transitionSet);
+
+		if (this.activeFrame === '')
+			return this.handleTransitionEnd();
 
 		if (this.frameQry.style.opacity === '0')
 			return this.transitionSet.add(this.blockTransition());
@@ -175,11 +160,29 @@ export class LayoutAdapter extends Adapter {
 		this.frameQry.contentWindow
 			?.removeEventListener('keydown', this.handleHotkeyPress);
 
-		this.frameQry.addEventListener(
-			'transitionend', this.handleTransitionEnd, { once: true },
-		);
+		this.frameQry.addEventListener('transitionend',
+			this.handleTransitionEnd, { once: true });
 
 		this.frameQry.style.setProperty('opacity', '0');
+	};
+
+	protected handleTransitionEnd = () => {
+		const hash = location.hash.slice(1);
+		if (hash) {
+			this.loading = true;
+			this.activeFrame = hash + '.html';
+
+			const { base, libDir } = ContainerLoader.get<SiteConfig>('site-config').env;
+			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
+			frame.src = [ base, libDir, this.activeFrame ].join('/').replaceAll(/\/+/g, '/');
+
+			this.frameQry.replaceWith(frame);
+			this.frameQry.addEventListener('load', this.handleFrameLoad, { once: true });
+		}
+		else {
+			this.loading = false;
+			Object.assign(this.frameQry.style, { opacity: 1 });
+		}
 	};
 
 	protected handleColorSchemeToggle(reset?: boolean) {
@@ -205,7 +208,7 @@ export class LayoutAdapter extends Adapter {
 	}
 
 	protected handleHotkeyPress = (ev: KeyboardEvent) => {
-		if (ev.code === 'KeyP' && ev.ctrlKey) {
+		if (ev.code === 'KeyP' && (ev.ctrlKey || ev.metaKey)) {
 			ev.preventDefault();
 
 			const searchEl = this.querySelector<GlobalSearchCmp>('midoc-global-search');

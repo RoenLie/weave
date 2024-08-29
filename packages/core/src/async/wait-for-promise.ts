@@ -34,3 +34,22 @@ export const waitForPromiseSet = async (set: Set<Promise<any>>) => {
 		await Promise.allSettled(promises);
 	}
 };
+
+
+/** Iteratively waits for promises in a map or set.
+ *
+ * Promises are deleted from the map as they complete.
+ */
+export const waitForPromises = async (map: Map<any, Promise<any>> | Set<any>) => {
+	// Keep running the loop as long as there are promises.
+	while (map.size) {
+		// get first entry:
+		const first = map.entries().next();
+		const [ key, promise ] = first.value;
+
+		try { await promise;	}
+		catch (_error) { /*  */ }
+
+		map.delete(key);
+	}
+};

@@ -7,8 +7,8 @@ import type { UnsafeHTMLDirective } from 'lit/directives/unsafe-html.js';
 import type { SiteConfig } from '../../../shared/config.types.js';
 import { debounce } from '../../utilities/debounce.js';
 import { drag } from '../../utilities/drag.js';
-import { type LoadedEditor, monaco } from '../../utilities/monaco.js';
 import { unpkgReplace } from '../../utilities/unpkg-replace.js';
+import { MonacoEditorCmp } from '@roenlie/monaco-editor-wc';
 
 
 @customElement('docs-source-editor')
@@ -16,129 +16,34 @@ export class EsSourceEditor extends LitElement {
 
 	//#region state
 	@property({ type: String })                            public source: string;
-	@property({ type: Boolean })                           public immediate: boolean;
-	@property({ type: Boolean, attribute: 'auto-height' }) public autoHeight: boolean;
 	@property({ type: Number, attribute: 'max-height' })   public maxHeight = Infinity;
-	@state() public content: TemplateResult | DirectiveResult<typeof UnsafeHTMLDirective> = html``;
-	//#endregion
-
-
-	//#region properties
-	protected editorLang: 'javascript' | 'typescript' = 'javascript';
-	protected resolveEditor: (editor: LoadedEditor) => any;
-	protected editor: Promise<LoadedEditor>;
-	protected get vsTheme() {
-		const scheme = document.documentElement.getAttribute('color-scheme') ?? 'dark';
-
-		return scheme === 'dark' ? 'vs-dark' : 'vs';
-	}
-	//#endregion
-
-
-	//#region controllers
-	protected readonly resizeObs = new ResizeObserver(() => this.updateHeight());
-	protected readonly documentElementObserver =
-		new MutationObserver((_mutations) => this.handleColorScheme());
+	@state() public content = html`` as TemplateResult | DirectiveResult<typeof UnsafeHTMLDirective>;
 	//#endregion
 
 
 	//#region queries
-	@query('.outlet')         protected outletQry: HTMLElement;
-	@query('.editor')         protected editorQry: HTMLElement;
-	@query('.panel')          protected panelQry: HTMLElement;
+	@query('.outlet')         protected outletQry:        HTMLElement;
+	@query('.panel')          protected panelQry:         HTMLElement;
 	@query('.editor-wrapper') protected editorWrapperQry: HTMLElement;
+	@query('monaco-editor')   protected editorQry?:       MonacoEditorCmp;
 	//#endregion
 
 
 	//#region lifecycle
-	public override connectedCallback() {
-		super.connectedCallback();
-
-		let resolve: (editor: LoadedEditor) => any = () => {};
-		this.editor = new Promise<LoadedEditor>(res => resolve = res);
-		this.resolveEditor = resolve;
-
-		this.resizeObs.observe(window.document.body);
-		this.documentElementObserver.observe(document.documentElement, {
-			attributes:      true,
-			attributeFilter: [ 'color-scheme' ],
-		});
-	}
-
-	public override disconnectedCallback() {
-		super.disconnectedCallback();
-
-		this.editor.then(ed => ed.dispose());
-		this.resizeObs.disconnect();
-		this.documentElementObserver.disconnect();
-	}
-
 	public override async firstUpdated() {
-		this.resizeObs.observe(this.editorWrapperQry);
-
-		const editor = (await monaco).editor.create(this.editorQry, {
-			value:                   this.source,
-			language:                this.editorLang,
-			scrollbar:               { alwaysConsumeMouseWheel: false },
-			scrollBeyondLastLine:    !this.autoHeight,
-			wordWrap:                'on',
-			wrappingStrategy:        'advanced',
-			minimap:                 { enabled: false },
-			overviewRulerLanes:      3,
-			fontFamily:              'Cascadia Code',
-			fontLigatures:           true,
-			theme:                   this.vsTheme,
-			bracketPairColorization: { enabled: true },
-			guides:                  { bracketPairs: true },
-		});
-
-		this.resolveEditor(editor);
-
-		editor.onDidContentSizeChange(() => this.updateHeight());
-		editor.onDidChangeModelContent(this.delayedExecute);
-
-		this.setInitialHeight();
-		this.updateHeight();
-
-		if (this.immediate)
-			await this.execute(true);
+		this.delayedExecute();
 	}
 	//#endregion
 
 
 	//#region logic
-	protected async setInitialHeight() {
-		const editor = await this.editor;
-
-		if (this.autoHeight) {
-			if (this.maxHeight !== Infinity) {
-				// Based on: https://github.com/microsoft/monaco-editor/issues/794#issuecomment-688959283
-				this.editorWrapperQry.style.setProperty('height',
-					Math.min(this.maxHeight, editor.getContentHeight() + 50) + 'px');
-			}
-		}
-		else {
-			this.editorWrapperQry.style.setProperty('max-height', this.maxHeight + 'px');
-		}
-	}
-
-	protected async updateHeight() {
-		const editor = await this.editor;
-
-		const contentHeight = Math.min(this.maxHeight, this.editorWrapperQry.clientHeight ?? 0 - 50);
-		const editorWidth = this.editorQry.clientWidth;
-
-		editor.layout({ width: editorWidth, height: contentHeight });
-		// doing a second call to layout to recalculate the height after setting it
-		// this fixes a bug where when in auto initial height, the first row is not visible.
-		editor.layout();
-	}
-
 	protected delayedExecute = debounce(() => this.execute(), 1000);
 
-	protected async execute(force = false) {
-		const editor = await this.editor;
-		const js = unpkgReplace(editor.getValue());
+	protected async execute() {
+		if (!this.editorQry?.editor)
+			return;
+
+		const js = unpkgReplace(this.editorQry.editor.getValue());
 		const encodedJs = encodeURIComponent(js);
 		const dataUri = `data:text/javascript;charset=utf-8,${ encodedJs }`;
 
@@ -147,8 +52,7 @@ export class EsSourceEditor extends LitElement {
 		}
 		catch (error) {
 			console.warn('Import failed. Reason:', error);
-			if (force === true)
-				this.content = html`${ error }`;
+			this.content = html`${ error }`;
 		}
 
 		this.requestUpdate();
@@ -163,11 +67,6 @@ export class EsSourceEditor extends LitElement {
 		const scriptContent = slottedScript?.textContent ?? '';
 		if (scriptContent)
 			this.source = scriptContent;
-	}
-
-	protected async handleColorScheme() {
-		const editor = await this.editor;
-		editor.updateOptions({ theme: this.vsTheme });
 	}
 
 	protected handleResizeWrapper = (ev: PointerEvent) => {
@@ -193,22 +92,23 @@ export class EsSourceEditor extends LitElement {
 			},
 		);
 	};
+
+	protected onEditorChange() {
+		this.source = this.editorQry?.editor?.getValue() ?? '';
+	}
 	//#endregion
 
 
 	//#region template
 	public override render() {
 		return html`
-		<link
-			rel="stylesheet"
-			type="text/css"
-			data-name="vs/editor/editor.main"
-			href="https://cdn.jsdelivr.net/npm/monaco-editor@0.34.1/min/vs/editor/editor.main.css"
-		></link>
-
 		<div class="editor-section panel">
 			<div class="editor-wrapper">
-				<div class="editor"></div>
+				<monaco-editor
+					language="typescript"
+					.value=${ this.source }
+					@change=${ this.onEditorChange }
+				></monaco-editor>
 			</div>
 
 			<div class="resizer" @pointerdown=${ this.handleResizeWrapper }>
@@ -235,7 +135,7 @@ export class EsSourceEditor extends LitElement {
 		</div>
 
 		<div class="actions">
-			<button @click=${ () => this.execute(true) }>Execute</button>
+			<button @click=${ () => this.delayedExecute() }>Execute</button>
 			<button @click=${ this.clearContent }>Clear</button>
 		</div>
 

@@ -101,7 +101,7 @@ export class MonacoEditorCmp extends LitElement {
 
 		const resolveablePromise = promise as Promise<any> & {
 			resolve: (value?: any) => void;
-			done: boolean;
+			done:    boolean;
 		};
 		resolveablePromise.resolve = () => {
 			resolveablePromise.done = true;
@@ -112,10 +112,10 @@ export class MonacoEditorCmp extends LitElement {
 		return resolveablePromise;
 	})();
 
-	protected internals: ElementInternals;
-	protected disposables: monaco.IDisposable[] = [];
+	protected internals:        ElementInternals;
+	protected disposables:      monaco.IDisposable[] = [];
 	protected disposableModels: monaco.IDisposable[] = [];
-	protected monacoRef: Ref<HTMLDivElement> = createRef();
+	protected monacoRef:        Ref<HTMLDivElement> = createRef();
 	protected resizeObs = new ResizeObserver(([ entry ]) => {
 		const rect = entry!.contentRect;
 		this.editor?.layout({ height: rect.height, width: rect.width });

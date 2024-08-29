@@ -1,9 +1,8 @@
-import type mdIt from 'markdown-it';
-
 import { stringRepeat } from '../helpers/string-repeat.js';
+import type { PluginWithOptions } from 'markdown-it';
 
 
-export const tabReplacePlugin: mdIt.PluginWithOptions<{tabWidth: number}> = (md, options) => {
+export const tabReplacePlugin: PluginWithOptions<{ tabWidth: number }> = (md, options) => {
 	// default to being two spaces wide
 	const tabWidth: number = options?.tabWidth ?? 2;
 

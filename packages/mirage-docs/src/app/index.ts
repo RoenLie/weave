@@ -1,7 +1,5 @@
-/* eslint-disable simple-import-sort/exports */
 /* eslint-disable max-len */
 /* auto generated */
-export type { LoadedEditor, Loader, LoaderPromise } from './utilities/monaco.js';
 export type { NameReplacement } from './utilities/name-replacement.js';
 export type { TreeRecord } from './utilities/paths-to-tree.js';
 export { Icon, xIcon, sunIcon, moonIcon, listIcon, chevronRightIcon, chevronUpIcon, chevronDownIcon, spinningCircleIcon } from './components/layout/icons.js';
@@ -24,7 +22,6 @@ export { MiDocHeaderCmp } from './components/page/page-header.js';
 export { anchorSnatcher } from './utilities/anchor-snatcher.js';
 export { replaceInName } from './utilities/name-replacement.js';
 export { createSearchWorker } from './workers/search-worker.js';
-export { createTSWorker } from './workers/typescript-worker.js';
 export { componentStyles } from './styles/component.styles.js';
 export { markdownStyles } from './styles/markdown.styles.js';
 export { unpkgReplace } from './utilities/unpkg-replace.js';
@@ -32,5 +29,4 @@ export { pathsToTree } from './utilities/paths-to-tree.js';
 export { buttonStyle } from './styles/button.styles.js';
 export { inputStyle } from './styles/input.styles.js';
 export { debounce } from './utilities/debounce.js';
-export { monaco } from './utilities/monaco.js';
 export { drag } from './utilities/drag.js';
