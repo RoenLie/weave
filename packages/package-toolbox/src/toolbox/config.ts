@@ -14,12 +14,13 @@ export const loadConfig = async (filePath: string) => {
 	const fileUrl = `${ pathToFileURL(fileBase) }${ ext }`;
 
 	await build({
-		logLevel: 'silent',
-		build:    {
+		configFile: false,
+		logLevel:   'silent',
+		build:      {
 			outDir:      '.',
 			emptyOutDir: false,
 			lib:         {
-				entry:    '',
+				entry:    filePath,
 				formats:  [ 'es' ],
 				fileName: () => fileNameTmp,
 			},
