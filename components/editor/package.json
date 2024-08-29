@@ -23,7 +23,8 @@
 		"build": "pnpm run --sequential \"/^build::.+/\"",
 		"build::js": "vite build",
 		"build::ts": "tsc --project ./src/tsconfig.build.json",
-		"build::ts-bundle": "api-extractor run --local"
+		"build::ts-bundle": "api-extractor run --local",
+		"increment-version": "pkg-toolbox increment-version"
 	},
 	"devDependencies": {
 		"lit": "^3.1.3",
