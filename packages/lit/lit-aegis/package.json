@@ -47,7 +47,6 @@
 	},
 	"dependencies": {
 		"@roenlie/core": "workspace:*",
-		"@roenlie/mirage-docs": "workspace:*",
 		"@roenlie/reflect-metadata": "workspace:*",
 		"deepmerge-ts": "^7.0.0",
 		"inversify": "^6.0.2",

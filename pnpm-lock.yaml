@@ -682,9 +682,6 @@ importers:
       '@roenlie/core':
         specifier: workspace:*
         version: link:../../core
-      '@roenlie/mirage-docs':
-        specifier: workspace:*
-        version: link:../../mirage-docs
       '@roenlie/reflect-metadata':
         specifier: workspace:*
         version: link:../../reflect-metadata
@@ -701,6 +698,9 @@ importers:
         specifier: ^2.6.3
         version: 2.7.0
     devDependencies:
+      '@roenlie/mirage-docs':
+        specifier: workspace:*
+        version: link:../../mirage-docs
       vite:
         specifier: ^5.3.3
         version: 5.4.2(@types/node@22.5.1)(lightningcss@1.26.0)(terser@5.31.6)
