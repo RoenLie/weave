@@ -42,8 +42,7 @@
 		"build::js": "vite build",
 		"build::ts": "tsc --project ./src/tsconfig.json",
 		"build::cleanup": "rimraf dist/.tsbuildinfo",
-		"updatedeps": "pnpm update --latest",
-		"increment-version": "pkg-toolbox increment-version"
+		"prepublishOnly": "pkg-toolbox increment-version"
 	},
 	"dependencies": {
 		"@roenlie/core": "workspace:^",
