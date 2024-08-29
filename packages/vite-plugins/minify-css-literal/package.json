@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/vite-plugin-minify-css-literal",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"description": "Minifies css literals.",
 	"license": "MIT",
 	"author": {
@@ -36,9 +36,9 @@
 		"magic-string": "^0.30.11"
 	},
 	"devDependencies": {
-		"@roenlie/eslint-config": "workspace:*",
-		"@roenlie/package-toolbox": "workspace:*",
-		"@roenlie/tsconfig": "workspace:*",
+		"@roenlie/eslint-config": "workspace:^",
+		"@roenlie/package-toolbox": "workspace:^",
+		"@roenlie/tsconfig": "workspace:^",
 		"@types/babel__traverse": "^7.20.6",
 		"lit": "^3.1.4",
 		"rollup": "^4.18.0",

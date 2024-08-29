@@ -21,7 +21,7 @@
 	"dependencies": {
 		"tslib": "^2.7.0",
 		"lit": "3.2.0",
-		"@roenlie/mirage-docs": "workspace:*"
+		"@roenlie/mirage-docs": "workspace:^"
 	},
 	"devDependencies": {
 		"vite": "^5.4.2"

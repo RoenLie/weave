@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/lit-localize",
-	"version": "99.99.99",
+	"version": "1.0.0",
 	"description": "A lightweight and reactive localization package, with a focus on use with LIT web components.",
 	"author": {
 		"name": "Kristoffer Roen-Lie",
@@ -43,7 +43,7 @@
 		"increment-version": "pkg-toolbox increment-version --placeholder 99.99.99"
 	},
 	"dependencies": {
-		"@roenlie/core": "workspace:*"
+		"@roenlie/core": "workspace:^"
 	},
 	"peerDependencies": {
 		"lit": "^3.1.3",

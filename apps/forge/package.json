@@ -10,17 +10,17 @@
 	},
 	"dependencies": {
 		"@lit-labs/preact-signals": "^1.0.2",
-		"@roenlie/lit-aegis": "workspace:*",
-		"@roenlie/lit-utilities": "workspace:*",
-		"@roenlie/core": "workspace:*",
-		"@roenlie/elements": "workspace:*",
+		"@roenlie/lit-aegis": "workspace:^",
+		"@roenlie/lit-utilities": "workspace:^",
+		"@roenlie/core": "workspace:^",
+		"@roenlie/elements": "workspace:^",
 		"lit": "3.1.4",
-		"posix-path-browser": "workspace:*",
+		"posix-path-browser": "workspace:^",
 		"quill": "2.0.2",
 		"tslib": "^2.6.2",
 		"typescript": "^5.4.5"
 	},
 	"devDependencies": {
-		"@roenlie/vite-plugin-import-css-sheet": "workspace:*"
+		"@roenlie/vite-plugin-import-css-sheet": "workspace:^"
 	}
 }

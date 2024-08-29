@@ -8,9 +8,9 @@
 		"lint": "turbo lint"
 	},
 	"devDependencies": {
-		"@roenlie/eslint-config": "workspace:*",
-		"@roenlie/package-toolbox": "workspace:*",
-		"@roenlie/tsconfig": "workspace:*",
+		"@roenlie/eslint-config": "workspace:^",
+		"@roenlie/package-toolbox": "workspace:^",
+		"@roenlie/tsconfig": "workspace:^",
 		"@types/node": "^22.5.0",
 		"rimraf": "^6.0.1",
 		"typescript": "^5.5.2",

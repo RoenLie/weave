@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/planner-client",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"description": "Spiritual successor to Absence.",
 	"private": true,
 	"main": "./dist/lib/index.js",
@@ -27,11 +27,11 @@
 		"@floating-ui/dom": "^1.2.6",
 		"@lit-labs/context": "^0.5.1",
 		"@lukeed/uuid": "^2.0.1",
-		"@roenlie/lit-router": "workspace:*",
-		"@roenlie/lit-utilities": "workspace:*",
-		"@roenlie/core": "workspace:*",
-		"@roenlie/planner-entities": "workspace:*",
-		"@roenlie/reflect-metadata": "workspace:*",
+		"@roenlie/lit-router": "workspace:^",
+		"@roenlie/lit-utilities": "workspace:^",
+		"@roenlie/core": "workspace:^",
+		"@roenlie/planner-entities": "workspace:^",
+		"@roenlie/reflect-metadata": "workspace:^",
 		"deepmerge-ts": "^7.0.3",
 		"fast-equals": "^5.0.1",
 		"inversify": "^6.0.1",
@@ -43,7 +43,7 @@
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^8.4.1",
-		"@roenlie/package-toolbox": "workspace:*",
+		"@roenlie/package-toolbox": "workspace:^",
 		"dotenv": "^16.0.3",
 		"vite": "^5.3.2"
 	}

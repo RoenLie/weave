@@ -36,9 +36,9 @@
 		"package:local": "pnpm pack --pack-destination ../../_packages/"
 	},
 	"dependencies": {
-		"@roenlie/monaco-editor-wc": "workspace:*",
-		"@roenlie/lit-aegis": "workspace:*",
-		"@roenlie/core": "workspace:*",
+		"@roenlie/monaco-editor-wc": "workspace:^",
+		"@roenlie/lit-aegis": "workspace:^",
+		"@roenlie/core": "workspace:^",
 		"@custom-elements-manifest/analyzer": "^0.10.2",
 		"@orama/orama": "2.0.23",
 		"@orama/plugin-data-persistence": "2.0.23",

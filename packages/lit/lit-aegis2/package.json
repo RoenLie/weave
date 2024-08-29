@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "@roenlie/lit-aegis2",
-	"version": "99.99.99",
+	"version": "1.0.0",
 	"contributors": [
 		{
 			"name": "Kristoffer Roen-Lie"
@@ -29,16 +29,16 @@
 	"sideEffects": true,
 	"scripts": {},
 	"peerDependencies": {
-		"@roenlie/core": "workspace:*",
-		"@roenlie/reflect-metadata": "workspace:*",
+		"@roenlie/core": "workspace:^",
+		"@roenlie/reflect-metadata": "workspace:^",
 		"deepmerge-ts": "*",
 		"inversify": "*",
 		"lit": "*",
 		"tslib": "*"
 	},
 	"devDependencies": {
-		"@roenlie/core": "workspace:*",
-		"@roenlie/reflect-metadata": "workspace:*",
+		"@roenlie/core": "workspace:^",
+		"@roenlie/reflect-metadata": "workspace:^",
 		"deepmerge-ts": "^7.1.0",
 		"inversify": "^6.0.2",
 		"lit": "^3.1.4",

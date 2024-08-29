@@ -8,7 +8,7 @@
 		"dist"
 	],
 	"license": "MIT",
-	"version": "1.0.7",
+	"version": "1.0.0",
 	"type": "module",
 	"types": "./dist/monaco-editor-wc.d.ts",
 	"main": "./dist/index.js",

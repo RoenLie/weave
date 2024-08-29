@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/vite-plugin-import-css-sheet",
-	"version": "99.99.99",
+	"version": "1.0.0",
 	"description": "Small plugin that enables the use of tc39/proposal-import-attributes for css files in vite.",
 	"license": "MIT",
 	"author": {
@@ -32,9 +32,9 @@
 		"vite": ">=5.3.3"
 	},
 	"devDependencies": {
-		"@roenlie/eslint-config": "workspace:*",
-		"@roenlie/package-toolbox": "workspace:*",
-		"@roenlie/tsconfig": "workspace:*",
+		"@roenlie/eslint-config": "workspace:^",
+		"@roenlie/package-toolbox": "workspace:^",
+		"@roenlie/tsconfig": "workspace:^",
 		"lit": "^3.1.4",
 		"rollup": "^4.18.0",
 		"tslib": "^2.6.2",

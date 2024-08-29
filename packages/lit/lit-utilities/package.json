@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/lit-utilities",
-	"version": "99.99.99",
+	"version": "1.0.0",
 	"description": "Extensions and utilities for the LIT framework.",
 	"author": {
 		"name": "Kristoffer Roen-Lie",
@@ -60,7 +60,7 @@
 	},
 	"dependencies": {
 		"@floating-ui/dom": "^1.6.4",
-		"@roenlie/core": "workspace:*",
+		"@roenlie/core": "workspace:^",
 		"fast-equals": "^5.0.1",
 		"nanoid": "^5.0.7",
 		"lit": "^3.1.3"

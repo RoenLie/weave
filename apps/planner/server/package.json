@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/planner-server",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"description": "",
 	"author": "Kristoffer Roen-Lie",
 	"private": true,
@@ -23,9 +23,9 @@
 		"@nestjs/core": "^10.3.10",
 		"@nestjs/platform-express": "^10.3.10",
 		"@nestjs/throttler": "^5.2.0",
-		"@roenlie/core": "workspace:*",
-		"@roenlie/planner-entities": "workspace:*",
-		"@roenlie/reflect-metadata": "workspace:*",
+		"@roenlie/core": "workspace:^",
+		"@roenlie/planner-entities": "workspace:^",
+		"@roenlie/reflect-metadata": "workspace:^",
 		"dotenv": "^16.0.3",
 		"nanoid": "^5.0.7",
 		"rxjs": "^7.2.0",
@@ -35,6 +35,6 @@
 		"@nestjs/cli": "^10.4.0",
 		"@nestjs/schematics": "^10.1.2",
 		"@nestjs/testing": "^10.3.10",
-		"@roenlie/package-toolbox": "workspace:*"
+		"@roenlie/package-toolbox": "workspace:^"
 	}
 }

@@ -14,12 +14,12 @@
 		"bootstrap-icons": "^1.11.3",
 		"lit": "^3.1.4",
 		"tslib": "^2.6.3",
-		"@roenlie/core": "workspace:*",
-		"@roenlie/lit-aegis": "workspace:*"
+		"@roenlie/core": "workspace:^",
+		"@roenlie/lit-aegis": "workspace:^"
 	},
 	"devDependencies": {
 		"vite": "^5.3.1",
-		"@roenlie/vite-plugin-import-css-sheet": "workspace:*",
+		"@roenlie/vite-plugin-import-css-sheet": "workspace:^",
 		"vite-plugin-mkcert": "^1.17.5"
 	}
 }

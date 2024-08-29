@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/clock",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"author": "Kristoffer Roen-Lie",
 	"license": "MIT",
 	"description": "",
@@ -16,17 +16,17 @@
 		"typecheck": "tsc --project ./tsconfig.json"
 	},
 	"dependencies": {
-		"@roenlie/lit-fabric": "workspace:*",
-		"@roenlie/lit-utilities": "workspace:*",
-		"@roenlie/core": "workspace:*",
-		"@roenlie/elements": "workspace:*",
+		"@roenlie/lit-fabric": "workspace:^",
+		"@roenlie/lit-utilities": "workspace:^",
+		"@roenlie/core": "workspace:^",
+		"@roenlie/elements": "workspace:^",
 		"lit": "^3.1.4",
 		"tslib": "^2.6.2"
 	},
 	"devDependencies": {
-		"@roenlie/eslint-config": "workspace:*",
-		"@roenlie/package-toolbox": "workspace:*",
-		"@roenlie/tsconfig": "workspace:*",
+		"@roenlie/eslint-config": "workspace:^",
+		"@roenlie/package-toolbox": "workspace:^",
+		"@roenlie/tsconfig": "workspace:^",
 		"dotenv": "^16.3.1",
 		"vite": "^5.3.2"
 	}
