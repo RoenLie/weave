@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import { glob } from 'node:fs/promises';
 import type { PackageJson } from '../types/package-json.js';
+import { dirname } from 'node:path';
 
 
 const nameToPathMap = new Map<string, string>();
@@ -25,6 +26,16 @@ const ensurePackageLookup = async () => {
 		nameToPathMap.set(json.name, path);
 		nameToContentMap.set(json.name, json);
 	}
+};
+
+export const getPackageDir = async (packageName: string) => {
+	await ensurePackageLookup();
+
+	const packagePath = nameToPathMap.get(packageName);
+	if (!packagePath)
+		return;
+
+	return dirname(packagePath);
 };
 
 

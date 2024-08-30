@@ -3,7 +3,9 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "tsx ./scripts/build-package.ts @roenlie/package-toolbox && tsx ./scripts/publish-package.ts"
+		"build-toolbox": "tsx ./scripts/build-package.ts @roenlie/package-toolbox",
+		"build": "pnpm build-toolbox && tsx ./scripts/build-package.ts",
+		"release": "pnpm build-toolbox && tsx ./scripts/publish-package.ts"
 	},
 	"devDependencies": {
 		"@roenlie/eslint-config": "workspace:^",
