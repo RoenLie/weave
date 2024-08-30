@@ -103,7 +103,7 @@ export class PageAdapter extends Adapter {
 			padding-bottom: 200px;
 		}
 		.markdown-body pre {
-			border: 1px solid var(--midoc-surface-variant);
+			border: 1px solid var(--midoc-outline);
 		}
 		.markdown-body pre code {
 			font-family: var(--code-font);

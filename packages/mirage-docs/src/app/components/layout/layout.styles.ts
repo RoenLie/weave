@@ -52,7 +52,7 @@ ${ buttonStyle('.theme-toggle button', 40, 18) }
 	padding: 12px;
 	background-color: var(--midoc-surface);
 	color: var(--midoc-tertiary);
-	border: 1px solid var(--midoc-surface-variant);
+	border: 1px solid var(--midoc-outline);
 	border-radius: 8px;
 }
 :host(.nav--closed) midoc-sidebar {

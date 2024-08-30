@@ -252,7 +252,7 @@ export class MiDocMetadataViewerCmp extends LitElement {
 		.base {
 			background-color: var(--midoc-background);
 			color: var(--midoc-on-surface);
-			border: 1px solid var(--midoc-surface-variant);
+			border: 1px solid var(--midoc-outline);
 			border-radius: var(--midoc-border-radius-s);
 			padding: 12px;
 		}
@@ -308,7 +308,7 @@ export class MiDocMetadataViewerCmp extends LitElement {
 		.cssprop-body__row .prop-type p,
 		.cssprop-body__row .prop-default p {
 			padding: 4px 4px;
-			background-color: var(--midoc-surface-variant);
+			background-color: var(--midoc-outline);
 			border-radius: 6px;
 			line-height: 1em;
 			font-size: 0.8em;
@@ -337,7 +337,7 @@ export class MiDocMetadataViewerCmp extends LitElement {
 		}
 		.prop-body__row,
 		.cssprop-body__row {
-			border-top: 1px solid var(--midoc-surface-variant);
+			border-top: 1px solid var(--midoc-outline);
 		}
 
 		.cssprop-body__header,

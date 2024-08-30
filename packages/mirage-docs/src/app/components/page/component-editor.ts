@@ -49,7 +49,7 @@ export class EsComponentEditor extends EsSourceEditor {
 			height: auto;
 		}
 		.resizer {
-			border-top: 1px solid var(--midoc-surface-variant);
+			border-top: 1px solid var(--midoc-outline);
 		}
 		`,
 	];

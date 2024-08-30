@@ -331,6 +331,7 @@ export class GlobalSearchAdapter extends Adapter {
 			gap: 12px;
 			background-color: var(--midoc-surface);
 			border-radius: var(--midoc-border-radius-s);
+			border: 1px solid var(--midoc-outline);
 		}
 		.input-icon {
 			padding: 6px;

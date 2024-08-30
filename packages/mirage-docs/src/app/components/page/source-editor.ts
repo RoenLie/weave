@@ -158,13 +158,13 @@ export class EsSourceEditor extends LitElement {
 			margin: 5px;
 			gap: 8px;
 			border-radius: var(--midoc-border-radius-s);
-			border: 1px solid var(--midoc-surface-variant);
+			border: 1px solid var(--midoc-outline);
 		}
 		.editor-section {
 			display: grid;
 			grid-template-columns: 1fr auto 1fr;
 			gap: 8px;
-			border-bottom: 1px solid var(--midoc-surface-variant);
+			border-bottom: 1px solid var(--midoc-outline);
 			overflow: hidden;
 			resize: vertical;
 			height: 500px;
@@ -173,7 +173,7 @@ export class EsSourceEditor extends LitElement {
 			cursor: ew-resize;
 			display: grid;
 			place-items: center;
-			border: 1px solid var(--midoc-surface-variant);
+			border: 1px solid var(--midoc-outline);
 			border-top: none;
 			border-bottom: none;
 		}
