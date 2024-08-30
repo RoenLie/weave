@@ -79,12 +79,19 @@ export const getPackageBuildOrder = async (packageName: string) => {
 		deps: [],
 	};
 
-	traverseBreadth(rootNode);
+	createNodeTree(rootNode);
 	const dependencies = traverseUpwards(rootNode);
 
-	return [ ...dependencies ];
+	const flat = dependencies.reduceRight((acc, cur) => {
+		cur.forEach(dep => acc.add(dep));
 
-	function traverseBreadth(node: Node) {
+		return acc;
+	}, new Set<string>());
+
+
+	return [ ...flat ];
+
+	function createNodeTree(node: Node) {
 		const visitedNodes = new WeakSet<Node>();
 		const nodeQueue: Node[] = [ node ];
 		while (nodeQueue.length) {
@@ -110,17 +117,21 @@ export const getPackageBuildOrder = async (packageName: string) => {
 
 	function traverseUpwards(
 		node: Node,
-		dependencies = new Set<string>(),
+		dependencies: string[][] = [],
 		visitedNodes = new WeakSet<Node>(),
+		depth = 0,
 	) {
 		if (visitedNodes.has(node) && visitedNodes.add(node))
 			return dependencies;
 
 		if (node.deps.length) {
 			for (const child of node.deps)
-				traverseUpwards(child, dependencies, visitedNodes);
+				traverseUpwards(child, dependencies, visitedNodes, depth + 1);
 		}
 
-		return dependencies.add(node.name);
+		const arr = dependencies[depth] ?? (dependencies[depth] = []);
+		arr.push(node.name);
+
+		return dependencies;
 	}
 };
