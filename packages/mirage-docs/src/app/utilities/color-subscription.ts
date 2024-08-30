@@ -28,7 +28,7 @@ export const updateScheme = () => {
 		const themeLink = document.createElement('link');
 		themeLink.id = 'theme-' + i;
 		themeLink.rel = 'stylesheet';
-		themeLink.href = cfg.env.base + '/' +  href;
+		themeLink.href = (cfg.env.base + '/' + href).replace(/\/{2}/g, '/');
 		document.head.appendChild(themeLink);
 	});
 
