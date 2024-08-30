@@ -27,6 +27,6 @@ jobs:
         run: pnpm install
 
       - name: Build dependencies, project and publish package.
-        run: pnpm build @roenlie/eslint-config --publish
+        run: pnpm release @roenlie/eslint-config --publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

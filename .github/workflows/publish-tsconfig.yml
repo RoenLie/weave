@@ -27,6 +27,6 @@ jobs:
         run: pnpm install
 
       - name: Build dependencies, project and publish package.
-        run: pnpm build @roenlie/tsconfig-config --publish
+        run: pnpm release @roenlie/tsconfig-config --publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
