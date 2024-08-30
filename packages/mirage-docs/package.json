@@ -31,9 +31,7 @@
 		"build": "pnpm run --sequential \"/^build:.+/\"",
 		"build:server": "vite build --config ./vite.config.ts",
 		"build:workers": "vite build --config ./vite-workers.config.ts",
-		"build:types": "tsc --project ./src/app/tsconfig.json && tsc --project ./src/server/tsconfig.json",
-		"increment-version": "pkg-toolbox increment-version",
-		"package:local": "pnpm pack --pack-destination ../../_packages/"
+		"build:types": "tsc --project ./src/app/tsconfig.json && tsc --project ./src/server/tsconfig.json"
 	},
 	"dependencies": {
 		"@roenlie/monaco-editor-wc": "workspace:^",
@@ -61,9 +59,7 @@
 	"devDependencies": {
 		"@types/markdown-it": "^14.1.1",
 		"@types/sharedworker": "^0.0.123",
-		"bootstrap-icons": "^1.11.3",
-		"vitest": "^2.0.5",
-		"vite": "^5.4.2"
+		"bootstrap-icons": "^1.11.3"
 	},
 	"sideEffects": []
 }

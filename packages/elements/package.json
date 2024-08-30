@@ -118,9 +118,7 @@
 		"build:prepare": "rimraf dist",
 		"build:index": "pkg-toolbox build-indexes",
 		"build:types": "tsc --project ./src/tsconfig.json",
-		"typecheck": "tsc --project ./tsconfig.json",
-		"updatedeps": "pnpm update --latest",
-		"increment-version": "pkg-toolbox increment-version --placeholder 99.99.99"
+		"typecheck": "tsc --project ./tsconfig.json"
 	},
 	"dependencies": {
 		"@floating-ui/dom": "^1.6.4",
@@ -135,10 +133,6 @@
 		"@faker-js/faker": "^8.4.1",
 		"@roenlie/elements": "workspace:^",
 		"@roenlie/mirage-docs": "workspace:^",
-		"@roenlie/vite-plugin-import-css-sheet": "workspace:^",
-		"vite": "^5.3.3"
-	},
-	"vaadin": {
-		"disableUsageStatistics": true
+		"@roenlie/vite-plugin-import-css-sheet": "workspace:^"
 	}
 }

@@ -14,13 +14,16 @@ export const mergeTSConfig = (config: string, outFile: string) => {
 
 	const tsConfig = getTSConfigFromPath(entrypointPath);
 	if (!tsConfig)
-		throw new Error('Could not get initial tsconfig. ' + entrypointPath);
+		return console.error('Could not get initial tsconfig. ' + entrypointPath);
 
 	const tsConfigChain: TSConfig[] = [ tsConfig ];
 
 	let currentTsConfig: TSConfig | undefined = tsConfig;
 	while (currentTsConfig?.extends) {
 		currentTsConfig = getTSConfigFromModule(currentTsConfig.extends);
+		if (!currentTsConfig)
+			break;
+
 		tsConfigChain.unshift(currentTsConfig);
 	}
 

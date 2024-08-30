@@ -1,14 +1,14 @@
 name: Publish eslint config
 
 on:
-   # Runs on pushes targeting the default branch
-   push:
-     paths:
-      - 'packages/eslint-config/**'
-     branches: ["publish"]
+  # Runs on pushes targeting the default branch
+  push:
+    paths:
+      - "packages/eslint-config/**"
+    branches: ["publish"]
 
-   # Allows you to run this workflow manually from the Actions tab
-   workflow_dispatch:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   publish-npm:
@@ -26,19 +26,7 @@ jobs:
       - name: Install dependencies.
         run: pnpm install
 
-      - name: Build package toolbox.
-        run: |
-         cd packages/package-toolbox
-         pnpm build
-
-      - name: Change package version
-        run: |
-          cd packages/eslint-config
-          pnpm pkg-toolbox increment-version
-
-      - name: Publish
-        run: |
-          cd packages/eslint-config
-          pnpm publish --access public --no-git-checks
+      - name: Build dependencies, project and publish package.
+        run: pnpm build @roenlie/eslint-config --publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

@@ -1,8 +1,8 @@
 name: Planner - Build and deploy server package as an Azure App Service.
 
 on:
-   # Allows you to run this workflow manually from the Actions tab
-   workflow_dispatch:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   build:

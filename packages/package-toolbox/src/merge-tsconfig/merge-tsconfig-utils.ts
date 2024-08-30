@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 
@@ -81,7 +81,10 @@ export interface TSConfig extends Record<string, any> {
 }
 
 
-const getTSConfig = (path: string) => {
+const getTSConfig = (path: string): TSConfig | undefined => {
+	if (!existsSync(path))
+		return;
+
 	const raw = readFileSync(path, { encoding: 'utf-8' });
 	const processed = raw
 		.replaceAll(/\/\/.*/g, '')
@@ -99,7 +102,7 @@ const getTSConfig = (path: string) => {
 		console.error('Could not parse tsconfig. ' + path);
 		console.error(error);
 
-		return {};
+		return;
 	}
 };
 

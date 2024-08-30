@@ -8,9 +8,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"preview": "vite preview",
 		"build": "vite build",
-		"updatedeps": "pnpm update --latest --interactive",
 		"typecheck": "tsc --project ./src/tsconfig.json"
 	},
 	"repository": {
@@ -43,8 +41,6 @@
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^8.4.1",
-		"@roenlie/package-toolbox": "workspace:^",
-		"dotenv": "^16.0.3",
-		"vite": "^5.3.2"
+		"dotenv": "^16.0.3"
 	}
 }

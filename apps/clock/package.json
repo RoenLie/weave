@@ -10,9 +10,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"preview": "vite preview",
 		"build": "vite build",
-		"updatedeps": "pnpm update --latest --interactive",
 		"typecheck": "tsc --project ./tsconfig.json"
 	},
 	"dependencies": {
@@ -24,10 +22,6 @@
 		"tslib": "^2.6.2"
 	},
 	"devDependencies": {
-		"@roenlie/eslint-config": "workspace:^",
-		"@roenlie/package-toolbox": "workspace:^",
-		"@roenlie/tsconfig": "workspace:^",
-		"dotenv": "^16.3.1",
-		"vite": "^5.3.2"
+		"dotenv": "^16.3.1"
 	}
 }

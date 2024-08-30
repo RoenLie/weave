@@ -1,14 +1,14 @@
 name: Publish package-toolbox
 
 on:
-   # Runs on pushes targeting the default branch
-   push:
-      paths:
-       - 'packages/package-toolbox/**'
-      branches: ["publish"]
+  # Runs on pushes targeting the default branch
+  push:
+    paths:
+      - "packages/package-toolbox/**"
+    branches: ["publish"]
 
-   # Allows you to run this workflow manually from the Actions tab
-   workflow_dispatch:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   publish-npm:
@@ -28,24 +28,7 @@ jobs:
       - name: Install dependencies.
         run: pnpm install
 
-      - name: Build complete project.
-        run: |
-         cd packages/package-toolbox
-         pnpm build
-
-      - name: Change package version.
-        run: |
-         cd packages/package-toolbox
-         pnpm increment-version
-
-      - name: Merge tsconfig.
-        run: |
-         cd packages/package-toolbox
-         pnpm merge-tsconfig
-
-      - name: Publish package.
-        run: |
-         cd packages/package-toolbox
-         pnpm publish --access public --no-git-checks
+      - name: Build dependencies, project and publish package.
+        run: pnpm build @roenlie/package-toolbox --publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

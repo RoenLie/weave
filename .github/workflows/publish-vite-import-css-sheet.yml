@@ -1,14 +1,14 @@
 name: Publish vite-import-css-sheet
 
 on:
-   # Runs on pushes targeting the default branch
-   push:
-     paths:
-      - 'packages/vite-plugins/import-css-sheet/**'
-     branches: ["publish"]
+  # Runs on pushes targeting the default branch
+  push:
+    paths:
+      - "packages/vite-plugins/import-css-sheet/**"
+    branches: ["publish"]
 
-   # Allows you to run this workflow manually from the Actions tab
-   workflow_dispatch:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   publish-npm:
@@ -26,29 +26,7 @@ jobs:
       - name: Install dependencies.
         run: pnpm install
 
-      - name: Build package toolbox.
-        run: |
-         cd packages/package-toolbox
-         pnpm build
-
-      - name: Build package.
-        run: |
-         cd packages/vite-plugins/import-css-sheet
-         pnpm build
-
-      - name: Change package version.
-        run: |
-         cd packages/vite-plugins/import-css-sheet
-         pnpm increment-version
-
-      - name: Merge tsconfig.
-        run: |
-         cd packages/vite-plugins/import-css-sheet
-         pnpm merge-tsconfig
-
-      - name: Publish package.
-        run: |
-         cd packages/vite-plugins/import-css-sheet
-         pnpm publish --access public --no-git-checks
+      - name: Build dependencies, project and publish package.
+        run: pnpm build @roenlie/vite-plugin-import-css-sheet --publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

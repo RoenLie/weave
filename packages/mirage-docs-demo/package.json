@@ -15,16 +15,12 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build",
-		"preview": "vite preview",
-		"updatedeps": "pnpm update --latest"
+		"build": "vite build"
 	},
 	"dependencies": {
 		"tslib": "^2.7.0",
 		"lit": "3.2.0",
 		"@roenlie/mirage-docs": "workspace:^"
 	},
-	"devDependencies": {
-		"vite": "^5.4.2"
-	}
+	"devDependencies": {}
 }

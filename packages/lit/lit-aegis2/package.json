@@ -31,10 +31,10 @@
 	"peerDependencies": {
 		"@roenlie/core": "workspace:^",
 		"@roenlie/reflect-metadata": "workspace:^",
-		"deepmerge-ts": "*",
-		"inversify": "*",
-		"lit": "*",
-		"tslib": "*"
+		"deepmerge-ts": "^7.1.0",
+		"inversify": "^6.0.2",
+		"lit": "^3.1.4",
+		"tslib": "^2.6.3"
 	},
 	"devDependencies": {
 		"@roenlie/core": "workspace:^",

@@ -47,16 +47,12 @@
 		"./filesystem/*": "./dist/filesystem/*"
 	},
 	"scripts": {
-		"lint": "eslint src --fix",
 		"build": "pnpm run --sequential \"/^build::.*/\"",
 		"build::prepare": "rimraf dist",
 		"build::js1": "vite build",
 		"build::index": "node ./bin/index.js build-indexes",
 		"build::js2": "vite build",
-		"build::types": "tsc --project ./src/tsconfig.json",
-		"update:deps": "pnpm update --latest --interactive",
-		"merge-tsconfig": "node ./bin/index.js merge-tsconfig --config ./src/tsconfig.json",
-		"increment-version": "node ./bin/index.js increment-version"
+		"build::types": "tsc --project ./src/tsconfig.json"
 	},
 	"dependencies": {
 		"colorette": "^2.0.20",

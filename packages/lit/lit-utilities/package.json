@@ -54,9 +54,7 @@
 		"build": "pnpm build:prepare && pnpm build:index && pnpm build:types && vite build",
 		"build:prepare": "rimraf dist",
 		"build:index": "pkg-toolbox build-indexes",
-		"build:types": "tsc --project ./src/tsconfig.json",
-		"updatedeps": "pnpm update --latest",
-		"increment-version": "pkg-toolbox increment-version --placeholder 99.99.99"
+		"build:types": "tsc --project ./src/tsconfig.json"
 	},
 	"dependencies": {
 		"@floating-ui/dom": "^1.6.4",

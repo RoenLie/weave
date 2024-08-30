@@ -1,14 +1,14 @@
-name: Publish Mirage-MDE
+name: Publish mirage-mde
 
 on:
-   # Runs on pushes targeting the default branch
-   push:
-     paths:
-      - 'packages/mirage-mde/**'
-     branches: ["publish"]
+  # Runs on pushes targeting the default branch
+  push:
+    paths:
+      - "packages/mirage-mde/**"
+    branches: ["publish"]
 
-   # Allows you to run this workflow manually from the Actions tab
-   workflow_dispatch:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   publish-npm:
@@ -31,22 +31,7 @@ jobs:
       - name: Install workspace dependencies.
         run: pnpm install
 
-      - name: Build complete project.
-        run: pnpm build
-
-      - name: Change package version
-        run: |
-         cd packages/mirage-mde
-         pnpm increment-version
-
-      - name: Merge tsconfig
-        run: |
-         cd packages/mirage-mde
-         pnpm merge-tsconfig
-
-      - name: Publish to NPM
+      - name: Build dependencies, project and publish package.
+        run: pnpm build @roenlie/mirage-mde --publish
         env:
-         NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-        run: |
-         cd packages/mirage-mde
-         pnpm publish --access public --no-git-checks
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

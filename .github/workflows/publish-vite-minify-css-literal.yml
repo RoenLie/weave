@@ -1,14 +1,14 @@
 name: Publish vite-minify-css-literal
 
 on:
-   # Runs on pushes targeting the default branch
-   push:
-     paths:
-      - 'packages/vite-plugins/minify-css-literal/**'
-     branches: ["publish"]
+  # Runs on pushes targeting the default branch
+  push:
+    paths:
+      - "packages/vite-plugins/minify-css-literal/**"
+    branches: ["publish"]
 
-   # Allows you to run this workflow manually from the Actions tab
-   workflow_dispatch:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   publish-npm:
@@ -26,29 +26,7 @@ jobs:
       - name: Install dependencies.
         run: pnpm install
 
-      - name: Build package toolbox.
-        run: |
-         cd packages/package-toolbox
-         pnpm build
-
-      - name: Build package.
-        run: |
-         cd packages/vite-plugins/minify-css-literal
-         pnpm build
-
-      - name: Change package version.
-        run: |
-         cd packages/vite-plugins/minify-css-literal
-         pnpm increment-version
-
-      - name: Merge tsconfig.
-        run: |
-         cd packages/vite-plugins/minify-css-literal
-         pnpm merge-tsconfig
-
-      - name: Publish package.
-        run: |
-         cd packages/vite-plugins/minify-css-literal
-         pnpm publish --access public --no-git-checks
+      - name: Build dependencies, project and publish package.
+        run: pnpm build @roenlie/vite-plugin-minify-css-literal --publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
