@@ -307,35 +307,6 @@ export class GlobalSearchAdapter extends Adapter {
 		:host {
 			display: block;
 		}
-		:host([color-scheme="dark"]) {
-			--button-border-color: rgb(50,50,50);
-			--button-background-color: rgb(30,35,35);
-			--button-box-shadow-color: rgb(30 30 30);
-
-			--hotkey-border-color: rgb(50, 50, 50);
-			--hotkey-background-color: rgb(30,30,30);
-
-			--dialog-border-color: rgb(50,50,50);
-			--dialog-background-color: rgb(30,35,35);
-
-			--item-border-color: rgb(50, 50, 50);
-			--item-background-color: rgb(30,30,30);
-		}
-		:host([color-scheme="light"]) {
-			--button-border-color: rgb(50,50,50);
-			--button-background-color: rgb(240,240,240);
-			--button-box-shadow-color: rgb(30 30 30);
-
-			--hotkey-border-color: rgb(50, 50, 50);
-			--hotkey-background-color: rgb(230,230,230);
-
-			--dialog-border-color: rgb(50,50,50);
-			--dialog-background-color: rgb(240,240,240);
-
-			--item-border-color: rgb(50, 50, 50);
-			--item-background-color: rgb(230,230,230);
-		}
-
 		button.button {
 			user-select: none;
 			display: flex;
@@ -345,13 +316,11 @@ export class GlobalSearchAdapter extends Adapter {
 			height: max-content;
 			gap: 8px;
 			padding: 8px;
-			border: 1px solid var(--button-border-color);
 			border-radius: 6px;
-			background-color: var(--button-background-color);
-			box-shadow: 0px 0px 4px var(--button-box-shadow-color);
+			background-color: var(--midoc-surface);
 		}
 		button.button:hover {
-			outline: 1px solid orange;
+			outline: 1px solid var(--midoc-outline1);
 			outline-offset: 2px;
 			cursor: pointer;
 		}
@@ -360,17 +329,13 @@ export class GlobalSearchAdapter extends Adapter {
 			grid-template-columns: 1fr max-content;
 			align-items: center;
 			gap: 12px;
+			background-color: var(--midoc-surface);
+			border-radius: var(--midoc-border-radius-s);
 		}
 		.input-icon {
 			padding: 6px;
 			cursor: pointer;
 			border: 1px solid transparent;
-		}
-		.input-icon:hover {
-			box-shadow: 0px 0px 3px rgb(50,50,50);
-			border-radius: 8px;
-			border-color: var(--item-border-color);
-			background-color: var(--item-background-color);
 		}
 		.icon {
 			display: grid;
@@ -386,12 +351,10 @@ export class GlobalSearchAdapter extends Adapter {
 		}
 		.hotkey {
 			padding: 3px;
-			border: 1px solid grey;
+			border: 1px solid var(--midoc-outline);
 			border-radius: 4px;
 
 			line-height: 1em;
-			border: 1px solid var(--hotkey-border-color);
-			background-color: var(--hotkey-background-color);
 			border-radius: 4px;
 			font-size: 0.7em;
 			padding-inline: 4px;
@@ -399,13 +362,13 @@ export class GlobalSearchAdapter extends Adapter {
 			font-weight: bold;
 		}
 		dialog.search {
-			color: var(--midoc-on-background);
-			border-radius: var(--midoc-border-radius-s);
-			border: 1px solid var(--dialog-border-color);
-			background-color: var(--dialog-background-color);
 			margin-top: 50px;
 			width: clamp(400px, 50vw, 600px);
-    		height: clamp(400px, 70vh, 600px);
+			height: clamp(400px, 70vh, 600px);
+			background-color: var(--midoc-surface1);
+			color: var(--midoc-on-background);
+			border-color: var(--midoc-outline1);
+			border-radius: var(--midoc-border-radius-s);
 		}
 		dialog .base {
 			height: 100%;
@@ -415,7 +378,6 @@ export class GlobalSearchAdapter extends Adapter {
 		}
 		dialog .results {
 			display: grid;
-			border: 1px solid var(--item-border-color);
 			padding: 8px;
 			border-radius: 6px;
 			overflow: auto;
@@ -430,11 +392,14 @@ export class GlobalSearchAdapter extends Adapter {
 			padding-block: 8px;
 			padding-inline: 8px;
 			border-radius: 8px;
-			border: 1px solid var(--item-border-color);
-			background-color: var(--item-background-color);
-		}
-		.results ul li.active {
-			border-color: orange;
+			border: 1px solid transparent;
+			&:hover {
+				background-color: var(--midoc-surface);
+			}
+			&.active {
+				background-color: var(--midoc-surface);
+				border-color: var(--midoc-outline);
+			}
 		}
 		.results ul li a {
 			text-decoration: none;
@@ -450,7 +415,6 @@ export class GlobalSearchAdapter extends Adapter {
 		dialog input {
 			all: unset;
 			background-color: transparent;
-			border: 1px solid var(--item-border-color);
 			border-radius: 6px;
 			padding: 8px;
 		}

@@ -16,26 +16,26 @@ import { typingsTemplate } from './generators/typings-template.js';
 
 
 export interface ConfigProperties {
-	base: string;
-	root: string;
-	source: string;
+	base:     string;
+	root:     string;
+	source:   string;
 	tagDirs?: {
-		path: string;
+		path:       string;
 		whitelist?: RegExp[];
 		blacklist?: RegExp[];
 	}[];
-	input?: string[];
-	autoImport?: AutoImportPluginProps;
-	siteConfig?: UserSiteConfig;
+	input?:          string[];
+	autoImport?:     AutoImportPluginProps;
+	siteConfig?:     UserSiteConfig;
 	/** @default 500ms */
 	hmrReloadDelay?: number | false;
-	debug?: boolean;
+	debug?:          boolean;
 }
 
 
 export type InternalConfigProperties = Omit<Required<ConfigProperties>, 'autoImport' | 'siteConfig'> & {
 	autoImport?: AutoImportPluginProps;
-	siteConfig: SiteConfig;
+	siteConfig:  SiteConfig;
 };
 
 

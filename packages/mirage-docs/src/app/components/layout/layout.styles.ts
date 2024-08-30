@@ -18,6 +18,8 @@ export const layoutStyles = css`
 	display: grid;
 	grid-template-columns: auto 1fr auto;
 	grid-template-rows: auto;
+	border-bottom: 1px solid var(--midoc-outline);
+	margin-inline: 8px;
 }
 .header >* {
 	display: inline-flex;
@@ -35,11 +37,6 @@ ${ buttonStyle('.theme-toggle button', 40, 18) }
 	border-radius: 999px;
 	overflow: hidden;
 }
-.nav-toggle:focus-visible,
-.theme-toggle:focus-visible {
-	outline: 2px solid var(--midoc-tertiary-hover);
-	outline-offset: -2px;
-}
 .scrollback {
 	position: fixed;
 	bottom: 25px;
@@ -53,10 +50,10 @@ ${ buttonStyle('.theme-toggle button', 40, 18) }
 	place-self: center;
 	font-size: 50px;
 	padding: 12px;
+	background-color: var(--midoc-surface);
 	color: var(--midoc-tertiary);
 	border: 1px solid var(--midoc-surface-variant);
 	border-radius: 8px;
-	background-color: var(--midoc-background);
 }
 :host(.nav--closed) midoc-sidebar {
 	width: 0vw;
@@ -65,7 +62,8 @@ midoc-sidebar {
 	transition: width 0.3s ease;
 	width: 250px;
 	grid-area: sidebar;
-	border-right: 1px solid var(--midoc-surface-variant);
+	border-right: var(--midoc-sidebar-border);
+	background-color: var(--midoc-sidebar-bg);
 }
 main {
 	position: relative;

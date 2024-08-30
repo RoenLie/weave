@@ -9,6 +9,16 @@ import { anchorSnatcher } from '../../utilities/anchor-snatcher.js';
 import { subscribeToColorChange } from '../../utilities/color-subscription.js';
 
 
+@customElement('midoc-page')
+export class PageElement extends AegisComponent {
+
+	constructor() {
+		super(PageAdapter);
+	}
+
+}
+
+
 export class PageAdapter extends Adapter {
 
 	//#region properties
@@ -107,15 +117,5 @@ export class PageAdapter extends Adapter {
 		this.styles.push(unsafeCSS(style));
 	}
 	//#endregion
-
-}
-
-
-@customElement('midoc-page')
-export class PageElement extends AegisComponent {
-
-	constructor() {
-		super(PageAdapter);
-	}
 
 }

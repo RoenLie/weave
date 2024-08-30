@@ -190,9 +190,9 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 			grid-auto-flow: column;
 			grid-auto-columns: max-content;
 			gap: 8px;
-			padding-block: 16px;
-			padding-inline: 1rem 0.5rem;
-			color: var(--midoc-on-surface-variant);
+			padding-block: 8px;
+			margin-inline: 1rem 0.5rem;
+			border-bottom: 1px solid var(--midoc-outline);
 		}
 		.greeting picture {
 			display: grid;
@@ -214,11 +214,6 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 			padding-inline-end: 4px
 		}
 		${ buttonStyle('button.toggle', 30, 20) }
-		.toggle-wrapper button:focus-visible {
-			outline: 2px solid var(--midoc-tertiary-hover);
-			outline-offset: -2px;
-		}
-
 		${ inputStyle('input.search') }
 
 		.menu-wrapper {

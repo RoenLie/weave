@@ -4,9 +4,7 @@
 
 html,
 body {
-	font-family: "Roboto", "Open Sans", "Helvetica", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-		"Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-		sans-serif;
+	font-family: var(--midoc-font-family);
 	font-size: 16px;
 }
 
@@ -18,8 +16,8 @@ body {
 	height: 100vh;
 	overflow-x: hidden;
 	box-sizing: border-box;
-	color: var(--midoc-on-background, white);
-	background-color: var(--midoc-background, transparent);
+	color: var(--midoc-on-background);
+	background-color: var(--midoc-background);
 	--scrollbar-width: 4px;
 	--scrollbar-height: 4px;
 }
@@ -42,22 +40,3 @@ body {
 *::-webkit-scrollbar-corner {
 	background: var(--scrollbar-corner, var(--scrollbar-track, inherit));
 }
-
-/* setup for a checkers background */
-/*body {
-	--checkers-line-color: rgb(50, 50, 50);
-	--checkers-line-size: 30px;
-	--checkers-overlay-color-from: rgb(25, 25, 25);
-	--checkers-overlay-color-to: rgb(25, 25, 25);
-
-	background:
-		repeating-linear-gradient(to right, transparent,
-			transparent 25px,
-			var(--checkers-line-color) 25px,
-			var(--checkers-line-color) var(--checkers-line-size)),
-		repeating-linear-gradient(to bottom, transparent,
-			transparent 25px,
-			var(--checkers-line-color) 25px,
-			var(--checkers-line-color) var(--checkers-line-size)),
-		linear-gradient(45deg, var(--checkers-overlay-color-from), var(--checkers-overlay-color-to));
-}*/

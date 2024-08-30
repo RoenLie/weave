@@ -14,6 +14,7 @@ import {
 import { layoutStyles } from './layout.styles.js';
 import { SidebarCmp } from './sidebar.cmp.js';
 import { waitForPromises } from '@roenlie/core/async';
+import { updateScheme } from '../../utilities/color-subscription.js';
 
 SidebarCmp.register();
 GlobalSearchCmp.register();
@@ -38,6 +39,7 @@ export class LayoutAdapter extends Adapter {
 	public override connectedCallback(): void {
 		this.handleHashChange();
 		this.handleNavToggle(true);
+
 		this.handleColorSchemeToggle(true);
 
 		this.updateComplete.then(() => {
@@ -195,6 +197,7 @@ export class LayoutAdapter extends Adapter {
 
 		document.documentElement.setAttribute('color-scheme', nextTheme);
 		localStorage.setItem('midocColorScheme', nextTheme);
+		updateScheme();
 
 		if (this.frameQry) {
 			const contentWindow   = this.frameQry.contentWindow;

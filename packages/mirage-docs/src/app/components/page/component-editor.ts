@@ -7,7 +7,7 @@ import type { SiteConfig } from '../../../shared/config.types.js';
 import { EsSourceEditor } from './source-editor.js';
 
 
-@customElement('docs-component-editor')
+@customElement('midoc-component-editor')
 export class EsComponentEditor extends EsSourceEditor {
 
 	protected override willUpdate(_changedProperties: PropertyValues): void {
@@ -24,7 +24,7 @@ export class EsComponentEditor extends EsSourceEditor {
 					this.content = html``;
 					await this.updateComplete;
 					this.content = html`
-					<docs-editor-scratchpad .mixins=${ mixins }></docs-editor-scratchpad>
+					<midoc-editor-scratchpad .mixins=${ mixins }></midoc-editor-scratchpad>
 					`;
 				}
 				catch (error) {
@@ -64,7 +64,7 @@ export class EsComponentEditor extends EsSourceEditor {
 }
 
 
-@customElement('docs-editor-scratchpad')
+@customElement('midoc-editor-scratchpad')
 export class EsEditorScratchpad extends LitElement {
 
 	//#region properties

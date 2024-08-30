@@ -3,10 +3,10 @@ import { fileExt } from '../build/helpers/is-dev-mode.js';
 
 
 export const indexPageTemplate = (props: {
-	moduleId: string;
+	moduleId:     string;
 	siteConfigId: string;
-	styleLinks: SiteConfig['pages']['styles'];
-	scriptLinks: SiteConfig['pages']['scripts'];
+	styleLinks:   SiteConfig['pages']['styles'];
+	scriptLinks:  SiteConfig['pages']['scripts'];
 }) => {
 	interface HeadTemplate { template: string; order: number; }
 

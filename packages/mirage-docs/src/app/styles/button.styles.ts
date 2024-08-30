@@ -24,4 +24,8 @@ ${ unsafeCSS(selector) }:hover::after {
 	background-color: var(--midoc-tertiary-hover);
 	border-radius: inherit;
 }
+${ unsafeCSS(selector) }:focus-visible {
+	outline: 2px solid var(--midoc-outline1);
+	outline-offset: -2px;
+}
 `;

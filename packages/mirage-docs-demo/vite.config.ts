@@ -9,14 +9,18 @@ export default defineDocConfig(
 			source:     '/src/pages',
 			siteConfig: {
 				root: {
-					layout: {
+					darkTheme:  [ 'root-dark.css' ],
+					lightTheme: [ 'root-light.css' ],
+					layout:     {
 						headingText: 'Mirage Docs',
 						logoHeight:  '40px',
 						logoSrc:     'logo.svg',
 					},
 				},
 				pages: {
-					scripts: [
+					darkTheme:  [ 'dark.css' ],
+					lightTheme: [ 'light.css' ],
+					scripts:    [
 						{
 							src: '/bootstrap-page.ts',
 						},

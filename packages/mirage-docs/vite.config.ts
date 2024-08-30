@@ -26,9 +26,10 @@ export default defineConfig(async (): Promise<UserConfig> => {
 		},
 		build: {
 			outDir,
-			minify:    false,
-			sourcemap: true,
-			lib:       {
+			emptyOutDir: true,
+			minify:      false,
+			sourcemap:   true,
+			lib:         {
 				entry:   input,
 				formats: [ 'es' ],
 			},

@@ -29,6 +29,7 @@
 	"scripts": {
 		"test": "vitest --config ./tests/vite.config.ts",
 		"build": "pnpm run --sequential \"/^build:.+/\"",
+		"build:indexes": "pkg-toolbox build-indexes",
 		"build:server": "vite build --config ./vite.config.ts",
 		"build:workers": "vite build --config ./vite-workers.config.ts",
 		"build:types": "tsc --project ./src/app/tsconfig.json && tsc --project ./src/server/tsconfig.json"

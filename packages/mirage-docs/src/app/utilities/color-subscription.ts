@@ -12,25 +12,33 @@ export const subscribeToColorChange = (element: LitElement) => {
 };
 
 
-const updateScheme = () => {
-	const { darkTheme, lightTheme } = ContainerLoader.get<SiteConfig>('site-config').pages;
+export const updateScheme = () => {
+	const cfg = ContainerLoader.get<SiteConfig>('site-config');
+
 	const mode = document.documentElement.getAttribute('color-scheme') ?? 'dark';
-	const schemeLink = document.head.querySelector<HTMLLinkElement>('link#color-scheme');
-	const href = (mode === 'dark' ? darkTheme : lightTheme) ?? '';
+	const obj = window.top === window ? cfg.root : cfg.pages;
+	const themeHrefs = mode === 'dark'
+		? obj.darkTheme
+		: obj.lightTheme;
 
-	if (!schemeLink) {
-		const schemeLink = document.createElement('link');
-		Object.assign(schemeLink, { id: 'color-scheme', rel: 'stylesheet', href });
-		document.head.appendChild(schemeLink);
-	}
-	else {
-		schemeLink.href = href;
-	}
+	const existingThemes = document.querySelectorAll('link[rel="stylesheet"][id^="theme-"]');
+	existingThemes.forEach(link => link.remove());
 
-	subscribers.forEach(ref => {
-		const el = ref.deref();
-		!el ? subscribers.delete(ref) : el?.requestUpdate();
+	themeHrefs.forEach((href, i) => {
+		const themeLink = document.createElement('link');
+		themeLink.id = 'theme-' + i;
+		themeLink.rel = 'stylesheet';
+		themeLink.href = cfg.env.base + '/' +  href;
+		document.head.appendChild(themeLink);
 	});
+
+	if (window.top !== window)  {
+		// Request an update for all subscribed elements
+		subscribers.forEach(ref => {
+			const el = ref.deref();
+			!el ? subscribers.delete(ref) : el?.requestUpdate();
+		});
+	}
 };
 
 

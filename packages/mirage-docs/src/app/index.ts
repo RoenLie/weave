@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { NameReplacement } from './utilities/name-replacement.js';
 export type { TreeRecord } from './utilities/paths-to-tree.js';
@@ -7,12 +7,12 @@ export { findDocumentOrShadowRoot, elementHasAncestor, elementHasDescendant, fin
 export { isGroupingSegment, createSegmentedPath, segmentComparer } from './utilities/segments.js';
 export { GlobalSearchAdapter, GlobalSearchCmp } from './components/layout/global-search.cmp.js';
 export { EsComponentEditor, EsEditorScratchpad } from './components/page/component-editor.js';
-export { PathTreeAdapter, PathTreeCmp } from './components/layout/path-tree.cmp.js';
-export { SidebarAdapter, SidebarCmp } from './components/layout/sidebar.cmp.js';
+export { subscribeToColorChange, updateScheme } from './utilities/color-subscription.js';
+export { PathTreeCmp, PathTreeAdapter } from './components/layout/path-tree.cmp.js';
+export { SidebarCmp, SidebarAdapter } from './components/layout/sidebar.cmp.js';
 export { MiDocMetadataViewerCmp } from './components/page/metadata-viewer.js';
 export { LayoutAdapter, LayoutCmp } from './components/layout/layout.cmp.js';
-export { PageAdapter, PageElement } from './components/page/page-element.js';
-export { subscribeToColorChange } from './utilities/color-subscription.js';
+export { PageElement, PageAdapter } from './components/page/page-element.js';
 export { editorComponent } from './components/page/editor-component.js';
 export { navigateToUrl, updateSearchParams } from './utilities/uri.js';
 export { layoutStyles } from './components/layout/layout.styles.js';

@@ -72,6 +72,8 @@ export const defineDocConfig = async (
 					base:     props.base,
 				},
 				root: {
+					darkTheme:     [],
+					lightTheme:    [],
 					styleImports:  [],
 					scriptImports: [],
 					layout:        {
@@ -99,8 +101,8 @@ export const defineDocConfig = async (
 					},
 				},
 				pages: {
-					darkTheme:  '',
-					lightTheme: '',
+					darkTheme:  [],
+					lightTheme: [],
 					styles:     [],
 					scripts:    [],
 				},
@@ -172,8 +174,6 @@ export const defineDocConfig = async (
 			throw new Error('Mirage Docs does not support: rollupOptions => output as an Array.');
 
 		mergedConfig.build.rollupOptions.output.manualChunks = (id) => {
-			if (id.includes('monaco-editor'))
-				return 'monaco-editor';
 			if (id.endsWith('siteconfig.ts'))
 				return 'site-config';
 		};

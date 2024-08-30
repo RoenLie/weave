@@ -14,6 +14,8 @@ import { MonacoEditorCmp } from '@roenlie/monaco-editor-wc';
 @customElement('docs-source-editor')
 export class EsSourceEditor extends LitElement {
 
+	public static refs = [ MonacoEditorCmp ];
+
 	//#region state
 	@property({ type: String })                            public source: string;
 	@property({ type: Number, attribute: 'max-height' })   public maxHeight = Infinity;

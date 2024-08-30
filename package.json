@@ -1,6 +1,6 @@
 {
-	"name": "weave",
 	"private": true,
+	"name": "weave-workspace",
 	"type": "module",
 	"scripts": {
 		"build-toolbox": "tsx ./scripts/build-package.ts @roenlie/package-toolbox",
@@ -17,9 +17,5 @@
 		"typescript": "^5.5.2",
 		"vite": "^5.4.2",
 		"vitest": "^2.0.5"
-	},
-	"packageManager": "pnpm@9.0.6",
-	"engines": {
-		"node": ">=20"
 	}
 }

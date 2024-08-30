@@ -1,4 +1,4 @@
-import { join, normalize, resolve } from 'path';
+import { join, normalize } from 'path';
 
 
 //const sourcePath = 'C:/Devstuff/PersonalProjects/mirage-docs/docpages/pages';

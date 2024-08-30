@@ -1,1 +1,66 @@
-@import url(tokens.css);
+/* general tokens */
+:root {
+	--midoc-font-family: "Roboto", "Open Sans", "Helvetica", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+		"Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+		sans-serif;
+
+	--midoc-border-radius-s: 4px;
+	--midoc-border-radius-m: 8px;
+
+	--midoc-spacing-xxs: 4px;
+	--midoc-spacing-xs: 8px;
+	--midoc-spacing-s: 12px;
+	--midoc-spacing-m: 16px;
+	--midoc-spacing-l: 20px;
+	--midoc-spacing-xl: 24px;
+	--midoc-spacing-xxl: 60px;
+
+	--midoc-surface-drag: rgba(25, 28, 26, 0.25);
+	--midoc-surface-press: rgba(25, 28, 26, 0.20);
+	--midoc-surface-hover: rgba(25, 28, 26, 0.15);
+
+	--midoc-tertiary-drag: rgba(162, 205, 218, 0.25);
+	--midoc-tertiary-press: rgba(162, 205, 218, 0.20);
+	--midoc-tertiary-hover: rgba(162, 205, 218, 0.15);
+	--midoc-tertiary-active: rgba(162, 205, 218, 0.10);
+
+	--midoc-on-tertiary-drag: rgba(3, 54, 64, 0.25);
+	--midoc-on-tertiary-press: rgba(3, 54, 64, 0.20);
+	--midoc-on-tertiary-hover: rgba(3, 54, 64, 0.15);
+
+	--midoc-sidebar-bg: var(--midoc-surface);
+	--midoc-page-bg: var(--midoc-surface1);
+	--midoc-sidebar-border: 1px solid var(--midoc-outline);
+}
+
+/* dark mode */
+:where(:root[color-scheme="dark"]) {
+	--midoc-background: #1b1b1f;
+	--midoc-on-background: #ffffff;
+
+	--midoc-surface: #161618;
+	--midoc-surface1: #202127;
+
+	--midoc-outline: #2e2e32;
+	--midoc-outline1: rgb(from orange r g b / 0.5);
+
+	--midoc-primary: #238636;
+
+	--midoc-tertiary: #a8b1ff;
+}
+
+/* light mode */
+:where(:root[color-scheme="light"]) {
+	--midoc-background: #ffffff;
+	--midoc-on-background: #000000;
+
+	--midoc-surface: #ffffff;
+	--midoc-surface1: #ffffff;
+
+	--midoc-outline: #303030;
+	--midoc-outline1: #252525;
+
+	--midoc-primary: #238636;
+
+	--midoc-tertiary: #000000;
+}

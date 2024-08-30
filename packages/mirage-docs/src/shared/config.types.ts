@@ -1,5 +1,5 @@
 interface SrcTag {
-	src: string;
+	src:    string;
 	order?: number | 'pre' | 'post';
 }
 
@@ -11,38 +11,40 @@ type DeepPartial<T extends Record<keyof any, any>> = {
 
 export interface SiteConfig {
 	root: {
-		styleImports: SrcTag[];
+		darkTheme:     string[];
+		lightTheme:    string[];
+		styleImports:  SrcTag[];
 		scriptImports: SrcTag[];
 		layout: {
-			logoSrc: string;
-			logoHeight: string;
+			logoSrc:     string;
+			logoHeight:  string;
 			headingText: string;
 		};
 		sidebar: {
 			nameReplacements: [from: string, to: string][];
-			delimiter: string;
+			delimiter:        string;
 		};
 		styleOverrides: {
-			layout: string;
-			sidebar: string;
-			pathTree: string;
-			metadata: string;
-			cmpEditor: string;
-			pageHeader: string;
+			layout:       string;
+			sidebar:      string;
+			pathTree:     string;
+			metadata:     string;
+			cmpEditor:    string;
+			pageHeader:   string;
 			sourceEditor: string;
 			pageTemplate: string;
 		},
 	},
 	pages: {
-		styles: SrcTag[];
-		scripts: SrcTag[];
-		darkTheme: string;
-		lightTheme: string;
+		styles:     SrcTag[];
+		scripts:    SrcTag[];
+		darkTheme:  string[];
+		lightTheme: string[];
 	}
 	env: {
-		base: string;
-		libDir: string;
-		rootDir: string;
+		base:     string;
+		libDir:   string;
+		rootDir:  string;
 		entryDir: string;
 	}
 }
