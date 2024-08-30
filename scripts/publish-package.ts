@@ -19,14 +19,14 @@ for (const cmd of buildOrder)
 
 
 console.log('Merging tsconfig.json files...');
-execPromise(`cd ${ packageDir } && pkg-toolbox merge-tsconfig --config ./src/tsconfig.json`);
+await execPromise(`cd ${ packageDir } && pkg-toolbox merge-tsconfig --config ./src/tsconfig.json`);
 
 
 console.log('Incrementing package version...');
-execPromise(`cd ${ packageDir } && pkg-toolbox increment-version`);
+await execPromise(`cd ${ packageDir } && pkg-toolbox increment-version`);
 
 
 if (publish) {
 	console.log('Publishing package...');
-	execPromise(`cd ${ packageDir } && pnpm publish --access public --no-git-checks`);
+	await execPromise(`cd ${ packageDir } && pnpm publish --access public --no-git-checks`);
 }

@@ -7,8 +7,8 @@
 			"node"
 		]
 	},
-	"exclude": [
-		"node_modules",
-		"dist",
-	]
+	"include": [
+		"scripts",
+		"vitest.workspace.js"
+	],
 }
