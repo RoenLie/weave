@@ -18,9 +18,7 @@ PathTreeCmp.register();
 @customElement('midoc-sidebar')
 export class SidebarCmp extends AegisComponent {
 
-	constructor() {
-		super(SidebarAdapter);
-	}
+	constructor() { super(SidebarAdapter); }
 
 }
 
@@ -122,16 +120,16 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 
 	//#region template
 	public override render() {
-		const base = this.siteConfig.env!.base;
-		const layoutCfg = this.siteConfig.root!.layout!;
+		const base = this.siteConfig.env.base;
+		const layoutCfg = this.siteConfig.root.layout;
 
 		return html`
 			<div class="greeting">
 				${ when(layoutCfg.logoSrc, () => html`
 				<picture>
 					<img
-						height=${ layoutCfg.logoHeight! }
-						src=${ (base ? base + '/' : '') + layoutCfg.logoSrc }
+						height=${ layoutCfg.logoHeight }
+						src=${ (base + '/' + layoutCfg.logoSrc).replaceAll(/\/{2,}/g, '/') }
 						alt="Logo"
 					/>
 				</picture>
@@ -190,7 +188,7 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 			grid-auto-flow: column;
 			grid-auto-columns: max-content;
 			gap: 8px;
-			padding-block: 8px;
+			padding-block: 12px;
 			margin-inline: 1rem 0.5rem;
 			border-bottom: 1px solid var(--midoc-outline);
 		}
