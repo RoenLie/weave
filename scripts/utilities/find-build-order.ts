@@ -74,12 +74,9 @@ export const getPackageBuildOrder = async (packageName: string) => {
 		return [];
 	}
 
-	const rootNode: Node = {
-		name: rootPkg.name,
-		deps: [],
-	};
-
+	const rootNode: Node = { name: rootPkg.name, deps: [] };
 	createNodeTree(rootNode);
+
 	const dependencies = traverseUpwards(rootNode);
 
 	const flat = dependencies.reduceRight((acc, cur) => {

@@ -13,15 +13,15 @@ import { getPkgDepsMap } from './resolve-pkg-deps.js';
 
 
 export interface LiveTsImportsConfig {
-	importMeta: ImportMeta;
-	server: HTTPServer | HTTPSServer;
-	app: express.Express;
-	packages: string[];
-	client?: {path: string, dir: string}[];
-	vendorDir?: string;
+	importMeta:  ImportMeta;
+	server:      HTTPServer | HTTPSServer;
+	app:         express.Express;
+	packages:    string[];
+	client?:     { path: string, dir: string }[];
+	vendorDir?:  string;
 	clientPath?: string;
 	vendorPath?: string;
-	dev?: boolean;
+	dev?:        boolean;
 }
 
 
