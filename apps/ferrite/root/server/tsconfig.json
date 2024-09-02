@@ -1,0 +1,16 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"outDir": "out",
+		"noEmit": true,
+		"emitDeclarationOnly": false,
+		"types": ["node"]
+	},
+	"include": [
+		"**/*.ts",
+		"**/*.d.ts"
+	],
+	"exclude": [
+		"node_modules",
+	]
+}
