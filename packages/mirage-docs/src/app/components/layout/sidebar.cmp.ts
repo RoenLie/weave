@@ -184,16 +184,16 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 		}
 		.greeting {
 			display: grid;
-			place-items: center;
-			grid-auto-flow: column;
-			grid-auto-columns: max-content;
-			gap: 8px;
-			padding-block: 12px;
+			grid-template-columns: max-content 1fr;
+			align-items: center;
+			gap: 12px;
+			min-height: 56px;
+			padding-block: 8px;
 			margin-inline: 1rem 0.5rem;
 			border-bottom: 1px solid var(--midoc-outline);
 		}
-		.greeting picture {
-			display: grid;
+		.greeting picture, .greeting img {
+			height: 100%;
 		}
 		.greeting .title {
 			font-size: 22px;

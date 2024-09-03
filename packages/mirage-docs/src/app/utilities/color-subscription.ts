@@ -12,24 +12,64 @@ export const subscribeToColorChange = (element: LitElement) => {
 };
 
 
-export const updateScheme = () => {
+export const getColorScheme = () => {
+	const localTheme = localStorage.getItem('midocColorScheme') ?? 'dark';
+	const currentTheme = document.documentElement.getAttribute('color-scheme') ?? localTheme;
+
+	return currentTheme;
+};
+
+
+export const setColorScheme = (theme: string) => {
+	localStorage.setItem('midocColorScheme', theme);
+	document.documentElement.setAttribute('color-scheme', theme);
+
+	updateColorSchemeLinks();
+};
+
+
+export const ensureColorScheme = () => {
+	const currentTheme = getColorScheme();
+	setColorScheme(currentTheme);
+};
+
+
+export const toggleColorScheme = () => {
+	const localTheme = localStorage.getItem('midocColorScheme') ?? 'dark';
+	const currentTheme = document.documentElement.getAttribute('color-scheme') ?? localTheme;
+	const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+	setColorScheme(nextTheme);
+
+	return nextTheme;
+};
+
+
+export const updateColorSchemeLinks = () => {
 	const cfg = ContainerLoader.get<SiteConfig>('site-config');
 
-	const mode = document.documentElement.getAttribute('color-scheme') ?? 'dark';
+	const mode = getColorScheme();
 	const obj = window.top === window ? cfg.root : cfg.pages;
 	const themeHrefs = mode === 'dark'
 		? obj.darkTheme
 		: obj.lightTheme;
 
-	const existingThemes = document.querySelectorAll('link[rel="stylesheet"][id^="theme-"]');
-	existingThemes.forEach(link => link.remove());
+	const existingThemes = Array.from(document
+		.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"][id^="theme-"]'));
 
-	themeHrefs.forEach((href, i) => {
-		const themeLink = document.createElement('link');
-		themeLink.id = 'theme-' + i;
-		themeLink.rel = 'stylesheet';
-		themeLink.href = (cfg.env.base + '/' + href).replaceAll(/\/{2,}/g, '/');
-		document.head.appendChild(themeLink);
+	existingThemes.forEach(link => link.disabled = true);
+	themeHrefs.forEach(href => {
+		let themeLink = existingThemes.find(link => link.href.endsWith(href));
+		if (themeLink) {
+			themeLink.disabled = false;
+		}
+		else {
+			themeLink = document.createElement('link');
+			themeLink.id = 'theme-' + Math.random().toString(36).slice(5);
+			themeLink.rel = 'stylesheet';
+			themeLink.href = (cfg.env.base + '/' + href).replaceAll(/\/{2,}/g, '/');
+			document.head.appendChild(themeLink);
+		}
 	});
 
 	if (window.top !== window)  {
@@ -44,15 +84,15 @@ export const updateScheme = () => {
 
 declare global {
 	interface Window {
-		updateColorScheme: typeof updateScheme
-	}
-
-	interface Document {
-		updateColorScheme: typeof updateScheme
+		updateColorSchemeLinks: typeof updateColorSchemeLinks;
+		ensureColorScheme:      typeof ensureColorScheme;
+		setColorScheme:         typeof setColorScheme;
 	}
 }
 
 
 Object.assign(window, {
-	updateColorScheme: updateScheme,
+	updateColorSchemeLinks,
+	ensureColorScheme,
+	setColorScheme,
 });

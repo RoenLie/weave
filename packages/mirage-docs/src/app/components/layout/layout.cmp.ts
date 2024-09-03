@@ -14,10 +14,20 @@ import {
 import { layoutStyles } from './layout.styles.js';
 import { SidebarCmp } from './sidebar.cmp.js';
 import { waitForPromises } from '@roenlie/core/async';
-import { updateScheme } from '../../utilities/color-subscription.js';
+import { toggleColorScheme } from '../../utilities/color-subscription.js';
 
 SidebarCmp.register();
 GlobalSearchCmp.register();
+
+
+@customElement('midoc-layout')
+export class LayoutCmp extends AegisComponent {
+
+	constructor() {
+		super(LayoutAdapter);
+	}
+
+}
 
 
 export class LayoutAdapter extends Adapter {
@@ -39,8 +49,6 @@ export class LayoutAdapter extends Adapter {
 	public override connectedCallback(): void {
 		this.handleHashChange();
 		this.handleNavToggle(true);
-
-		this.handleColorSchemeToggle(true);
 
 		this.updateComplete.then(() => {
 			window.addEventListener('message', (ev) => {
@@ -67,18 +75,10 @@ export class LayoutAdapter extends Adapter {
 	protected handleFrameLoad = () => {
 		Object.assign(this.frameQry.style, { opacity: 1 });
 
-		const currentTheme = document.documentElement.getAttribute('color-scheme') ?? 'dark';
-
 		if (this.frameQry) {
 			const contentWindow   = this.frameQry.contentWindow;
-			const documentElement = this.frameQry.contentDocument?.documentElement;
-
-			if (documentElement)
-				documentElement.setAttribute('color-scheme', currentTheme);
 
 			if (contentWindow) {
-				contentWindow?.updateColorScheme?.();
-
 				const scrollVal = Number(localStorage.getItem('pageScrollValue') ?? 0);
 				contentWindow.scrollTo(0, scrollVal);
 
@@ -131,10 +131,7 @@ export class LayoutAdapter extends Adapter {
 			const routes = ContainerLoader.get<string[]>('routes');
 
 			hash = routes[0] ?? '';
-			history.pushState({}, '', base + '#' + hash);
-			dispatchEvent(new HashChangeEvent('hashchange'));
-
-			return;
+			history.replaceState({}, '', base + '#' + hash);
 		}
 
 		if (this.activeFrame === (hash + '.html'))
@@ -147,7 +144,8 @@ export class LayoutAdapter extends Adapter {
 	};
 
 	protected startFrameReload = async () => {
-		console.clear();
+		if (ContainerLoader.get<SiteConfig>('site-config').root.layout.clearLogOnReload)
+			console.clear();
 
 		await waitForPromises(this.transitionSet);
 
@@ -177,6 +175,7 @@ export class LayoutAdapter extends Adapter {
 			const { base, libDir } = ContainerLoader.get<SiteConfig>('site-config').env;
 			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
 			frame.src = [ base, libDir, this.activeFrame ].join('/').replaceAll(/\/+/g, '/');
+			frame.classList.toggle('active', true);
 
 			this.frameQry.replaceWith(frame);
 			this.frameQry.addEventListener('load', this.handleFrameLoad, { once: true });
@@ -187,27 +186,11 @@ export class LayoutAdapter extends Adapter {
 		}
 	};
 
-	protected handleColorSchemeToggle(reset?: boolean) {
-		const localTheme = localStorage.getItem('midocColorScheme') ?? 'dark';
-		const currentTheme = document.documentElement.getAttribute('color-scheme') ?? localTheme;
-		let nextTheme = currentTheme;
+	protected handleColorSchemeToggle() {
+		const theme = toggleColorScheme();
 
-		if (!reset)
-			nextTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-		document.documentElement.setAttribute('color-scheme', nextTheme);
-		localStorage.setItem('midocColorScheme', nextTheme);
-		updateScheme();
-
-		if (this.frameQry) {
-			const contentWindow   = this.frameQry.contentWindow;
-			const documentElement = this.frameQry.contentDocument?.documentElement;
-
-			documentElement?.setAttribute('color-scheme', nextTheme);
-			contentWindow?.updateColorScheme?.();
-		}
-
-		this.requestUpdate();
+		if (this.frameQry)
+			this.frameQry.contentWindow?.setColorScheme(theme);
 	}
 
 	protected handleHotkeyPress = (ev: KeyboardEvent) => {
@@ -287,7 +270,10 @@ export class LayoutAdapter extends Adapter {
 			</div>
 
 			<section>
-				<iframe src=${ this.activeFrame ? base + this.activeFrame : '' }></iframe>
+				<iframe
+					class=${ classMap({ active: !!this.activeFrame }) }
+					src=${ this.activeFrame ? base + this.activeFrame : '' }
+				></iframe>
 			</section>
 
 			${ when(this.loading, () => html`
@@ -323,16 +309,6 @@ export class LayoutAdapter extends Adapter {
 		this.styles.push(unsafeCSS(style));
 	}
 	//#endregion
-
-}
-
-
-@customElement('midoc-layout')
-export class LayoutCmp extends AegisComponent {
-
-	constructor() {
-		super(LayoutAdapter);
-	}
 
 }
 

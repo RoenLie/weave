@@ -2,16 +2,16 @@
 /* auto generated */
 export type { NameReplacement } from './utilities/name-replacement.js';
 export type { TreeRecord } from './utilities/paths-to-tree.js';
+export { subscribeToColorChange, getColorScheme, setColorScheme, ensureColorScheme, toggleColorScheme, updateColorSchemeLinks } from './utilities/color-subscription.js';
 export { Icon, xIcon, sunIcon, moonIcon, listIcon, chevronRightIcon, chevronUpIcon, chevronDownIcon, spinningCircleIcon } from './components/layout/icons.js';
 export { findDocumentOrShadowRoot, elementHasAncestor, elementHasDescendant, findActiveElement } from './utilities/domquery.js';
 export { isGroupingSegment, createSegmentedPath, segmentComparer } from './utilities/segments.js';
 export { GlobalSearchAdapter, GlobalSearchCmp } from './components/layout/global-search.cmp.js';
 export { EsComponentEditor, EsEditorScratchpad } from './components/page/component-editor.js';
-export { subscribeToColorChange, updateScheme } from './utilities/color-subscription.js';
 export { PathTreeCmp, PathTreeAdapter } from './components/layout/path-tree.cmp.js';
 export { SidebarCmp, SidebarAdapter } from './components/layout/sidebar.cmp.js';
 export { MiDocMetadataViewerCmp } from './components/page/metadata-viewer.js';
-export { LayoutAdapter, LayoutCmp } from './components/layout/layout.cmp.js';
+export { LayoutCmp, LayoutAdapter } from './components/layout/layout.cmp.js';
 export { PageElement, PageAdapter } from './components/page/page-element.js';
 export { editorComponent } from './components/page/editor-component.js';
 export { navigateToUrl, updateSearchParams } from './utilities/uri.js';

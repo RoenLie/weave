@@ -13,7 +13,6 @@ export default defineDocConfig(
 					lightTheme: [ 'root-light.css' ],
 					layout:     {
 						headingText: 'Mirage Docs',
-						logoHeight:  '40px',
 						logoSrc:     'logo.svg',
 					},
 				},

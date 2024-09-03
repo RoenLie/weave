@@ -77,9 +77,10 @@ export const defineDocConfig = async (
 					styleImports:  [],
 					scriptImports: [],
 					layout:        {
-						headingText: '',
-						logoHeight:  '',
-						logoSrc:     '',
+						headingText:      '',
+						logoHeight:       '',
+						logoSrc:          '',
+						clearLogOnReload: true,
 					},
 					sidebar: {
 						delimiter:        '_',

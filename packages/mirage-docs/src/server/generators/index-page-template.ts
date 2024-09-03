@@ -55,6 +55,9 @@ export const indexPageTemplate = (props: {
 <body>
 	<midoc-page></midoc-page>
 	<script type="module">
+		import { ensureColorScheme } from '@roenlie/mirage-docs/app/utilities/color-subscription.${ fileExt() }';
+		ensureColorScheme();
+
 		import { PageElement } from '@roenlie/mirage-docs/app/components/page/page-element.${ fileExt() }';
 		PageElement.register();
 	</script>

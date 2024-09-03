@@ -16,9 +16,10 @@ export interface SiteConfig {
 		styleImports:  SrcTag[];
 		scriptImports: SrcTag[];
 		layout: {
-			logoSrc:     string;
-			logoHeight:  string;
-			headingText: string;
+			logoSrc:          string;
+			logoHeight:       string;
+			headingText:      string;
+			clearLogOnReload: boolean;
 		};
 		sidebar: {
 			nameReplacements: [from: string, to: string][];

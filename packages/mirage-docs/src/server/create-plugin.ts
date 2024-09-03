@@ -76,8 +76,12 @@ export const createPlugin = (args: {
 						attrs:    { type: 'module' },
 						injectTo: 'head',
 						children: `
+						import { ensureColorScheme } from '@roenlie/mirage-docs/app/utilities/color-subscription.${ fileExt() }';
+						ensureColorScheme();
+
 						import { LayoutCmp } from "@roenlie/mirage-docs/app/components/layout/layout.cmp.${ fileExt() }"
 						LayoutCmp.register();
+
 						document.body.appendChild(document.createElement('midoc-layout'));
 						`,
 					},
