@@ -36,6 +36,15 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(@types/node@22.5.1)(happy-dom@14.12.3)(lightningcss@1.26.0)(terser@5.31.6)
 
+  apps/builder:
+    dependencies:
+      lit:
+        specifier: ^3.2.0
+        version: 3.2.0
+      tslib:
+        specifier: ^2.7.0
+        version: 2.7.0
+
   apps/chessmaster:
     dependencies:
       '@floating-ui/dom':
@@ -101,25 +110,31 @@ importers:
         specifier: ^16.3.1
         version: 16.4.5
 
-  apps/ferrite/absence/client:
+  apps/ferrite/absence:
     dependencies:
       vite:
         specifier: ^5.3.5
         version: 5.4.2(@types/node@22.5.1)(lightningcss@1.26.0)(terser@5.31.6)
+
+  apps/ferrite/absence/client: {}
 
   apps/ferrite/absence/server: {}
 
-  apps/ferrite/handover/client:
+  apps/ferrite/handover:
     dependencies:
       vite:
         specifier: ^5.3.5
         version: 5.4.2(@types/node@22.5.1)(lightningcss@1.26.0)(terser@5.31.6)
 
-  apps/ferrite/root/client:
+  apps/ferrite/handover/client: {}
+
+  apps/ferrite/home:
     dependencies:
       vite:
         specifier: ^5.3.5
         version: 5.4.2(@types/node@22.5.1)(lightningcss@1.26.0)(terser@5.31.6)
+
+  apps/ferrite/root/client: {}
 
   apps/ferrite/root/server:
     dependencies:

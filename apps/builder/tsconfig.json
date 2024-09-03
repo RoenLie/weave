@@ -1,0 +1,12 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"types": [
+			"vite/client"
+		]
+	},
+	"exclude": [
+		"dist",
+		"node_modules"
+	]
+}

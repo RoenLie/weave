@@ -6,6 +6,5 @@
 	"version": "1.0.0",
 	"main": "pathToMain",
 	"dependencies": {
-		"vite": "^5.3.5"
 	}
 }
