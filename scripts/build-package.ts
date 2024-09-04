@@ -3,7 +3,9 @@ import { getPackageBuildOrder, getPackageDir } from './utilities/find-build-orde
 
 
 const args = process.argv.slice(2);
-const packageName = args[0] ?? '';
+
+// First argument not starting with -- is the package name
+const packageName = args.find(arg => !arg.startsWith('--'));
 const publish = args.includes('--publish');
 const dryRun = args.includes('--dry-run');
 const verbose = args.includes('--verbose');
