@@ -5,11 +5,11 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { handlePreviewScroll } from '../codemirror/commands/toggle-sidebyside.js';
 import { MirageMDE } from '../mirage-mde.js';
 
-DisplayElement;
-
 
 @customElement('mirage-mde-preview')
 export class PreviewElement extends LitElement {
+
+	protected static requiredElements = [ DisplayElement ];
 
 	@property({ type: Object }) public scope: MirageMDE;
 	@state() protected htmlContent = '';
@@ -17,8 +17,8 @@ export class PreviewElement extends LitElement {
 	public previewScroll = false;
 	protected isCreated = false;
 
-	public setContent(htmlString: string): void
-	public setContent(htmlString: Promise<string>): Promise<string>
+	public setContent(htmlString: string): void;
+	public setContent(htmlString: Promise<string>): Promise<string>;
 	public setContent(htmlString: any): any {
 		if (typeof htmlString === 'string')
 			this.htmlContent = htmlString;

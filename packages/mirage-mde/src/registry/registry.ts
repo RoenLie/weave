@@ -8,7 +8,7 @@ import { builtInStatuses, type StatusBarItem } from './status-registry.js';
 export interface Registry {
 	action: Map<stringliteral | BuiltInAction, ToolbarItem>;
 	status: Map<stringliteral, StatusBarItem>;
-	draw: Map<stringliteral | BuiltInDrawables, string>;
+	draw:   Map<stringliteral | BuiltInDrawables, string>;
 }
 
 

@@ -2,7 +2,11 @@ import { CSSResult, type CSSResultGroup, type CSSResultOrNative, LitElement, sup
 
 
 // This function migrates styles from a custom element's constructe stylesheet to a new document.
-export const adoptStyles = (shadowRoot: ShadowRoot, styles: CSSResultGroup, defaultView: Window & typeof globalThis) => {
+export const adoptStyles = (
+	shadowRoot: ShadowRoot,
+	styles: CSSResultGroup,
+	defaultView: Window & typeof globalThis,
+) => {
 	// If the browser supports adopting stylesheets
 	if (supportsAdoptingStyleSheets) {
 		// If the styles is an array of CSSResultGroup Objects

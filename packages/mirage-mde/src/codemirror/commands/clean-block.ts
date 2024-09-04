@@ -12,7 +12,7 @@ import { getAllNodesInRange } from '../listeners/get-state.js';
 export const cleanBlock: MMDECommand = (view: EditorView) => {
 	const markValidator = (mark: {
 		from: number;
-		to: number;
+		to:   number;
 		name: string;
 	}) => {
 		return [

@@ -1,17 +1,17 @@
 type IconFile = {
-	ok: true;
+	ok:     true;
 	status: number;
-	svg: string;
+	svg:    string;
 } | {
-	ok: false;
+	ok:     false;
 	status: number;
-	svg: null;
+	svg:    null;
 };
 
 interface IncludeFile {
-	ok: boolean;
+	ok:     boolean;
 	status: number;
-	html: string;
+	html:   string;
 }
 
 

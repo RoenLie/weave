@@ -19,7 +19,11 @@ export const editorToPreview = async (scope: MirageMDE) => {
 /**
  * Toggle side by side preview
  */
-export const toggleSideBySide: MMDECommand = (view: EditorView, scope: MirageMDE, force?: boolean) => {
+export const toggleSideBySide: MMDECommand = (
+	_view: EditorView,
+	scope: MirageMDE,
+	force?: boolean,
+) => {
 	const { guiClasses, host } = scope;
 
 	const show = !(force ?? host?.classList.contains('sidebyside'));
@@ -33,12 +37,6 @@ export const toggleSideBySide: MMDECommand = (view: EditorView, scope: MirageMDE
 		host?.classList.toggle('preview', false);
 		previewButton?.classList.toggle('active', false);
 		sidebysideButton?.classList.toggle('active', true);
-
-		const width = getComputedStyle(scope.gui.preview).width;
-		if (!width || width === 'auto') {
-			const hostWidth = scope.host.offsetWidth;
-			scope.gui.preview.style.width = hostWidth / 2 + 'px';
-		}
 	}
 	else {
 		guiClasses.editor['hidden'] = false;

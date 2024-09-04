@@ -8,7 +8,7 @@ import { type MMDECommand } from '../../registry/action-registry.js';
 /**
  * Action for opening an external window which holds a live preview of the rendered markdown.
  */
-export const popoutPreview: MMDECommand = (view, scope) => {
+export const popoutPreview: MMDECommand = (_view, scope) => {
 	if (scope.isWindowActive)
 		return false;
 
@@ -63,7 +63,7 @@ export const popoutPreview: MMDECommand = (view, scope) => {
 
 	render(html`
 	<mirage-mde-window
-		.scope=${ scope }
+		.editor=${ scope }
 	></mirage-mde-window>
 	`, winHandle!.document.body);
 

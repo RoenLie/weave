@@ -20,12 +20,11 @@
 		"README.md"
 	],
 	"scripts": {
-		"dev": "vite build --watch",
+		"dev": "vite --config ./demo/vite.config.ts",
 		"build": "tsc --project ./src/tsconfig.json && vite build",
 		"typecheck": "tsc --project ./src/tsconfig.json --noEmit --emitDeclarationOnly false"
 	},
 	"dependencies": {
-		"@roenlie/mirage-mde-display": "workspace:^",
 		"@codemirror/autocomplete": "^6.11.1",
 		"@codemirror/commands": "^6.3.3",
 		"@codemirror/lang-markdown": "^6.2.3",
@@ -38,6 +37,7 @@
 		"@lezer/highlight": "^1.2.0",
 		"@lezer/markdown": "^1.2.0",
 		"@roenlie/core": "workspace:^",
+		"@roenlie/mirage-mde-display": "workspace:^",
 		"cm6-theme-basic-dark": "^0.2.0",
 		"highlight.js": "^11.9.0",
 		"lit": "^3.1.0",

@@ -4,6 +4,13 @@ import { getPackageBuildOrder, getPackageDir } from './utilities/find-build-orde
 
 const args = process.argv.slice(2);
 const packageName = args[0] ?? '';
+const publish = args.includes('--publish');
+const dryRun = args.includes('--dry-run');
+const verbose = args.includes('--verbose');
+
+if (!packageName)
+	throw new Error('Package name is required as the first argument.');
+
 
 const packageDir = await getPackageDir(packageName);
 if (!packageDir)
@@ -11,7 +18,28 @@ if (!packageDir)
 
 
 const buildOrder = await getPackageBuildOrder(packageName);
-console.log('Building packages...', buildOrder);
+console.log('Building packages...', '\n' + buildOrder.join('\n→ '));
+
+
+const handleStdout = (data: any) => {
+	if (verbose)
+		process.stdout.write(data);
+};
+
 
 for (const cmd of buildOrder)
-	await execPromise(`pnpm --filter=${ cmd } run build`);
+	await execPromise(`pnpm --filter=${ cmd } run build`, handleStdout);
+
+
+if (publish || dryRun) {
+	console.log('Merging tsconfig.json files...');
+	await execPromise(`cd ${ packageDir } && pkg-toolbox merge-tsconfig --config ./src/tsconfig.json`, handleStdout);
+
+	console.log('Incrementing package version...');
+	await execPromise(`cd ${ packageDir } && pkg-toolbox increment-version`, handleStdout);
+
+	if (!dryRun) {
+		console.log('Publishing package...');
+		await execPromise(`cd ${ packageDir } && pnpm publish --access public --no-git-checks`, handleStdout);
+	}
+}

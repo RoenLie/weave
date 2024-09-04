@@ -6,14 +6,14 @@ import { type MirageMDE } from '../mirage-mde.js';
 
 
 export interface StatusBarItem {
-	value?: string;
-	name: string;
-	template: (item: StatusBarItem, editor: EditorView, scope: MirageMDE) => string;
-	css?: (item: StatusBarItem, editor: EditorView, scope: MirageMDE) => string;
-	initialize?: (item: StatusBarItem, update: ViewUpdate, scope: MirageMDE) => void;
-	onUpdate?: (item: StatusBarItem, update: ViewUpdate, scope: MirageMDE) => void;
+	value?:       string;
+	name:         string;
+	template:     (item: StatusBarItem, editor: EditorView, scope: MirageMDE) => string;
+	css?:         (item: StatusBarItem, editor: EditorView, scope: MirageMDE) => string;
+	initialize?:  (item: StatusBarItem, update: ViewUpdate, scope: MirageMDE) => void;
+	onUpdate?:    (item: StatusBarItem, update: ViewUpdate, scope: MirageMDE) => void;
 	onAnyUpdate?: (item: StatusBarItem, update: ViewUpdate, scope: MirageMDE) => void;
-	onActivity?: (item: StatusBarItem, update: ViewUpdate, scope: MirageMDE) => void;
+	onActivity?:  (item: StatusBarItem, update: ViewUpdate, scope: MirageMDE) => void;
 }
 
 
@@ -22,7 +22,7 @@ export type BuildInStatus = [
 	'lines',
 	'cursor',
 	'autosave',
-	'upload-image',
+	'upload-image'
 ][number];
 
 
@@ -107,7 +107,7 @@ export const builtInStatuses: [stringliteral, StatusBarItem][] = [
 				${ item.value ?? '' }
 			</div>
 			`,
-			onAnyUpdate: (item, update, scope) => {
+			onAnyUpdate: (item, _update, scope) => {
 				item.value = scope.lastSaved;
 			},
 		},
@@ -120,7 +120,7 @@ export const builtInStatuses: [stringliteral, StatusBarItem][] = [
 				${ item.value ?? '' }
 			</div>
 			`,
-			initialize: (item, update, scope) => {
+			initialize: (item, _update, scope) => {
 				item.value = scope.options.imageTexts?.sbInit ?? '';
 			},
 		},

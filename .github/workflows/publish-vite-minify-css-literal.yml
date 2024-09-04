@@ -27,6 +27,6 @@ jobs:
         run: pnpm install
 
       - name: Build dependencies, project and publish package.
-        run: pnpm release @roenlie/vite-plugin-minify-css-literal --publish
+        run: pnpm release @roenlie/vite-plugin-minify-css-literal
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

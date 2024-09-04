@@ -19,7 +19,7 @@ const _timeFormat = {
 export const timeFormat: RecordOf<
 	typeof _timeFormat,
 	string,
-	string | {hour: string; minute: string}
+	string | { hour: string; minute: string }
 > = _timeFormat;
 
 

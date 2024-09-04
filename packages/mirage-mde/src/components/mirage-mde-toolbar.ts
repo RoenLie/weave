@@ -21,7 +21,7 @@ import styles from './mirage-mde-toolbar.css?inline';
 export class ToolbarElement extends LitElement {
 
 	@property({ type: Object }) public scope: MirageMDE;
-	@state() private items: Options['toolbar'] = [];
+	@state() private items:                   Options['toolbar'] = [];
 
 	public create() {
 		this.items = this.scope.toolbar.filter(
@@ -63,7 +63,7 @@ export class ToolbarElement extends LitElement {
 			type      ="button"
 			class     =${ classMap({ active }) }
 			title     =${ title }
-			aria-label=${ item.title }
+			aria-label=${ item.title ?? '' }
 			?disabled =${ disabled }
 			@click    =${ listener }
 			${ ref(elRef) }

@@ -13,7 +13,7 @@ import type { StatusBarItem } from '../registry/status-registry.js';
 export class StatusbarElement extends LitElement {
 
 	@property({ type: Object }) public scope: MirageMDE;
-	@state() protected items: StatusBarItem[] = [];
+	@state() protected items:                 StatusBarItem[] = [];
 
 	public create() {
 		this.items = iterate(this.scope.registry.status)

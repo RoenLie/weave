@@ -21,29 +21,29 @@ import { type Marker } from '../codemirror/listeners/get-state.js';
 import { type MirageMDE } from '../mirage-mde.js';
 
 
-export type MMDECommand = (target: EditorView, scope: MirageMDE) => boolean
+export type MMDECommand = (target: EditorView, scope: MirageMDE) => boolean;
 
 export type ToolbarItem = ToolbarSeparator | ToolbarButton | ToolbarDropdown;
 
 export interface ToolbarButtonBase {
-	name: stringliteral | BuiltInAction;
-	iconUrl?: string;
-	title?: string;
-	shortcut?: string;
-	global?: boolean;
+	name:       stringliteral | BuiltInAction;
+	iconUrl?:   string;
+	title?:     string;
+	shortcut?:  string;
+	global?:    boolean;
 	noDisable?: boolean;
-	noMobile?: boolean;
+	noMobile?:  boolean;
 }
 
 export interface ToolbarDropdown extends ToolbarButtonBase {
-	type: 'dropdown';
+	type:     'dropdown';
 	children: (stringliteral | BuiltInAction)[];
 }
 
 export interface ToolbarButton extends ToolbarButtonBase {
-	type: 'button';
+	type:    'button';
 	action?: string | MMDECommand;
-	text?: string;
+	text?:   string;
 	marker?: Marker[];
 }
 
@@ -73,8 +73,8 @@ export type BuiltInAction = [
 	'horizontal-rule',
 	'preview',
 	'side-by-side',
-	'fullscreen',
 	'popout',
+	'fullscreen',
 	'guide',
 	'undo',
 	'redo',
@@ -84,8 +84,8 @@ export type BuiltInAction = [
 	'separator-3',
 	'separator-4',
 	'separator-5',
-	'separator-6',
-][number]
+	'separator-6'
+][number];
 
 
 export const defaultToolbar: BuiltInAction[] = [
@@ -114,8 +114,8 @@ export const defaultToolbar: BuiltInAction[] = [
 	'separator-4',
 	'preview',
 	'side-by-side',
-	'fullscreen',
 	'popout',
+	'fullscreen',
 	'separator-5',
 	'undo',
 	'redo',
@@ -384,6 +384,16 @@ export const builtInActions: [stringliteral | BuiltInAction, ToolbarItem][] = [
 		},
 	],
 	[
+		'popout', {
+			type:     'button',
+			name:     'popout',
+			action:   popoutPreview,
+			shortcut: 'F10',
+			title:    'Open preview in external window',
+			iconUrl:  'https://icons.getbootstrap.com/assets/icons/box-arrow-up-right.svg',
+		},
+	],
+	[
 		'fullscreen', {
 			type:      'button',
 			name:      'fullscreen',
@@ -393,15 +403,6 @@ export const builtInActions: [stringliteral | BuiltInAction, ToolbarItem][] = [
 			title:     'Toggle Fullscreen',
 			noDisable: true,
 			noMobile:  true,
-		},
-	],
-	[
-		'popout', {
-			type:    'button',
-			name:    'popout',
-			action:  popoutPreview,
-			title:   'Open preview in external window',
-			iconUrl: 'https://icons.getbootstrap.com/assets/icons/box-arrow-up-right.svg',
 		},
 	],
 	[

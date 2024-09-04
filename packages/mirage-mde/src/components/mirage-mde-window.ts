@@ -10,11 +10,11 @@ import { adoptStyles, CrossDocElement } from './cross-doc-element.js';
 @customElement('mirage-mde-window')
 export class WindowElement extends CrossDocElement {
 
-	@property({ type: Object }) public scope: MirageMDE;
+	@property({ type: Object }) public editor: MirageMDE;
 	@state() protected htmlContent = '';
 
-	public setContent(htmlString: string): void
-	public setContent(htmlString: Promise<string>): Promise<string>
+	public setContent(htmlString: string): void;
+	public setContent(htmlString: Promise<string>): Promise<string>;
 	public setContent(htmlString: any): any {
 		if (typeof htmlString === 'string')
 			this.htmlContent = htmlString;
@@ -25,8 +25,8 @@ export class WindowElement extends CrossDocElement {
 	public override connectedCallback() {
 		super.connectedCallback();
 
-		this.scope.gui.window = this;
-		editorToPreview(this.scope);
+		this.editor.gui.window = this;
+		editorToPreview(this.editor);
 	}
 
 	protected override render() {

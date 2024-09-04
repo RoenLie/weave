@@ -17,104 +17,104 @@ export interface TimeFormatOptions {
 }
 
 export interface AutoSaveOptions {
-	enabled: boolean;
-	uniqueId: string;
-	delay?: number;
-	submit_delay?: number;
-	text?: string;
-	timeFormat?: TimeFormatOptions;
+	enabled:          boolean;
+	uniqueId:         string;
+	delay?:           number;
+	submit_delay?:    number;
+	text?:            string;
+	timeFormat?:      TimeFormatOptions;
 	foundSavedValue?: boolean;
-	bound?: boolean;
-	loaded?: boolean;
+	bound?:           boolean;
+	loaded?:          boolean;
 }
 
 export interface BlockStyleOptions {
-	bold?: string;
-	code?: string;
+	bold?:   string;
+	code?:   string;
 	italic?: string;
 }
 
 export interface ParsingOptions {
-	name?: string;
+	name?:                       string;
 	allowAtxHeaderWithoutSpace?: boolean;
-	strikethrough?: boolean;
-	underscoresBreakWords?: boolean;
-	gitHubSpice?: boolean;
-	highlightFormatting?: boolean;
+	strikethrough?:              boolean;
+	underscoresBreakWords?:      boolean;
+	gitHubSpice?:                boolean;
+	highlightFormatting?:        boolean;
 }
 
 export interface PromptTexts {
 	image?: string;
-	link?: string;
+	link?:  string;
 }
 
 export interface RenderingOptions {
 	codeSyntaxHighlighting?: boolean;
-	markedOptions?: MarkedOptions;
-	sanitizerFunction?: (html: string) => string;
-	singleLineBreaks?: boolean;
+	markedOptions?:          MarkedOptions;
+	sanitizerFunction?:      (html: string) => string;
+	singleLineBreaks?:       boolean;
 	preprocessor?: {
-		regexp: RegExp,
+		regexp:   RegExp,
 		replacer: (...match: string[]) => string | Promise<string>;
 	}[]
 }
 
 export interface ImageTextsOptions {
-	sbInit?: string;
+	sbInit?:        string;
 	sbOnDragEnter?: string;
-	sbOnDrop?: string;
-	sbProgress?: string;
-	sbOnUploaded?: string;
-	sizeUnits?: string;
+	sbOnDrop?:      string;
+	sbProgress?:    string;
+	sbOnUploaded?:  string;
+	sizeUnits?:     string;
 }
 
 export interface ImageErrorTextsOptions {
-	noFileGiven?: string;
+	noFileGiven?:    string;
 	typeNotAllowed?: string;
-	fileTooLarge?: string;
-	importError?: string;
-	filesTooLarge?: string;
+	fileTooLarge?:   string;
+	importError?:    string;
+	filesTooLarge?:  string;
 }
 
 export interface Options {
-	extensions?: Extension[],
-	host?: LitElement;
-	autofocus?: boolean;
-	autocomplete?: boolean;
-	autosave?: AutoSaveOptions;
-	autoRefresh?: boolean | { delay: number; };
-	blockStyles?: BlockStyleOptions;
-	hideIcons?: (stringliteral | BuiltInAction)[];
-	initialValue?: string;
-	lineNumbers?: boolean;
-	lineWrapping?: boolean;
-	parsingConfig?: ParsingOptions;
-	placeholder?: string;
+	extensions?:            Extension[],
+	host?:                  LitElement;
+	autofocus?:             boolean;
+	autocomplete?:          boolean;
+	autosave?:              AutoSaveOptions;
+	autoRefresh?:           boolean | { delay: number; };
+	blockStyles?:           BlockStyleOptions;
+	hideIcons?:             (stringliteral | BuiltInAction)[];
+	initialValue?:          string;
+	lineNumbers?:           boolean;
+	lineWrapping?:          boolean;
+	parsingConfig?:         ParsingOptions;
+	placeholder?:           string;
 	previewImagesInEditor?: boolean;
-	imagesPreviewHandler?: (src: string) => string;
-	previewRender?: (markdownPlaintext: string) => Promise<string>;
-	promptURLs?: boolean;
-	renderingConfig?: RenderingOptions;
-	tabSize?: number;
-	statusbar?: (stringliteral | BuildInStatus)[];
-	statusbarStatuses?: StatusBarItem[];
-	toolbar?: (stringliteral | BuiltInAction)[];
-	toolbarActions?: (ToolbarButton | ToolbarDropdown)[];
-	toolbarTooltips?: boolean;
-	drawables?: {name: string; value: string}[];
-	unorderedListStyle?: '*' | '-' | '+';
-	uploadImage?: boolean;
-	imageMaxSize?: number;
-	imageAccept?: string;
-	imageUploadFunction?: (file: File, onSuccess: (url: string) => void, onError: (error: string) => void) => void;
-	imageUploadEndpoint?: string;
-	imagePathAbsolute?: boolean;
-	imageCSRFToken?: string;
-	imageCSRFName?: string;
-	imageCSRFHeader?: boolean;
-	imageTexts?: ImageTextsOptions;
-	errorMessages?: ImageErrorTextsOptions;
-	errorCallback?: (errorMessage: string) => void;
-	promptTexts?: PromptTexts;
-	direction?: 'ltr' | 'rtl';
+	imagesPreviewHandler?:  (src: string) => string;
+	previewRender?:         (markdownPlaintext: string) => Promise<string>;
+	promptURLs?:            boolean;
+	renderingConfig?:       RenderingOptions;
+	tabSize?:               number;
+	statusbar?:             (stringliteral | BuildInStatus)[];
+	statusbarStatuses?:     StatusBarItem[];
+	toolbar?:               (stringliteral | BuiltInAction)[];
+	toolbarActions?:        (ToolbarButton | ToolbarDropdown)[];
+	toolbarTooltips?:       boolean;
+	drawables?:             { name: string; value: string }[];
+	unorderedListStyle?:    '*' | '-' | '+';
+	uploadImage?:           boolean;
+	imageMaxSize?:          number;
+	imageAccept?:           string;
+	imageUploadFunction?:   (file: File, onSuccess: (url: string) => void, onError: (error: string) => void) => void;
+	imageUploadEndpoint?:   string;
+	imagePathAbsolute?:     boolean;
+	imageCSRFToken?:        string;
+	imageCSRFName?:         string;
+	imageCSRFHeader?:       boolean;
+	imageTexts?:            ImageTextsOptions;
+	errorMessages?:         ImageErrorTextsOptions;
+	errorCallback?:         (errorMessage: string) => void;
+	promptTexts?:           PromptTexts;
+	direction?:             'ltr' | 'rtl';
 }

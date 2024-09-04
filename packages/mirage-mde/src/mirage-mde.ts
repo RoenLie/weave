@@ -47,29 +47,29 @@ import { value } from './utilities/value.js';
 
 
 interface GUIElements {
-	editor: EditorElement;
-	preview: PreviewElement;
-	toolbar: ToolbarElement;
+	editor:    EditorElement;
+	preview:   PreviewElement;
+	toolbar:   ToolbarElement;
 	statusbar: StatusbarElement;
-	window?: WindowElement;
+	window?:   WindowElement;
 }
 type GUIClasses = Record<keyof GUIElements, Partial<Record<'hidden', boolean>>>;
 
 
 export class MirageMDE {
 
-	public options: Options;
-	public host: LitElement;
-	public editor: EditorView;
-	public toolbar: (stringliteral | BuiltInAction)[];
-	public toolbarElements: Record<string, Ref<HTMLElement>> = {};
-	public statusbar: (stringliteral | BuildInStatus)[];
+	public options:           Options;
+	public host:              LitElement;
+	public editor:            EditorView;
+	public toolbar:           (stringliteral | BuiltInAction)[];
+	public toolbarElements:   Record<string, Ref<HTMLElement>> = {};
+	public statusbar:         (stringliteral | BuildInStatus)[];
 	public saved = false;
 	public lastSaved = '';
 	public autosaveTimeoutId: number | undefined;
-	public activeMarkers: Marker[] = [];
+	public activeMarkers:     Marker[] = [];
 	public registry = createRegistry();
-	public gui: GUIElements = {} as any;
+	public gui:               GUIElements = {} as any;
 	public guiClasses: GUIClasses = {
 		preview:   { hidden: true },
 		editor:    {},
@@ -195,97 +195,12 @@ export class MirageMDE {
 	public uploadImagesUsingCustomFunction = uploadImagesUsingCustomFunction.bind(this);
 
 	// Public Actions
-	public value(val: string | undefined): MirageMDE
-	public value(val?: undefined): string
+	public value(val: string | undefined): MirageMDE;
+	public value(val?: undefined): string;
 	public value(val: any): any { return value(this, val); }
 
-	public toggleBold() {
-		performAction(this, this.registry.action.get('bold'));
-	}
-
-	public toggleItalic() {
-		performAction(this, this.registry.action.get('italic'));
-	}
-
-	public toggleStrikethrough() {
-		performAction(this, this.registry.action.get('strikethrough'));
-	}
-
-	public toggleCodeBlock() {
-		performAction(this, this.registry.action.get('code'));
-	}
-
-	public toggleQuote() {
-		performAction(this, this.registry.action.get('quote'));
-	}
-
-	public toggleList(type: 'ordered' | 'unordered') {
-		performAction(this, this.registry.action.get(type + '-list'));
-	}
-
-	public togglePreview() {
-		performAction(this, this.registry.action.get('preview'));
-	}
-
-	public toggleSizeBySize() {
-		performAction(this, this.registry.action.get('side-by-side'));
-	}
-
-	public toggleFullscreen() {
-		performAction(this, this.registry.action.get('fullscreen'));
-	}
-
-	public toggleHeading() {
-		performAction(this, this.registry.action.get('heading'));
-	}
-
-	public headingBigger() {
-		performAction(this, this.registry.action.get('heading-bigger'));
-	}
-
-	public headingSmaller() {
-		performAction(this, this.registry.action.get('heading-smaller'));
-	}
-
-	public setHeadingLevel(size: 1|2|3|4|5|6) {
-		const action = this.registry.action.get('heading-' + size);
-		performAction(this, action);
-	}
-
-	public cleanBlock() {
-		performAction(this, this.registry.action.get('clean-block'));
-	}
-
-	public drawLink() {
-		performAction(this, this.registry.action.get('link'));
-	}
-
-	public drawImage() {
-		performAction(this, this.registry.action.get('image'));
-	}
-
-	public drawUploadedImage() {
-		performAction(this, this.registry.action.get('upload-image'));
-	}
-
-	public drawTable() {
-		performAction(this, this.registry.action.get('table'));
-	}
-
-	public drawLine() {
-		performAction(this, this.registry.action.get('horizontal-rule'));
-	}
-
-	public popoutPreview() {
-		performAction(this, this.registry.action.get('popout'));
-	}
-
-	public undo() {
-		performAction(this, this.registry.action.get('undo'));
-	}
-
-	public redo() {
-		performAction(this, this.registry.action.get('redo'));
+	public action(action: BuiltInAction) {
+		performAction(this, this.registry.action.get(action));
 	}
 
 }

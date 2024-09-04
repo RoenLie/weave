@@ -10,7 +10,7 @@ const isLocalStorageAvailable = () => {
 			localStorage.setItem('mmde_localStorage', String(1));
 			localStorage.removeItem('mmde_localStorage');
 		}
-		catch (e) {
+		catch {
 			return false;
 		}
 	}

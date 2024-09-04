@@ -8,10 +8,10 @@ import { MirageMDE } from '../mirage-mde.js';
  */
 export const openBrowseFileWindow = function(
 	this: MirageMDE,
-	onSuccess?: Function,
-	onError?: Function,
+	onSuccess?: (...args: any) => any,
+	onError?: (...args: any) => any,
 ) {
-	const imageInput = this.gui.toolbar.getElementsByClassName('imageInput')[0]! as HTMLElement;
+	const imageInput = this.gui.toolbar.getElementsByClassName('imageInput')[0]!as HTMLElement;
 	dispatchEvent(new MouseEvent('click'));
 
 	const onChange = (event: Event) => {

@@ -5,12 +5,16 @@ import { MirageMDE } from '../mirage-mde.js';
  * Get or set the text content.
  */
 export const value = (scope: MirageMDE, val?: string): MirageMDE | string => {
+	if (!scope.editor)
+		return '';
+
 	const state = scope.editor.state;
+	const currentValue = state.doc.toString();
 
 	if (val === undefined) {
-		return state.doc.toString();
+		return currentValue;
 	}
-	else {
+	else if (val !== currentValue) {
 		scope.editor.dispatch(state.update({
 			changes: {
 				from:   0,
@@ -18,7 +22,7 @@ export const value = (scope: MirageMDE, val?: string): MirageMDE | string => {
 				insert: val,
 			},
 		}));
-
-		return scope;
 	}
+
+	return scope;
 };

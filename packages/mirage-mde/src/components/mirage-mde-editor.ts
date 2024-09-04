@@ -54,7 +54,7 @@ import type { MMDECommand, ToolbarButton } from '../registry/action-registry.js'
 export class EditorElement extends LitElement {
 
 	@property({ type: Object }) public scope: MirageMDE;
-	protected globalShortcuts: KeyBinding[] = [];
+	protected globalShortcuts:                KeyBinding[] = [];
 	protected documentOnKeyDown = (ev: KeyboardEvent) => {
 		const pressedKey = ev.key.toUpperCase();
 		const modifierMap: Record<string, string> = {
@@ -62,6 +62,8 @@ export class EditorElement extends LitElement {
 			'a-': 'altKey',
 			's-': 'shiftKey',
 		};
+
+		console.log(this.globalShortcuts);
 
 		this.globalShortcuts.forEach(({ key, preventDefault, run }) => {
 			if (!key)
@@ -74,6 +76,8 @@ export class EditorElement extends LitElement {
 			if (modifiers.every(m => (ev as any)[m]) && pressedKey === requiredKey) {
 				if (preventDefault)
 					ev.preventDefault();
+
+				console.log('do the thing');
 
 				run?.(this.scope.editor);
 			}
@@ -134,9 +138,16 @@ export class EditorElement extends LitElement {
 			// Consumer custom extensions.
 			...this.scope.options.extensions ?? [],
 
-			EditorView.updateListener.of(update => updateToolbarStateListener(update, this.scope)),
-			EditorView.updateListener.of(update => updateStatusbarListener(update, this.scope)),
-			EditorView.updateListener.of(update => updatePreviewListener(update, this.scope)),
+			EditorView.updateListener.of(update => {
+				updateToolbarStateListener(update, this.scope);
+				updateStatusbarListener(update, this.scope);
+				updatePreviewListener(update, this.scope);
+
+				if (update.docChanged) {
+					this.dispatchEvent(new CustomEvent('change',
+						{ detail: update, bubbles: true, composed: true }));
+				}
+			}),
 			EditorView.domEventHandlers({
 				scroll: (ev) => handleEditorScroll(ev, this.scope),
 			}),
@@ -209,7 +220,6 @@ export class EditorElement extends LitElement {
 			extensions.push(EditorView.lineWrapping);
 		if (this.scope.options.lineNumbers)
 			extensions.push(lineNumbers());
-
 
 		this.scope.editor = new EditorView({
 			parent: this.renderRoot,

@@ -5,7 +5,7 @@
 	"scripts": {
 		"build-toolbox": "tsx ./scripts/build-package.ts @roenlie/package-toolbox",
 		"build": "pnpm build-toolbox && tsx ./scripts/build-package.ts",
-		"release": "pnpm build-toolbox && tsx ./scripts/publish-package.ts"
+		"release": "pnpm build-toolbox && tsx ./scripts/build-package.ts --publish"
 	},
 	"devDependencies": {
 		"@roenlie/eslint-config": "workspace:^",

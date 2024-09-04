@@ -28,6 +28,6 @@ jobs:
         run: pnpm install
 
       - name: Build dependencies, project and publish package.
-        run: pnpm release @roenlie/monaco-editor-wc --publish
+        run: pnpm release @roenlie/monaco-editor-wc
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
