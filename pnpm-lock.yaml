@@ -751,19 +751,12 @@ importers:
 
   packages/lit/lit-context:
     dependencies:
-      '@roenlie/core':
-        specifier: workspace:^
-        version: link:../../core
       lit:
         specifier: ^3.2.0
         version: 3.2.0
       tslib:
         specifier: ^2.7.0
         version: 2.7.0
-    devDependencies:
-      '@roenlie/mirage-docs':
-        specifier: workspace:^
-        version: link:../../mirage-docs
 
   packages/lit/lit-fabric:
     dependencies:

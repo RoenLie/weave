@@ -34,12 +34,8 @@
 		"build:types": "tsc --project ./src/tsconfig.json"
 	},
 	"dependencies": {
-		"@roenlie/core": "workspace:^",
 		"lit": "^3.2.0",
 		"tslib": "^2.7.0"
-	},
-	"devDependencies": {
-		"@roenlie/mirage-docs": "workspace:^"
 	},
 	"sideEffects": false
 }
