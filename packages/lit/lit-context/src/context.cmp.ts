@@ -1,13 +1,7 @@
-import type { RecordOf } from '@roenlie/core/types';
 import { css, html, LitElement, type PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
 
 import { type ConsumeContextEvent, createEventName, createHydrateName } from './context.js';
-
-
-declare global { interface HTMLElementTagNameMap {
-	'context-provider': ContextProvider;
-} }
 
 
 export interface Context { name: string; value: any }
@@ -21,14 +15,14 @@ export class ContextProvider extends LitElement {
 			globalThis.customElements.define(this.tagName, this);
 	}
 
-	@property({ type: Object }) public context: Record<string, any>;
-	#listeners: {name: string; listener: (ev: Event) => any;}[] = [];
+	@property({ type: Object })
+	public context: Record<string, any>;
+
+	#listeners: { name: string; listener: (ev: Event) => any; }[] = [];
 
 	protected setupContext() {
 		// Remove all old listeners when a new context array has been assigned.
-		this.#listeners.forEach(({ name, listener }) => {
-			this.removeEventListener(name, listener);
-		});
+		this.#listeners.forEach(({ name, listener }) => this.removeEventListener(name, listener));
 		this.#listeners.length = 0;
 
 		// Hook up the new context listeners.
@@ -39,7 +33,7 @@ export class ContextProvider extends LitElement {
 				ev.stopPropagation();
 				ev.stopImmediatePropagation();
 
-				const me = this as RecordOf<this>;
+				const me = this as this & Record<keyof any, any>;
 				const event = ev as ConsumeContextEvent;
 				event.detail.prop = {
 					get value() {
@@ -92,4 +86,11 @@ export class ContextProvider extends LitElement {
 	}
 	`;
 
+}
+
+
+declare global {
+	interface HTMLElementTagNameMap {
+		'context-provider': ContextProvider;
+	}
 }
