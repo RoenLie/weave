@@ -20,14 +20,14 @@ export const createHydrateName = (prop: string | symbol) => 'hydrate-context:' +
 class ProviderController implements ReactiveController {
 
 	public static providerSym = Symbol.for('providerCtrl');
-	protected static cache = new WeakMap<LitElement, { name: string; prop: string }[]>();
+	protected static cache = new WeakMap<LitElement, `${ string }<:>${ string }`[]>();
 
 	public static register(host: RecordOf<LitElement>, name: string, prop: string) {
 		if (!host[this.providerSym]) {
 			host[this.providerSym] = true;
-			const original = host.connectedCallback;
 
 			// Using this as a way to get the end of prototype chain.
+			const original = host.connectedCallback;
 			host.connectedCallback = function() {
 				this.addController(new ProviderController(this));
 				original.call(this);
@@ -37,7 +37,7 @@ class ProviderController implements ReactiveController {
 		const cache = this.cache.get(host) ??
 			this.cache.set(host, []).get(host)!;
 
-		cache.push({ name, prop });
+		cache.push(`${ name }<:>${ prop }`);
 	}
 
 	constructor(protected host: RecordOf<LitElement>) {}
@@ -59,15 +59,22 @@ class ProviderController implements ReactiveController {
 
 		const providers = protoChain
 			.flatMap(proto => ProviderController.cache.get(proto))
-			.filter(proto => !!proto);
+			.reduce((acc, value) => {
+				if (value)
+					acc.add(value);
 
-		this.cache.clear();
-		providers.forEach(({ name, prop }) => this.add(name, prop));
+				return acc;
+			}, new Set<string>());
+
+		providers.forEach((value) =>
+			this.add(...value.split('<:>') as [string, string]));
 	}
 
 	public hostDisconnected(): void {
 		this.cache.forEach(value =>
 			this.host.removeEventListener(value.eventName, value.provider));
+
+		this.cache.clear();
 	}
 
 	public hostUpdate(): void {
@@ -117,14 +124,14 @@ class ProviderController implements ReactiveController {
 class ConsumerController implements ReactiveController {
 
 	protected static consumerSym = Symbol.for('consumerCtrl');
-	protected static cache = new WeakMap<LitElement, { name: string; prop: string }[]>();
+	protected static cache = new WeakMap<LitElement, `${ string }<:>${ string }`[]>();
 
 	public static register(host: RecordOf<LitElement>, name: string, prop: string) {
 		if (!host[this.consumerSym]) {
 			host[this.consumerSym] = true;
-			const original = host.connectedCallback;
 
 			// Using this as a way to get the end of prototype chain.
+			const original = host.connectedCallback;
 			host.connectedCallback = function() {
 				this.addController(new ConsumerController(this));
 				original.call(this);
@@ -134,7 +141,7 @@ class ConsumerController implements ReactiveController {
 		const cache = this.cache.get(host) ??
 			this.cache.set(host, []).get(host)!;
 
-		cache.push({ name, prop });
+		cache.push(`${ name }<:>${ prop }`);
 	}
 
 	constructor(protected host: RecordOf<LitElement>) {}
@@ -155,9 +162,15 @@ class ConsumerController implements ReactiveController {
 
 		const consumers = protoChain
 			.flatMap(proto => ConsumerController.cache.get(proto))
-			.filter(proto => !!proto);
+			.reduce((acc, value) => {
+				if (value)
+					acc.add(value);
 
-		consumers.forEach(({ name, prop }) => this.add(name, prop));
+				return acc;
+			}, new Set<string>());
+
+		consumers.forEach((value) =>
+			this.add(...value.split('<:>') as [string, string]));
 	}
 
 	public hostDisconnected(): void {
