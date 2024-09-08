@@ -38,9 +38,18 @@ importers:
 
   apps/builder:
     dependencies:
+      '@roenlie/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      lightningcss:
+        specifier: ^1.25.1
+        version: 1.26.0
       lit:
         specifier: ^3.2.0
         version: 3.2.0
+      magic-string:
+        specifier: ^0.30.11
+        version: 0.30.11
       tslib:
         specifier: ^2.7.0
         version: 2.7.0
@@ -110,29 +119,11 @@ importers:
         specifier: ^16.3.1
         version: 16.4.5
 
-  apps/ferrite/absence:
-    dependencies:
-      vite:
-        specifier: ^5.3.5
-        version: 5.4.2(@types/node@22.5.1)(lightningcss@1.26.0)(terser@5.31.6)
-
   apps/ferrite/absence/client: {}
 
   apps/ferrite/absence/server: {}
 
-  apps/ferrite/handover:
-    dependencies:
-      vite:
-        specifier: ^5.3.5
-        version: 5.4.2(@types/node@22.5.1)(lightningcss@1.26.0)(terser@5.31.6)
-
   apps/ferrite/handover/client: {}
-
-  apps/ferrite/home:
-    dependencies:
-      vite:
-        specifier: ^5.3.5
-        version: 5.4.2(@types/node@22.5.1)(lightningcss@1.26.0)(terser@5.31.6)
 
   apps/ferrite/root/client: {}
 
@@ -759,27 +750,6 @@ importers:
         version: 6.0.2
       lit:
         specifier: ^3.1.3
-        version: 3.2.0
-      tslib:
-        specifier: ^2.6.3
-        version: 2.7.0
-
-  packages/lit/lit-aegis2:
-    devDependencies:
-      '@roenlie/core':
-        specifier: workspace:^
-        version: link:../../core
-      '@roenlie/reflect-metadata':
-        specifier: workspace:^
-        version: link:../../reflect-metadata
-      deepmerge-ts:
-        specifier: ^7.1.0
-        version: 7.1.0
-      inversify:
-        specifier: ^6.0.2
-        version: 6.0.2
-      lit:
-        specifier: ^3.1.4
         version: 3.2.0
       tslib:
         specifier: ^2.6.3

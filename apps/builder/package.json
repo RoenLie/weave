@@ -6,7 +6,10 @@
 	"type": "module",
 	"main": "pathToMain",
 	"dependencies": {
+		"@roenlie/core": "workspace:^",
+		"lightningcss": "^1.25.1",
 		"lit": "^3.2.0",
+		"magic-string": "^0.30.11",
 		"tslib": "^2.7.0"
 	}
 }

@@ -2,6 +2,7 @@ import { css, html, LitElement, render, type PropertyValues } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { icon } from './icons.ts';
 import { classMap } from 'lit/directives/class-map.js';
+import { when } from 'lit/directives/when.js';
 
 
 @customElement('b-app')
@@ -10,6 +11,14 @@ export class BuilderApp extends LitElement {
 	@query('iframe') protected iframe: HTMLIFrameElement;
 	@state() protected activeAction:   'pointer' | 'frame' = 'pointer';
 
+	@state() protected activeComponent?: {
+		tag:    string;
+		styles: {
+			backgroundColor: string;
+		};
+		path: string;
+	};
+
 	public override connectedCallback(): void {
 		super.connectedCallback();
 	}
@@ -17,35 +26,64 @@ export class BuilderApp extends LitElement {
 	protected override firstUpdated(_changedProperties: PropertyValues): void {
 		super.firstUpdated(_changedProperties);
 
+		import.meta.hot?.on('select-component', (payload: {
+			tag:    string;
+			styles: { backgroundColor: string; };
+			path:   string;
+		}) => {
+			this.activeComponent = {
+				tag:    payload.tag,
+				styles: payload.styles,
+				path:   payload.path,
+			};
+
+			console.log(payload);
+
+			//console.log('got payload with information about component', payload);
+		});
+
 		window.addEventListener('message', (ev) => {
-			console.log(ev);
-
-			if (ev.data.type === 'click') {
-				if (this.activeAction === 'frame') {
-					this.iframe.contentWindow?.postMessage({
-						type:    'new-frame',
-						details: {
-							style: {
-								position:        'absolute',
-								top:             (ev.data.details.y - 50) + 'px',
-								left:            (ev.data.details.x - 50) + 'px',
-								width:           '100px',
-								height:          '100px',
-								backgroundColor: 'white',
-								borderRadius:    '8px',
-							},
-						},
-					});
-
-					this.activeAction = 'pointer';
-				}
-			}
+			this.onIframeMessage(ev.data);
 		});
 	}
 
-	protected save() {
-		import.meta.hot?.send('save', {
-			tagname: 'hei der',
+	protected onIframeMessage(data: {
+		type: 'click' | string;
+		x:    number;
+		y:    number;
+		path: {
+			id:    string;
+			tag:   string;
+			class: string;
+		}[]
+	}) {
+		console.log(data);
+
+		if (data.type === 'click') {
+			const parentCmp = data.path.slice(1)
+				.find(p => !!this.iframe.contentWindow?.customElements.get(p.tag));
+
+			console.log(parentCmp);
+
+			import.meta.hot?.send('select-component', {
+				tag:       data.path[0]?.tag,
+				parentTag: parentCmp?.tag,
+			});
+		}
+	}
+
+	protected onColorChange(ev: Event) {
+		console.log(ev);
+
+		const newColor = (ev.currentTarget as HTMLInputElement)
+			.value;
+
+		import.meta.hot?.send('patch-styles', {
+			tag:    this.activeComponent!.tag,
+			path:   this.activeComponent!.path,
+			styles: {
+				backgroundColor: newColor,
+			},
 		});
 	}
 
@@ -89,9 +127,14 @@ export class BuilderApp extends LitElement {
 
 
 		<s-toolbox>
-			<button @click=${ this.save }>
-				Save data
-			</button>
+			${ when(this.activeComponent, cmp => html`
+				<div>${ cmp.tag }</div>
+				<input
+					type="color"
+					value=${ cmp.styles.backgroundColor }
+					@change=${ this.onColorChange }
+				>
+			`) }
 		</s-toolbox>
 		`;
 	}

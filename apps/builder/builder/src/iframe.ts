@@ -1,7 +1,5 @@
-console.log('hei');
-
-
-const componentTree: any[] = [];
+import { html, render } from 'lit';
+import 'root/root.cmp.ts';
 
 
 window.addEventListener('message', (ev) => {
@@ -17,10 +15,19 @@ window.addEventListener('message', (ev) => {
 
 window.addEventListener('click', (ev) => {
 	window.top?.postMessage({
-		type:    'click',
-		details: {
-			x: ev.x,
-			y: ev.y,
-		},
+		type: 'click',
+		x:    ev.x,
+		y:    ev.y,
+		path: ev.composedPath()
+			.filter(tar => tar instanceof HTMLElement)
+			.map(tar => {
+				return {
+					id:    tar.id,
+					tag:   tar.localName,
+					class: tar.classList.toString(),
+				};
+			}),
 	});
 });
+
+render(html`<b-root></b-root>`, document.body);
