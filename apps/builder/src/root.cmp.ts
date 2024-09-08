@@ -14,7 +14,7 @@ export class RootCmp extends LitElement {
 
 	public static override styles = css`
 	:host {
-	  background-color: #9c2191;
+	  background-color: #20496f;
 	}
 	
 	#haiw124n {

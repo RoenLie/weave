@@ -4,12 +4,12 @@ import { defineConfig, type Plugin } from 'vite';
 import ts, { isCallExpression, isIdentifier } from 'typescript';
 import { transform } from 'lightningcss';
 import MagicString from 'magic-string';
-import { hexToRgba } from './builder/plugin/hex-to-rgba.ts';
+import { hexToRgba } from './_builder/plugin/hex-to-rgba.ts';
 
 
 export default defineConfig(() => {
-	const builderRoot   = join(process.cwd(), 'builder');
-	const builderAssets = join(process.cwd(), 'builder', 'assets');
+	const builderRoot   = join(process.cwd(), '_builder');
+	const builderAssets = join(process.cwd(), '_builder', 'assets');
 
 
 	return {
@@ -129,10 +129,7 @@ export default defineConfig(() => {
 						});
 					},
 					handleHotUpdate(ctx) {
-						console.log(ctx.file);
-
-
-						if (!ctx.file.includes('/builder/builder/src')) {
+						if (!ctx.file.includes('/_builder/src')) {
 							ctx.server.ws.send('frame-reload');
 
 							return [];
