@@ -42,6 +42,10 @@ export class BuilderApp extends LitElement {
 			//console.log('got payload with information about component', payload);
 		});
 
+		import.meta.hot?.on('frame-reload', () => {
+			this.iframe.contentWindow?.location.reload();
+		});
+
 		window.addEventListener('message', (ev) => {
 			this.onIframeMessage(ev.data);
 		});

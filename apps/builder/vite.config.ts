@@ -115,7 +115,11 @@ export default defineConfig(() => {
 								},
 							});
 
-							const parsedText = Buffer.from(code).toString();
+							const parsedText = Buffer.from(code).toString()
+								.split('\n')
+								.map(line => '\t' + line)
+								.join('\n');
+
 							const s = new MagicString(fileContent);
 
 							s.update(stylesTemplate.getStart() + 1,
@@ -123,6 +127,16 @@ export default defineConfig(() => {
 
 							writeFileSync(data.path, s.toString());
 						});
+					},
+					handleHotUpdate(ctx) {
+						console.log(ctx.file);
+
+
+						if (!ctx.file.includes('/builder/builder/src')) {
+							ctx.server.ws.send('frame-reload');
+
+							return [];
+						}
 					},
 				};
 			})(),

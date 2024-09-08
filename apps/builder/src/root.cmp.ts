@@ -13,18 +13,18 @@ export class RootCmp extends LitElement {
 	}
 
 	public static override styles = css`
-:host {
-  background-color: #2a3079;
-}
-
-#haiw124n {
-  background-color: #1e90ff;
-  width: 200px;
-  height: 200px;
-  position: absolute;
-  top: 50px;
-  left: 100px;
-}
-`;
+	:host {
+	  background-color: #9c2191;
+	}
+	
+	#haiw124n {
+	  background-color: #1e90ff;
+	  width: 200px;
+	  height: 200px;
+	  position: absolute;
+	  top: 50px;
+	  left: 100px;
+	}
+	`;
 
 }
