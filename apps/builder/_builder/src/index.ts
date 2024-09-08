@@ -67,8 +67,6 @@ export class BuilderApp extends LitElement {
 			const parentCmp = data.path.slice(1)
 				.find(p => !!this.iframe.contentWindow?.customElements.get(p.tag));
 
-			console.log(parentCmp);
-
 			import.meta.hot?.send('select-component', {
 				tag:       data.path[0]?.tag,
 				parentTag: parentCmp?.tag,

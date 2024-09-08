@@ -2,17 +2,6 @@ import { html, render } from 'lit';
 import 'root/root.cmp.ts';
 
 
-window.addEventListener('message', (ev) => {
-	console.log(ev);
-
-	const style = ev.data.details.style;
-
-	const rect = document.createElement('div');
-	Object.assign(rect.style, style);
-
-	document.body.append(rect);
-});
-
 window.addEventListener('click', (ev) => {
 	window.top?.postMessage({
 		type: 'click',
@@ -22,6 +11,7 @@ window.addEventListener('click', (ev) => {
 			.filter(tar => tar instanceof HTMLElement)
 			.map(tar => {
 				return {
+					type:  tar.nodeName,
 					id:    tar.id,
 					tag:   tar.localName,
 					class: tar.classList.toString(),
