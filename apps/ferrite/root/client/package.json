@@ -6,5 +6,9 @@
 	"version": "1.0.0",
 	"main": "pathToMain",
 	"dependencies": {
+		"@roenlie/core": "workspace:^",
+		"@lit-labs/motion": "^1.0.7",
+		"lit": "^3.2.0",
+		"tslib": "^2.7.0"
 	}
 }
