@@ -6,6 +6,7 @@ import { InfiniteScroller } from '../../features/infinite-scroller/infinite-scro
 
 @customElement('m-handover-list', true)
 export class HandoverListCmp extends AegisElement {
+
 	public override afterConnectedCallback(): void {
 		const scroller = this.shadowRoot!.querySelector<HandoverRowScrollerCmp>(
 			'm-handover-row-scroller',
@@ -29,10 +30,12 @@ export class HandoverListCmp extends AegisElement {
 		display: grid;
 	}
 	`;
+
 }
 
 @customElement('m-handover-row-scroller', true)
 export class HandoverRowScrollerCmp extends InfiniteScroller {
+
 	protected override minIndex = 0;
 	protected override maxIndex = 50;
 
@@ -46,7 +49,8 @@ export class HandoverRowScrollerCmp extends InfiniteScroller {
 	): void {
 		if (index < this.minIndex || index > this.maxIndex) {
 			element.style.setProperty('visibility', 'hidden');
-		} else {
+		}
+		else {
 			element.style.setProperty('visibility', '');
 			element.value = String(index);
 		}
@@ -57,15 +61,17 @@ export class HandoverRowScrollerCmp extends InfiniteScroller {
 		css`
 		`,
 	];
+
 }
 
 @customElement('m-handover-row', true)
 export class HandoverRowCmp extends AegisElement {
+
 	@property() public value = '';
 
 	protected override render(): unknown {
 		return html`
-	WHAT IS THIS: ${this.value}
+	WHAT IS THIS: ${ this.value }
 	`;
 	}
 
@@ -77,4 +83,5 @@ export class HandoverRowCmp extends AegisElement {
 	}
 	`,
 	];
+
 }

@@ -1,17 +1,16 @@
-import { debounce, withDebounce } from '@roenlie/core/timing';
+import { paintCycle } from '@roenlie/core/async';
+import { debounce } from '@roenlie/core/timing';
 import type { RecordOf } from '@roenlie/core/types';
-import { queryId } from '@roenlie/lit-utilities/decorators';
-import { MimicElement, customElement } from '@roenlie/lit-utilities/element';
-import { type CSSResultGroup, css, html } from 'lit';
-import { property, query } from 'lit/decorators.js';
+import { type CSSResultGroup, LitElement, css, html } from 'lit';
+import { customElement, property, query } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import { until } from 'lit/directives/until.js';
 import { when } from 'lit/directives/when.js';
+
 
 interface BufferElement extends HTMLElement {
 	translateY: number;
-	updated: boolean;
-	children: HTMLCollectionOf<SlotElement>;
+	updated:    boolean;
+	children:   HTMLCollectionOf<SlotElement>;
 }
 
 interface SlotElement extends HTMLSlotElement {
@@ -23,9 +22,13 @@ interface ItemWrapperElement extends HTMLDivElement {
 }
 
 // TODO, Make the minimum buffer change depending on available space.
-export abstract class InfiniteScroller extends MimicElement {
-	@queryId('scroller') protected scrollerQry: HTMLElement;
-	@queryId('fullHeight') protected fullHeightQry: HTMLElement;
+export abstract class InfiniteScroller extends LitElement {
+
+	protected abstract createElement(): RecordOf<HTMLElement>;
+	protected abstract updateElement(element: HTMLElement, index: number): void;
+
+	@query('#scroller') protected scrollerQry:                    HTMLElement;
+	@query('#fullHeight') protected fullHeightQry:                HTMLElement;
 	@query('infinite-scroller-scrollbar') protected scrollbarQry: ScrollbarCmp;
 
 	/**
@@ -34,13 +37,21 @@ export abstract class InfiniteScroller extends MimicElement {
 	 * will result in 40 buffered DOM items in total.
 	 * Changing after initialization not supported.
 	 */
-	public bufferSize = 20;
+	public get bufferSize() { return this.#bufferSize; };
+	public set bufferSize(v: number) {
+		this.#active = false;
+		this.#bufferSize = v;
+
+		this.active = true;
+	}
+
+	#bufferSize = 20;
 
 	/**
 	 * The amount of initial scroll top.
 	 * Needed in order for the user to be able to scroll backwards.
 	 */
-	protected initialScroll = 50000;
+	protected readonly initialScroll = 50000;
 
 	/** The index/position mapped at _initialScroll point. */
 	protected initialIndex = 0;
@@ -51,16 +62,14 @@ export abstract class InfiniteScroller extends MimicElement {
 	/** highest index list will scroll to. */
 	protected maxIndex?: number;
 
-	protected preventScrollEvent: boolean;
+	protected preventScrollEvent = false;
 
 	/** This must be an array, as part of the core logic is reversing the order. */
-	protected buffers: [BufferElement, BufferElement];
-	protected firstIndex: number;
-	protected scrollDisabled: boolean;
-	protected mayHaveMomentum: boolean;
-	protected initDone: boolean;
+	protected buffers:        [BufferElement, BufferElement];
+	protected firstIndex = 0;
+	protected scrollDisabled = false;
+	protected mayHaveMomentum = false;
 	protected resizeObserver: ResizeObserver;
-
 	protected debounceScroll = debounce(() => {
 		const scrollerRect = this.scrollerQry.getBoundingClientRect();
 		const firstBufferVisible = this.isVisible(this.buffers[0], scrollerRect);
@@ -69,16 +78,6 @@ export abstract class InfiniteScroller extends MimicElement {
 		if (!firstBufferVisible && !secondBufferVisible)
 			this.position = this.position; // eslint-disable-line no-self-assign
 	}, 200);
-
-	protected debounceBlockScroll = withDebounce(
-		() => {
-			this.scrollerQry.style.setProperty('overflow', 'hidden');
-		},
-		() => {
-			this.scrollerQry.style.removeProperty('overflow');
-		},
-		100,
-	);
 
 	protected debounceUpdateClones = debounce(() => {
 		this.buffers[0].updated = false;
@@ -93,7 +92,8 @@ export abstract class InfiniteScroller extends MimicElement {
 
 	protected get showScrollbar() {
 		const itemCount = (this.maxIndex ?? 0) - (this.minIndex ?? 0);
-		if (!itemCount) return false;
+		if (!itemCount)
+			return false;
 
 		const availableSpace = this.offsetHeight;
 		const usedSpace = this.itemHeight * (itemCount + 1);
@@ -103,11 +103,11 @@ export abstract class InfiniteScroller extends MimicElement {
 
 	/** This must be set to true for the scroller to initialized. */
 	#active = false;
-	public get active(): boolean {
-		return this.#active;
-	}
+	public get active(): boolean { return this.#active; }
+
 	public set active(active) {
-		if (this.#active || !active) return;
+		if (this.#active || !active)
+			return;
 
 		this.createPool();
 		this.#active = true;
@@ -120,9 +120,8 @@ export abstract class InfiniteScroller extends MimicElement {
 	#itemHeight = 0;
 	public get itemHeight(): number {
 		if (!this.#itemHeight && this.fullHeightQry) {
-			const itemHeight = getComputedStyle(this).getPropertyValue(
-				'--_infinite-scroller-item-height',
-			);
+			const itemHeight = getComputedStyle(this)
+				.getPropertyValue('--item-height');
 
 			// Use background-position temp inline style for unit conversion
 			const tmpStyleProp = 'background-position';
@@ -139,9 +138,7 @@ export abstract class InfiniteScroller extends MimicElement {
 		return this.#itemHeight;
 	}
 
-	protected get bufferHeight(): number {
-		return this.itemHeight * this.bufferSize;
-	}
+	protected get bufferHeight(): number { return this.itemHeight * this.bufferSize; }
 
 	protected get totalHeight(): number {
 		const itemLength = (this.maxIndex ?? 0) - (this.minIndex ?? 0);
@@ -150,26 +147,24 @@ export abstract class InfiniteScroller extends MimicElement {
 	}
 
 	public get position(): number {
-		return (
-			(this.scrollerQry.scrollTop - this.buffers[0].translateY) /
-				this.itemHeight +
-			this.firstIndex
-		);
+		return (this.scrollerQry.scrollTop - this.buffers[0].translateY)
+			/ this.itemHeight + this.firstIndex;
 	}
 
 	/** Current scroller position as index. Can be a fractional number. */
 	public set position(index: number) {
 		this.preventScrollEvent = true;
-		if (
-			index > this.firstIndex &&
-			index < this.firstIndex + this.bufferSize * 2
+		if (index > this.firstIndex
+			&& index < this.firstIndex + this.bufferSize * 2
 		) {
 			this.scrollerQry.scrollTop =
 				this.itemHeight * (index - this.firstIndex) +
 				this.buffers[0].translateY;
-		} else {
+		}
+		else {
 			this.initialIndex = ~~index;
 			this.reset();
+
 			this.scrollDisabled = true;
 			this.scrollerQry.scrollTop += (index % 1) * this.itemHeight;
 			this.scrollDisabled = false;
@@ -187,7 +182,12 @@ export abstract class InfiniteScroller extends MimicElement {
 		}
 	}
 
-	public override afterConnectedCallback(): void {
+	public override connectedCallback(): void {
+		super.connectedCallback();
+		this.updateComplete.then(() => this.afterConnectedCallback());
+	}
+
+	public afterConnectedCallback(): void {
 		this.resizeObserver = new ResizeObserver(() => {
 			this.requestUpdate();
 			this.scrollbarQry.updateScrollPosition();
@@ -199,70 +199,107 @@ export abstract class InfiniteScroller extends MimicElement {
 		super.firstUpdated(props);
 
 		const bufferEls = this.shadowRoot!.querySelectorAll('.buffer');
-		this.buffers = [...bufferEls] as typeof this.buffers;
-		this.fullHeightQry.style.height = `${this.initialScroll * 2}px`;
+		this.buffers = [ ...bufferEls ] as typeof this.buffers;
+		this.fullHeightQry.style.height = `${ this.initialScroll * 2 }px`;
 		this.scrollerQry.addEventListener('scroll', this.handleScroll.bind(this), {
 			passive: true,
 		});
 
 		// Firefox interprets elements with overflow:auto as focusable
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=1069739
-		if (isFirefox) this.scrollerQry.tabIndex = -1;
+		if (isFirefox)
+			this.scrollerQry.tabIndex = -1;
 	}
 
-	protected createPool() {
+	protected async createPool() {
+		// If there is no change in buffer size, ignore the function call.
+		const currentChildCount = this.buffers[0].childElementCount;
+		if (currentChildCount === this.bufferSize)
+			return;
+
 		const container = this.getBoundingClientRect();
-		let id = 0;
 
-		for (const buffer of this.buffers) {
-			for (let i = 0; i < this.bufferSize; i++) {
-				const slotName = `infinite-scroller-item-content-${id++}`;
+		// No children, this is the first time creating the pool.
+		if (currentChildCount === 0) {
+			let id = 0;
 
-				const itemWrapper = document.createElement('div') as ItemWrapperElement;
-				itemWrapper.setAttribute('slot', slotName);
-				itemWrapper.instance = {} as RecordOf<HTMLElement>;
+			for (const buffer of this.buffers) {
+				for (let i = 0; i < this.bufferSize; i++)
+					this.createAndAppendSlot(buffer, id++, container);
+			}
+		}
+		// TODO case with removing and adding to the buffer needs to be ironed out.
+		else if (currentChildCount < this.bufferSize) {
+			const buffers = this.buffers[0].firstElementChild?.getAttribute('name') === 'item-0'
+				? [ this.buffers[0], this.buffers[1] ]
+				: [ this.buffers[1], this.buffers[0] ];
 
-				const slot = document.createElement('slot') as SlotElement;
-				slot._itemWrapper = itemWrapper;
-				slot.setAttribute('name', slotName);
+			let itemCount = buffers[0]!.childElementCount + buffers[1]!.childElementCount;
+			for (const buffer of buffers) {
+				for (let i = currentChildCount; i < this.bufferSize; i++)
+					this.createAndAppendSlot(buffer, itemCount++, container);
+			}
+		}
+		else if (currentChildCount > this.bufferSize) {
+			for (const buffer of this.buffers) {
+				while (buffer.childElementCount > this.bufferSize) {
+					const child = buffer.lastElementChild!;
+					const name = child.getAttribute('name')!;
+					child.remove();
 
-				buffer.appendChild(slot);
-				this.appendChild(itemWrapper);
-
-				// Only stamp the visible instances first
-				if (this.isVisible(itemWrapper, container))
-					this.ensureStampedInstance(itemWrapper);
+					//this.querySelector('[slot="' + name + '"]')?.remove();
+				}
 			}
 		}
 
-		requestAnimationFrame(() => this.finishInit());
+		// Wait for the dom to render the elements before stamping remaining instances.
+		await paintCycle();
+		this.stampRemainingInstances();
+	}
+
+	protected createAndAppendSlot(buffer: BufferElement, id: number, container: DOMRect) {
+		const slotName = `item-${ id }`;
+
+		const itemWrapper = document.createElement('div') as ItemWrapperElement;
+		itemWrapper.setAttribute('slot', slotName);
+		itemWrapper.style.display = 'contents';
+		itemWrapper.instance = {} as RecordOf<HTMLElement>;
+
+		const slot = document.createElement('slot') as SlotElement;
+		slot._itemWrapper = itemWrapper;
+		slot.setAttribute('name', slotName);
+
+		buffer.appendChild(slot);
+		this.appendChild(itemWrapper);
+
+		// Only stamp the visible instances first
+		if (this.isVisible(itemWrapper, container))
+			this.ensureStampedInstance(itemWrapper);
 	}
 
 	protected ensureStampedInstance(itemWrapper: ItemWrapperElement) {
-		if (itemWrapper.firstElementChild) return;
+		if (itemWrapper.firstElementChild)
+			return;
 
 		const tmpInstance = itemWrapper.instance;
 
 		itemWrapper.instance = this.createElement();
-		itemWrapper.style.display = 'contents';
 		itemWrapper.appendChild(itemWrapper.instance);
 
 		for (const prop of Object.keys(tmpInstance))
 			itemWrapper.instance[prop] = tmpInstance[prop]!;
 	}
 
-	protected finishInit() {
-		if (this.initDone) return;
-
+	protected stampRemainingInstances() {
 		// Once the first set of items start fading in, stamp the rest
 		for (const buffer of this.buffers) {
 			for (const slot of buffer.children)
 				this.ensureStampedInstance(slot._itemWrapper);
 		}
 
-		if (!this.buffers[0].translateY) this.reset();
+		if (!this.buffers[0].translateY)
+			this.reset();
 
-		this.initDone = true;
 		this.dispatchEvent(new CustomEvent('init-done'));
 	}
 
@@ -275,15 +312,14 @@ export abstract class InfiniteScroller extends MimicElement {
 		this.debounceUpdateClones.cancel();
 	}
 
-	protected abstract createElement(): RecordOf<HTMLElement>;
-	protected abstract updateElement(element: HTMLElement, index: number): void;
-
 	protected translateBuffer(up: boolean) {
 		const index = up ? 1 : 0;
-		this.buffers[index].translateY =
-			this.buffers[up ? 0 : 1].translateY + this.bufferHeight * (up ? -1 : 1);
-		this.buffers[index].style.transform =
-			`translate3d(0, ${this.buffers[index].translateY}px, 0)`;
+		this.buffers[index].translateY = this.buffers[up ? 0 : 1].translateY
+			+ this.bufferHeight * (up ? -1 : 1);
+
+		this.buffers[index].style.transform = `translate3d(0, ${
+			this.buffers[index].translateY }px, 0)`;
+
 		this.buffers[index].updated = false;
 		this.buffers.reverse();
 	}
@@ -293,19 +329,20 @@ export abstract class InfiniteScroller extends MimicElement {
 			if (!this.showScrollbar) {
 				this.position = 0;
 
-				return this.debounceBlockScroll();
+				return;
 			}
 
 			this.scrollbarQry.updateScrollPosition();
 		}
 
-		if (this.scrollDisabled) return;
+		if (this.scrollDisabled)
+			return;
 
 		if (this.minIndex !== undefined) {
 			if (this.position < this.minIndex) {
 				this.position = this.minIndex;
 
-				return this.debounceBlockScroll();
+				return;
 			}
 		}
 
@@ -313,7 +350,7 @@ export abstract class InfiniteScroller extends MimicElement {
 			if (this.position > this.maxIndex) {
 				this.position = this.maxIndex;
 
-				return this.debounceBlockScroll();
+				return;
 			}
 		}
 
@@ -360,7 +397,7 @@ export abstract class InfiniteScroller extends MimicElement {
 		this.buffers[1].translateY = this.initialScroll;
 
 		for (const buffer of this.buffers)
-			buffer.style.transform = `translate3d(0, ${buffer.translateY}px, 0)`;
+			buffer.style.transform = `translate3d(0, ${ buffer.translateY }px, 0)`;
 
 		this.buffers[0].updated = false;
 		this.buffers[1].updated = false;
@@ -373,8 +410,8 @@ export abstract class InfiniteScroller extends MimicElement {
 
 	protected updateClones(viewPortOnly?: boolean) {
 		this.firstIndex =
-			~~((this.buffers[0].translateY - this.initialScroll) / this.itemHeight) +
-			this.initialIndex;
+			~~((this.buffers[0].translateY - this.initialScroll) / this.itemHeight)
+			+ this.initialIndex;
 
 		const scrollerRect = viewPortOnly
 			? this.scrollerQry.getBoundingClientRect()
@@ -382,7 +419,8 @@ export abstract class InfiniteScroller extends MimicElement {
 
 		for (let i = 0; i < this.buffers.length; i++) {
 			const buffer = this.buffers[i]!;
-			if (buffer.updated) continue;
+			if (buffer.updated)
+				continue;
 
 			const firstIndex = this.firstIndex + this.bufferSize * i;
 
@@ -429,55 +467,45 @@ export abstract class InfiniteScroller extends MimicElement {
 
 		return obj as {
 			readonly totalHeight: number;
-			readonly itemCount: number;
-			readonly itemHeight: number;
-			position: number;
+			readonly itemCount:   number;
+			readonly itemHeight:  number;
+			position:             number;
 		};
 	})();
 
 	protected override render(): unknown {
 		return html`
 		<div id="scroller">
-			<div class="buffer"></div>
-			<div class="buffer"></div>
+			<div id="buffer1" class="buffer"></div>
+			<div id="buffer2" class="buffer"></div>
 			<div id="fullHeight"></div>
 		</div>
 
-		${until(
-			this.updateComplete.then(() =>
-				when(
-					this.useScrollbar,
-					() => html`
-					<infinite-scroller-scrollbar
-						style=${styleMap({ display: this.showScrollbar ? '' : 'none' })}
-						.connector=${this.scrollerProps}
-					></infinite-scroller-scrollbar>
-					`,
-				),
-			),
-		)}
+		${ when(this.useScrollbar, () => html`
+		<infinite-scroller-scrollbar
+			style=${ styleMap({ display: this.showScrollbar ? '' : 'none' }) }
+			.connector=${ this.scrollerProps }
+		></infinite-scroller-scrollbar>
+		`) }
 		`;
 	}
 
 	public static override styles: CSSResultGroup = css`
 		:host {
-			--_infinite-scroller-item-height: 100px;
-			--_infinite-scroller-buffer-width: 100%;
-			--_infinite-scroller-buffer-offset: 0;
-			--_infinite-scroller-thumb: rgb(80 80 80 / 50%);
+			--item-height: 60px;
+			--thumb-bg: rgb(80 80 80 / 50%);
 
-			overflow: hidden;
+			contain: strict;
 			position: relative;
 			display: grid;
-			grid-template-columns: 1fr auto;
+			grid-template-columns: 1fr max-content;
 		}
 		#scroller {
 			position: relative;
-			height: 100%;
-			overflow: auto;
+			display: block;
 			outline: none;
-			-webkit-overflow-scrolling: touch;
 			overflow-x: hidden;
+			-webkit-overflow-scrolling: touch;
 		}
 		#scroller.notouchscroll {
 			-webkit-overflow-scrolling: auto;
@@ -488,35 +516,36 @@ export abstract class InfiniteScroller extends MimicElement {
 		.buffer {
 			box-sizing: border-box;
 			position: absolute;
-			top: var(--_infinite-scroller-buffer-offset);
-			width: var(--_infinite-scroller-buffer-width);
-			animation: fadein 0.2s;
-
+			top: 0;
+			width: 100%;
 			display: grid;
-			grid-auto-rows: var(--_infinite-scroller-item-height);
+			grid-auto-rows: var(--item-height);
+			animation: fadein 0.2s;
 		}
 		@keyframes fadein {
 			from { opacity: 0; }
 			to { opacity: 1; }
 		}
 	`;
+
 }
 
+
 @customElement('infinite-scroller-scrollbar')
-export class ScrollbarCmp extends MimicElement {
+export class ScrollbarCmp extends LitElement {
+
 	@property({ type: Object }) public connector: {
 		readonly totalHeight: number;
-		readonly itemCount: number;
-		readonly itemHeight: number;
-		position: number;
+		readonly itemCount:   number;
+		readonly itemHeight:  number;
+		position:             number;
 	};
-	@queryId('scroll', true) protected thumbQry: HTMLElement;
-	protected abortSig: AbortController;
+
+	@query('#scroll', true) protected thumbQry: HTMLElement;
+	protected abortSig:                         AbortController;
 	protected get excessHeight() {
-		return (
-			(this.offsetHeight / this.connector.itemHeight) *
-			this.connector.itemHeight
-		);
+		return (this.offsetHeight / this.connector.itemHeight)
+			* this.connector.itemHeight;
 	}
 
 	public override connectedCallback(): void {
@@ -526,6 +555,12 @@ export class ScrollbarCmp extends MimicElement {
 		this.addEventListener('mousedown', this.handleTrackMousedown, {
 			signal: this.abortSig.signal,
 		});
+
+		this.updateComplete.then(() => this.afterConnectedCallback());
+	}
+
+	public afterConnectedCallback(): void {
+		this.updateScrollPosition();
 	}
 
 	public override disconnectedCallback(): void {
@@ -533,28 +568,22 @@ export class ScrollbarCmp extends MimicElement {
 		this.abortSig.abort();
 	}
 
-	public override afterConnectedCallback(): void {
-		this.updateScrollPosition();
-	}
-
 	public updateScrollPosition(): void {
 		const viewportHeight = this.offsetHeight;
 		const contentHeight = Math.max(viewportHeight, this.connector.totalHeight);
 
 		const viewableRatio = viewportHeight / contentHeight; // 1/3 or 0.333333333n
-		const scrollBarArea =
-			viewportHeight * 2 - (this.excessHeight + this.connector.itemHeight); // 150px
+		const scrollBarArea = viewportHeight * 2
+			- (this.excessHeight + this.connector.itemHeight); // 150px
 		const thumbHeight = Math.max(scrollBarArea * viewableRatio, 20); // 50px
 
-		this.thumbQry.style.height = `${thumbHeight}px`;
+		this.thumbQry.style.height = `${ thumbHeight }px`;
 
-		const top = Math.max(
-			0,
-			((viewportHeight - thumbHeight) / this.connector.itemCount) *
-				this.connector.position,
-		);
+		const top = Math.max(0,
+			((viewportHeight - thumbHeight) / this.connector.itemCount)
+			* this.connector.position);
 
-		this.thumbQry.style.transform = `translate3d(0, ${top}px, 0)`;
+		this.thumbQry.style.transform = `translate3d(0, ${ top }px, 0)`;
 	}
 
 	protected handleThumbMousedown(ev: MouseEvent): void {
@@ -582,10 +611,8 @@ export class ScrollbarCmp extends MimicElement {
 			const jumpDistance = scrollJump * distance;
 			const positionChange = jumpDistance / this.connector.itemHeight;
 
-			this.connector.position = Math.max(
-				0,
-				this.connector.position + positionChange,
-			);
+			this.connector.position = Math.max(0,
+				this.connector.position + positionChange);
 		};
 
 		const mouseup = () => {
@@ -612,13 +639,14 @@ export class ScrollbarCmp extends MimicElement {
 	protected override render(): unknown {
 		return html`
 		<s-scroll-thumb id="scroll"
-			@mousedown=${this.handleThumbMousedown}
+			@mousedown=${ this.handleThumbMousedown }
 		></s-scroll-thumb>
 		`;
 	}
 
 	public static override styles = css`
 	:host {
+		position: relative;
 		display: block;
 		width: 16px;
 	}
@@ -626,13 +654,15 @@ export class ScrollbarCmp extends MimicElement {
 		position: absolute;
 		display: block;
 		width: 100%;
-		background-color: var(--_infinite-scroller-thumb);
+		background-color: var(--thumb-bg);
 	}
 	`;
+
 }
-ScrollbarCmp.register();
+
 
 const isFirefox = /Firefox/u.test(navigator.userAgent);
+
 
 const calculatePercentage = (
 	current: number,

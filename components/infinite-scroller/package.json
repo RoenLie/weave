@@ -1,0 +1,16 @@
+{
+	"name": "@roenlie/infinite-scroller",
+	"description": "description",
+	"authors": "author",
+	"version": "1.0.0",
+	"type": "module",
+	"main": "pathToMain",
+	"scripts": {
+		"dev": "vite --config ./demo/vite.config.ts"
+	},
+	"dependencies": {
+		"@roenlie/core": "workspace:^",
+		"lit": "^3.2.0",
+		"tslib": "^2.7.0"
+	}
+}

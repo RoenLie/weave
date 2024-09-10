@@ -670,6 +670,18 @@ importers:
         specifier: 5.4.2
         version: 5.4.2
 
+  components/infinite-scroller:
+    dependencies:
+      '@roenlie/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      lit:
+        specifier: ^3.2.0
+        version: 3.2.0
+      tslib:
+        specifier: ^2.7.0
+        version: 2.7.0
+
   components/widget-grid:
     dependencies:
       lit:
