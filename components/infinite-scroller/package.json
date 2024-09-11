@@ -6,6 +6,7 @@
 	"type": "module",
 	"types": "./dist/infinite-scroller.d.ts",
 	"main": "./dist/infinite-scroller.js",
+	"sideEffects": false,
 	"files": [
 		"dist",
 		"src"
