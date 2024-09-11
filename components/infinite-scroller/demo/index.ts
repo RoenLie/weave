@@ -1,39 +1,16 @@
 import { css, html, LitElement, render } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 
-import { InfiniteScroller } from '../src/index.js';
+import { InfiniteScroller } from '../src/infinite-scroller.ts';
 
 
 @customElement('m-handover-list')
 export class HandoverListCmp extends LitElement {
 
-
 	@query('m-handover-row-scroller') protected scrollerEl: HandoverRowScrollerCmp;
-	protected resizeObs = new ResizeObserver(([ entry ]) => {
-		const scroller = this.scrollerEl;
-		if (!entry || !scroller)
-			return;
-
-		const availableSize = this.offsetHeight;
-		const visibleCount = Math.ceil(availableSize / 60);
-
-		if (visibleCount !== scroller.bufferSize)
-			scroller.bufferSize = visibleCount;
-	});
 
 	public override connectedCallback(): void {
 		super.connectedCallback();
-
-		this.resizeObs.observe(this);
-
-		this.updateComplete.then(() => this.afterConnectedCallback());
-	}
-
-	public afterConnectedCallback(): void {
-		const availableSize = this.offsetHeight;
-		const visibleCount = Math.ceil(availableSize / 60);
-
-		this.scrollerEl.bufferSize = visibleCount;
 	}
 
 	protected override render(): unknown {
@@ -55,7 +32,7 @@ export class HandoverListCmp extends LitElement {
 export class HandoverRowScrollerCmp extends InfiniteScroller {
 
 	protected override minIndex = 0;
-	protected override maxIndex = 10000;
+	protected override maxIndex = 100;
 
 	protected override createElement(): HTMLElement {
 		return document.createElement('m-handover-row');
@@ -74,11 +51,14 @@ export class HandoverRowScrollerCmp extends InfiniteScroller {
 		}
 	}
 
-	public static override styles = [
-		InfiniteScroller.styles,
-		css`
-		`,
-	];
+	protected override onScroll(): void {
+		super.onScroll();
+
+		if ((this.maxIndex - this.position) < 20)
+			this.maxIndex += 100;
+	}
+
+	public static override styles = [];
 
 }
 

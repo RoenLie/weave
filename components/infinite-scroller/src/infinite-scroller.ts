@@ -1,16 +1,15 @@
-import { paintCycle } from '@roenlie/core/async';
 import { debounce } from '@roenlie/core/timing';
 import type { RecordOf } from '@roenlie/core/types';
-import { type CSSResultGroup, LitElement, css, html } from 'lit';
+import { type CSSResult, LitElement, css, html } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { when } from 'lit/directives/when.js';
 
 
 interface BufferElement extends HTMLElement {
-	translateY: number;
-	updated:    boolean;
-	children:   HTMLCollectionOf<SlotElement>;
+	_translateY: number;
+	_updated:    boolean;
+	children:    HTMLCollectionOf<SlotElement>;
 }
 
 interface SlotElement extends HTMLSlotElement {
@@ -18,10 +17,10 @@ interface SlotElement extends HTMLSlotElement {
 }
 
 interface ItemWrapperElement extends HTMLDivElement {
-	instance: HTMLElement & Record<PropertyKey, unknown>;
+	_instance: HTMLElement & Record<PropertyKey, unknown>;
 }
 
-// TODO, Make the minimum buffer change depending on available space.
+
 export abstract class InfiniteScroller extends LitElement {
 
 	protected abstract createElement(): RecordOf<HTMLElement>;
@@ -35,23 +34,19 @@ export abstract class InfiniteScroller extends LitElement {
 	 * Count of individual items in each buffer.
 	 * The scroller has 2 buffers altogether so bufferSize of 20
 	 * will result in 40 buffered DOM items in total.
-	 * Changing after initialization not supported.
 	 */
+	#bufferSize = 0;
 	public get bufferSize() { return this.#bufferSize; };
 	public set bufferSize(v: number) {
-		this.#active = false;
 		this.#bufferSize = v;
-
-		this.active = true;
+		this.createPool();
 	}
-
-	#bufferSize = 20;
 
 	/**
 	 * The amount of initial scroll top.
 	 * Needed in order for the user to be able to scroll backwards.
 	 */
-	protected readonly initialScroll = 50000;
+	protected readonly initialScroll = 10000;
 
 	/** The index/position mapped at _initialScroll point. */
 	protected initialIndex = 0;
@@ -80,8 +75,8 @@ export abstract class InfiniteScroller extends LitElement {
 	}, 200);
 
 	protected debounceUpdateClones = debounce(() => {
-		this.buffers[0].updated = false;
-		this.buffers[1].updated = false;
+		this.buffers[0]._updated = false;
+		this.buffers[1]._updated = false;
 
 		this.updateClones();
 	}, 200);
@@ -101,22 +96,6 @@ export abstract class InfiniteScroller extends LitElement {
 		return usedSpace > availableSpace;
 	}
 
-	/** This must be set to true for the scroller to initialized. */
-	#active = false;
-	public get active(): boolean { return this.#active; }
-
-	public set active(active) {
-		if (this.#active || !active)
-			return;
-
-		this.createPool();
-		this.#active = true;
-	}
-
-	public get bufferOffset(): number {
-		return this.buffers[0].offsetTop;
-	}
-
 	#itemHeight = 0;
 	public get itemHeight(): number {
 		if (!this.#itemHeight && this.fullHeightQry) {
@@ -127,9 +106,8 @@ export abstract class InfiniteScroller extends LitElement {
 			const tmpStyleProp = 'background-position';
 			this.fullHeightQry.style.setProperty(tmpStyleProp, itemHeight);
 
-			const itemHeightPx = getComputedStyle(
-				this.fullHeightQry,
-			).getPropertyValue(tmpStyleProp);
+			const itemHeightPx = getComputedStyle(this.fullHeightQry)
+				.getPropertyValue(tmpStyleProp);
 
 			this.fullHeightQry.style.removeProperty(tmpStyleProp);
 			this.#itemHeight = parseFloat(itemHeightPx);
@@ -138,28 +116,28 @@ export abstract class InfiniteScroller extends LitElement {
 		return this.#itemHeight;
 	}
 
-	protected get bufferHeight(): number { return this.itemHeight * this.bufferSize; }
+	protected get bufferHeight(): number {
+		return this.itemHeight * this.bufferSize;
+	}
 
 	protected get totalHeight(): number {
-		const itemLength = (this.maxIndex ?? 0) - (this.minIndex ?? 0);
+		const itemCount = (this.maxIndex ?? 0) - (this.minIndex ?? 0);
 
-		return this.itemHeight * itemLength;
+		return this.itemHeight * itemCount;
 	}
 
 	public get position(): number {
-		return (this.scrollerQry.scrollTop - this.buffers[0].translateY)
+		return (this.scrollerQry.scrollTop - this.buffers[0]._translateY)
 			/ this.itemHeight + this.firstIndex;
 	}
 
 	/** Current scroller position as index. Can be a fractional number. */
 	public set position(index: number) {
 		this.preventScrollEvent = true;
-		if (index > this.firstIndex
-			&& index < this.firstIndex + this.bufferSize * 2
-		) {
-			this.scrollerQry.scrollTop =
-				this.itemHeight * (index - this.firstIndex) +
-				this.buffers[0].translateY;
+		if (index > this.firstIndex && index < (this.firstIndex + this.bufferSize * 2)) {
+			this.scrollerQry.scrollTop = this.itemHeight
+				* (index - this.firstIndex)
+				+ this.buffers[0]._translateY;
 		}
 		else {
 			this.initialIndex = ~~index;
@@ -182,28 +160,47 @@ export abstract class InfiniteScroller extends LitElement {
 		}
 	}
 
+	protected override createRenderRoot(): HTMLElement | DocumentFragment {
+		// This ensures that the custom styles will always be included
+		// when this component is extended.
+		const base = (this.constructor as typeof InfiniteScroller);
+		const styles = base.elementStyles;
+		if (!styles.includes(base._styles))
+			styles.unshift(InfiniteScroller._styles);
+
+		return super.createRenderRoot();
+	}
+
 	public override connectedCallback(): void {
 		super.connectedCallback();
 		this.updateComplete.then(() => this.afterConnectedCallback());
 	}
 
-	public afterConnectedCallback(): void {
-		this.resizeObserver = new ResizeObserver(() => {
+	protected afterConnectedCallback(): void {
+		this.resizeObserver = new ResizeObserver(([ entry ]) => {
 			this.requestUpdate();
 			this.scrollbarQry.updateScrollPosition();
+
+			if (!entry)
+				return;
+
+			const availableSize = entry.contentRect.height;
+			const visibleCount = Math.ceil(availableSize / this.itemHeight);
+
+			if (visibleCount !== this.bufferSize)
+				this.bufferSize = visibleCount;
 		});
 		this.resizeObserver.observe(this);
 	}
 
-	protected override firstUpdated(props: Map<PropertyKey, unknown>) {
+	protected override firstUpdated(props: Map<PropertyKey, unknown>): void {
 		super.firstUpdated(props);
 
 		const bufferEls = this.shadowRoot!.querySelectorAll('.buffer');
 		this.buffers = [ ...bufferEls ] as typeof this.buffers;
 		this.fullHeightQry.style.height = `${ this.initialScroll * 2 }px`;
-		this.scrollerQry.addEventListener('scroll', this.handleScroll.bind(this), {
-			passive: true,
-		});
+		this.scrollerQry.addEventListener('scroll',
+			this.onScroll.bind(this), { passive: true });
 
 		// Firefox interprets elements with overflow:auto as focusable
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=1069739
@@ -211,7 +208,7 @@ export abstract class InfiniteScroller extends LitElement {
 			this.scrollerQry.tabIndex = -1;
 	}
 
-	protected async createPool() {
+	protected createPool(): void {
 		// If there is no change in buffer size, ignore the function call.
 		const currentChildCount = this.buffers[0].childElementCount;
 		if (currentChildCount === this.bufferSize)
@@ -227,43 +224,53 @@ export abstract class InfiniteScroller extends LitElement {
 				for (let i = 0; i < this.bufferSize; i++)
 					this.createAndAppendSlot(buffer, id++, container);
 			}
-		}
-		// TODO case with removing and adding to the buffer needs to be ironed out.
-		else if (currentChildCount < this.bufferSize) {
-			const buffers = this.buffers[0].firstElementChild?.getAttribute('name') === 'item-0'
-				? [ this.buffers[0], this.buffers[1] ]
-				: [ this.buffers[1], this.buffers[0] ];
 
+			// Wait for the dom to render the elements before stamping remaining instances.
+			return void requestAnimationFrame(() => this.stampRemainingInstances());
+		}
+
+		// Get the buffers in the correct order as these can be reversed during the scroll.
+		const buffers = this.buffers[0].firstElementChild?.getAttribute('name') === 'item-0'
+			? [ this.buffers[0], this.buffers[1] ]
+			: [ this.buffers[1], this.buffers[0] ];
+
+		const diff = Math.abs(this.bufferSize - currentChildCount);
+
+		if (currentChildCount < this.bufferSize) {
 			let itemCount = buffers[0]!.childElementCount + buffers[1]!.childElementCount;
-			for (const buffer of buffers) {
-				for (let i = currentChildCount; i < this.bufferSize; i++)
-					this.createAndAppendSlot(buffer, itemCount++, container);
-			}
+			const itemsToAdd = diff * 2;
+
+			for (let i = 0; i < itemsToAdd; i++)
+				this.createAndAppendSlot(buffers[1]!, itemCount++, container);
+
+			for (let i = 0; i < diff; i++)
+				buffers[0]!.appendChild(buffers[1]!.firstElementChild!);
+
+			this.stampRemainingInstances();
 		}
 		else if (currentChildCount > this.bufferSize) {
-			for (const buffer of this.buffers) {
-				while (buffer.childElementCount > this.bufferSize) {
-					const child = buffer.lastElementChild!;
-					const name = child.getAttribute('name')!;
-					child.remove();
+			const itemsToRemove = diff * 2;
 
-					//this.querySelector('[slot="' + name + '"]')?.remove();
-				}
+			for (let i = 0; i < itemsToRemove; i++) {
+				buffers[1]!.lastElementChild!.remove();
+				this.lastElementChild!.remove();
 			}
+
+			for (let i = 0; i < diff; i++)
+				buffers[1]!.prepend(buffers[0]!.lastElementChild!);
 		}
 
-		// Wait for the dom to render the elements before stamping remaining instances.
-		await paintCycle();
-		this.stampRemainingInstances();
+		this.initialIndex = ~~this.position;
+		this.reset(true);
 	}
 
-	protected createAndAppendSlot(buffer: BufferElement, id: number, container: DOMRect) {
+	protected createAndAppendSlot(buffer: BufferElement, id: number, container: DOMRect): void {
 		const slotName = `item-${ id }`;
 
 		const itemWrapper = document.createElement('div') as ItemWrapperElement;
 		itemWrapper.setAttribute('slot', slotName);
 		itemWrapper.style.display = 'contents';
-		itemWrapper.instance = {} as RecordOf<HTMLElement>;
+		itemWrapper._instance = {} as RecordOf<HTMLElement>;
 
 		const slot = document.createElement('slot') as SlotElement;
 		slot._itemWrapper = itemWrapper;
@@ -277,60 +284,48 @@ export abstract class InfiniteScroller extends LitElement {
 			this.ensureStampedInstance(itemWrapper);
 	}
 
-	protected ensureStampedInstance(itemWrapper: ItemWrapperElement) {
+	protected ensureStampedInstance(itemWrapper: ItemWrapperElement): void {
 		if (itemWrapper.firstElementChild)
 			return;
 
-		const tmpInstance = itemWrapper.instance;
+		const tmpInstance = itemWrapper._instance;
 
-		itemWrapper.instance = this.createElement();
-		itemWrapper.appendChild(itemWrapper.instance);
+		itemWrapper._instance = this.createElement();
+		itemWrapper.appendChild(itemWrapper._instance);
 
 		for (const prop of Object.keys(tmpInstance))
-			itemWrapper.instance[prop] = tmpInstance[prop]!;
+			itemWrapper._instance[prop] = tmpInstance[prop]!;
 	}
 
-	protected stampRemainingInstances() {
+	protected stampRemainingInstances(): void {
 		// Once the first set of items start fading in, stamp the rest
 		for (const buffer of this.buffers) {
 			for (const slot of buffer.children)
 				this.ensureStampedInstance(slot._itemWrapper);
 		}
 
-		if (!this.buffers[0].translateY)
-			this.reset();
+		if (!this.buffers[0]._translateY)
+			this.reset(true);
 
 		this.dispatchEvent(new CustomEvent('init-done'));
 	}
 
-	/** Force the scroller to update clones, without waiting for the debouncer to resolve. */
-	public forceUpdate() {
-		this.buffers[0].updated = false;
-		this.buffers[1].updated = false;
-
-		this.updateClones();
-		this.debounceUpdateClones.cancel();
-	}
-
-	protected translateBuffer(up: boolean) {
+	protected translateBuffer(up: boolean): void {
 		const index = up ? 1 : 0;
-		this.buffers[index].translateY = this.buffers[up ? 0 : 1].translateY
+		this.buffers[index]._translateY = this.buffers[up ? 0 : 1]._translateY
 			+ this.bufferHeight * (up ? -1 : 1);
 
 		this.buffers[index].style.transform = `translate3d(0, ${
-			this.buffers[index].translateY }px, 0)`;
+			this.buffers[index]._translateY }px, 0)`;
 
-		this.buffers[index].updated = false;
+		this.buffers[index]._updated = false;
 		this.buffers.reverse();
 	}
 
-	protected handleScroll() {
+	protected onScroll(): void {
 		if (this.useScrollbar) {
-			if (!this.showScrollbar) {
-				this.position = 0;
-
-				return;
-			}
+			if (!this.showScrollbar)
+				return void (this.position = 0);
 
 			this.scrollbarQry.updateScrollPosition();
 		}
@@ -338,20 +333,16 @@ export abstract class InfiniteScroller extends LitElement {
 		if (this.scrollDisabled)
 			return;
 
+		// Prevent the scroller from scrolling past the min index.
 		if (this.minIndex !== undefined) {
-			if (this.position < this.minIndex) {
-				this.position = this.minIndex;
-
-				return;
-			}
+			if (this.position < this.minIndex)
+				return void (this.position = this.minIndex);
 		}
 
+		// Prevent the scroller from scrolling past the max index.
 		if (this.maxIndex !== undefined) {
-			if (this.position > this.maxIndex) {
-				this.position = this.maxIndex;
-
-				return;
-			}
+			if (this.position > this.maxIndex)
+				return void (this.position = this.maxIndex);
 		}
 
 		const scrollTop = this.scrollerQry.scrollTop;
@@ -367,11 +358,11 @@ export abstract class InfiniteScroller extends LitElement {
 		}
 
 		// Check if we scrolled enough to translate the buffer positions.
-		const offset = this.itemHeight + this.bufferOffset;
+		const offset = this.itemHeight + this.buffers[0].offsetTop;
 		const upperThresholdReached =
-			scrollTop > this.buffers[1].translateY + offset;
+			scrollTop > this.buffers[1]._translateY + offset;
 		const lowerThresholdReached =
-			scrollTop < this.buffers[0].translateY + offset;
+			scrollTop < this.buffers[0]._translateY + offset;
 
 		if (upperThresholdReached || lowerThresholdReached) {
 			this.translateBuffer(lowerThresholdReached);
@@ -390,27 +381,32 @@ export abstract class InfiniteScroller extends LitElement {
 		this.debounceScroll();
 	}
 
-	protected reset() {
+	protected reset(force = false): void {
 		this.scrollDisabled = true;
 		this.scrollerQry.scrollTop = this.initialScroll;
-		this.buffers[0].translateY = this.initialScroll - this.bufferHeight;
-		this.buffers[1].translateY = this.initialScroll;
+		this.buffers[0]._translateY = this.initialScroll - this.bufferHeight;
+		this.buffers[1]._translateY = this.initialScroll;
 
 		for (const buffer of this.buffers)
-			buffer.style.transform = `translate3d(0, ${ buffer.translateY }px, 0)`;
+			buffer.style.transform = `translate3d(0, ${ buffer._translateY }px, 0)`;
 
-		this.buffers[0].updated = false;
-		this.buffers[1].updated = false;
+		this.buffers[0]._updated = false;
+		this.buffers[1]._updated = false;
 
-		this.updateClones(true);
-		this.debounceUpdateClones();
+		if (force) {
+			this.updateClones();
+		}
+		else {
+			this.updateClones(true);
+			this.debounceUpdateClones();
+		}
 
 		this.scrollDisabled = false;
 	}
 
-	protected updateClones(viewPortOnly?: boolean) {
+	protected updateClones(viewPortOnly?: boolean): void {
 		this.firstIndex =
-			~~((this.buffers[0].translateY - this.initialScroll) / this.itemHeight)
+			~~((this.buffers[0]._translateY - this.initialScroll) / this.itemHeight)
 			+ this.initialIndex;
 
 		const scrollerRect = viewPortOnly
@@ -419,7 +415,7 @@ export abstract class InfiniteScroller extends LitElement {
 
 		for (let i = 0; i < this.buffers.length; i++) {
 			const buffer = this.buffers[i]!;
-			if (buffer.updated)
+			if (buffer._updated)
 				continue;
 
 			const firstIndex = this.firstIndex + this.bufferSize * i;
@@ -432,46 +428,41 @@ export abstract class InfiniteScroller extends LitElement {
 					!viewPortOnly ||
 					(scrollerRect && this.isVisible(itemWrapper, scrollerRect))
 				)
-					this.updateElement(itemWrapper.instance, firstIndex + i);
+					this.updateElement(itemWrapper._instance, firstIndex + i);
 			}
 
-			buffer.updated = true;
+			buffer._updated = true;
 		}
 	}
 
-	protected isVisible(element: HTMLElement, container: DOMRect) {
+	protected isVisible(element: HTMLElement, container: DOMRect): boolean {
 		const rect = element.getBoundingClientRect();
 
 		return rect.bottom > container.top && rect.top < container.bottom;
 	}
 
-	protected scrollerProps = (() => {
-		const obj = {};
-		Object.defineProperties(obj, {
-			totalHeight: {
-				get: () => this.totalHeight,
+	protected scrollerProps = Object.defineProperties({} as {
+		readonly totalHeight: number;
+		readonly itemCount:   number;
+		readonly itemHeight:  number;
+		position:             number;
+	}, {
+		totalHeight: {
+			get: () => this.totalHeight,
+		},
+		itemCount: {
+			get: () => (this.maxIndex ?? 0) - (this.minIndex ?? 0),
+		},
+		itemHeight: {
+			get: () => this.itemHeight,
+		},
+		position: {
+			get: () => this.position,
+			set: (v: number) => {
+				this.position = v;
 			},
-			itemCount: {
-				get: () => (this.maxIndex ?? 0) - (this.minIndex ?? 0),
-			},
-			itemHeight: {
-				get: () => this.itemHeight,
-			},
-			position: {
-				get: () => this.position,
-				set: (v: number) => {
-					this.position = v;
-				},
-			},
-		});
-
-		return obj as {
-			readonly totalHeight: number;
-			readonly itemCount:   number;
-			readonly itemHeight:  number;
-			position:             number;
-		};
-	})();
+		},
+	});
 
 	protected override render(): unknown {
 		return html`
@@ -484,16 +475,18 @@ export abstract class InfiniteScroller extends LitElement {
 		${ when(this.useScrollbar, () => html`
 		<infinite-scroller-scrollbar
 			style=${ styleMap({ display: this.showScrollbar ? '' : 'none' }) }
+			.modifyScrollTop=${ (amount: number) => this.scrollerQry.scrollTop += amount }
 			.connector=${ this.scrollerProps }
 		></infinite-scroller-scrollbar>
 		`) }
 		`;
 	}
 
-	public static override styles: CSSResultGroup = css`
+	protected static _styles: CSSResult = css`
 		:host {
 			--item-height: 60px;
 			--thumb-bg: rgb(80 80 80 / 50%);
+			--track-bg: transparent;
 
 			contain: strict;
 			position: relative;
@@ -520,11 +513,6 @@ export abstract class InfiniteScroller extends LitElement {
 			width: 100%;
 			display: grid;
 			grid-auto-rows: var(--item-height);
-			animation: fadein 0.2s;
-		}
-		@keyframes fadein {
-			from { opacity: 0; }
-			to { opacity: 1; }
 		}
 	`;
 
@@ -534,6 +522,7 @@ export abstract class InfiniteScroller extends LitElement {
 @customElement('infinite-scroller-scrollbar')
 export class ScrollbarCmp extends LitElement {
 
+	@property({ type: Object }) public modifyScrollTop: (amount: number) => void;
 	@property({ type: Object }) public connector: {
 		readonly totalHeight: number;
 		readonly itemCount:   number;
@@ -542,20 +531,11 @@ export class ScrollbarCmp extends LitElement {
 	};
 
 	@query('#scroll', true) protected thumbQry: HTMLElement;
-	protected abortSig:                         AbortController;
-	protected get excessHeight() {
-		return (this.offsetHeight / this.connector.itemHeight)
-			* this.connector.itemHeight;
-	}
 
 	public override connectedCallback(): void {
 		super.connectedCallback();
 
-		this.abortSig = new AbortController();
-		this.addEventListener('mousedown', this.handleTrackMousedown, {
-			signal: this.abortSig.signal,
-		});
-
+		this.addEventListener('mousedown', this.handleTrackMousedown);
 		this.updateComplete.then(() => this.afterConnectedCallback());
 	}
 
@@ -565,7 +545,7 @@ export class ScrollbarCmp extends LitElement {
 
 	public override disconnectedCallback(): void {
 		super.disconnectedCallback();
-		this.abortSig.abort();
+		this.removeEventListener('mousedown', this.handleTrackMousedown);
 	}
 
 	public updateScrollPosition(): void {
@@ -573,58 +553,52 @@ export class ScrollbarCmp extends LitElement {
 		const contentHeight = Math.max(viewportHeight, this.connector.totalHeight);
 
 		const viewableRatio = viewportHeight / contentHeight; // 1/3 or 0.333333333n
+
+		const excessHeight = (this.offsetHeight / this.connector.itemHeight)
+			* this.connector.itemHeight;
+
 		const scrollBarArea = viewportHeight * 2
-			- (this.excessHeight + this.connector.itemHeight); // 150px
+			- (excessHeight + this.connector.itemHeight); // 150px
+
 		const thumbHeight = Math.max(scrollBarArea * viewableRatio, 20); // 50px
+		this.thumbQry.style.height = thumbHeight + 'px';
 
-		this.thumbQry.style.height = `${ thumbHeight }px`;
-
-		const top = Math.max(0,
-			((viewportHeight - thumbHeight) / this.connector.itemCount)
-			* this.connector.position);
+		const modifier = ((viewportHeight - thumbHeight) / this.connector.itemCount);
+		const top = Math.max(0, modifier * this.connector.position);
 
 		this.thumbQry.style.transform = `translate3d(0, ${ top }px, 0)`;
 	}
 
-	protected handleThumbMousedown(ev: MouseEvent): void {
+	protected handleThumbMousedown = (ev: MouseEvent): void => {
 		ev.preventDefault();
 		ev.stopPropagation();
 
-		const rect = this.thumbQry.getBoundingClientRect();
-		const offsetY = ev.y - rect.y;
+		let previousY = ev.y;
 
 		const mousemove = (ev: MouseEvent) => {
-			const rect = this.thumbQry.getBoundingClientRect();
-			const distance = ev.y - rect.y - offsetY;
+			if ((ev.y - previousY) === 0)
+				return;
 
 			const contentHeight = this.connector.totalHeight;
 			const viewportHeight = this.offsetHeight;
 
-			const viewableRatio = viewportHeight / contentHeight; // 1/3 or 0.333333333n
-			const scrollBarArea = viewportHeight * 2 - this.excessHeight; // 150px
-			const thumbHeight = Math.max(scrollBarArea * viewableRatio, 20); // 50px
+			const multiplier = contentHeight / viewportHeight;
+			const distance = (ev.y - previousY) * multiplier;
+			previousY = ev.y;
 
-			const scrollTrackSpace = contentHeight - viewportHeight; // (600 - 200) = 400
-			const scrollThumbSpace = viewportHeight - thumbHeight; // (200 - 50) = 150
-			const scrollJump = scrollTrackSpace / scrollThumbSpace; // (400 / 150 ) = 2.6667
-
-			const jumpDistance = scrollJump * distance;
-			const positionChange = jumpDistance / this.connector.itemHeight;
-
-			this.connector.position = Math.max(0,
-				this.connector.position + positionChange);
+			this.modifyScrollTop(distance);
 		};
 
 		const mouseup = () => {
-			window.removeEventListener('mousemove', mousemove);
-			window.removeEventListener('mouseup', mouseup);
+			window.removeEventListener('pointermove', mousemove);
+			window.removeEventListener('pointerup', mouseup);
 		};
 
-		window.addEventListener('mousemove', mousemove);
-		window.addEventListener('mouseup', mouseup);
-	}
+		window.addEventListener('pointermove', mousemove);
+		window.addEventListener('pointerup', mouseup);
+	};
 
-	protected handleTrackMousedown(ev: MouseEvent): void {
+	protected handleTrackMousedown = (ev: MouseEvent): void => {
 		ev.preventDefault();
 
 		const hostRect = this.getBoundingClientRect();
@@ -634,7 +608,7 @@ export class ScrollbarCmp extends LitElement {
 		this.connector.position = Math.max(0, newPos);
 
 		requestAnimationFrame(() => this.handleThumbMousedown(ev));
-	}
+	};
 
 	protected override render(): unknown {
 		return html`
@@ -649,6 +623,7 @@ export class ScrollbarCmp extends LitElement {
 		position: relative;
 		display: block;
 		width: 16px;
+		background-color: var(--track-bg);
 	}
 	s-scroll-thumb {
 		position: absolute;
