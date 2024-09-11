@@ -1,4 +1,4 @@
-name: Publish lit-aegis
+name: Publish infinite-scroller
 
 on:
   push:
