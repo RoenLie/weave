@@ -35,7 +35,10 @@ export abstract class InfiniteScroller extends LitElement {
 	@query('infinite-scroller-scrollbar') protected scrollbarQry:  ScrollbarCmp;
 
 	#bufferSize = 0;
-	public get bufferSize() { return this.#bufferSize; };
+	public get bufferSize() {
+		return this.#bufferSize;
+	};
+
 	public set bufferSize(v: number) {
 		this.#bufferSize = v;
 		this.createPool();
@@ -68,12 +71,10 @@ export abstract class InfiniteScroller extends LitElement {
 			return;
 
 		const availableSize = entry.contentRect.height;
-		const visibleCount = Math.ceil(availableSize / this.itemHeight);
+		const visibleCount = Math.ceil(availableSize / this.itemHeight) + 2;
 
-		if (visibleCount !== this.bufferSize) {
-			this.initialIndex = ~~this.position;
+		if (this.bufferSize !== visibleCount)
 			this.bufferSize = visibleCount;
-		}
 
 		this.scrollbarQry.updateScrollPosition();
 		this.requestUpdate();
@@ -156,6 +157,8 @@ export abstract class InfiniteScroller extends LitElement {
 				this.scrollerQry.classList.remove('notouchscroll');
 			}, 10);
 		}
+
+		this.onScroll();
 	}
 	//#endregion
 
@@ -191,7 +194,6 @@ export abstract class InfiniteScroller extends LitElement {
 		const bufferEls = this.shadowRoot!.querySelectorAll('.buffer');
 		this.buffers = [ ...bufferEls ] as typeof this.buffers;
 		this.fullHeightQry.style.height = `${ this.initialScroll * 2 }px`;
-
 
 		// Firefox interprets elements with overflow:auto as focusable
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=1069739
@@ -231,6 +233,8 @@ export abstract class InfiniteScroller extends LitElement {
 			return void requestAnimationFrame(() => this.stampRemainingInstances());
 		}
 
+		this.initialIndex = ~~this.position;
+
 		// Get the buffers in the correct order as these can be reversed during the scroll.
 		const buffers = this.buffers[0].firstElementChild?.getAttribute('name') === 'item-0'
 			? [ this.buffers[0], this.buffers[1] ]
@@ -262,7 +266,6 @@ export abstract class InfiniteScroller extends LitElement {
 				buffers[1]!.prepend(buffers[0]!.lastElementChild!);
 		}
 
-		this.initialIndex = ~~this.position;
 		this.reset(true);
 	}
 
@@ -458,26 +461,13 @@ export abstract class InfiniteScroller extends LitElement {
 		return rect.bottom > container.top && rect.top < container.bottom;
 	}
 
-	protected scrollerProps = Object.defineProperties({} as {
-		readonly totalHeight: number;
-		readonly itemCount:   number;
-		readonly itemHeight:  number;
-		position:             number;
-	}, {
-		totalHeight: {
-			get: () => this.totalHeight,
-		},
-		itemCount: {
-			get: () => (this.maxIndex ?? 0) - (this.minIndex ?? 0),
-		},
-		itemHeight: {
-			get: () => this.itemHeight,
-		},
-		position: {
+	protected scrollerProps = Object.defineProperties({} as ScrollbarCmp['connector'], {
+		totalHeight: { get: () => this.totalHeight              },
+		itemHeight:  { get: () => this.itemHeight               },
+		itemCount:   { get: () => this.maxIndex - this.minIndex },
+		position:    {
 			get: () => this.position,
-			set: (v: number) => {
-				this.position = v;
-			},
+			set: v => this.position = v,
 		},
 	});
 	//#endregion
@@ -507,6 +497,7 @@ export abstract class InfiniteScroller extends LitElement {
 			--item-height: 60px;
 			--thumb-bg: rgb(80 80 80 / 50%);
 			--track-bg: transparent;
+			--scroll-width: 16px;
 
 			contain: strict;
 			position: relative;
@@ -546,8 +537,8 @@ export class ScrollbarCmp extends LitElement {
 	@property({ type: Object }) public modifyScrollTop: (amount: number) => void;
 	@property({ type: Object }) public connector: {
 		readonly totalHeight: number;
-		readonly itemCount:   number;
 		readonly itemHeight:  number;
+		readonly itemCount:   number;
 		position:             number;
 	};
 
@@ -643,7 +634,7 @@ export class ScrollbarCmp extends LitElement {
 	:host {
 		position: relative;
 		display: block;
-		width: 16px;
+		width: var(--scroll-width);
 		background-color: var(--track-bg);
 	}
 	s-scroll-thumb {

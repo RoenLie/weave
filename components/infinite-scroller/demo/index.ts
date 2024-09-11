@@ -5,33 +5,10 @@ import { InfiniteScroller } from '../src/infinite-scroller.ts';
 
 
 @customElement('m-handover-list')
-export class HandoverListCmp extends LitElement {
-
-	@query('m-handover-row-scroller') protected scrollerEl: HandoverRowScrollerCmp;
-
-	public override connectedCallback(): void {
-		super.connectedCallback();
-	}
-
-	protected override render(): unknown {
-		return html`
-		<m-handover-row-scroller></m-handover-row-scroller>
-		`;
-	}
-
-	public static override styles = css`
-	:host {
-		overflow: hidden;
-		display: grid;
-	}
-	`;
-
-}
-
-@customElement('m-handover-row-scroller')
 export class HandoverRowScrollerCmp extends InfiniteScroller {
 
 	protected override maxIndex = 100;
+	protected override initialIndex = 20;
 
 	protected override createElement(): HTMLElement {
 		return document.createElement('m-handover-row');
@@ -57,7 +34,11 @@ export class HandoverRowScrollerCmp extends InfiniteScroller {
 			this.maxIndex += 100;
 	}
 
-	public static override styles = [];
+	public static override styles = css`
+	:host {
+		padding-block: 50px;
+	}
+	`;
 
 }
 
