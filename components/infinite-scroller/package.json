@@ -1,12 +1,26 @@
 {
 	"name": "@roenlie/infinite-scroller",
-	"description": "description",
-	"authors": "author",
+	"description": "Infinite scroller base component.",
+	"authors": "Kristoffer Roen-Lie",
 	"version": "1.0.0",
 	"type": "module",
-	"main": "pathToMain",
+	"types": "./dist/infinite-scroller.d.ts",
+	"main": "./dist/infinite-scroller.js",
+	"files": [
+		"dist",
+		"src"
+	],
+	"exports": {
+		".": {
+			"types": "./dist/infinite-scroller.d.ts",
+			"default": "./dist/infinite-scroller.js"
+		}
+	},
 	"scripts": {
-		"dev": "vite --config ./demo/vite.config.ts"
+		"dev": "vite --config ./demo/vite.config.ts",
+		"build": "pnpm run --sequential \"/^build::.*/\"",
+		"build::ts": "tsc --project ./src/tsconfig.json",
+		"build::js": "vite build"
 	},
 	"dependencies": {
 		"@roenlie/core": "workspace:^",

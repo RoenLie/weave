@@ -12,11 +12,13 @@ interface BufferElement extends HTMLElement {
 	children:    HTMLCollectionOf<SlotElement>;
 }
 
+
 interface SlotElement extends HTMLSlotElement {
-	_itemWrapper: ItemWrapperElement;
+	_itemWrapper: ItemElement;
 }
 
-interface ItemWrapperElement extends HTMLDivElement {
+
+interface ItemElement extends HTMLDivElement {
 	_instance: HTMLElement & Record<PropertyKey, unknown>;
 }
 
@@ -26,15 +28,12 @@ export abstract class InfiniteScroller extends LitElement {
 	protected abstract createElement(): RecordOf<HTMLElement>;
 	protected abstract updateElement(element: HTMLElement, index: number): void;
 
-	@query('#scroller') protected scrollerQry:                    HTMLElement;
-	@query('#fullHeight') protected fullHeightQry:                HTMLElement;
-	@query('infinite-scroller-scrollbar') protected scrollbarQry: ScrollbarCmp;
 
-	/**
-	 * Count of individual items in each buffer.
-	 * The scroller has 2 buffers altogether so bufferSize of 20
-	 * will result in 40 buffered DOM items in total.
-	 */
+	//#region properties
+	@query('#scroller')                   protected scrollerQry:   HTMLElement;
+	@query('#fullHeight')                 protected fullHeightQry: HTMLElement;
+	@query('infinite-scroller-scrollbar') protected scrollbarQry:  ScrollbarCmp;
+
 	#bufferSize = 0;
 	public get bufferSize() { return this.#bufferSize; };
 	public set bufferSize(v: number) {
@@ -52,34 +51,33 @@ export abstract class InfiniteScroller extends LitElement {
 	protected initialIndex = 0;
 
 	/** lowest index list will scroll to. */
-	protected minIndex?: number;
+	protected minIndex = 0;
 
 	/** highest index list will scroll to. */
-	protected maxIndex?: number;
+	protected abstract maxIndex: number;
 
 	protected preventScrollEvent = false;
 
 	/** This must be an array, as part of the core logic is reversing the order. */
-	protected buffers:        [BufferElement, BufferElement];
+	protected buffers: [BufferElement, BufferElement];
 	protected firstIndex = 0;
 	protected scrollDisabled = false;
 	protected mayHaveMomentum = false;
-	protected resizeObserver: ResizeObserver;
-	protected debounceScroll = debounce(() => {
-		const scrollerRect = this.scrollerQry.getBoundingClientRect();
-		const firstBufferVisible = this.isVisible(this.buffers[0], scrollerRect);
-		const secondBufferVisible = this.isVisible(this.buffers[1], scrollerRect);
+	protected resizeObserver = new ResizeObserver(([ entry ]) => {
+		if (!entry || !this.scrollbarQry)
+			return;
 
-		if (!firstBufferVisible && !secondBufferVisible)
-			this.position = this.position; // eslint-disable-line no-self-assign
-	}, 200);
+		const availableSize = entry.contentRect.height;
+		const visibleCount = Math.ceil(availableSize / this.itemHeight);
 
-	protected debounceUpdateClones = debounce(() => {
-		this.buffers[0]._updated = false;
-		this.buffers[1]._updated = false;
+		if (visibleCount !== this.bufferSize) {
+			this.initialIndex = ~~this.position;
+			this.bufferSize = visibleCount;
+		}
 
-		this.updateClones();
-	}, 200);
+		this.scrollbarQry.updateScrollPosition();
+		this.requestUpdate();
+	});
 
 	protected get useScrollbar() {
 		return this.minIndex !== undefined && this.maxIndex !== undefined;
@@ -159,7 +157,10 @@ export abstract class InfiniteScroller extends LitElement {
 			}, 10);
 		}
 	}
+	//#endregion
 
+
+	//#region lifecycle
 	protected override createRenderRoot(): HTMLElement | DocumentFragment {
 		// This ensures that the custom styles will always be included
 		// when this component is extended.
@@ -176,21 +177,12 @@ export abstract class InfiniteScroller extends LitElement {
 		this.updateComplete.then(() => this.afterConnectedCallback());
 	}
 
-	protected afterConnectedCallback(): void {
-		this.resizeObserver = new ResizeObserver(([ entry ]) => {
-			this.requestUpdate();
-			this.scrollbarQry.updateScrollPosition();
-
-			if (!entry)
-				return;
-
-			const availableSize = entry.contentRect.height;
-			const visibleCount = Math.ceil(availableSize / this.itemHeight);
-
-			if (visibleCount !== this.bufferSize)
-				this.bufferSize = visibleCount;
-		});
+	#scrollRef?: () => any;
+	public afterConnectedCallback(): void {
 		this.resizeObserver.observe(this);
+
+		this.#scrollRef = this.onScroll.bind(this);
+		this.scrollerQry.addEventListener('scroll', this.#scrollRef, { passive: true });
 	}
 
 	protected override firstUpdated(props: Map<PropertyKey, unknown>): void {
@@ -199,8 +191,7 @@ export abstract class InfiniteScroller extends LitElement {
 		const bufferEls = this.shadowRoot!.querySelectorAll('.buffer');
 		this.buffers = [ ...bufferEls ] as typeof this.buffers;
 		this.fullHeightQry.style.height = `${ this.initialScroll * 2 }px`;
-		this.scrollerQry.addEventListener('scroll',
-			this.onScroll.bind(this), { passive: true });
+
 
 		// Firefox interprets elements with overflow:auto as focusable
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=1069739
@@ -208,6 +199,17 @@ export abstract class InfiniteScroller extends LitElement {
 			this.scrollerQry.tabIndex = -1;
 	}
 
+	public override disconnectedCallback(): void {
+		if (this.#scrollRef)
+			this.scrollerQry.removeEventListener('scroll', this.#scrollRef);
+
+		this.resizeObserver.disconnect();
+		super.disconnectedCallback();
+	}
+	//#endregion
+
+
+	//#region logic
 	protected createPool(): void {
 		// If there is no change in buffer size, ignore the function call.
 		const currentChildCount = this.buffers[0].childElementCount;
@@ -267,7 +269,7 @@ export abstract class InfiniteScroller extends LitElement {
 	protected createAndAppendSlot(buffer: BufferElement, id: number, container: DOMRect): void {
 		const slotName = `item-${ id }`;
 
-		const itemWrapper = document.createElement('div') as ItemWrapperElement;
+		const itemWrapper = document.createElement('div') as ItemElement;
 		itemWrapper.setAttribute('slot', slotName);
 		itemWrapper.style.display = 'contents';
 		itemWrapper._instance = {} as RecordOf<HTMLElement>;
@@ -284,7 +286,7 @@ export abstract class InfiniteScroller extends LitElement {
 			this.ensureStampedInstance(itemWrapper);
 	}
 
-	protected ensureStampedInstance(itemWrapper: ItemWrapperElement): void {
+	protected ensureStampedInstance(itemWrapper: ItemElement): void {
 		if (itemWrapper.firstElementChild)
 			return;
 
@@ -366,7 +368,7 @@ export abstract class InfiniteScroller extends LitElement {
 
 		if (upperThresholdReached || lowerThresholdReached) {
 			this.translateBuffer(lowerThresholdReached);
-			this.updateClones();
+			this.updateElements();
 		}
 
 		if (!this.preventScrollEvent) {
@@ -381,6 +383,15 @@ export abstract class InfiniteScroller extends LitElement {
 		this.debounceScroll();
 	}
 
+	protected debounceScroll = debounce(() => {
+		const scrollerRect = this.scrollerQry.getBoundingClientRect();
+		const firstBufferVisible = this.isVisible(this.buffers[0], scrollerRect);
+		const secondBufferVisible = this.isVisible(this.buffers[1], scrollerRect);
+
+		if (!firstBufferVisible && !secondBufferVisible)
+			this.position = this.position; // eslint-disable-line no-self-assign
+	}, 200);
+
 	protected reset(force = false): void {
 		this.scrollDisabled = true;
 		this.scrollerQry.scrollTop = this.initialScroll;
@@ -394,17 +405,17 @@ export abstract class InfiniteScroller extends LitElement {
 		this.buffers[1]._updated = false;
 
 		if (force) {
-			this.updateClones();
+			this.updateElements();
 		}
 		else {
-			this.updateClones(true);
-			this.debounceUpdateClones();
+			this.updateElements(true);
+			this.debounceUpdateElements();
 		}
 
 		this.scrollDisabled = false;
 	}
 
-	protected updateClones(viewPortOnly?: boolean): void {
+	protected updateElements(viewPortOnly?: boolean): void {
 		this.firstIndex =
 			~~((this.buffers[0]._translateY - this.initialScroll) / this.itemHeight)
 			+ this.initialIndex;
@@ -424,8 +435,7 @@ export abstract class InfiniteScroller extends LitElement {
 				const slot = buffer.children[i]!;
 
 				const itemWrapper = slot._itemWrapper;
-				if (
-					!viewPortOnly ||
+				if (!viewPortOnly ||
 					(scrollerRect && this.isVisible(itemWrapper, scrollerRect))
 				)
 					this.updateElement(itemWrapper._instance, firstIndex + i);
@@ -434,6 +444,13 @@ export abstract class InfiniteScroller extends LitElement {
 			buffer._updated = true;
 		}
 	}
+
+	protected debounceUpdateElements = debounce(() => {
+		this.buffers[0]._updated = false;
+		this.buffers[1]._updated = false;
+
+		this.updateElements();
+	}, 200);
 
 	protected isVisible(element: HTMLElement, container: DOMRect): boolean {
 		const rect = element.getBoundingClientRect();
@@ -463,7 +480,10 @@ export abstract class InfiniteScroller extends LitElement {
 			},
 		},
 	});
+	//#endregion
 
+
+	//#region render
 	protected override render(): unknown {
 		return html`
 		<div id="scroller">
@@ -515,6 +535,7 @@ export abstract class InfiniteScroller extends LitElement {
 			grid-auto-rows: var(--item-height);
 		}
 	`;
+	//#endregion
 
 }
 

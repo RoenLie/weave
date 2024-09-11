@@ -31,7 +31,6 @@ export class HandoverListCmp extends LitElement {
 @customElement('m-handover-row-scroller')
 export class HandoverRowScrollerCmp extends InfiniteScroller {
 
-	protected override minIndex = 0;
 	protected override maxIndex = 100;
 
 	protected override createElement(): HTMLElement {
