@@ -1,6 +1,6 @@
 import { emitEvent } from '../dom/event.js';
 import { createPromiseResolver } from './create-promise-resolver.js';
-import { waitForPromiseSet } from './wait-for-promise.js';
+import { waitForPromises } from './wait-for-promise.js';
 
 
 export type PauseableEvent = CustomEvent<{
@@ -25,7 +25,7 @@ export const pauseableEvent = async (element: HTMLElement, eventName: string) =>
 
 	emitEvent(element, eventName, { detail: { id, addPromise } });
 
-	await waitForPromiseSet(promises);
+	await waitForPromises(promises);
 
 	window.removeEventListener(eventName, windowResolve as any);
 };
