@@ -257,13 +257,30 @@ export abstract class InfiniteScroller extends LitElement {
 		else if (currentChildCount > this.bufferSize) {
 			const itemsToRemove = diff * 2;
 
-			for (let i = 0; i < itemsToRemove; i++) {
-				buffers[1]!.lastElementChild!.remove();
-				this.lastElementChild!.remove();
-			}
+			try {
+				for (let i = 0; i < itemsToRemove; i++) {
+					buffers[1]!.lastElementChild!.remove();
+					this.lastElementChild!.remove();
+				}
 
-			for (let i = 0; i < diff; i++)
-				buffers[1]!.prepend(buffers[0]!.lastElementChild!);
+				for (let i = 0; i < diff; i++)
+					buffers[1]!.prepend(buffers[0]!.lastElementChild!);
+			}
+			catch {
+				console.warn(
+					'Item pool is in an inconsistent state.',
+					'Removing and recreating the items in the pool.',
+				);
+
+				// If we got here, it means something has messed up the item pool.
+				// This is a last resort to do a complete reset of the item pool.
+				for (const buffer of this.buffers) {
+					while (buffer.lastElementChild)
+						buffer.lastElementChild.remove();
+				}
+
+				return this.createPool();
+			}
 		}
 
 		this.reset(true);
