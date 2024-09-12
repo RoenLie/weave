@@ -85,7 +85,7 @@ export abstract class InfiniteScroller extends LitElement {
 	}
 
 	protected get showScrollbar() {
-		const itemCount = (this.maxIndex ?? 0) - (this.minIndex ?? 0);
+		const itemCount = this.maxIndex - this.minIndex;
 		if (!itemCount)
 			return false;
 
@@ -329,7 +329,7 @@ export abstract class InfiniteScroller extends LitElement {
 
 	protected onScroll(): void {
 		if (this.useScrollbar) {
-			if (!this.showScrollbar)
+			if (!this.showScrollbar && this.position !== 0)
 				return void (this.position = 0);
 
 			this.scrollbarQry.updateScrollPosition();

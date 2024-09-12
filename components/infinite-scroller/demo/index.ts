@@ -1,5 +1,5 @@
 import { css, html, LitElement, render } from 'lit';
-import { customElement, property, query } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 
 import { InfiniteScroller } from '../src/infinite-scroller.ts';
 
@@ -7,8 +7,8 @@ import { InfiniteScroller } from '../src/infinite-scroller.ts';
 @customElement('m-handover-list')
 export class HandoverRowScrollerCmp extends InfiniteScroller {
 
-	protected override maxIndex = 100;
-	protected override initialIndex = 20;
+	protected override maxIndex = 1;
+	protected override initialIndex = 0;
 
 	protected override createElement(): HTMLElement {
 		return document.createElement('m-handover-row');
@@ -18,8 +18,9 @@ export class HandoverRowScrollerCmp extends InfiniteScroller {
 		element: HandoverRowCmp,
 		index: number,
 	): void {
-		if (index < this.minIndex || index > this.maxIndex) {
+		if (index < this.minIndex || index >= this.maxIndex) {
 			element.style.setProperty('visibility', 'hidden');
+			element.value = '';
 		}
 		else {
 			element.style.setProperty('visibility', '');
@@ -30,8 +31,8 @@ export class HandoverRowScrollerCmp extends InfiniteScroller {
 	protected override onScroll(): void {
 		super.onScroll();
 
-		if ((this.maxIndex - this.position) < 20)
-			this.maxIndex += 100;
+		//if ((this.maxIndex - this.position) < 20)
+		//	this.maxIndex += 100;
 	}
 
 	public static override styles = css`
