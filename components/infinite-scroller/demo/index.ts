@@ -7,7 +7,7 @@ import { InfiniteScroller } from '../src/infinite-scroller.ts';
 @customElement('m-handover-list')
 export class HandoverRowScrollerCmp extends InfiniteScroller {
 
-	protected override maxIndex = 1;
+	protected override maxIndex = 5000;
 	protected override initialIndex = 0;
 
 	protected override createElement(): HTMLElement {
