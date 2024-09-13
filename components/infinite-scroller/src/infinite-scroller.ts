@@ -337,10 +337,34 @@ export abstract class InfiniteScroller extends LitElement {
 		this.buffers.reverse();
 	}
 
+	protected blockScroll = (() => {
+		let blocked = false;
+		const blockTouchMove = (ev: TouchEvent): void => ev.preventDefault();
+		const debounced = debounce(() => {
+			blocked = false;
+
+			this.scrollerQry.classList.toggle('no-scroll', false);
+			document.body.removeEventListener('touchmove', blockTouchMove);
+		}, 300);
+
+		return () => {
+			if (!blocked) {
+				blocked = true;
+				this.scrollerQry.classList.toggle('no-scroll', true);
+				document.body.addEventListener('touchmove', blockTouchMove);
+			}
+
+			debounced();
+		};
+	})();
+
 	protected onScroll(): void {
 		if (this.useScrollbar) {
-			if (!this.showScrollbar && this.position !== 0)
+			if (!this.showScrollbar && this.position !== 0) {
+				this.blockScroll();
+
 				return void (this.position = 0);
+			}
 
 			this.scrollbarQry.updateScrollPosition();
 		}
@@ -350,14 +374,20 @@ export abstract class InfiniteScroller extends LitElement {
 
 		// Prevent the scroller from scrolling past the min index.
 		if (this.minIndex !== undefined) {
-			if (this.position < this.minIndex)
+			if (this.position < this.minIndex) {
+				this.blockScroll();
+
 				return void (this.position = this.minIndex);
+			}
 		}
 
 		// Prevent the scroller from scrolling past the max index.
 		if (this.maxIndex !== undefined) {
-			if (this.position > this.maxIndex)
+			if (this.position > this.maxIndex) {
+				this.blockScroll();
+
 				return void (this.position = this.maxIndex);
+			}
 		}
 
 		const scrollTop = this.scrollerQry.scrollTop;
@@ -528,6 +558,9 @@ export abstract class InfiniteScroller extends LitElement {
 		}
 		#scroller::-webkit-scrollbar {
 			display: none;
+		}
+		#scroller.no-scroll {
+			overflow: hidden;
 		}
 		.buffer {
 			box-sizing: border-box;
