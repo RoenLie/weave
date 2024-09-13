@@ -435,6 +435,13 @@ export abstract class InfiniteScroller extends LitElement {
 		this.scrollDisabled = false;
 	}
 
+	public forceUpdateElements() {
+		this.buffers[0]._updated = false;
+		this.buffers[1]._updated = false;
+
+		this.updateElements();
+	}
+
 	protected updateElements(viewPortOnly?: boolean): void {
 		this.firstIndex =
 			~~((this.buffers[0]._translateY - this.initialScroll) / this.itemHeight)
@@ -465,12 +472,7 @@ export abstract class InfiniteScroller extends LitElement {
 		}
 	}
 
-	protected debounceUpdateElements = debounce(() => {
-		this.buffers[0]._updated = false;
-		this.buffers[1]._updated = false;
-
-		this.updateElements();
-	}, 200);
+	protected debounceUpdateElements = debounce(() => this.forceUpdateElements(), 200);
 
 	protected isVisible(element: HTMLElement, container: DOMRect): boolean {
 		const rect = element.getBoundingClientRect();
