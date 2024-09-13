@@ -345,7 +345,7 @@ export abstract class InfiniteScroller extends LitElement {
 
 			this.scrollerQry.classList.toggle('no-scroll', false);
 			document.body.removeEventListener('touchmove', blockTouchMove);
-		}, 300);
+		}, 100);
 
 		return () => {
 			if (!blocked) {
@@ -376,6 +376,7 @@ export abstract class InfiniteScroller extends LitElement {
 		if (this.minIndex !== undefined) {
 			if (this.position < this.minIndex) {
 				this.blockScroll();
+				this.firstIndex = this.minIndex;
 
 				return void (this.position = this.minIndex);
 			}
