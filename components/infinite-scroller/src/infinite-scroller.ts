@@ -30,6 +30,12 @@ export abstract class InfiniteScroller extends LitElement {
 	@query('#scroller')   protected scrollerQry:   HTMLElement;
 	@query('#fullHeight') protected fullHeightQry: HTMLElement;
 
+	@state() protected maxIndex = 1;
+	protected initialScroll = 0;
+
+	/** This must be an array, as part of the core logic is reversing the order. */
+	protected buffers: [BufferElement, BufferElement];
+
 	#bufferSize = 0;
 	public get bufferSize() {
 		return this.#bufferSize;
@@ -37,46 +43,32 @@ export abstract class InfiniteScroller extends LitElement {
 
 	public set bufferSize(v: number) {
 		this.#bufferSize = v;
+
+		for (const buffer of this.buffers) {
+			while (buffer.lastElementChild)
+				buffer.lastElementChild.remove();
+		}
+
+		while (this.lastElementChild)
+			this.lastElementChild.remove();
+
 		this.createPool();
+
+		// Ensure the buffers have been given a translateY value after a buffer size change.
+		const buffers = this.buffers[0].firstElementChild?.getAttribute('name') === 'item-0'
+			? [ this.buffers[0], this.buffers[1] ]
+			: [ this.buffers[1], this.buffers[0] ];
+
+		buffers[0]!._translateY = this.initialScroll - this.bufferHeight;
+		buffers[1]!._translateY = this.initialScroll;
+
+		for (const buffer of buffers)
+			buffer.style.transform = `translate3d(0, ${ buffer._translateY }px, 0)`;
 	}
 
-	protected initialScroll = 0;
-	@state() protected maxIndex = 1;
-
-	/** This must be an array, as part of the core logic is reversing the order. */
-	protected buffers: [BufferElement, BufferElement];
-	protected get firstIndex(): number {
-		return ~~((this.buffers[0]._translateY - this.initialScroll) / this.itemHeight);
+	protected get bufferHeight(): number {
+		return this.itemHeight * this.bufferSize;
 	}
-
-	protected resizeObserver = new ResizeObserver(([ entry ]) => {
-		if (!entry)
-			return;
-
-		const availableSize = entry.contentRect.height;
-		const visibleCount = Math.ceil(availableSize / this.itemHeight) + 2;
-
-		if (this.bufferSize !== visibleCount) {
-			this.bufferSize = visibleCount;
-			this.fullHeightQry.style.height = this.totalHeight + 'px';
-		}
-
-		// Initialize the buffer translateY values.
-		if (this.buffers[0]._translateY === undefined
-			|| this.buffers[1]._translateY === undefined
-		) {
-			// Ensure the buffers have been given a translateY value after a buffer size change.
-			const buffers = this.buffers[0].firstElementChild?.getAttribute('name') === 'item-0'
-				? [ this.buffers[0], this.buffers[1] ]
-				: [ this.buffers[1], this.buffers[0] ];
-
-			buffers[0]!._translateY = this.initialScroll - this.bufferHeight;
-			buffers[1]!._translateY = this.initialScroll;
-
-			for (const buffer of buffers)
-				buffer.style.transform = `translate3d(0, ${ buffer._translateY }px, 0)`;
-		}
-	});
 
 	#itemHeight = 0;
 	public get itemHeight(): number {
@@ -98,14 +90,14 @@ export abstract class InfiniteScroller extends LitElement {
 		return this.#itemHeight;
 	}
 
-	protected get bufferHeight(): number {
-		return this.itemHeight * this.bufferSize;
-	}
-
 	protected get totalHeight(): number {
 		const modifiedMaxIndex = Math.ceil(this.maxIndex / this.bufferSize) * this.bufferSize;
 
 		return this.itemHeight * modifiedMaxIndex;
+	}
+
+	protected get firstIndex(): number {
+		return ~~((this.buffers[0]._translateY - this.initialScroll) / this.itemHeight);
 	}
 
 	/** Current scroller position as index. Can be a fractional number. */
@@ -122,6 +114,19 @@ export abstract class InfiniteScroller extends LitElement {
 			* (index - this.firstIndex)
 			+ this.buffers[0]._translateY;
 	}
+
+	protected readonly resizeObserver = new ResizeObserver(([ entry ]) => {
+		if (!entry)
+			return;
+
+		const availableSize = entry.contentRect.height;
+		const visibleCount = Math.ceil(availableSize / this.itemHeight) + 2;
+
+		if (this.bufferSize !== visibleCount) {
+			this.bufferSize = visibleCount;
+			this.fullHeightQry.style.height = this.totalHeight + 'px';
+		}
+	});
 	//#endregion
 
 
@@ -149,8 +154,8 @@ export abstract class InfiniteScroller extends LitElement {
 			this.#scrollRef = this.onScroll.bind(this), { passive: true });
 	}
 
-	protected override firstUpdated(props: Map<PropertyKey, unknown>): void {
-		super.firstUpdated(props);
+	protected override firstUpdated(changedProps: PropertyValues): void {
+		super.firstUpdated(changedProps);
 
 		const bufferEls = this.renderRoot.querySelectorAll('.buffer');
 		this.buffers = [ ...bufferEls ] as typeof this.buffers;
@@ -201,53 +206,6 @@ export abstract class InfiniteScroller extends LitElement {
 			// Wait for the dom to render the elements before stamping remaining instances.
 			return void requestAnimationFrame(() => this.stampRemainingInstances());
 		}
-
-		return;
-		// TODO, this part is broken after changes.
-
-		// Get the buffers in the correct order as these can be reversed during the scroll.
-		const buffers = this.buffers[0].firstElementChild?.getAttribute('name') === 'item-0'
-			? [ this.buffers[0], this.buffers[1] ]
-			: [ this.buffers[1], this.buffers[0] ];
-
-		const diff = Math.abs(this.bufferSize - currentChildCount);
-
-		if (currentChildCount < this.bufferSize) {
-			let itemCount = buffers[0]!.childElementCount + buffers[1]!.childElementCount;
-			const itemsToAdd = diff * 2;
-
-			for (let i = 0; i < itemsToAdd; i++)
-				this.createAndAppendSlot(buffers[1]!, itemCount++, container);
-
-			for (let i = 0; i < diff; i++)
-				buffers[0]!.appendChild(buffers[1]!.firstElementChild!);
-
-			this.stampRemainingInstances();
-		}
-		else if (currentChildCount > this.bufferSize) {
-			const itemsToRemove = diff * 2;
-
-			const elementsExists = buffers[1]!.childElementCount > itemsToRemove
-				&& this.childElementCount > itemsToRemove;
-
-			if (!elementsExists) {
-				return console.warn(
-					'All elements affected by reduction in buffer size are not present.',
-					'Buffer size has not been reduced',
-				);
-			}
-
-			for (let i = 0; i < itemsToRemove; i++) {
-				buffers[1]!.lastElementChild!.remove();
-				this.lastElementChild!.remove();
-			}
-
-			for (let i = 0; i < diff; i++)
-				buffers[1]!.prepend(buffers[0]!.lastElementChild!);
-		}
-
-		this.syncBufferTranslate();
-		this.forceUpdateElements();
 	}
 
 	protected createAndAppendSlot(buffer: BufferElement, id: number, container: DOMRect): void {
@@ -293,7 +251,7 @@ export abstract class InfiniteScroller extends LitElement {
 		this.syncBufferTranslate();
 		this.forceUpdateElements();
 
-		this.dispatchEvent(new CustomEvent('init-done'));
+		this.dispatchEvent(new CustomEvent('ready'));
 	}
 
 	protected translateBuffer(up: boolean): boolean {
