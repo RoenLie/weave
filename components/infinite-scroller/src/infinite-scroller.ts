@@ -30,7 +30,20 @@ export abstract class InfiniteScroller extends LitElement {
 	@query('#scroller')   protected scrollerQry:   HTMLElement;
 	@query('#fullHeight') protected fullHeightQry: HTMLElement;
 
-	@state() protected maxIndex = 1;
+	#maxIndex = 1;
+	public get maxIndex(): number {
+		return this.#maxIndex;
+	}
+
+	@state() protected set maxIndex(v: number) {
+		this.#maxIndex = Math.max(1, v);
+
+		if (this.hasUpdated) {
+			this.fullHeightQry.style.height = this.totalHeight + 'px';
+			this.forceUpdateElements();
+		}
+	}
+
 	protected initialScroll = 0;
 
 	/** This must be an array, as part of the core logic is reversing the order. */
@@ -161,20 +174,6 @@ export abstract class InfiniteScroller extends LitElement {
 		this.buffers = [ ...bufferEls ] as typeof this.buffers;
 	}
 
-	protected override willUpdate(changedProps: PropertyValues): void {
-		super.willUpdate(changedProps);
-
-		if (changedProps.has('maxIndex'))
-			this.maxIndex = Math.max(1, this.maxIndex);
-
-		if (this.hasUpdated) {
-			if (changedProps.has('maxIndex')) {
-				this.fullHeightQry.style.height = this.totalHeight + 'px';
-				this.forceUpdateElements();
-			}
-		}
-	}
-
 	public override disconnectedCallback(): void {
 		if (this.#scrollRef)
 			this.scrollerQry.removeEventListener('scroll', this.#scrollRef);
@@ -283,7 +282,7 @@ export abstract class InfiniteScroller extends LitElement {
 			this.updateElements();
 	}
 
-	protected syncBufferTranslate(): boolean {
+	public syncBufferTranslate(): boolean {
 		const scrollTop = this.scrollerQry.scrollTop;
 
 		let upperThresholdReached = false;

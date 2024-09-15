@@ -8,10 +8,14 @@ import { InfiniteScroller } from '../src/infinite-scroller.ts';
 export class HandoverRowScrollerCmp extends InfiniteScroller {
 
 	//protected override maxIndex = 5000;
-	protected override maxIndex = 500;
 	//protected override maxIndex = 50;
 	//protected override maxIndex = 5;
 	//protected override maxIndex = 0;
+
+	public override connectedCallback(): void {
+		super.connectedCallback();
+		this.maxIndex = 50;
+	}
 
 	protected override createElement(): HTMLElement {
 		return document.createElement('m-handover-row');
