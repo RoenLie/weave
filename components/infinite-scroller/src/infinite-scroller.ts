@@ -44,8 +44,6 @@ export abstract class InfiniteScroller extends LitElement {
 		}
 	}
 
-	protected initialScroll = 0;
-
 	/** This must be an array, as part of the core logic is reversing the order. */
 	protected buffers: [BufferElement, BufferElement];
 
@@ -72,8 +70,8 @@ export abstract class InfiniteScroller extends LitElement {
 			? [ this.buffers[0], this.buffers[1] ]
 			: [ this.buffers[1], this.buffers[0] ];
 
-		buffers[0]!._translateY = this.initialScroll - this.bufferHeight;
-		buffers[1]!._translateY = this.initialScroll;
+		buffers[0]!._translateY = -this.bufferHeight;
+		buffers[1]!._translateY = 0;
 
 		for (const buffer of buffers)
 			buffer.style.transform = `translate3d(0, ${ buffer._translateY }px, 0)`;
@@ -110,7 +108,7 @@ export abstract class InfiniteScroller extends LitElement {
 	}
 
 	protected get firstIndex(): number {
-		return ~~((this.buffers[0]._translateY - this.initialScroll) / this.itemHeight);
+		return ~~(this.buffers[0]._translateY / this.itemHeight);
 	}
 
 	/** Current scroller position as index. Can be a fractional number. */
