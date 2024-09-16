@@ -6,17 +6,7 @@ import { query, state } from 'lit/decorators.js';
 interface BufferElement extends HTMLElement {
 	_translateY: number;
 	_updated:    boolean;
-	children:    HTMLCollectionOf<SlotElement>;
-}
-
-
-interface SlotElement extends HTMLSlotElement {
-	_itemWrapper: ItemElement;
-}
-
-
-interface ItemElement extends HTMLDivElement {
-	_instance: HTMLElement & Record<PropertyKey, unknown>;
+	children:    HTMLCollectionOf<HTMLSlotElement>;
 }
 
 
@@ -55,26 +45,7 @@ export abstract class InfiniteScroller extends LitElement {
 	public set bufferSize(v: number) {
 		this.#bufferSize = v;
 
-		for (const buffer of this.buffers) {
-			while (buffer.lastElementChild)
-				buffer.lastElementChild.remove();
-		}
-
-		while (this.lastElementChild)
-			this.lastElementChild.remove();
-
 		this.createPool();
-
-		// Ensure the buffers have been given a translateY value after a buffer size change.
-		const buffers = this.buffers[0].firstElementChild?.getAttribute('name') === 'item-0'
-			? [ this.buffers[0], this.buffers[1] ]
-			: [ this.buffers[1], this.buffers[0] ];
-
-		buffers[0]!._translateY = -this.bufferHeight;
-		buffers[1]!._translateY = 0;
-
-		for (const buffer of buffers)
-			buffer.style.transform = `translate3d(0, ${ buffer._translateY }px, 0)`;
 	}
 
 	protected get bufferHeight(): number {
@@ -189,66 +160,104 @@ export abstract class InfiniteScroller extends LitElement {
 		if (currentChildCount === this.bufferSize)
 			return;
 
-		const container = this.getBoundingClientRect();
-
 		// No children, this is the first time creating the pool.
 		if (currentChildCount === 0) {
 			let id = 0;
 
 			for (const buffer of this.buffers) {
 				for (let i = 0; i < this.bufferSize; i++)
-					this.createAndAppendSlot(buffer, id++, container);
+					this.createAndAppendSlot(buffer, id++);
 			}
 
-			// Wait for the dom to render the elements before stamping remaining instances.
-			return void requestAnimationFrame(() => this.stampRemainingInstances());
+			this.ensureBufferTranslate();
+
+			return void requestAnimationFrame(() => {
+				this.syncBufferTranslate();
+				this.forceUpdateElements();
+
+				this.dispatchEvent(new CustomEvent('ready'));
+			});
 		}
+
+		// If the buffer size has increased, create the new slots.
+		let currentCount = this.buffers[0].childElementCount
+			+ this.buffers[1].childElementCount;
+
+		if (currentChildCount < this.bufferSize) {
+			for (const buffer of this.buffers) {
+				for (let i = currentChildCount; i < this.bufferSize; i++)
+					this.createAndAppendSlot(buffer, currentCount++);
+			}
+		}
+		// If the buffer size has decreased, remove the extra slots.
+		else {
+			for (const buffer of this.buffers) {
+				while (buffer.childElementCount > this.bufferSize) {
+					const el = buffer.lastElementChild as HTMLSlotElement;
+					el.assignedElements()[0]?.remove();
+					el.remove();
+				}
+			}
+		}
+
+		// Update the slot names and the assigned elements.
+		let count = 0;
+		for (const buffer of this.buffers) {
+			for (const slot of buffer.children)
+				slot.setAttribute('name', 'item-' + count++);
+		}
+
+		// Update the assigned elements slot attribute.
+		count = 0;
+		while (this.childElementCount > count) {
+			this.children[count]!.setAttribute('slot', 'item-' + count);
+			count++;
+		}
+
+		// Translate the buffers to the correct position.
+		const difference = this.bufferSize - currentChildCount;
+		if (difference > 0) {
+			this.buffers[0]._translateY += difference * this.itemHeight;
+			this.buffers[1]._translateY += difference * this.itemHeight + this.itemHeight;
+		}
+		else if (difference < 0) {
+			this.buffers[0]._translateY += difference * this.itemHeight + this.itemHeight;
+			this.buffers[1]._translateY += difference * this.itemHeight;
+		}
+
+		for (const buffer of this.buffers)
+			buffer.style.transform = `translate3d(0, ${ buffer._translateY }px, 0)`;
+
+		this.syncBufferTranslate();
+		this.forceUpdateElements();
 	}
 
-	protected createAndAppendSlot(buffer: BufferElement, id: number, container: DOMRect): void {
+	protected createAndAppendSlot(buffer: BufferElement, id: number): void {
 		const slotName = `item-${ id }`;
 
-		const itemWrapper = document.createElement('div') as ItemElement;
+		const itemWrapper = document.createElement('div');
 		itemWrapper.setAttribute('slot', slotName);
 		itemWrapper.style.display = 'contents';
-		itemWrapper._instance = {} as RecordOf<HTMLElement>;
+		itemWrapper.appendChild(this.createElement());
 
-		const slot = document.createElement('slot') as SlotElement;
-		slot._itemWrapper = itemWrapper;
+		const slot = document.createElement('slot');
 		slot.setAttribute('name', slotName);
 
 		buffer.appendChild(slot);
 		this.appendChild(itemWrapper);
-
-		// Only stamp the visible instances first
-		if (this.isVisible(itemWrapper, container))
-			this.ensureStampedInstance(itemWrapper);
 	}
 
-	protected ensureStampedInstance(itemWrapper: ItemElement): void {
-		if (itemWrapper.firstElementChild)
-			return;
+	protected ensureBufferTranslate(): void {
+		// Ensure the buffers have been given a translateY value after a buffer size change.
+		const buffers = this.buffers[0].firstElementChild?.getAttribute('name') === 'item-0'
+			? [ this.buffers[0], this.buffers[1] ]
+			: [ this.buffers[1], this.buffers[0] ];
 
-		const tmpInstance = itemWrapper._instance;
+		buffers[0]!._translateY = -this.bufferHeight;
+		buffers[1]!._translateY = 0;
 
-		itemWrapper._instance = this.createElement();
-		itemWrapper.appendChild(itemWrapper._instance);
-
-		for (const prop of Object.keys(tmpInstance))
-			itemWrapper._instance[prop] = tmpInstance[prop]!;
-	}
-
-	protected stampRemainingInstances(): void {
-		// Once the first set of items start fading in, stamp the rest
-		for (const buffer of this.buffers) {
-			for (const slot of buffer.children)
-				this.ensureStampedInstance(slot._itemWrapper);
-		}
-
-		this.syncBufferTranslate();
-		this.forceUpdateElements();
-
-		this.dispatchEvent(new CustomEvent('ready'));
+		for (const buffer of buffers)
+			buffer.style.transform = `translate3d(0, ${ buffer._translateY }px, 0)`;
 	}
 
 	protected translateBuffer(up: boolean): boolean {
@@ -337,10 +346,12 @@ export abstract class InfiniteScroller extends LitElement {
 
 			for (let i = 0; i < buffer.children.length; i++) {
 				const slot = buffer.children[i]!;
+				const slottedItem = slot.assignedElements()[0] as HTMLElement;
 
-				const itemWrapper = slot._itemWrapper;
-				if (!viewPortOnly || this.isVisible(itemWrapper, scrollerRect))
-					this.updateElement(itemWrapper._instance, firstIndex + i);
+				if (!viewPortOnly || this.isVisible(slottedItem, scrollerRect)) {
+					this.updateElement(slottedItem.firstElementChild as HTMLElement,
+						firstIndex + i);
+				}
 			}
 
 			buffer._updated = true;
