@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { DelayedStyleDirective } from './delayed-style.js';
 export type { PortalDirective } from './portal.js';

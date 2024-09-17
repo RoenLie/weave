@@ -31,8 +31,14 @@ export const indexPageTemplate = (props: {
 			order:    300,
 		},
 		{
-			template: '<script type="module">import "@roenlie/mirage-docs/assets/index.css";</script>',
-			order:    400,
+			template: `<script type="module">
+			import index from "@roenlie/mirage-docs/assets/index.css?url";
+			const link = document.createElement('link');
+			link.rel = 'stylesheet';
+			link.href = index;
+			document.head.prepend(link);
+			</script>`,
+			order: 400,
 		},
 		{
 			template: `<script type="module" src="${ props.siteConfigId }"></script>`,

@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { KeyboardListener, KeyboardEventType, KeyboardModifier, KeyboardKey } from './controllers/keyboard-controller.js';
 export type { Interface, Constructor, ClassDescriptor, ClassElement } from './decorators/decorator-utility.js';

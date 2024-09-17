@@ -1,9 +1,4 @@
-import type { TermTupleArray } from '@roenlie/mimic-localize/core';
-
-import type { UploadTranslation } from './upload.types.js';
-
-
-export const uploadTerms: TermTupleArray<UploadTranslation> = [
+export const uploadTerms: [string, string][] = [
 	[ 'dropFiles.one',                         'Drop file here' ],
 	[ 'dropFiles.many',                        'Drop files here' ],
 	[ 'addFiles.one',                          'Upload File...' ],

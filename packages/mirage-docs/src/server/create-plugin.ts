@@ -60,7 +60,13 @@ export const createPlugin = (args: {
 						tag:      'script',
 						attrs:    { type: 'module' },
 						injectTo: 'head-prepend',
-						children: 'import "@roenlie/mirage-docs/assets/index.css"',
+						children: `
+						import index from "@roenlie/mirage-docs/assets/index.css?url";
+						const link = document.createElement('link');
+						link.rel = 'stylesheet';
+						link.href = index;
+						document.head.prepend(link);
+						`,
 					},
 					{
 						tag:   'script',

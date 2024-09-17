@@ -1,19 +1,27 @@
-import { TrackedPromise } from '@roenlie/core/async';
+import { resolvablePromise } from '@roenlie/core/async';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, CSSResult, html } from 'lit';
 import { property, query } from 'lit/decorators.js';
 
 
-declare global { interface HTMLElementTagNameMap {
-	'mm-dialog': MMDialog;
-} }
+declare global {
+	interface HTMLElementTagNameMap {
+		'mm-dialog': MMDialog;
+	}
+}
 
 
-export type DialogOptions = Partial<{modal: boolean; closeOnBlur: boolean;}>;
+export type DialogOptions = Partial<{ modal: boolean; closeOnBlur: boolean; }>;
 export type StateConfigFn = (dialog: MMDialog) => (Promise<any> | any);
-export type ActionConfigFn<T extends StateConfigFn> = (dialog: MMDialog, state: Awaited<ReturnType<T>>) => any;
-export interface TemplateConfigFn<TState extends StateConfigFn, TActions extends ActionConfigFn<TState>> {
+export type ActionConfigFn<T extends StateConfigFn> = (
+	dialog: MMDialog,
+	state: Awaited<ReturnType<T>>
+) => any;
+export interface TemplateConfigFn<
+	TState extends StateConfigFn,
+	TActions extends ActionConfigFn<TState>
+> {
 	initialize?: (
 		dialog: MMDialog,
 		state: Awaited<ReturnType<TState>>,
@@ -35,9 +43,9 @@ export interface TemplateConfigFn<TState extends StateConfigFn, TActions extends
 
 export class DialogConfig {
 
-	public options: DialogOptions;
-	public stateCreator: StateConfigFn;
-	public actionCreator: ActionConfigFn<any>;
+	public options:         DialogOptions;
+	public stateCreator:    StateConfigFn;
+	public actionCreator:   ActionConfigFn<any>;
 	public templateCreator: TemplateConfigFn<any, any>;
 
 	public config(options: DialogOptions) {
@@ -85,17 +93,17 @@ export class MMDialog extends MimicElement {
 
 	@property({ type: Object }) public config?: DialogConfig;
 
-	public modal?: boolean;
+	public modal?:       boolean;
 	public closeOnBlur?: boolean;
 
 	@query('.host') public innerDialog?: HTMLDivElement;
-	@query('dialog') public dialog?: HTMLDialogElement;
+	@query('dialog') public dialog?:     HTMLDialogElement;
 	protected parsedConfig?: {
 		render: () => unknown;
-		style: CSSResult;
+		style:  CSSResult;
 	};
 
-	public complete = new TrackedPromise(() => {});
+	public complete = resolvablePromise();
 
 	public override async connectedCallback() {
 		super.connectedCallback();

@@ -1,9 +1,8 @@
-import { isPromise } from '@roenlie/core/async';
 import { debounce } from '@roenlie/core/timing';
 import { queryId, watch } from '@roenlie/lit-utilities/decorators';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
-import { css, type CSSResultGroup, html } from 'lit';
+import { css, html } from 'lit';
 import { eventOptions, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 
@@ -49,7 +48,7 @@ export class MMVirtualScrollbar extends MimicElement {
 		if (!this.reference)
 			return;
 
-		this.resolvedRef = isPromise(this.reference)
+		this.resolvedRef = this.reference instanceof Promise
 			? await this.reference
 			: this.reference;
 
@@ -62,7 +61,7 @@ export class MMVirtualScrollbar extends MimicElement {
 		this.resizeObs.observe(this.resolvedRef);
 
 		if (this.widthResizeRef) {
-			const widthResizeRef = isPromise(this.widthResizeRef)
+			const widthResizeRef = this.widthResizeRef instanceof Promise
 				? await this.widthResizeRef
 				: this.widthResizeRef;
 

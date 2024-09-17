@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { Interface, Constructor, ClassDescriptor, ClassElement } from './decorator-utility.js';
 export { legacyPrototypeMethod, standardPrototypeMethod, decorateProperty } from './decorator-utility.js';

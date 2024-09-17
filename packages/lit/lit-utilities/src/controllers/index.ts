@@ -1,5 +1,4 @@
-/* eslint-disable simple-import-sort/exports */
-/* eslint-disable max-len */
+/* eslint-disable */
 /* auto generated */
 export type { KeyboardListener, KeyboardEventType, KeyboardModifier, KeyboardKey } from './keyboard-controller.js';
 export type { ObjectOfKeys, SlotListener } from './slot-controller.js';

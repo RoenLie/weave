@@ -9,12 +9,15 @@ const siteConfig = {
       "base": ""
    },
    "root": {
+      "darkTheme": [],
+      "lightTheme": [],
       "styleImports": [],
       "scriptImports": [],
       "layout": {
          "headingText": "Mimic Elements",
          "logoHeight": "",
-         "logoSrc": "logo.svg"
+         "logoSrc": "logo.svg",
+         "clearLogOnReload": true
       },
       "sidebar": {
          "delimiter": "_",
@@ -45,8 +48,8 @@ const siteConfig = {
       }
    },
    "pages": {
-      "darkTheme": "",
-      "lightTheme": "",
+      "darkTheme": [],
+      "lightTheme": [],
       "styles": [],
       "scripts": [
          {

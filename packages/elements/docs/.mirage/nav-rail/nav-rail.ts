@@ -9,7 +9,7 @@ import '@roenlie/mirage-docs/app/components/page/page-header.js';
 // hoisted
 
 
-class rbndiwkjiu extends PageAdapter {
+class aonrvnmhad extends PageAdapter {
 
 	//#region properties
 	protected examples: Record<string, string> = {};
@@ -38,7 +38,7 @@ class rbndiwkjiu extends PageAdapter {
 }
 
 const module = new ContainerModule(({rebind}) => {
-	rebind('midoc-page').to(rbndiwkjiu);
+	rebind('midoc-page').toConstantValue(aonrvnmhad);
 });
 
 ContainerLoader.load(module);

@@ -30,9 +30,6 @@ export default defineDocConfig(
 	},
 	env => {
 		return {
-			resolve: {
-				conditions: env.mode === 'development' ? [ 'mimic-workspace' ] : [],
-			},
 			build: {
 				outDir: './dist/docs',
 			},

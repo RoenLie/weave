@@ -4,7 +4,7 @@ import { uppercaseFirstLetter } from '@roenlie/core/string';
 import { SlotController } from '@roenlie/lit-utilities/controllers';
 import { watch } from '@roenlie/lit-utilities/decorators';
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
-import { tTerm } from '@roenlie/mimic-localize/directive';
+import { tTerm } from '@roenlie/lit-localize/directive';
 import { html } from 'lit';
 import { property, query } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

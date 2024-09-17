@@ -18,9 +18,9 @@ export class MMIcon extends MimicElement {
 		svg.removeAttribute('width');
 	};
 
-	@property() public url: string;
+	@property() public url:      string;
 	@property() public template: string;
-	@state() protected svg: string;
+	@state() protected svg:      string;
 
 	protected override update(props: PropertyValues) {
 		super.update(props);

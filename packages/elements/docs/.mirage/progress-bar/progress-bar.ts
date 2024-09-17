@@ -9,7 +9,7 @@ import '@roenlie/mirage-docs/app/components/page/page-header.js';
 // hoisted
 
 
-class hppgrawvfr extends PageAdapter {
+class irufwnnnka extends PageAdapter {
 
 	//#region properties
 	protected examples: Record<string, string> = {};
@@ -38,7 +38,7 @@ class hppgrawvfr extends PageAdapter {
 }
 
 const module = new ContainerModule(({rebind}) => {
-	rebind('midoc-page').to(hppgrawvfr);
+	rebind('midoc-page').toConstantValue(irufwnnnka);
 });
 
 ContainerLoader.load(module);

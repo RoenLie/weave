@@ -1,6 +1,6 @@
 import { customElement, MimicElement } from '@roenlie/lit-utilities/element';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
-import { tTerm } from '@roenlie/mimic-localize/directive';
+import { tTerm } from '@roenlie/lit-localize/directive';
 import { css, html } from 'lit';
 import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

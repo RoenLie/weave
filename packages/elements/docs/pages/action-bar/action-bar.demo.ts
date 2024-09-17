@@ -1,4 +1,4 @@
-import { MMActionBar } from '@roenlie/elements/action-bar'
+import { MMActionBar } from '@roenlie/elements/action-bar';
 import { MMButton } from '@roenlie/elements/button';
 import { sharedStyles } from '@roenlie/lit-utilities/styles';
 import { css, html, LitElement } from 'lit';
