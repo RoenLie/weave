@@ -7,14 +7,13 @@ import { InfiniteScroller } from '../src/infinite-scroller.ts';
 @customElement('m-handover-list')
 export class HandoverRowScrollerCmp extends InfiniteScroller {
 
-	//protected override maxIndex = 5000;
-	//protected override maxIndex = 50;
-	//protected override maxIndex = 5;
-	//protected override maxIndex = 0;
-
 	public override connectedCallback(): void {
 		super.connectedCallback();
-		this.maxIndex = 50;
+		//this.maxIndex = 5000;
+		//this.maxIndex = 500;
+		//this.maxIndex = 50;
+		this.maxIndex = 5;
+		//this.maxIndex = 0;
 	}
 
 	protected override createElement(): HTMLElement {
@@ -38,8 +37,8 @@ export class HandoverRowScrollerCmp extends InfiniteScroller {
 	protected override onScroll(): void {
 		super.onScroll();
 
-		if ((this.maxIndex - this.position) < 30)
-			this.maxIndex += 50;
+		//if ((this.maxIndex - this.position) < 30)
+		//	this.maxIndex += 50;
 	}
 
 	public static override styles = css`

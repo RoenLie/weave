@@ -1,6 +1,7 @@
 import type { RecordOf } from '@roenlie/core/types';
 import { type CSSResult, LitElement, type PropertyValues, css, html } from 'lit';
 import { query, state } from 'lit/decorators.js';
+import { styleMap } from 'lit/directives/style-map.js';
 
 
 interface BufferElement extends HTMLElement {
@@ -29,7 +30,10 @@ export abstract class InfiniteScroller extends LitElement {
 		this.#maxIndex = Math.max(1, v);
 
 		if (this.hasUpdated) {
-			this.fullHeightQry.style.height = this.totalHeight + 'px';
+			const bufferChanged = this.onResize();
+			if (!bufferChanged)
+				this.fullHeightQry.style.height = this.totalHeight + 'px';
+
 			this.forceUpdateElements();
 		}
 	}
@@ -38,12 +42,15 @@ export abstract class InfiniteScroller extends LitElement {
 	protected buffers: [BufferElement, BufferElement];
 
 	#bufferSize = 0;
-	public get bufferSize() {
+	public get bufferSize(): number {
 		return this.#bufferSize;
 	};
 
 	public set bufferSize(v: number) {
 		this.#bufferSize = v;
+
+		if (this.hasUpdated)
+			this.fullHeightQry.style.height = this.totalHeight + 'px';
 
 		this.createPool();
 	}
@@ -53,8 +60,18 @@ export abstract class InfiniteScroller extends LitElement {
 	}
 
 	#itemHeight = 0;
+	public set itemHeight(v: number) {
+		this.#itemHeight = v;
+
+		if (this.hasUpdated) {
+			this.scrollerQry.style.setProperty('--_item-height', this.#itemHeight + 'px');
+			this.onResize();
+			this.forceUpdateElements();
+		}
+	}
+
 	public get itemHeight(): number {
-		if (!this.#itemHeight && this.fullHeightQry) {
+		if (!this.#itemHeight && this.hasUpdated) {
 			const itemHeight = getComputedStyle(this)
 				.getPropertyValue('--item-height');
 
@@ -67,6 +84,7 @@ export abstract class InfiniteScroller extends LitElement {
 
 			this.fullHeightQry.style.removeProperty(tmpStyleProp);
 			this.#itemHeight = parseFloat(itemHeightPx);
+			this.scrollerQry.style.setProperty('--_item-height', this.#itemHeight + 'px');
 		}
 
 		return this.#itemHeight;
@@ -97,18 +115,30 @@ export abstract class InfiniteScroller extends LitElement {
 			+ this.buffers[0]._translateY;
 	}
 
-	protected readonly resizeObserver = new ResizeObserver(([ entry ]) => {
-		if (!entry)
-			return;
+	#availableSize = 0;
+	protected readonly resizeObserver = new ResizeObserver(this.onResize.bind(this));
+	protected onResize(entries?: ResizeObserverEntry[]): boolean {
+		const entry = entries?.[0];
+		if (entry)
+			this.#availableSize = entry.contentRect.height;
 
-		const availableSize = entry.contentRect.height;
-		const visibleCount = Math.ceil(availableSize / this.itemHeight) + 2;
+		const minimumBuffer = Math.ceil(this.#availableSize / this.itemHeight);
 
-		if (this.bufferSize !== visibleCount) {
-			this.bufferSize = visibleCount;
-			this.fullHeightQry.style.height = this.totalHeight + 'px';
+		if (this.bufferSize !== minimumBuffer) {
+			if (this.maxIndex <= minimumBuffer) {
+				this.bufferSize = this.maxIndex;
+				this.ensureBufferTranslate();
+				this.forceUpdateElements();
+			}
+			else {
+				this.bufferSize = minimumBuffer + 2;
+			}
+
+			return true;
 		}
-	});
+
+		return false;
+	};
 	//#endregion
 
 
@@ -325,7 +355,7 @@ export abstract class InfiniteScroller extends LitElement {
 		return updateElements;
 	}
 
-	public forceUpdateElements() {
+	public forceUpdateElements(): void {
 		this.buffers[0]._updated = false;
 		this.buffers[1]._updated = false;
 
@@ -372,9 +402,11 @@ export abstract class InfiniteScroller extends LitElement {
 	//#region render
 	protected override render(): unknown {
 		return html`
-		<div id="scroller" tabindex=-1>
-			<div class="buffer"></div>
-			<div class="buffer"></div>
+		<div part="scroller" id="scroller" tabindex=-1 style=${ styleMap({
+			'--_item-height': `${ this.itemHeight }px`,
+		}) }>
+			<div part="buffer" class="buffer"></div>
+			<div part="buffer" class="buffer"></div>
 			<div id="fullHeight"></div>
 		</div>
 		`;
@@ -403,7 +435,7 @@ export abstract class InfiniteScroller extends LitElement {
 			top: 0;
 			width: 100%;
 			display: grid;
-			grid-auto-rows: var(--item-height);
+			grid-auto-rows: var(--_item-height, var(--item-height));
 		}
 	`;
 	//#endregion

@@ -867,10 +867,6 @@ importers:
       tslib:
         specifier: ^2.7.0
         version: 2.7.0
-    devDependencies:
-      happy-dom:
-        specifier: ^14.7.1
-        version: 14.12.3
 
   packages/live-ts-imports:
     dependencies:
