@@ -278,15 +278,12 @@ export abstract class InfiniteScroller extends LitElement {
 	}
 
 	protected ensureBufferTranslate(): void {
-		// Ensure the buffers have been given a translateY value after a buffer size change.
-		const buffers = this.buffers[0].firstElementChild?.getAttribute('name') === 'item-0'
-			? [ this.buffers[0], this.buffers[1] ]
-			: [ this.buffers[1], this.buffers[0] ];
+		// Ensure the buffers have been given a translateY value.
+		// Also reset the translateY value of the buffers.
+		this.buffers[0]!._translateY = -this.bufferHeight;
+		this.buffers[1]!._translateY = 0;
 
-		buffers[0]!._translateY = -this.bufferHeight;
-		buffers[1]!._translateY = 0;
-
-		for (const buffer of buffers)
+		for (const buffer of this.buffers)
 			buffer.style.transform = `translate3d(0, ${ buffer._translateY }px, 0)`;
 	}
 
