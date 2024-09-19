@@ -14,6 +14,10 @@ export class HandoverRowScrollerCmp extends InfiniteScroller {
 		//this.maxIndex = 50;
 		this.maxIndex = 5;
 		//this.maxIndex = 0;
+
+		setTimeout(() => {
+			this.maxIndex = 10;
+		}, 100);
 	}
 
 	protected override createElement(): HTMLElement {

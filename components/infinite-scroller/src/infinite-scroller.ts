@@ -288,14 +288,10 @@ export abstract class InfiniteScroller extends LitElement {
 	}
 
 	protected translateBuffer(up: boolean): boolean {
-		if (up) {
-			if (~~this.position < 0)
-				return false;
-		}
-		else {
-			if ((this.position + this.bufferSize) > this.maxIndex)
-				return false;
-		}
+		if (~~this.position < 0)
+			return false;
+		if ((this.position + this.bufferSize) > this.maxIndex)
+			return false;
 
 		const index = up ? 1 : 0;
 
@@ -330,7 +326,9 @@ export abstract class InfiniteScroller extends LitElement {
 		do {
 			count++;
 			if (count > maxIterations) {
-				console.warn('Infinite loop detected in syncBufferTranslate');
+				if (maxIterations > 1)
+					console.warn('Infinite loop detected in syncBufferTranslate');
+
 				break;
 			}
 
