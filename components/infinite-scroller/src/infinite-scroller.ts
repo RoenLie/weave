@@ -30,9 +30,8 @@ export abstract class InfiniteScroller extends LitElement {
 		this.#maxIndex = Math.max(1, v);
 
 		if (this.hasUpdated) {
-			const bufferChanged = this.onResize();
-			if (!bufferChanged)
-				this.fullHeightQry.style.height = this.totalHeight + 'px';
+			this.onResize();
+			this.fullHeightQry.style.height = this.totalHeight + 'px';
 
 			this.forceUpdateElements();
 		}
