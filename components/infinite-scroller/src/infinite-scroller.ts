@@ -90,7 +90,8 @@ export abstract class InfiniteScroller extends LitElement {
 	}
 
 	protected get totalHeight(): number {
-		const modifiedMaxIndex = Math.ceil(this.maxIndex / this.bufferSize) * this.bufferSize;
+		const modifiedMaxIndex = this.maxIndex
+			+ (this.bufferSize - this.maxIndex % this.bufferSize);
 
 		return this.itemHeight * modifiedMaxIndex;
 	}
