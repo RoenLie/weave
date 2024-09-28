@@ -1,33 +1,24 @@
-const getPropertyNameInternal = <const T>(
-	expression: (instance: T) => any,
-	options: {
-		isDeep: boolean
+// nameof property path is stored here for retrieval.
+const propertyThatWasAccessed: string[] = [];
+
+
+// Proxy objects to store the property path.
+const proxy: any = new Proxy({} as any, {
+	get: <const C extends string>(_: any, prop: C) => {
+		propertyThatWasAccessed.push(prop);
+
+		return proxy;
 	},
-) => {
-	let propertyThatWasAccessed = '';
-	const proxy: T = new Proxy({} as any, {
-		get: <const C extends string>(_: any, prop: C) => {
-			if (options.isDeep) {
-				if (propertyThatWasAccessed)
-					propertyThatWasAccessed += '.';
+});
 
-				propertyThatWasAccessed += prop;
-			}
-			else {
-				propertyThatWasAccessed = prop;
-			}
 
-			return proxy;
-		},
-	});
+/**
+ * Returns either the last part of a objects path  \
+ * or dotted path if the fullPath flag is set to true.
+ */
+export const nameof = <const T>(expression: (instance: T) => any) => {
+	propertyThatWasAccessed.length = 0;
 	expression(proxy);
 
-	return propertyThatWasAccessed;
+	return propertyThatWasAccessed.join('.');
 };
-
-
-export const nameof = <const T>(
-	expression: (instance: T) => any, deep = false,
-) => getPropertyNameInternal(expression, {
-	isDeep: deep,
-});
