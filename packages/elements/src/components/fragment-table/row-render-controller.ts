@@ -19,10 +19,10 @@ export class RowRenderController implements ReactiveController {
 	public readonly rowOverflow = 10;
 	public topBufferRange = 0;
 	public botBufferRange = 0;
-	public dataRange: Record<string, any>[] = [];
-	public interObs: Promise<IntersectionObserver>;
+	public dataRange:         Record<string, any>[] = [];
+	public interObs:          Promise<IntersectionObserver>;
 	public firstRowFirstCell: Ref<HTMLTableCellElement> = createRef();
-	public editorCell: {rowIndex: number; columnIndex: number;} | undefined = undefined;
+	public editorCell:        { rowIndex: number; columnIndex: number; } | undefined = undefined;
 	#dynamicStyle = new DynamicStyle();
 
 	protected get table() {
@@ -196,23 +196,23 @@ export class RowRenderController implements ReactiveController {
 		this.host.requestUpdate();
 	};
 
-	public DynamicStyles() {
+	public dynamicStyles() {
 		return html`
 		<style>${ this.dynamicStyling }</style>
 		`;
 	}
 
-	public Rows() {
+	public rows() {
 		const dataStartIndex = this.startIndex;
 
 		return html`
 		<tr id="top-buffer" ${ intersect(this.interObs) }></tr>
-		${ map(this.dataRange, (data, i) => this.Row(data, i + dataStartIndex)) }
+		${ map(this.dataRange, (data, i) => this.row(data, i + dataStartIndex)) }
 		<tr id="bot-buffer" ${ intersect(this.interObs) }></tr>
 		`;
 	}
 
-	protected Row(data: Record<string, any>, index: number) {
+	protected row(data: Record<string, any>, index: number) {
 		return html`
 		<tr id=${ 'row-' + index } part="tbody-tr">
 			<td ${ ref(this.firstRowFirstCell) }>

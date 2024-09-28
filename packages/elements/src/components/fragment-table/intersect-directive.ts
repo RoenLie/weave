@@ -5,7 +5,7 @@ import { type AttributePart, directive, type DirectiveParameters, type PartInfo,
 
 class IntersectDirective extends AsyncDirective {
 
-	#part: AttributePart;
+	#part:     AttributePart;
 	#observer: IntersectionObserver;
 	#initialized = false;
 

@@ -16,21 +16,28 @@ export type Direction = 'vertical' | 'horizontal';
 @customElement('mm-virtual-scrollbar')
 export class MMVirtualScrollbar extends MimicElement {
 
+	@property({ type: Object })
+	public widthResizeRef: HTMLElement | Promise<HTMLElement>;
+
+	@property({ type: Object })
+	public reference?: HTMLElement | Promise<HTMLElement | undefined>;
+
+	@property({ attribute: 'default-scroll' })
+	public defaultScroll: Direction = 'vertical';
+
 	@property() public placement: Placement = 'end';
 	@property() public direction: Direction = 'horizontal';
-	@property({ attribute: 'default-scroll' }) public defaultScroll: Direction = 'vertical';
-	@property({ type: Object }) public widthResizeRef: HTMLElement | Promise<HTMLElement>;
-	@property({ type: Object }) public reference: HTMLElement | Promise<HTMLElement>;
-	@state() protected resolvedRef?: HTMLElement;
+
+	@state() protected resolvedRef?:                   HTMLElement;
 	@state() protected show = false;
-	@queryId('scrollbar') protected scrollbarEl: HTMLElement;
+	@queryId('scrollbar') protected scrollbarEl:       HTMLElement;
 	@queryId('scrollbar-wrapper') protected wrapperEl: HTMLElement;
 
 	protected isChild = false;
 	protected resetScrollOrigin = debounce(() => this.scrollOrigin = undefined, 50);
-	protected scrollOrigin?: 'reference' | 'scrollbar' = undefined;
-	protected unlistenReference?: () => void;
-	protected unlistenWidthResizeRef?: () => void;
+	protected scrollOrigin?:             'reference' | 'scrollbar' = undefined;
+	protected unlistenReference?:        () => void;
+	protected unlistenWidthResizeRef?:   () => void;
 	protected unlistenHorizontalScroll?: () => void;
 
 	protected readonly resizeObs = new ResizeObserver(([ entry ]) => {
@@ -112,7 +119,7 @@ export class MMVirtualScrollbar extends MimicElement {
 
 			scrollbar.scrollLeft = localLeft;
 
-			this.syncPosition();
+			this.syncScrollHandlePosition();
 		};
 
 		ref.addEventListener('scroll', scrollListener);
@@ -174,10 +181,10 @@ export class MMVirtualScrollbar extends MimicElement {
 		if (this.direction === 'vertical')
 			this.resolvedRef.scrollTop = scrollbar.scrollTop;
 
-		this.syncPosition();
+		this.syncScrollHandlePosition();
 	}
 
-	protected syncPosition() {
+	protected syncScrollHandlePosition() {
 		const bar = this.wrapperEl;
 		const reference = this.resolvedRef;
 		if (!this.isChild || !reference || !bar)

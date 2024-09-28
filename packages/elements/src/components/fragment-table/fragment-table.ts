@@ -17,15 +17,15 @@ export interface Options {
 
 
 export interface Column<T extends Record<string, any>> {
-	width?: number;
-	minWidth?: number;
+	width?:        number;
+	minWidth?:     number;
 	defaultWidth?: number;
-	resizeable?: boolean;
-	label?: string;
-	field?: PathOf<T>;
+	resizeable?:   boolean;
+	label?:        string;
+	field?:        PathOf<T>;
 	headerRender?: (data: T[]) => TemplateResult<any>;
-	fieldRender?: (data: T) => TemplateResult<any>;
-	fieldEditor?: (data: T) => TemplateResult<any>;
+	fieldRender?:  (data: T) => TemplateResult<any>;
+	fieldEditor?:  (data: T) => TemplateResult<any>;
 }
 
 
@@ -42,28 +42,28 @@ export interface Column<T extends Record<string, any>> {
 @customElement('mm-fragment-table')
 export class FragmentTable extends MimicElement {
 
-	@property({ type: Array }) public columns: Column<any>[] = [];
-	@property({ type: Array }) public data: Record<string, any>[] = [];
-	@property({ type: Object }) public options?: Options;
-	@property({ type: String }) public styles?: string | CSSResult;
-	@property({ type: Boolean }) public dynamic?: boolean;
-	@property({ type: Boolean, reflect: true }) public contain?: boolean;
+	@property({ type: Array }) public columns:                      Column<any>[] = [];
+	@property({ type: Array }) public data:                         Record<string, any>[] = [];
+	@property({ type: Object }) public options?:                    Options;
+	@property({ type: String }) public styles?:                     string | CSSResult;
+	@property({ type: Boolean }) public dynamic?:                   boolean;
+	@property({ type: Boolean, reflect: true }) public contain?:    boolean;
 	@property({ type: Boolean, reflect: true }) public allChecked?: boolean;
 
-	@queryId('table') protected table?: HTMLTableElement;
+	@queryId('table') protected table?:          HTMLTableElement;
 	@queryId('top-buffer') protected topBuffer?: HTMLElement;
 
 	protected tablePromise = this.updateComplete.then(() => this.table);
 	protected topBufferPromise = this.updateComplete.then(() => this.topBuffer);
-	protected focusRow: number | undefined = undefined;
+	protected focusRow:    number | undefined = undefined;
 	protected focusedCell: number | undefined = undefined;
 	protected eventOptions = { bubbles: true, cancelable: true, composed: true };
 	public readonly headerRenderer = new HeaderRenderController(this);
 	public readonly rowRenderer = new RowRenderController(this);
 	public readonly checkedRowIndexes = new Set<number>();
 
-	public toggleEditor(): void
-	public toggleEditor(row: number | string, column: number | string): void
+	public toggleEditor(): void;
+	public toggleEditor(row: number | string, column: number | string): void;
 	public toggleEditor(row?: number | string, column?: number | string) {
 		if (row !== undefined && column !== undefined) {
 			this.rowRenderer.editorCell = {
@@ -181,7 +181,7 @@ export class FragmentTable extends MimicElement {
 		<style>${ this.styles }</style>
 
 		${ this.headerRenderer.DynamicStyles() }
-		${ this.rowRenderer.DynamicStyles() }
+		${ this.rowRenderer.dynamicStyles() }
 
 		<table id="table" part="table">
 			<thead
@@ -198,7 +198,7 @@ export class FragmentTable extends MimicElement {
 				@dblclick=${ this.handleBodyDblClick }
 				@mousedown=${ this.handleBodyMousedown }
 			>
-				${ this.rowRenderer.Rows() }
+				${ this.rowRenderer.rows() }
 			</tbody>
 		</table>
 
@@ -360,6 +360,8 @@ export class FragmentTable extends MimicElement {
 }
 
 
-declare global { interface HTMLElementTagNameMap {
-	'fragment-table': FragmentTable;
-} }
+declare global {
+	interface HTMLElementTagNameMap {
+		'fragment-table': FragmentTable;
+	}
+}
