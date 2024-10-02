@@ -5,7 +5,8 @@
 	"scripts": {
 		"build-toolbox": "tsx ./scripts/build-package.ts @roenlie/package-toolbox",
 		"build": "pnpm build-toolbox && tsx ./scripts/build-package.ts",
-		"release": "pnpm build-toolbox && tsx ./scripts/build-package.ts --publish"
+		"release": "pnpm build-toolbox && tsx ./scripts/build-package.ts --publish",
+		"clean": "rimraf --glob packages/**/*/node_modules && rimraf node_modules dist"
 	},
 	"devDependencies": {
 		"@roenlie/eslint-config": "workspace:^",

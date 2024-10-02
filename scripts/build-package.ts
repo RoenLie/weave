@@ -55,6 +55,8 @@ if (publish || dryRun) {
 	if (err)
 		throw err;
 
+	[ _, err ] = await execPromise(`cd ${ packageDir } && pnpm merge-tsconfig`, handleStdout);
+
 	console.log('Incrementing package version...');
 	[ _, err ] = await execPromise(`cd ${ packageDir } && pkg-toolbox increment-version`, handleStdout);
 	if (err)

@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/mirage-docs",
-	"version": "2.0.0",
+	"version": "2.0.24",
 	"description": "",
 	"author": "Kristoffer Roen-Lie",
 	"license": "MIT",
@@ -32,7 +32,11 @@
 		"build:indexes": "pkg-toolbox build-indexes",
 		"build:server": "vite build --config ./vite.config.ts",
 		"build:workers": "vite build --config ./vite-workers.config.ts",
-		"build:types": "tsc --project ./src/app/tsconfig.json && tsc --project ./src/server/tsconfig.json"
+		"build:types": "tsc --project ./src/app/tsconfig.json && tsc --project ./src/server/tsconfig.json",
+		"merge-tsconfig": "pnpm run --sequential \"/^merge-tsconfig:.+/\"",
+		"merge-tsconfig:1": "pkg-toolbox merge-tsconfig --config ./src/app/tsconfig.json",
+		"merge-tsconfig:2": "pkg-toolbox merge-tsconfig --config ./src/server/tsconfig.json",
+		"merge-tsconfig:3": "pkg-toolbox merge-tsconfig --config ./src/workers/tsconfig.json"
 	},
 	"dependencies": {
 		"@roenlie/monaco-editor-wc": "workspace:^",
