@@ -5,7 +5,11 @@ export type TreeRecord<T = any, TEnd = any> = {
 	[P in keyof T]: TreeRecord<T[P]> | TEnd;
 };
 
-export const pathsToTree = (paths: string[], delimiter: string, nameReplacements: NameReplacement[]) => {
+export const pathsToTree = (
+	paths: string[],
+	delimiter: string,
+	nameReplacements: NameReplacement[],
+) => {
 	const tree: TreeRecord = {};
 
 	paths.sort((a, b) => {

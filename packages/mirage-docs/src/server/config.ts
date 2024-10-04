@@ -84,11 +84,7 @@ export const defineDocConfig = async (
 					},
 					sidebar: {
 						delimiter:        '_',
-						nameReplacements: [
-							[ '.docs', '' ],
-							[ '.editor', ' Editor' ],
-							[ '-', ' ' ],
-						],
+						nameReplacements: undefined as any,
 					},
 					styleOverrides: {
 						layout:       '',
@@ -111,6 +107,13 @@ export const defineDocConfig = async (
 		};
 
 		deepmergeInto(internalProps, props);
+
+		// Assign the default name replacements if not already set.
+		internalProps.siteConfig.root.sidebar.nameReplacements ??= [
+			[ '.docs', '' ],
+			[ '.editor', ' Editor' ],
+			[ '-', ' ' ],
+		];
 
 		// Cache all relevant files.
 		bar.update(bar.current + 1, 'Caching files');

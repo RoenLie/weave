@@ -13,11 +13,11 @@
 		"@roenlie/package-toolbox": "workspace:^",
 		"@roenlie/tsconfig": "workspace:^",
 		"@types/node": "^22.5.0",
+		"happy-dom": "^15.7.4",
 		"rimraf": "^6.0.1",
 		"tsx": "^4.19.0",
 		"typescript": "^5.5.2",
 		"vite": "^5.4.2",
-		"vitest": "^2.0.5",
-		"happy-dom": "^14.7.1"
+		"vitest": "^2.1.2"
 	}
 }
