@@ -15,18 +15,18 @@ import { docPageTemplate } from './generators/doc-page-template.js';
 export class MarkdownComponentFactory {
 
 	protected readonly projectRoot = resolve();
-	protected readonly rootDepth: number;
-	protected readonly tagCache: Map<string, string>;
+	protected readonly rootDepth:     number;
+	protected readonly tagCache:      Map<string, string>;
 	protected readonly manifestCache: Map<string, Declarations>;
-	protected readonly path: string;
-	protected imports: string[] = [];
-	protected examples: Record<string, string> = {};
-	protected metadata: Record<string, Declarations> = {};
+	protected readonly path:          string;
+	protected imports:                string[] = [];
+	protected examples:               Record<string, string> = {};
+	protected metadata:               Record<string, Declarations> = {};
 	protected content = '';
 
 	constructor(args: {
-		path:          string,
-		rootDepth:     number,
+		path:      string,
+		rootDepth: number,
 	}) {
 		const cache = getCache();
 		this.tagCache      = cache.tag;
@@ -145,11 +145,14 @@ export class MarkdownComponentFactory {
 			return exampleReplacement(exampleId);
 		});
 
-		this.content = this.content.replace(exampleScriptExpr, (_, exampleId: string, exampleContent: string) => {
-			this.examples[exampleId] = stringDedent(exampleContent);
+		this.content = this.content.replace(
+			exampleScriptExpr,
+			(_, exampleId: string, exampleContent: string) => {
+				this.examples[exampleId] = stringDedent(exampleContent);
 
-			return exampleReplacement(exampleId);
-		});
+				return exampleReplacement(exampleId);
+			},
+		);
 
 		/* only import the editor if it there are examples to be displayed. */
 		if (!isEmptyObject(this.examples)) {

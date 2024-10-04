@@ -60,6 +60,7 @@ export const indexPageTemplate = (props: {
 </head>
 <body>
 	<midoc-page></midoc-page>
+	<div class="footer"></div>
 	<script type="module">
 		import { ensureColorScheme } from '@roenlie/mirage-docs/app/utilities/color-subscription.${ fileExt() }';
 		ensureColorScheme();
