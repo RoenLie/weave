@@ -292,7 +292,6 @@ export class PathTreeAdapter extends Adapter<PathTreeCmp> {
 		a {
 			cursor: pointer;
 			border-radius: var(--midoc-border-radius-s);
-			text-transform: capitalize;
 		}
 		.heading {
 			padding: 4px;
