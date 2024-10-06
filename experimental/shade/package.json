@@ -1,0 +1,16 @@
+{
+	"name": "@roenlie/shade",
+	"description": "description",
+	"authors": "author",
+	"version": "1.0.0",
+	"type": "module",
+	"types": "./src/index.ts",
+	"main": "./src/index.ts",
+	"scripts": {
+		"dev": "vite --config ./demo/vite.config.ts"
+	},
+	"dependencies": {
+		"lit": "^3.2.0",
+		"@roenlie/shade": "workspace:^"
+	}
+}
