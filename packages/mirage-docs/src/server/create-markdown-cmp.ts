@@ -10,12 +10,14 @@ import { stringDedent } from './build/helpers/string-dedent.js';
 import { toCamelCase } from './build/helpers/to-camel-case.js';
 import { markdownIt } from './build/markdown/markdown-it.js';
 import { docPageTemplate } from './generators/doc-page-template.js';
+import type { InternalConfigProperties } from './create-files.js';
 
 
 export class MarkdownComponentFactory {
 
 	protected readonly projectRoot = resolve();
 	protected readonly rootDepth:     number;
+	protected readonly siteConfig:    InternalConfigProperties;
 	protected readonly tagCache:      Map<string, string>;
 	protected readonly manifestCache: Map<string, Declarations>;
 	protected readonly path:          string;
@@ -25,8 +27,9 @@ export class MarkdownComponentFactory {
 	protected content = '';
 
 	constructor(args: {
-		path:      string,
-		rootDepth: number,
+		path:       string,
+		rootDepth:  number,
+		siteConfig: InternalConfigProperties,
 	}) {
 		const cache = getCache();
 		this.tagCache      = cache.tag;
@@ -34,16 +37,20 @@ export class MarkdownComponentFactory {
 
 		this.path          = args.path;
 		this.rootDepth     = args.rootDepth;
+		this.siteConfig    = args.siteConfig;
 	}
 
 	protected addUsedTags() {
+		if (!this.siteConfig.autoImport)
+			return;
+
 		/* save the matching tags to a set, to avoid duplicates */
 		const componentImportPaths = new Set<string>();
 
 		/* loop through and cache paths for all custom element tags. */
 		TagCatcher.get(this.content).forEach(tag => {
 			const path = this.tagCache.get(tag);
-			if (path)
+			if (path?.endsWith('ts') || path?.endsWith('js'))
 				componentImportPaths.add(path);
 		});
 

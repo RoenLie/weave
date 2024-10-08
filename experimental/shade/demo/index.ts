@@ -1,4 +1,3 @@
-import '@roenlie/shade';
 import { createElement, useStyles } from '@roenlie/shade';
 import { css, html, render } from 'lit';
 
@@ -13,7 +12,7 @@ const tester = createElement('test1', () => {
 	}
 	`);
 
-	return (params: { label: string }) => html`
+	return (_params: { label: string }) => html`
 	<div>
 		Hello what is this???
 

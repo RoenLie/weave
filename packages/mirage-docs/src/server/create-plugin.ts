@@ -173,7 +173,11 @@ export const createPlugin = (args: {
 			);
 
 			const rootDepth = props.root.split('/').filter(Boolean).length;
-			const factory = new MarkdownComponentFactory({ path: id, rootDepth });
+			const factory = new MarkdownComponentFactory({
+				path:       id,
+				rootDepth,
+				siteConfig: props,
+			});
 			const file = await factory.create();
 
 			await promises.writeFile(absoluteCmpPath, file);

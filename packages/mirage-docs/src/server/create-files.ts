@@ -98,7 +98,7 @@ export const createDocFiles = async (props: InternalConfigProperties) => {
 	const markdownComponentPaths = new Set<string>();
 
 	await Promise.all([ ...cache.markdown ].map(async ([ , path ]) => {
-		const factory = new MarkdownComponentFactory({ path, rootDepth });
+		const factory = new MarkdownComponentFactory({ path, rootDepth, siteConfig: props });
 
 		const componentContent = await factory.create();
 		const absoluteCmpPath = DocPath.createFileCachePath(
