@@ -14,7 +14,9 @@ export const markdownIt = mdIt({
 	highlight:   (str: string, lang: string) => {
 		if (lang && hljs.getLanguage(lang)) {
 			try {
-				return hljs.highlight(str, { language: lang }).value.replaceAll('`', '\\`');
+				return hljs.highlight(str, { language: lang }).value
+					.replaceAll('`', '\\`')
+					.replaceAll('${', '\\${');
 			}
 			catch (__) { /* Ignore errors! */ }
 		}
