@@ -1,8 +1,8 @@
-import type { Plugin, ResolvedConfig } from 'vite';
 import * as parser from '@babel/parser';
 import _traverse from '@babel/traverse';
 import { transform } from 'lightningcss';
 import MagicString from 'magic-string';
+import type { Plugin, ResolvedConfig } from 'vite';
 
 const traverse = (_traverse as unknown as { default: typeof _traverse }).default;
 
@@ -69,7 +69,9 @@ export const minifyCssLiteral = (debugLevel: 'error' | 'silent' = 'silent'): Plu
 
 						// we cannot mutate the code string while traversing.
 						// so we gather the text changes that need to be done.
-						replacements.push({ from: text, to: minified });
+						// we push the latest changes to the beginning of the array
+						// so that as we apply the changes, the indexes are still valid.
+						replacements.unshift({ from: text, to: minified });
 					}
 					catch (err) {
 						if (debugLevel !== 'silent') {
@@ -83,13 +85,21 @@ export const minifyCssLiteral = (debugLevel: 'error' | 'silent' = 'silent'): Plu
 			if (!replacements.length)
 				return;
 
-			const str = new MagicString(code);
-			replacements.forEach(({ from, to }) => str.replace(from, to));
+			try {
+				const str = new MagicString(code);
+				replacements.forEach(({ from, to }) => str.replace(from, to));
 
-			return {
-				code: str.toString(),
-				map:  str.generateMap({ file: id }),
-			};
+				return {
+					code: str.toString(),
+					map:  str.generateMap({ file: id }),
+				};
+			}
+			catch (err) {
+				if (debugLevel !== 'silent') {
+					console.error('\nFailed to apply css literal minification: ' + id);
+					console.error(err);
+				}
+			}
 		},
 		buildEnd() {
 			if (config.mode === 'development')
