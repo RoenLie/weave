@@ -1,1 +1,2 @@
-export { minifyCssLiteral, minifyCssAssets } from './minify-css-literal.js';
+export { minifyCssLiteral } from './minify-css-literal.js';
+export { minifyCssAssets } from './minify-css-assets.ts';
