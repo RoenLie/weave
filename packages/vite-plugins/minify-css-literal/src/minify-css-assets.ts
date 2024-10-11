@@ -9,7 +9,7 @@ export const minifyCssAssets = (): Plugin => {
 	let config: ResolvedConfig;
 
 	return {
-		name:           'vite-minify-css-assets',
+		name:           '@roenlie/vite-minify-css-assets',
 		configResolved: (cfg) => {
 			config = cfg;
 		},
