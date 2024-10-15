@@ -18,7 +18,7 @@ class IntersectDirective extends AsyncDirective {
 		this.#part = part as unknown as AttributePart;
 	}
 
-	public override update(part: AttributePart, [ observer ]: DirectiveParameters<this>) {
+	public override update(_part: AttributePart, [ observer ]: DirectiveParameters<this>) {
 		if (!this.#initialized) {
 			this.#initialized = true;
 			(async () => {

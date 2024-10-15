@@ -128,8 +128,8 @@ export class HeaderRenderController implements ReactiveController {
 				${ when(this.host.options?.checkbox, () => html`
 				<input
 					type="checkbox"
-					.checked=${ this.host.allChecked }
-					.indeterminate=${ this.host.checkedRowIndexes.size }
+					.checked=${ !!this.host.allChecked }
+					.indeterminate=${ !!this.host.checkedRowIndexes.size }
 					@change=${ this.checkAllRows }
 				/>
 				`) }

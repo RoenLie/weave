@@ -221,7 +221,7 @@ export class RowRenderController implements ReactiveController {
 					type="checkbox"
 					data-row-index=${ index }
 					.checked=${ this.host.checkedRowIndexes.has(index)
-						|| this.host.allChecked }
+						|| !!this.host.allChecked }
 					@change=${ this.checkRow }
 				/>
 				`) }
@@ -269,7 +269,6 @@ export class RowRenderController implements ReactiveController {
 			all: unset;
 			height: var(--_bot-buffer-height);
 		}
-
 		tbody tr {
 			background-color: var(--_row-background);
 			border-bottom: var(--_row-bottom-border);

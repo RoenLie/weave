@@ -78,7 +78,6 @@ export class FragmentTable extends MimicElement {
 		this.requestUpdate();
 	}
 
-
 	public override connectedCallback() {
 		super.connectedCallback();
 
