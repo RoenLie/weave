@@ -16,6 +16,17 @@ export class EsSourceEditor extends LitElement {
 
 	public static refs = [ MonacoEditorCmp ];
 
+	constructor() {
+		super();
+
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root.styleOverrides.sourceEditor;
+
+		const base = (this.constructor as typeof LitElement);
+		if (style && Array.isArray(base.styles))
+			base.styles.push(unsafeCSS(style));
+	}
+
 	//#region state
 	@property({ type: String })                            public source: string;
 	@property({ type: Number, attribute: 'max-height' })   public maxHeight = Infinity;
@@ -231,13 +242,6 @@ export class EsSourceEditor extends LitElement {
 		}
 		`,
 	];
-
-	static {
-		const cfg = ContainerLoader.get<SiteConfig>('site-config');
-		const style = cfg.root?.styleOverrides?.sourceEditor;
-		if (style)
-			this.styles.push(unsafeCSS(style));
-	}
 	//#endregion
 
 }

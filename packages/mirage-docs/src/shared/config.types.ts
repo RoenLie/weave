@@ -22,8 +22,8 @@ export interface SiteConfig {
 			clearLogOnReload: boolean;
 		};
 		sidebar: {
-			nameReplacements: [from: string, to: string][];
-			delimiter:        string;
+			nameReplacements: [from: string | RegExp, to: string][];
+			groupingKey:      string;
 		};
 		styleOverrides: {
 			layout:       string;

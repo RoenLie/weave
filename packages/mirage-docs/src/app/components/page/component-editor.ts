@@ -1,4 +1,4 @@
-import { ContainerLoader } from '@roenlie/lit-aegis';
+import { ContainerLoader, type Adapter } from '@roenlie/lit-aegis';
 import { css, html, LitElement, unsafeCSS, type PropertyValues } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
@@ -9,6 +9,17 @@ import { EsSourceEditor } from './source-editor.js';
 
 @customElement('midoc-component-editor')
 export class EsComponentEditor extends EsSourceEditor {
+
+	constructor() {
+		super();
+
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root.styleOverrides.cmpEditor;
+
+		const base = (this.constructor as typeof LitElement);
+		if (style && Array.isArray(base.styles))
+			base.styles.push(unsafeCSS(style));
+	}
 
 	protected override willUpdate(_changedProperties: PropertyValues): void {
 		super.willUpdate(_changedProperties);
@@ -53,13 +64,6 @@ export class EsComponentEditor extends EsSourceEditor {
 		}
 		`,
 	];
-
-	static {
-		const cfg = ContainerLoader.get<SiteConfig>('site-config');
-		const style = cfg.root?.styleOverrides?.cmpEditor;
-		if (style)
-			this.styles.push(unsafeCSS(style));
-	}
 
 }
 

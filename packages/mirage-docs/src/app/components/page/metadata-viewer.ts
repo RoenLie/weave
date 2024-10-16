@@ -12,6 +12,17 @@ import { componentStyles } from '../../styles/component.styles.js';
 @customElement('midoc-metadata-viewer')
 export class MiDocMetadataViewerCmp extends LitElement {
 
+	constructor() {
+		super();
+
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root.styleOverrides.metadata;
+
+		const base = (this.constructor as typeof LitElement);
+		if (style && Array.isArray(base.styles))
+			base.styles.push(unsafeCSS(style));
+	}
+
 	//#region properties
 	@property({ type: Object }) public declaration: Declarations;
 	protected sanitizedDeclarations:                Declarations;
@@ -363,13 +374,6 @@ export class MiDocMetadataViewerCmp extends LitElement {
 		}
 	`,
 	];
-
-	static {
-		const cfg = ContainerLoader.get<SiteConfig>('site-config');
-		const style = cfg.root?.styleOverrides?.metadata;
-		if (style)
-			this.styles.push(unsafeCSS(style));
-	}
 	//#endregion
 
 }

@@ -83,7 +83,7 @@ export const defineDocConfig = async (
 						clearLogOnReload: true,
 					},
 					sidebar: {
-						delimiter:        '_',
+						groupingKey:      '_',
 						nameReplacements: undefined as any,
 					},
 					styleOverrides: {
@@ -110,10 +110,16 @@ export const defineDocConfig = async (
 
 		// Assign the default name replacements if not already set.
 		internalProps.siteConfig.root.sidebar.nameReplacements ??= [
-			[ '.docs', '' ],
-			[ '.editor', ' Editor' ],
-			[ '-', ' ' ],
+			[ /^\d+\./, '' ],
+			[ /\.docs/, '' ],
+			[ /\.editor/, ' Editor' ],
+			[ /-/g, ' ' ],
 		];
+
+		// Convert any regexes to a string representation.
+		internalProps.siteConfig.root.sidebar.nameReplacements.forEach(replacement => {
+			replacement[0] = replacement[0].toString();
+		});
 
 		// Cache all relevant files.
 		bar.update(bar.current + 1, 'Caching files');

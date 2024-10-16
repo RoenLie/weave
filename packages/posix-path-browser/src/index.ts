@@ -442,11 +442,11 @@ export const extname = (path: string): string => {
 };
 
 export const format = (pathObject: {
-	dir?: string;
+	dir?:  string;
 	root?: string;
 	base?: string;
 	name?: string;
-	ext?: string;
+	ext?:  string;
 }): string => {
 	if (!validateObject(pathObject, 'pathObject'))
 		throw new Error('invalid object');
@@ -462,11 +462,11 @@ export const format = (pathObject: {
 };
 
 export const parse = (path: string): {
-	dir: string;
+	dir:  string;
 	root: string;
 	base: string;
 	name: string;
-	ext: string;
+	ext:  string;
 } => {
 	if (!validateString(path, 'path'))
 		throw new Error('invalid string');

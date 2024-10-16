@@ -1,6 +1,5 @@
 /* eslint-disable */
 /* auto generated */
-export type { NameReplacement } from './utilities/name-replacement.js';
 export type { TreeRecord } from './utilities/paths-to-tree.js';
 export { subscribeToColorChange, getColorScheme, setColorScheme, ensureColorScheme, toggleColorScheme, updateColorSchemeLinks } from './utilities/color-subscription.js';
 export { Icon, xIcon, sunIcon, moonIcon, listIcon, chevronRightIcon, chevronUpIcon, chevronDownIcon, spinningCircleIcon } from './components/layout/icons.js';
@@ -20,7 +19,6 @@ export { EsSourceEditor } from './components/page/source-editor.js';
 export { highlightjsStyles } from './styles/highlightjs.styles.js';
 export { MiDocHeaderCmp } from './components/page/page-header.js';
 export { anchorSnatcher } from './utilities/anchor-snatcher.js';
-export { replaceInName } from './utilities/name-replacement.js';
 export { createSearchWorker } from './workers/search-worker.js';
 export { componentStyles } from './styles/component.styles.js';
 export { markdownStyles } from './styles/markdown.styles.js';

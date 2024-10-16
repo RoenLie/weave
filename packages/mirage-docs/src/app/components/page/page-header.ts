@@ -12,6 +12,17 @@ import { componentStyles } from '../../styles/component.styles.js';
 @customElement('midoc-page-header')
 export class MiDocHeaderCmp extends LitElement {
 
+	constructor() {
+		super();
+
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root.styleOverrides.pageHeader;
+
+		const base = (this.constructor as typeof LitElement);
+		if (style && Array.isArray(base.styles))
+			base.styles.push(unsafeCSS(style));
+	}
+
 	//#region properties
 	@property({ type: Boolean }) public editor?:    boolean;
 	@property({ type: Object }) public declaration: Declarations;
@@ -111,13 +122,6 @@ export class MiDocHeaderCmp extends LitElement {
 		}
 		`,
 	];
-
-	static {
-		const cfg = ContainerLoader.get<SiteConfig>('site-config');
-		const style = cfg.root?.styleOverrides?.pageHeader;
-		if (style)
-			this.styles.push(unsafeCSS(style));
-	}
 	//#endregion
 
 }

@@ -1,15 +1,15 @@
-export const isGroupingSegment = (segment: string, delimiter: string) => {
-	return segment.startsWith(delimiter) || /\d+\./.test(segment);
+export const isGroupingSegment = (segment: string, groupingKey: string) => {
+	return segment.startsWith(groupingKey) || /\d+\./.test(segment);
 };
 
-export const createSegmentedPath = (path: string, delimiter: string) => {
+export const createSegmentedPath = (path: string, groupingKey: string) => {
 	const segments = path.split('/');
 	const filtered = [
 		...segments
 			.slice(0, -1)
-			.filter(s => isGroupingSegment(s, delimiter))
+			.filter(s => isGroupingSegment(s, groupingKey))
 			.map(s => s
-				.replace(delimiter, '')
+				.replace(groupingKey, '')
 				.replaceAll('-', ' ')),
 		segments.at(-1)!
 			.replaceAll('-', ' '),

@@ -21,6 +21,17 @@ export class PageElement extends AegisComponent {
 
 export class PageAdapter extends Adapter {
 
+	constructor() {
+		super();
+
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root.styleOverrides.pageTemplate;
+
+		const base = (this.constructor as typeof Adapter);
+		if (style && Array.isArray(base.styles))
+			base.styles.push(unsafeCSS(style));
+	}
+
 	//#region properties
 	public get colorScheme() {
 		return document.documentElement.getAttribute('color-scheme');
@@ -110,12 +121,6 @@ export class PageAdapter extends Adapter {
 		}
 		`,
 	];
-
-	static {
-		const cfg = ContainerLoader.get<SiteConfig>('site-config');
-		const style = cfg.root.styleOverrides.pageTemplate;
-		this.styles.push(unsafeCSS(style));
-	}
 	//#endregion
 
 }

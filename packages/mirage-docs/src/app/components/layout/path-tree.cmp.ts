@@ -37,10 +37,21 @@ export class PathTreeCmp extends AegisComponent {
 
 export class PathTreeAdapter extends Adapter<PathTreeCmp> {
 
+	constructor() {
+		super();
+
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root.styleOverrides.pathTree;
+
+		const base = (this.constructor as typeof Adapter);
+		if (style && Array.isArray(base.styles))
+			base.styles.push(unsafeCSS(style));
+	}
+
 	//#region properties
 	@inject('site-config') protected siteConfig: SiteConfig;
-	@state() protected groupState:               Record<string, boolean> = {};
 	@state() protected activeHref = '';
+	@state() protected groupState:               Record<string, boolean> = {};
 	protected hierarchy:                         TreeRecord = {};
 	//#endregion
 
@@ -71,13 +82,22 @@ export class PathTreeAdapter extends Adapter<PathTreeCmp> {
 
 	public override willUpdate(props: PropertyValues): void {
 		if (props.has('paths')) {
-			const { delimiter, nameReplacements } = this.siteConfig.root!.sidebar!;
+			const { groupingKey, nameReplacements } = this.siteConfig.root!.sidebar!;
 
-			this.hierarchy = pathsToTree(
-				this.element.paths,
-				delimiter!,
-				nameReplacements!,
-			);
+			// nameReplacements can be regexes converted to strings.
+			// Convert them back to regexes.
+			nameReplacements.forEach((replacement) => {
+				if (typeof replacement[0] !== 'string')
+					return;
+
+				const parts = /\/(.*)\/(.*)/.exec(replacement[0])!;
+				if (!parts)
+					return;
+
+				replacement[0] = new RegExp(parts[1]!, parts[2]!);
+			});
+
+			this.hierarchy = pathsToTree(this.element.paths, groupingKey, nameReplacements);
 		}
 
 		if (props.has('groupState'))
@@ -326,12 +346,6 @@ export class PathTreeAdapter extends Adapter<PathTreeCmp> {
 		}
 		`,
 	];
-
-	static {
-		const cfg = ContainerLoader.get<SiteConfig>('site-config');
-		const style = cfg.root.styleOverrides.pathTree;
-		this.styles.push(unsafeCSS(style));
-	}
 	//#endregion
 
 }

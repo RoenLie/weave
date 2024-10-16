@@ -25,6 +25,17 @@ export class SidebarCmp extends AegisComponent {
 
 export class SidebarAdapter extends Adapter<SidebarCmp> {
 
+	constructor() {
+		super();
+
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root.styleOverrides.sidebar;
+
+		const base = (this.constructor as typeof Adapter);
+		if (style && Array.isArray(base.styles))
+			base.styles.push(unsafeCSS(style));
+	}
+
 	//#region properties
 	@inject('site-config') protected siteConfig:     SiteConfig;
 	@inject('routes') protected routes:              string[];
@@ -224,13 +235,6 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 		}
 		`,
 	];
-
-	static {
-		const cfg = ContainerLoader.get<SiteConfig>('site-config');
-		const style = cfg.root?.styleOverrides?.sidebar;
-		if (style)
-			this.styles.push(unsafeCSS(style));
-	}
 	//#endregion
 
 }

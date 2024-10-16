@@ -32,6 +32,17 @@ export class LayoutCmp extends AegisComponent {
 
 export class LayoutAdapter extends Adapter {
 
+	constructor() {
+		super();
+
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root.styleOverrides.layout;
+
+		const base = (this.constructor as typeof Adapter);
+		if (Array.isArray(base.styles))
+			base.styles.push(unsafeCSS(style));
+	}
+
 	//#region properties
 	@state() protected loading = false;
 	@query('iframe') protected frameQry:           HTMLIFrameElement;
@@ -302,12 +313,6 @@ export class LayoutAdapter extends Adapter {
 		componentStyles,
 		layoutStyles,
 	];
-
-	static {
-		const cfg = ContainerLoader.get<SiteConfig>('site-config');
-		const style = cfg.root.styleOverrides.layout;
-		this.styles.push(unsafeCSS(style));
-	}
 	//#endregion
 
 }
