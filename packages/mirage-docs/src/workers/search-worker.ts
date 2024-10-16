@@ -12,11 +12,11 @@ const defaultHtmlSchema = {
 const customRestore = async (
 	data: RawData,
 ): Promise<Orama<any, any, any, any>> => {
-	const db = await create({
+	const db = create({
 		schema: defaultHtmlSchema,
 	});
 
-	await load(db, data);
+	load(db, data);
 
 	return db;
 };
@@ -24,7 +24,7 @@ const customRestore = async (
 
 (async () => {
 	const JSONIndex = await fetch('../searchIndexes.json')
-		.then(d => d.json()).then(d => d);
+		.then(d => d.json() as Promise<RawData>);
 
 	const db = await customRestore(JSONIndex);
 

@@ -114,9 +114,12 @@ export const defineDocConfig = async (
 			[ /\.docs/, '' ],
 			[ /\.editor/, ' Editor' ],
 			[ /-/g, ' ' ],
+			[ /_/g, ' ' ],
 		];
 
 		// Convert any regexes to a string representation.
+		// This is done because the config is JSON.stringified before being written to the siteconfig.ts
+		// file, for use in the client.
 		internalProps.siteConfig.root.sidebar.nameReplacements.forEach(replacement => {
 			replacement[0] = replacement[0].toString();
 		});

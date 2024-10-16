@@ -39,14 +39,14 @@
 		"merge-tsconfig:3": "pkg-toolbox merge-tsconfig --config ./src/workers/tsconfig.json"
 	},
 	"dependencies": {
-		"@roenlie/monaco-editor-wc": "workspace:^",
-		"@roenlie/lit-aegis": "workspace:^",
-		"@roenlie/core": "workspace:^",
 		"@custom-elements-manifest/analyzer": "^0.10.2",
-		"@orama/orama": "2.0.23",
-		"@orama/plugin-data-persistence": "2.0.23",
-		"@orama/plugin-match-highlight": "2.0.23",
-		"@orama/plugin-parsedoc": "2.0.23",
+		"@orama/orama": "3.0.0-rc-4",
+		"@orama/plugin-data-persistence": "3.0.0-rc-4",
+		"@orama/plugin-match-highlight": "3.0.0-rc-4",
+		"@orama/plugin-parsedoc": "3.0.0-rc-4",
+		"@roenlie/core": "workspace:^",
+		"@roenlie/lit-aegis": "workspace:^",
+		"@roenlie/monaco-editor-wc": "workspace:^",
 		"@sindresorhus/slugify": "^2.2.1",
 		"deepmerge-ts": "^7.0.3",
 		"globby": "^14.0.0",
@@ -55,7 +55,7 @@
 		"markdown-it-anchor": "^9.0.1",
 		"rollup-plugin-copy": "^3.5.0",
 		"tabbable": "^6.2.0",
-		"tslib": "^2.6.2"
+		"tslib": "^2.8.0"
 	},
 	"peerDependencies": {
 		"lit": "^3.1.0",
