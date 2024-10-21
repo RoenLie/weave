@@ -1,23 +1,27 @@
 import { output } from './output.ts';
 
-//const chart  = new Chart('', {
-//	type:    'line',
-//	data:    [] as any,
-//	options: {
-//		responsive: true,
-//		plugins:    {
-//			title: {
-//				display: true,
-//				text:    'Chart.js Line Chart',
-//			},
-//		},
-//	},
-//});
 
+export const barChart = async (...lines: { year: number, count: number }[]) => {
+	const code = `
+	import Chart from 'chart.js/auto'
 
-export const plot = async (...lines: number[][]) => {
-	output();
+	const data = ${ JSON.stringify(lines) };
+	new Chart(
+		document.getElementById('acquisitions'),
+		{
+			type: 'bar',
+			data: {
+				labels: data.map(row => row.year),
+				datasets: [
+					{
+						label: 'Acquisitions by year',
+						data: data.map(row => row.count)
+					}
+				]
+			}
+		}
+	);
+	`;
+
+	output(code);
 };
-
-
-plot();

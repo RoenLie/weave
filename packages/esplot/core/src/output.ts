@@ -5,7 +5,7 @@ import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 
 
-export const output = async () => {
+export const output = async (code: string) => {
 	const tempPath = join(tmpdir(), 'esplot');
 	const filePath = join(tempPath, 'plot.js');
 
@@ -40,39 +40,8 @@ export const output = async () => {
 						return source;
 				},
 				load: (id: string) => {
-					if (id === 'plot.js') {
-						return `
-						import Chart from 'chart.js/auto'
-
-						(async function() {
-						const data = [
-							{ year: 2010, count: 10 },
-							{ year: 2011, count: 20 },
-							{ year: 2012, count: 15 },
-							{ year: 2013, count: 25 },
-							{ year: 2014, count: 22 },
-							{ year: 2015, count: 30 },
-							{ year: 2016, count: 28 },
-						];
-
-						new Chart(
-							document.getElementById('acquisitions'),
-							{
-								type: 'bar',
-								data: {
-								labels: data.map(row => row.year),
-								datasets: [
-									{
-										label: 'Acquisitions by year',
-										data: data.map(row => row.count)
-									}
-								]
-								}
-							}
-						);
-						})();
-						`;
-					}
+					if (id === 'plot.js')
+						return code;
 				},
 			},
 		],
@@ -99,7 +68,7 @@ export const output = async () => {
 		unlinkSync(tempHtmlPath);
 	});
 
-	console.log('Plotting...', tempPath);
+	console.log('Opening a new window with your plot...');
 };
 
 const html = `
