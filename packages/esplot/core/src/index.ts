@@ -7,7 +7,7 @@ export const barChart = async (...lines: { year: number, count: number }[]) => {
 
 	const data = ${ JSON.stringify(lines) };
 	new Chart(
-		document.getElementById('acquisitions'),
+		document.querySelector('canvas'),
 		{
 			type: 'bar',
 			data: {

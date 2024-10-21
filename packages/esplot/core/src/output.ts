@@ -59,20 +59,20 @@ export const output = async (code: string) => {
 		throw new Error('only supports win and darwin');
 
 	const plotViewerDir = join(resolve(), 'bin');
-	const plotViewerPath = join(plotViewerDir, 'esplotv' + (os === 'win32' ? '-win' : '-dar'));
+	const plotViewerPath = join(plotViewerDir, 'esplotv' + (os === 'win32' ? '-win32' : '-arm64'));
 
 	const child = spawn(plotViewerPath, [ tempHtmlPath ], {
 		stdio:       'ignore',
 		shell:       true,
 		windowsHide: true,
-		//detached: true,
+		detached:    true,
 	});
+	child.unref();
 
 	const { promise, resolve: res } = Promise.withResolvers<void>();
 
 	child.once('spawn', async () => {
 		await new Promise<void>(res => setTimeout(() => res(), 1000));
-		child.unref();
 		res();
 		unlinkSync(tempHtmlPath);
 	});
@@ -106,7 +106,7 @@ const html = (code: string) => `
 	<script type="module">${ code }</script>
 </head>
 <body>
-<canvas id="acquisitions"></canvas>
+<canvas></canvas>
 </body>
 </html>
 `;
