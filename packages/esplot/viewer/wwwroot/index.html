@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>esplot-viewer</title>
+	<style>
+	body {
+		height: 100vh;
+		overflow: hidden;
+		contain: strict;
+		display: grid;
+		place-content: center;
+		margin: 0px;
+		padding: 0px;
+	}
+	canvas {
+		width: 100%;
+		height: 100%;
+	}
+	</style>
+
+	<script type="module">
+		// Create WebSocket connection.
+		const socket = new WebSocket("ws://localhost:46852/websocket");
+
+		// Connection opened
+		socket.addEventListener("open", (event) => {
+		socket.send("Hello Server!");
+		});
+
+		// Listen for messages
+		socket.addEventListener("message", (event) => {
+		console.log("Message from server ", event.data);
+		});
+	</script>
+</head>
+<body>
+<canvas></canvas>
+</body>
+</html>
