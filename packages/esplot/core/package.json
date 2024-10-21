@@ -1,0 +1,23 @@
+{
+	"name": "esplot",
+	"description": "description",
+	"authors": "author",
+	"version": "1.0.0",
+	"main": "pathToMain",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build"
+	},
+	"exports": {
+		"node": {
+			"default": "./src/index.js"
+		},
+		"default": {
+			"default:": "./src/index.js"
+		}
+	},
+	"dependencies": {
+		"chart.js": "^4.4.5",
+		"vite": "^5.4.9"
+	}
+}
