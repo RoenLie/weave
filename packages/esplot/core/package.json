@@ -4,6 +4,10 @@
 	"authors": "author",
 	"version": "1.0.0",
 	"main": "pathToMain",
+	"files": [
+		"bin",
+		"src"
+	],
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build"

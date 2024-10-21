@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -30,16 +31,18 @@ func main() {
 		panic(err)
 	}
 
-	w := webview.New(false)
+	w := webview.New(true)
 	if w == nil {
 		log.Fatalln("Failed to load webview.")
 	}
 	defer w.Destroy()
 
-	w.SetTitle("Minimal webview example")
+	w.SetTitle("esplot-viewer")
 	w.SetSize(800, 600, webview.HintNone)
 
 	w.SetHtml(string(data))
+
+	fmt.Println("esplot-viewer started");
 
 	w.Run()
 }
