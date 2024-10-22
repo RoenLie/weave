@@ -1,9 +1,8 @@
 import { build  } from 'vite';
 import { platform, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { readFileSync, unlinkSync } from 'node:fs';
 import { spawn } from 'node:child_process';
-import { Writable } from 'node:stream';
 
 
 export const output = async (code: string) => {
