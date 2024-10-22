@@ -6,36 +6,52 @@
 	<title>esplot-viewer</title>
 	<style>
 	body {
-		height: 100vh;
 		overflow: hidden;
 		contain: strict;
 		display: grid;
+		height: 100vh;
 		place-content: center;
 		margin: 0px;
 		padding: 0px;
 	}
-	canvas {
-		width: 100%;
-		height: 100%;
+	iframe {
+		all: unset;
+		width: 100vw;
+		height: 100vh;
 	}
 	</style>
 
 	<script type="module">
-		// Create WebSocket connection.
-		const socket = new WebSocket("ws://localhost:46852/websocket");
+		const setInnerHTML = (elm, html) => {
+			elm.innerHTML = html;
 
-		// Connection opened
-		socket.addEventListener("open", (event) => {
-		socket.send("Hello Server!");
-		});
+			[...elm.querySelectorAll("script")].forEach( oldScriptEl => {
+				const newScriptEl = document.createElement("script");
 
-		// Listen for messages
-		socket.addEventListener("message", (event) => {
-		console.log("Message from server ", event.data);
-		});
+				[...oldScriptEl.attributes].forEach( attr => {
+					newScriptEl.setAttribute(attr.name, attr.value)
+				});
+
+				const scriptText = document.createTextNode(oldScriptEl.innerHTML);
+				newScriptEl.appendChild(scriptText);
+
+				oldScriptEl.parentNode.replaceChild(newScriptEl, oldScriptEl);
+			});
+		}
+
+		const conn = new WebSocket("ws://" + document.location.host + "/ws");
+		conn.onclose = (evt) => {
+			console.log('connection closed')
+		};
+		conn.onmessage = (evt) => {
+			const html = evt.data
+			const iframe = document.querySelector('iframe');
+
+			setInnerHTML(iframe.contentWindow.document.documentElement, html);
+		};
 	</script>
 </head>
 <body>
-<canvas></canvas>
+<iframe></iframe>
 </body>
 </html>

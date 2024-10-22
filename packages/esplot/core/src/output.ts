@@ -19,7 +19,7 @@ export const output = async (code: string) => {
 			outDir:      tempPath,
 			lib:         {
 				entry:    '',
-				formats:  [ 'cjs' ],
+				formats:  [ 'es' ],
 				fileName: () => 'plot.js',
 			},
 			rollupOptions: {
@@ -51,17 +51,29 @@ export const output = async (code: string) => {
 	const fileContent = readFileSync(filePath, 'utf8');
 	unlinkSync(filePath);
 
-	const tempHtmlPath = join(tempPath, 'index.html');
-	writeFileSync(tempHtmlPath, html(fileContent));
-
 	const os = platform();
 	if (os !== 'win32' && os !== 'darwin')
 		throw new Error('only supports win and darwin');
 
 	const plotViewerDir = join(resolve(), 'bin');
-	const plotViewerPath = join(plotViewerDir, 'esplotv' + (os === 'win32' ? '-win32' : '-arm64'));
+	const plotViewerPath = join(plotViewerDir,
+		'esplotv' + (os === 'win32' ? '-win32' : '-arm64'));
 
-	const child = spawn(plotViewerPath, [ tempHtmlPath ], {
+	let viewerIsActive = false;
+	try {
+		await fetch('http://localhost:46852');
+		viewerIsActive = true;
+	}
+	catch { /*  */ }
+
+	if (viewerIsActive) {
+		await sendHtml(fileContent);
+		console.log('Opening plot in existing window...');
+
+		return;
+	}
+
+	const child = spawn(plotViewerPath, {
 		stdio:       'ignore',
 		shell:       true,
 		windowsHide: true,
@@ -69,16 +81,26 @@ export const output = async (code: string) => {
 	});
 	child.unref();
 
-	const { promise, resolve: res } = Promise.withResolvers<void>();
-
-	child.once('spawn', async () => {
-		await new Promise<void>(res => setTimeout(() => res(), 1000));
-		res();
-		unlinkSync(tempHtmlPath);
-	});
-
 	console.log('Opening a new window with your plot...');
-	await promise;
+	await sendHtml(fileContent);
+};
+
+const sendHtml = async (fileContent: string) => {
+	let gotConnection = false;
+
+	while (!gotConnection) {
+		try {
+			await fetch('http://localhost:46852/new', {
+				method: 'POST',
+				body:   html(fileContent),
+			});
+
+			gotConnection = true;
+		}
+		catch {
+			await new Promise<void>(res => setTimeout(() => res(), 500));
+		}
+	}
 };
 
 const html = (code: string) => `
