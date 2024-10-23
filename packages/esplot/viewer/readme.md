@@ -1,13 +1,11 @@
 Windows
 ```bash
 go build -o dist/esplotv-win32.exe -ldflags="-H windowsgui" .
-
-set GOOS=darwin && set GOARCH=arm64 && go build -o dist/esplotv-arm64 main.go
 ```
 
 Macos
 ```bash
-go build -o dist/esplotv-arm64 esplotv.go
+go build -o dist/esplotv-arm64 .
 ```
 
 

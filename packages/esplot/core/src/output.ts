@@ -6,8 +6,8 @@ import { spawn } from 'node:child_process';
 
 
 export const output = async (code: string) => {
-	const tempPath = join(tmpdir(), 'esplot');
-	const filePath = join(tempPath, 'plot.js');
+	const tempDir = join(tmpdir(), 'esplot');
+	const filePath = join(tempDir, 'plot.js');
 
 	await build({
 		appType:    'custom',
@@ -15,7 +15,7 @@ export const output = async (code: string) => {
 		logLevel:   'silent',
 		build:      {
 			emptyOutDir: false,
-			outDir:      tempPath,
+			outDir:      tempDir,
 			lib:         {
 				entry:    '',
 				formats:  [ 'es' ],
