@@ -35,5 +35,5 @@ export const barChart = async (...lines: { year: number, count: number }[]) => {
 	);
 	`;
 
-	output(code);
+	await output(code);
 };
