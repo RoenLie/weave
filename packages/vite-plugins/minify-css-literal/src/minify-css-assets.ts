@@ -5,25 +5,30 @@ import type { Plugin, ResolvedConfig } from 'vite';
 
 
 /** Minifies any css file found in the build output. */
-export const minifyCssAssets = (): Plugin => {
+export const minifyCssAssets = (dir?: string): Plugin => {
 	let config: ResolvedConfig;
 
 	return {
 		name:           '@roenlie/vite-minify-css-assets',
-		configResolved: (cfg) => {
+		configResolved: cfg => {
 			config = cfg;
 		},
 		closeBundle: async () => {
-			const searchDir = config.build.outDir;
+			const searchDir = dir ?? config.build.outDir;
 
 			const cssFileIterator = glob(`${ searchDir }/**/*.css`);
 			for await (const file of cssFileIterator) {
-				const { code } = await bundleAsync({
-					minify:   true,
-					filename: file,
-				});
-
-				writeFile(file, code);
+				try {
+					const { code } = await bundleAsync({
+						minify:   true,
+						filename: file,
+					});
+	
+					await writeFile(file, code);
+				}
+				catch (err) {
+					console.error(err);
+				}
 			}
 		},
 	};
