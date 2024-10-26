@@ -1,0 +1,3 @@
+[submodule "packages/sanguine"]
+	path = packages/sanguine
+	url = https://github.com/RoenLie/sanguine.git
