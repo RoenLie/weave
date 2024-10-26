@@ -1140,6 +1140,73 @@ importers:
 
   packages/reflect-metadata: {}
 
+  packages/sanguine/core:
+    dependencies:
+      '@preact/signals-core':
+        specifier: ^1.8.0
+        version: 1.8.0
+      '@roenlie/reflect-metadata':
+        specifier: workspace:*
+        version: link:../../reflect-metadata
+      deepmerge-ts:
+        specifier: ^7.1.0
+        version: 7.1.3
+      inversify:
+        specifier: ^6.0.2
+        version: 6.0.2
+      lit:
+        specifier: ^3.2.0
+        version: 3.2.1
+      nanoid:
+        specifier: ^5.0.7
+        version: 5.0.7
+      tslib:
+        specifier: ^2.7.0
+        version: 2.8.0
+      urlpattern-polyfill:
+        specifier: ^10.0.0
+        version: 10.0.0
+
+  packages/sanguine/demo:
+    dependencies:
+      '@roenlie/aegis':
+        specifier: workspace:^
+        version: link:../core
+      '@roenlie/aegis-vite-plugins':
+        specifier: workspace:^
+        version: link:../vite-plugins
+      lit:
+        specifier: ^3.1.4
+        version: 3.2.1
+      tslib:
+        specifier: ^2.6.3
+        version: 2.8.0
+    devDependencies:
+      '@roenlie/aegis-demo':
+        specifier: workspace:^
+        version: 'link:'
+
+  packages/sanguine/vite-plugins:
+    dependencies:
+      '@babel/parser':
+        specifier: ^7.24.8
+        version: 7.25.8
+      '@babel/traverse':
+        specifier: ^7.24.8
+        version: 7.25.7
+      '@babel/types':
+        specifier: ^7.24.9
+        version: 7.25.8
+      '@types/babel__traverse':
+        specifier: ^7.20.6
+        version: 7.20.6
+      '@types/node':
+        specifier: 22.7.4
+        version: 22.7.4
+      lightningcss:
+        specifier: ^1.27.0
+        version: 1.27.0
+
   packages/sqlite-wrapper:
     dependencies:
       better-sqlite3:
@@ -2419,6 +2486,9 @@ packages:
 
   '@types/node-fetch@2.6.11':
     resolution: {integrity: sha512-24xFj9R5+rfQJLRyM56qh+wnVSYhyXC2tkoBndtY0U+vubqNsYXGjufB2nn8Q6gt0LrARwL6UBtMCSVCwl4B1g==}
+
+  '@types/node@22.7.4':
+    resolution: {integrity: sha512-y+NPi1rFzDs1NdQHHToqeiX2TIS79SWEAw9GYhkkx8bD0ChpfqC+n2j5OXOCpzfojBEBt6DnEnnG9MY0zk1XLg==}
 
   '@types/node@22.7.5':
     resolution: {integrity: sha512-jML7s2NAzMWc//QSJ1a3prpk78cOPchGvXJsC3C6R6PSMoooztvRVQEz89gmBTBY1SPMaqo5teB4uNHPdetShQ==}
@@ -7248,11 +7318,11 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
 
   '@types/cookie@0.4.1': {}
 
@@ -7283,7 +7353,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
       '@types/qs': 6.9.16
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -7306,12 +7376,12 @@ snapshots:
 
   '@types/fs-extra@8.1.5':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
 
   '@types/glob@7.2.0':
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
 
   '@types/hast@2.3.10':
     dependencies:
@@ -7321,13 +7391,13 @@ snapshots:
 
   '@types/http-proxy@1.17.15':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
 
   '@types/json-schema@7.0.15': {}
 
   '@types/jsonfile@6.1.4':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
 
   '@types/jsonwebtoken@9.0.7':
     dependencies:
@@ -7354,8 +7424,12 @@ snapshots:
 
   '@types/node-fetch@2.6.11':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
       form-data: 4.0.1
+
+  '@types/node@22.7.4':
+    dependencies:
+      undici-types: 6.19.8
 
   '@types/node@22.7.5':
     dependencies:
@@ -7369,7 +7443,7 @@ snapshots:
 
   '@types/npm-registry-fetch@8.0.7':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
       '@types/node-fetch': 2.6.11
       '@types/npm-package-arg': 6.1.4
       '@types/npmlog': 7.0.0
@@ -7377,7 +7451,7 @@ snapshots:
 
   '@types/npmlog@7.0.0':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
 
   '@types/otp-generator@4.0.2': {}
 
@@ -7403,12 +7477,12 @@ snapshots:
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
 
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
       '@types/send': 0.17.4
 
   '@types/sharedworker@0.0.117': {}
@@ -7417,7 +7491,7 @@ snapshots:
 
   '@types/ssri@7.1.5':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
 
   '@types/trusted-types@2.0.7': {}
 
@@ -8285,7 +8359,7 @@ snapshots:
     dependencies:
       '@types/cookie': 0.4.1
       '@types/cors': 2.8.17
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
       accepts: 1.3.8
       base64id: 2.0.0
       cookie: 0.7.2
@@ -9198,7 +9272,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -10143,7 +10217,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 22.7.5
+      '@types/node': 22.7.4
       long: 5.2.3
 
   proxy-addr@2.0.7:
