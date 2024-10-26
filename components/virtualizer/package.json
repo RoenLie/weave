@@ -1,0 +1,11 @@
+{
+	"name": "name",
+	"description": "description",
+	"authors": "author",
+	"version": "1.0.0",
+	"main": "pathToMain",
+	"dependencies": {
+		"lit": "^3.2.1",
+		"tslib": "^2.7.0"
+	}
+}
