@@ -3,6 +3,9 @@ import { directive, Directive,  type PartInfo } from 'lit/directive.js';
 import { html } from './html.ts';
 
 
+const commentTag = '?shade:' as const;
+
+
 const _html = (id: string) => (
 	strings: TemplateStringsArray,
 	...values: unknown[]
@@ -53,7 +56,7 @@ const refDir = (id: string) => directive(class extends Directive {
 				el = el.nextSibling;
 
 			if (el) {
-				el.insertAdjacentHTML('beforebegin', '<!--?shade:' + id + '-->');
+				el.insertAdjacentHTML('beforebegin', '<!--' + commentTag + id + '-->');
 				if (el.previousSibling instanceof Comment)
 					this.commentRef = new WeakRef(el.previousSibling);
 			}
@@ -80,7 +83,7 @@ export const classes = directive(class extends Directive {
 				return console.warn('Could not find reference comment node');
 
 			const id = possibleNode.textContent
-				?.replace(/^\?shade:/, '').trim();
+				?.replace(commentTag, '').trim();
 
 			props.forEach(prop => {
 				this.#part.element.classList.add(prop + '-' + id);
@@ -98,7 +101,7 @@ const getCommentNode = (startNode: Node) => {
 
 	while (possibleNode) {
 		if (possibleNode.nodeType === possibleNode.COMMENT_NODE) {
-			if (possibleNode.textContent?.includes('?shade:'))
+			if (possibleNode.textContent?.includes(commentTag))
 				break;
 		}
 
