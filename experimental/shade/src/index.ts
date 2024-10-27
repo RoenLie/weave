@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 import { LitElement, render, type CSSResult } from 'lit';
-import { Directive, directive } from 'lit/directive.js';
+import { Directive, directive, type DirectiveResult } from 'lit/directive.js';
 
 
 let activeElement: HTMLElement | undefined = undefined;
@@ -11,7 +11,7 @@ export const createElement = <T extends Record<keyof any, any>>(
 	create: () => (
 		params: T,
 	) => unknown,
-) => {
+): DirectiveResult<any> => {
 	class _Element extends LitElement {
 
 		protected static __hasInitialized = false;

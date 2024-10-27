@@ -7,10 +7,14 @@
 	"types": "./src/index.ts",
 	"main": "./src/index.ts",
 	"scripts": {
-		"dev": "vite --config ./demo/vite.config.ts"
+		"dev": "vite --config ./demo/vite.config.ts",
+		"build": "vite --config ./demo/vite.config.ts build",
+		"preview": "vite --config ./demo/vite.config.ts preview"
 	},
 	"dependencies": {
+		"@preact/signals-core": "^1.8.0",
+		"@roenlie/shade": "workspace:^",
 		"lit": "^3.2.0",
-		"@roenlie/shade": "workspace:^"
+		"tslib": "^2.8.0"
 	}
 }
