@@ -4,8 +4,8 @@ import { genToArray, getFiles } from '../helpers/get-files.js';
 
 
 export const createTagCache = async (options: {
-	directories: { path: string; whitelist?: RegExp[]; blacklist?: RegExp[] }[];
-	componentTagCache?: Map<string, string>;
+	directories:         { path: string; whitelist?: RegExp[]; blacklist?: RegExp[] }[];
+	componentTagCache?:  Map<string, string>;
 	tagCapturePatterns?: RegExp[];
 }) => {
 	const { componentTagCache = new Map<string, string>() } = options;

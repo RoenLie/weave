@@ -10,8 +10,6 @@
 	"scripts": {
 		"dev": "vite"
 	},
-	"dependencies": {
-		"@roenlie/sanguine": "workspace:*"
-	},
+	"dependencies": {},
 	"devDependencies": {}
 }

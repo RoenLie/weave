@@ -21,7 +21,6 @@
 	"types": "./dist/app/index.d.ts",
 	"exports": {
 		"./server": "./dist/server/index.js",
-		"./app": "./dist/app/index.js",
 		"./app/*": "./dist/app/*",
 		"./workers/*": "./dist/workers/*",
 		"./assets/*": "./src/assets/*"
@@ -29,7 +28,6 @@
 	"scripts": {
 		"test": "vitest --config ./tests/vite.config.ts",
 		"build": "pnpm run --sequential \"/^build:.+/\"",
-		"build:indexes": "pkg-toolbox build-indexes",
 		"build:server": "vite build --config ./vite.config.ts",
 		"build:workers": "vite build --config ./vite-workers.config.ts",
 		"build:types": "tsc --project ./src/app/tsconfig.json && tsc --project ./src/server/tsconfig.json",
@@ -40,10 +38,10 @@
 	},
 	"dependencies": {
 		"@custom-elements-manifest/analyzer": "^0.10.2",
-		"@orama/orama": "3.0.0-rc-4",
-		"@orama/plugin-data-persistence": "3.0.0-rc-4",
-		"@orama/plugin-match-highlight": "3.0.0-rc-4",
-		"@orama/plugin-parsedoc": "3.0.0-rc-4",
+		"@orama/orama": "3.0.1",
+		"@orama/plugin-data-persistence": "3.0.1",
+		"@orama/plugin-match-highlight": "3.0.0",
+		"@orama/plugin-parsedoc": "3.0.1",
 		"@roenlie/core": "workspace:^",
 		"@roenlie/lit-aegis": "workspace:^",
 		"@roenlie/monaco-editor-wc": "workspace:^",
@@ -53,6 +51,7 @@
 		"highlight.js": "^11.9.0",
 		"markdown-it": "^14.0.0",
 		"markdown-it-anchor": "^9.0.1",
+		"mermaid": "^11.3.0",
 		"rollup-plugin-copy": "^3.5.0",
 		"tabbable": "^6.2.0",
 		"tslib": "^2.8.0"
@@ -63,7 +62,7 @@
 	},
 	"devDependencies": {
 		"@types/markdown-it": "^14.1.1",
-		"@types/sharedworker": "^0.0.123",
+		"@types/sharedworker": "^0.0.130",
 		"bootstrap-icons": "^1.11.3"
 	},
 	"sideEffects": []

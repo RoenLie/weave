@@ -12,7 +12,7 @@ export interface CreateManifestOptions {
 	 * Run the analyze builder in dev mode.
 	 * @default false
 	 */
-	dev?: boolean,
+	dev?:     boolean,
 	/**
 	 * Use ``custom-elements-manifest/analyzer`` plugins.
 	 * Get more information about these plugins here:

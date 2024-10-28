@@ -12,10 +12,11 @@ export const docPageTemplate = (props: {
 	const className = randomString(10);
 
 	return `
-import { ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis.${ fileExt() }';
-import { PageAdapter } from '@roenlie/mirage-docs/app/components/page/page-element.${ fileExt() }';
 import { html } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js'
+import { mermaid } from '@roenlie/mirage-docs/app/utilities/mermaid.js';
+import { ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis.${ fileExt() }';
+import { PageAdapter } from '@roenlie/mirage-docs/app/components/page/page-element.${ fileExt() }';
 // injected imports
 ${ props.imports }
 // hoisted
@@ -27,6 +28,13 @@ class ${ className } extends PageAdapter {
 	protected examples: Record<string, string> = ${ props.examples };
 	protected metadata: Record<string, any> = ${ props.metadata };
 	//#endregion
+
+	public override afterConnectedCallback() {
+		mermaid.initialize({
+			startOnLoad: true,
+			theme: this.colorScheme === 'dark' ? 'dark' : 'default'
+		});
+	}
 
 	//#region template
 	public override render() {

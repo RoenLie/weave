@@ -4,8 +4,8 @@ import { createManifest } from './create.js';
 
 
 export const createManifestCache = async (options: {
-	directories: { path: string; whitelist?: RegExp[]; blacklist?: RegExp[] }[];
-	componentTagCache?: Map<string, string>;
+	directories:         { path: string; whitelist?: RegExp[]; blacklist?: RegExp[] }[];
+	componentTagCache?:  Map<string, string>;
 	tagCapturePatterns?: RegExp[];
 } | Map<string, string>) => {
 	/** Map of tag and path to where that component is declared */

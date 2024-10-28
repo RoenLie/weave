@@ -1,8 +1,8 @@
 export const stringDedent = (
 	string: string,
 	options?: Partial<{
-		trim?: boolean;
-		count?: number;
+		trim?:    boolean;
+		count?:   number;
 		closest?: boolean;
 	}>,
 ) => {

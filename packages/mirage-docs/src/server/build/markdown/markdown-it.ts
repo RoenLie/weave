@@ -5,6 +5,7 @@ import mdItAnchor from 'markdown-it-anchor';
 
 import { anchorEnhancePlugin } from './anchor-enhance-plugin.js';
 import { tabReplacePlugin } from './tab-replace-plugin.js';
+import { MermaidPlugin } from './mermaid.js';
 
 
 export const markdownIt = mdIt({
@@ -29,4 +30,5 @@ export const markdownIt = mdIt({
 	permalink: mdItAnchor.permalink.headerLink(),
 }).use(tabReplacePlugin, {
 	tabWidth: 3,
-}).use(anchorEnhancePlugin);
+}).use(anchorEnhancePlugin)
+	.use(MermaidPlugin);

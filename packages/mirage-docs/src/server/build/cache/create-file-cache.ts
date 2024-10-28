@@ -5,12 +5,12 @@ import { genToArray, getFiles } from '../helpers/get-files.js';
 
 export type FilePathCache = Map<string, string> & {
 	recreate: () => Promise<void>;
-}
+};
 
 
 export const createFileCache = async (options: {
 	directories: { path: string; pattern: RegExp }[];
-	cache?: Map<string, string>;
+	cache?:      Map<string, string>;
 }): Promise<FilePathCache> => {
 	const { cache = new Map<string, string>() } = options;
 

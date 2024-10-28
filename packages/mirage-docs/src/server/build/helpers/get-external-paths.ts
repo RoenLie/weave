@@ -27,13 +27,13 @@ export const getImportPaths = async (
 		exclude?: Partial<{
 			file?: Partial<{
 				startsWith: string[];
-				includes: string[];
-				endsWith: string[];
+				includes:   string[];
+				endsWith:   string[];
 			}>
 			path: Partial<{
 				startsWith: string[];
-				includes: string[];
-				endsWith: string[];
+				includes:   string[];
+				endsWith:   string[];
 			}>;
 		}>
 	},

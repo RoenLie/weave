@@ -1,5 +1,5 @@
 import { Adapter, AegisComponent, ContainerLoader, customElement } from '@roenlie/lit-aegis';
-import { css, unsafeCSS } from 'lit';
+import { css, render, unsafeCSS } from 'lit';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
 import { componentStyles } from '../../styles/component.styles.js';
@@ -12,25 +12,72 @@ import { subscribeToColorChange } from '../../utilities/color-subscription.js';
 @customElement('midoc-page')
 export class PageElement extends AegisComponent {
 
+	protected static firstLoad = true;
+
 	constructor() {
 		super(PageAdapter);
+
+		if (PageElement.firstLoad) {
+			PageElement.firstLoad = false;
+			const cfg = ContainerLoader.get<SiteConfig>('site-config');
+			const style = cfg.root.styleOverrides.pageTemplate;
+
+			const stylesheet = new CSSStyleSheet();
+			stylesheet.replaceSync(style);
+
+			PageElement.stylesheets.push(stylesheet);
+		}
+	}
+
+	public static stylesheets = [
+		componentStyles,
+		highlightjsStyles,
+		markdownStyles,
+		css`
+		midoc-page {
+			--code-font: Roboto Mono;
+
+			display: block;
+			min-height: 100vh;
+
+			border-radius: 4px;
+			padding-top: 50px;
+			padding-inline: 24px;
+		}
+		.markdown-body {
+			display: grid;
+			background: none;
+			padding-bottom: 200px;
+		}
+		.markdown-body pre {
+			border: 1px solid var(--midoc-outline);
+		}
+		.markdown-body pre code {
+			font-family: var(--code-font);
+		}
+		`,
+	].map(style => {
+		const sheet = new CSSStyleSheet();
+		sheet.replaceSync(style.cssText);
+
+		return sheet;
+	});
+
+	protected override createRenderRoot() {
+		document.adoptedStyleSheets = [
+			...new Set([
+				...document.adoptedStyleSheets,
+				...PageElement.stylesheets,
+			]),
+		];
+
+		return this;
 	}
 
 }
 
 
 export class PageAdapter extends Adapter {
-
-	constructor() {
-		super();
-
-		const cfg = ContainerLoader.get<SiteConfig>('site-config');
-		const style = cfg.root.styleOverrides.pageTemplate;
-
-		const base = (this.constructor as typeof Adapter);
-		if (style && Array.isArray(base.styles))
-			base.styles.push(unsafeCSS(style));
-	}
 
 	//#region properties
 	public get colorScheme() {

@@ -5,16 +5,13 @@ import { type DirectiveResult } from 'lit/directive.js';
 import type { UnsafeHTMLDirective } from 'lit/directives/unsafe-html.js';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
-import { debounce } from '../../utilities/debounce.js';
 import { drag } from '../../utilities/drag.js';
-import { unpkgReplace } from '../../utilities/unpkg-replace.js';
-import { MonacoEditorCmp } from '@roenlie/monaco-editor-wc';
 
 
 @customElement('docs-source-editor')
-export class EsSourceEditor extends LitElement {
+export class SourceEditor extends LitElement {
 
-	public static refs = [ MonacoEditorCmp ];
+	//public static refs = [ MonacoEditorCmp ];
 
 	constructor() {
 		super();
@@ -38,38 +35,38 @@ export class EsSourceEditor extends LitElement {
 	@query('.outlet')         protected outletQry:        HTMLElement;
 	@query('.panel')          protected panelQry:         HTMLElement;
 	@query('.editor-wrapper') protected editorWrapperQry: HTMLElement;
-	@query('monaco-editor')   protected editorQry?:       MonacoEditorCmp;
+	//@query('monaco-editor')   protected editorQry?:       MonacoEditorCmp;
 	//#endregion
 
 
 	//#region lifecycle
 	public override async firstUpdated() {
-		this.delayedExecute();
+		//this.delayedExecute();
 	}
 	//#endregion
 
 
 	//#region logic
-	protected delayedExecute = debounce(() => this.execute(), 1000);
+	//protected delayedExecute = debounce(() => this.execute(), 1000);
 
-	protected async execute() {
-		if (!this.editorQry?.editor)
-			return;
+	//protected async execute() {
+	//	if (!this.editorQry?.editor)
+	//		return;
 
-		const js = unpkgReplace(this.editorQry.editor.getValue());
-		const encodedJs = encodeURIComponent(js);
-		const dataUri = `data:text/javascript;charset=utf-8,${ encodedJs }`;
+	//	const js = unpkgReplace(this.editorQry.editor.getValue());
+	//	const encodedJs = encodeURIComponent(js);
+	//	const dataUri = `data:text/javascript;charset=utf-8,${ encodedJs }`;
 
-		try {
-			this.content = (await import(/*@vite-ignore*/dataUri)).default;
-		}
-		catch (error) {
-			console.warn('Import failed. Reason:', error);
-			this.content = html`${ error }`;
-		}
+	//	try {
+	//		this.content = (await import(/*@vite-ignore*/dataUri)).default;
+	//	}
+	//	catch (error) {
+	//		console.warn('Import failed. Reason:', error);
+	//		this.content = html`${ error }`;
+	//	}
 
-		this.requestUpdate();
-	}
+	//	this.requestUpdate();
+	//}
 
 	protected clearContent() {
 		this.content = html``;
@@ -107,7 +104,7 @@ export class EsSourceEditor extends LitElement {
 	};
 
 	protected onEditorChange() {
-		this.source = this.editorQry?.editor?.getValue() ?? '';
+		//this.source = this.editorQry?.editor?.getValue() ?? '';
 	}
 	//#endregion
 
@@ -115,47 +112,51 @@ export class EsSourceEditor extends LitElement {
 	//#region template
 	public override render() {
 		return html`
-		<div class="editor-section panel">
-			<div class="editor-wrapper">
-				<monaco-editor
-					language="typescript"
-					.value=${ this.source }
-					@change=${ this.onEditorChange }
-				></monaco-editor>
-			</div>
-
-			<div class="resizer" @pointerdown=${ this.handleResizeWrapper }>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="16"
-					height="16"
-					fill="currentColor"
-					class="bi bi-grip-vertical"
-					viewBox="0 0 15 16"
-				>
-					<path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2
-						0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1
-						1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2
-						0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0
-						1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"
-					/>
-				</svg>
-			</div>
-
-			<div class="outlet">
-				${ this.content }
-			</div>
-		</div>
-
-		<div class="actions">
-			<button @click=${ () => this.delayedExecute() }>Execute</button>
-			<button @click=${ this.clearContent }>Clear</button>
-		</div>
-
-		<div hidden>
-			<slot @slotchange=${ this.handleSlotChange.bind(this) }></slot>
-		</div>
+		Live editor currently undergoing reworks.
 		`;
+
+		//return html`
+		//<div class="editor-section panel">
+		//	<div class="editor-wrapper">
+		//		<monaco-editor
+		//			language="typescript"
+		//			.value=${ this.source }
+		//			@change=${ this.onEditorChange }
+		//		></monaco-editor>
+		//	</div>
+
+		//	<div class="resizer" @pointerdown=${ this.handleResizeWrapper }>
+		//		<svg
+		//			xmlns="http://www.w3.org/2000/svg"
+		//			width="16"
+		//			height="16"
+		//			fill="currentColor"
+		//			class="bi bi-grip-vertical"
+		//			viewBox="0 0 15 16"
+		//		>
+		//			<path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2
+		//				0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1
+		//				1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2
+		//				0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0
+		//				1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"
+		//			/>
+		//		</svg>
+		//	</div>
+
+		//	<div class="outlet">
+		//		${ this.content }
+		//	</div>
+		//</div>
+
+		//<div class="actions">
+		//	<button @click=${ () => this.delayedExecute() }>Execute</button>
+		//	<button @click=${ this.clearContent }>Clear</button>
+		//</div>
+
+		//<div hidden>
+		//	<slot @slotchange=${ this.handleSlotChange.bind(this) }></slot>
+		//</div>
+		//`;
 	}
 	//#endregion
 

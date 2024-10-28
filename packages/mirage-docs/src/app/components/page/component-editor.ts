@@ -1,14 +1,14 @@
-import { ContainerLoader, type Adapter } from '@roenlie/lit-aegis';
+import { ContainerLoader } from '@roenlie/lit-aegis';
 import { css, html, LitElement, unsafeCSS, type PropertyValues } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
-import { EsSourceEditor } from './source-editor.js';
+import { SourceEditor } from './source-editor.js';
 
 
 @customElement('midoc-component-editor')
-export class EsComponentEditor extends EsSourceEditor {
+export class ComponentEditor extends SourceEditor {
 
 	constructor() {
 		super();
@@ -48,7 +48,7 @@ export class EsComponentEditor extends EsSourceEditor {
 	}
 
 	public static override styles = [
-		...EsSourceEditor.styles,
+		...SourceEditor.styles,
 		css`
 		:host {
 			grid-template-rows: 1fr auto auto;
@@ -69,7 +69,7 @@ export class EsComponentEditor extends EsSourceEditor {
 
 
 @customElement('midoc-editor-scratchpad')
-export class EsEditorScratchpad extends LitElement {
+export class EditorScratchpad extends LitElement {
 
 	//#region properties
 	@property({ type: Object, attribute: false }) public mixins: {

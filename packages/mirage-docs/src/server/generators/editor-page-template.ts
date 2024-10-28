@@ -13,14 +13,14 @@ export const editorPageTemplate = (props: {
 	return `
 import { ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis.${ fileExt() }';
 import { PageAdapter } from '@roenlie/mirage-docs/app/components/page/page-element.${ fileExt() }';
-import { EsComponentEditor } from '@roenlie/mirage-docs/app/components/page/component-editor.${ fileExt() }';
+import { ComponentEditor } from '@roenlie/mirage-docs/app/components/page/component-editor.${ fileExt() }';
 import { css, html } from 'lit';
 import '${ props.codeId }';
 
 
 class ${ className } extends PageAdapter {
 
-	static refs = [ EsComponentEditor ];
+	static refs = [ ComponentEditor ];
 
 	protected content: string = \`${ props.code }\`;
 

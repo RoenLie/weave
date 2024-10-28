@@ -198,10 +198,8 @@ export class LayoutAdapter extends Adapter {
 	};
 
 	protected handleColorSchemeToggle() {
-		const theme = toggleColorScheme();
-
-		if (this.frameQry)
-			this.frameQry.contentWindow?.setColorScheme(theme);
+		toggleColorScheme();
+		this.startFrameReload();
 	}
 
 	protected handleHotkeyPress = (ev: KeyboardEvent) => {
