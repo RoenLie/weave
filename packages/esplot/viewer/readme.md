@@ -1,11 +1,11 @@
 Windows
 ```bash
-go build -o dist/esplotv-win32.exe -ldflags="-H windowsgui" .
+go build -o ../core/bin/esplotv-win32.exe -ldflags="-H windowsgui" .
 ```
 
 Macos
 ```bash
-go build -o dist/esplotv-arm64 .
+go build -o ../core/bin/esplotv-arm64 .
 ```
 
 
