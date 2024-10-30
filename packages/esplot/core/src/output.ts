@@ -65,12 +65,8 @@ export const output = async (code: string) => {
 	}
 	catch { /*  */ }
 
-	if (viewerIsActive) {
-		await sendHtml(fileContent);
-		console.log('Opening plot in existing window...');
-
-		return;
-	}
+	if (viewerIsActive)
+		return await sendHtml(fileContent);
 
 	const child = spawn(plotViewerPath, {
 		stdio:       'ignore',
@@ -80,7 +76,6 @@ export const output = async (code: string) => {
 	});
 	child.unref();
 
-	console.log('Opening a new window with your plot...');
 	await sendHtml(fileContent);
 };
 
@@ -89,17 +84,18 @@ const sendHtml = async (fileContent: string) => {
 
 	while (!gotConnection) {
 		try {
-			await fetch('http://localhost:46852/new', {
+			gotConnection = await fetch('http://localhost:46852/new', {
 				method: 'POST',
 				body:   html(fileContent),
-			});
-
-			gotConnection = true;
+			}).then(res => res.status === 200);
 		}
 		catch {
+			console.log('Esplot: not running, waiting for it to start...');
 			await new Promise<void>(res => setTimeout(() => res(), 500));
 		}
 	}
+
+	console.log('Esplot: opening plot...');
 };
 
 const html = (code: string) => `
