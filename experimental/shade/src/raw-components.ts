@@ -1,4 +1,4 @@
-import { _$LH, css, noChange, type ChildPart, type CSSResultGroup, type ElementPart } from 'lit';
+import { css, noChange, type ChildPart, type CSSResultGroup, type ElementPart } from 'lit';
 import { directive, Directive,  type PartInfo } from 'lit/directive.js';
 import { html } from './html.ts';
 
@@ -6,47 +6,49 @@ import { html } from './html.ts';
 const commentTag = '?shade:' as const;
 
 
-const _html = (id: string) => (
-	strings: TemplateStringsArray,
-	...values: unknown[]
-) => refDir(id)(html(strings, ...values));
+type CreateComponent = (
+	root: (strings: TemplateStringsArray, ...values: unknown[]) => unknown,
+	css: (strings: TemplateStringsArray, ...values: (CSSResultGroup | number)[]) => void
+) => (props: any) => unknown;
 
 
-const _css = (id: string) => (
-	strings: TemplateStringsArray,
-	...values: (CSSResultGroup | number)[]
-) => {
-	const cssResult = css(strings, ...values);
+export class Component {
 
-	const style = document.createElement('style');
-	style.innerHTML = cssResult.cssText
-		.replaceAll(/\.[\w-]+/g, str => (str + '-' + id).trim());
+	static #html = (id: string) => (
+		strings: TemplateStringsArray,
+		...values: unknown[]
+	): unknown => refDir(id)(html(strings, ...values));
 
-	document.head.append(style);
+	static #css = (id: string) => (
+		strings: TemplateStringsArray,
+		...values: (CSSResultGroup | number)[]
+	): void => {
+		const cssResult = css(strings, ...values);
 
-	return;
-};
+		const style = document.createElement('style');
+		style.innerHTML = cssResult.cssText
+			.replaceAll(/\.[\w-]+/g, str => (str + '-' + id).trim());
 
+		document.head.append(style);
+	};
 
-export const component = <T>(
-	create: (
-		root: ReturnType<typeof _html>,
-		css: ReturnType<typeof _css>
-	) => (props?: T) => unknown,
-): (props?: T) => unknown => {
-	const id = (Math.random() * 100).toString(16).slice(3);
+	public static create<T extends CreateComponent>(fn: T) {
+		const id = (Math.random() * 100).toString(16).slice(3);
 
-	return create(_html(id), _css(id));
-};
+		return fn(this.#html(id), this.#css(id)) as ReturnType<T>;
+	}
+
+}
 
 
 const refDir = (id: string) => directive(class extends Directive {
 
-	#part: ChildPart;
 	constructor(partInfo: PartInfo) {
 		super(partInfo);
 		this.#part = partInfo as ChildPart;
 	}
+
+	#part: ChildPart;
 
 	public commentRef: WeakRef<Comment> | undefined = undefined;
 	public override render(template: unknown): unknown {
@@ -70,13 +72,14 @@ const refDir = (id: string) => directive(class extends Directive {
 
 export const classes = directive(class extends Directive {
 
-	#part: ElementPart;
 	constructor(partInfo: PartInfo) {
 		super(partInfo);
 		this.#part = partInfo as ElementPart;
 	}
 
-	public override render(...props: unknown[]): unknown {
+	#part: ElementPart;
+
+	public override render(...classes: unknown[]): unknown {
 		queueMicrotask(() => {
 			const possibleNode = getCommentNode(this.#part.element);
 			if (!possibleNode)
@@ -85,8 +88,10 @@ export const classes = directive(class extends Directive {
 			const id = possibleNode.textContent
 				?.replace(commentTag, '').trim();
 
-			props.forEach(prop => {
-				this.#part.element.classList.add(prop + '-' + id);
+			this.#part.element.classList.value = '';
+
+			classes.forEach(cls => {
+				this.#part.element.classList.add(cls + '-' + id);
 			});
 		});
 
