@@ -1,5 +1,5 @@
 import { Adapter, AegisComponent, ContainerLoader, customElement } from '@roenlie/lit-aegis';
-import { css, render, unsafeCSS } from 'lit';
+import { css } from 'lit';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
 import { componentStyles } from '../../styles/component.styles.js';

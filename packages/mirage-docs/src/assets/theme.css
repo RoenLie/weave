@@ -47,6 +47,10 @@
 	--midoc-primary: #238636;
 
 	--midoc-tertiary: #a8b1ff;
+
+	--midoc-success: #7dd87d;
+
+	--midoc-error: darkred;
 }
 
 /* light mode */
@@ -63,4 +67,8 @@
 	--midoc-primary: #238636;
 
 	--midoc-tertiary: #000000;
+
+	--midoc-success: forestgreen;
+
+	--midoc-error: red;
 }

@@ -10,7 +10,7 @@ import { stringDedent } from './build/helpers/string-dedent.js';
 import { toCamelCase } from './build/helpers/to-camel-case.js';
 import { markdownIt } from './build/markdown/markdown-it.js';
 import { docPageTemplate } from './generators/doc-page-template.js';
-import type { InternalConfigProperties } from './create-files.js';
+import type { InternalConfigProperties } from './config.js';
 
 
 export class MarkdownComponentFactory {
@@ -182,7 +182,7 @@ export class MarkdownComponentFactory {
 			metadata: JSON.stringify(this.metadata, null, 3),
 			hoisted:  '',
 			imports:  this.imports.join('\n'),
-			markdown: markdownIt.render(this.content),
+			markdown: markdownIt.value.render(this.content),
 		});
 
 		return this.content;

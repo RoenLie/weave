@@ -125,10 +125,3 @@ export class MiDocHeaderCmp extends LitElement {
 	//#endregion
 
 }
-
-
-declare global {
-	interface HTMLElementTagNameMap {
-		'midoc-page-header': MiDocHeaderCmp;
-	}
-}

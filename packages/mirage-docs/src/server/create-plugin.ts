@@ -8,8 +8,8 @@ import { getCache } from './build/cache/cache-registry.js';
 import { componentAutoImportLoad } from './build/component/auto-import.js';
 import { DocPath } from './build/helpers/docpath.js';
 import { fileExt } from './build/helpers/is-dev-mode.js';
-import type { InternalConfigProperties } from './create-files.js';
 import { MarkdownComponentFactory } from './create-markdown-cmp.js';
+import type { InternalConfigProperties } from './config.js';
 
 
 export const createPlugin = (args: {

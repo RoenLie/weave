@@ -1,4 +1,4 @@
-import type MarkdownIt from 'markdown-it';
+import type { PluginSimple } from 'markdown-it';
 
 
 const mermaidChart = (code: string) => {
@@ -10,7 +10,7 @@ const mermaidChart = (code: string) => {
 	}
 };
 
-export const MermaidPlugin = (md: MarkdownIt) => {
+export const MermaidPlugin: PluginSimple = (md) => {
 	const temp = md.renderer.rules.fence!;
 	md.renderer.rules.fence = function(tokens, idx, options, env, slf) {
 		const token = tokens[idx]!;

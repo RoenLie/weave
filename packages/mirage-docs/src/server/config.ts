@@ -8,13 +8,42 @@ import { type ConfigEnv, defineConfig, type UserConfig } from 'vite';
 
 import { createCache } from './build/cache/cache-registry.js';
 import { setDevMode } from './build/helpers/is-dev-mode.js';
-import { type ConfigProperties, createDocFiles, type InternalConfigProperties } from './create-files.js';
+import { createDocFiles } from './create-files.js';
 import { createPlugin } from './create-plugin.js';
 import { ConsoleBar } from './progress-bar.js';
+import type { PluginWithOptions, PluginSimple } from 'markdown-it';
+import type { SiteConfig, UserSiteConfig } from '../shared/config.types.js';
+import type { AutoImportPluginProps } from './build/component/auto-import.types.js';
+import { addDefaultMarkdownItPlugins, addMarkdownItPlugins, type MarkdownItConfig } from './build/markdown/markdown-it.js';
 
 
 const pRoot = resolve();
 const outDir = join(resolve(), 'dist');
+
+
+export interface ConfigProperties {
+	base:     string;
+	root:     string;
+	source:   string;
+	tagDirs?: {
+		path:       string;
+		whitelist?: RegExp[];
+		blacklist?: RegExp[];
+	}[];
+	input?:          string[];
+	autoImport?:     AutoImportPluginProps;
+	siteConfig?:     UserSiteConfig;
+	/** @default 500ms */
+	hmrReloadDelay?: number | false;
+	debug?:          boolean;
+	markdownit?:     MarkdownItConfig
+}
+
+
+export type InternalConfigProperties = Omit<Required<ConfigProperties>, 'autoImport' | 'siteConfig'> & {
+	autoImport?: AutoImportPluginProps;
+	siteConfig:  SiteConfig;
+};
 
 
 export const defineDocConfig = async (
@@ -104,9 +133,22 @@ export const defineDocConfig = async (
 					scripts:    [],
 				},
 			},
+			markdownit: {
+				plugins: [],
+				use:	    {
+					anchor:        true,
+					anchorEnhance: true,
+					tabReplace:    true,
+					mermaid:       true,
+				},
+			},
 		};
 
 		deepmergeInto(internalProps, props);
+
+		// Adds both the default plugins based on use config and any additional plugins.
+		addDefaultMarkdownItPlugins(internalProps.markdownit.use);
+		addMarkdownItPlugins(internalProps.markdownit.plugins);
 
 		// Assign the default name replacements if not already set.
 		internalProps.siteConfig.root.sidebar.nameReplacements ??= [

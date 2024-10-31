@@ -1,5 +1,5 @@
 import type { Declarations } from '../../../shared/metadata.types.js';
-import type { InternalConfigProperties } from '../../create-files.js';
+import type { InternalConfigProperties } from '../../config.js';
 import { createManifestCache } from '../manifest/create-manifest-cache.js';
 import { createFileCache, type FilePathCache } from './create-file-cache.js';
 import { createTagCache } from './create-tag-cache.js';

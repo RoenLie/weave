@@ -17,6 +17,7 @@ import { ifDefined } from 'lit/directives/if-defined.js'
 import { mermaid } from '@roenlie/mirage-docs/app/utilities/mermaid.js';
 import { ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis.${ fileExt() }';
 import { PageAdapter } from '@roenlie/mirage-docs/app/components/page/page-element.${ fileExt() }';
+import '@roenlie/mirage-docs/app/components/page/copy-code.${ fileExt() }';
 // injected imports
 ${ props.imports }
 // hoisted
