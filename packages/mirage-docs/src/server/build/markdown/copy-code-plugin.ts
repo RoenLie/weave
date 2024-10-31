@@ -10,10 +10,14 @@ function renderCode(origRule?: RenderRule): RenderRule | undefined {
 		const [ tokens, idx ] = args;
 
 		const origRendered = origRule(...args);
-		const content = tokens[idx]?.content;
-
-		if ((content?.length ?? 0) === 0)
+		let content = tokens[idx]?.content.trim();
+		if (!content)
 			return origRendered;
+
+		// This makes it so that the generated component code handles the formatting.
+		content = content
+			.replaceAll('`', '\\`')
+			.replaceAll('${', '\\${');
 
 		return `
 		<div style="position: relative">
