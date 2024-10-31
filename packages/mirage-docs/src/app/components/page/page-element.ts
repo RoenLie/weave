@@ -7,6 +7,9 @@ import { highlightjsStyles } from '../../styles/highlightjs.styles.js';
 import { markdownStyles } from '../../styles/markdown.styles.js';
 import { anchorSnatcher } from '../../utilities/anchor-snatcher.js';
 import { subscribeToColorChange } from '../../utilities/color-subscription.js';
+import { MiDocCopyCodeCmp } from './copy-code.js';
+
+MiDocCopyCodeCmp.register();
 
 
 @customElement('midoc-page')

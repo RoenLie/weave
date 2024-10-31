@@ -1,12 +1,12 @@
-import { css, html, LitElement, svg } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { css, html, svg } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { componentStyles } from '../../styles/component.styles.js';
+import { AegisElement, customElement, state } from '@roenlie/lit-aegis';
 
 
 @customElement('midoc-copy-code')
-export class MiDocCopyCodeCmp extends LitElement {
+export class MiDocCopyCodeCmp extends AegisElement {
 
 	protected static icons = {
 		neutral: svg`
@@ -78,7 +78,7 @@ export class MiDocCopyCodeCmp extends LitElement {
 			place-items: center;
 			opacity: 0.5;
 			transition: opacity 0.2s;
-			transition-delay: 0.5s
+			transition-delay: 0.5s;
 
 			&:hover {
 				opacity: 1;
