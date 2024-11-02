@@ -1,6 +1,10 @@
+import { ContainerLoader } from '@roenlie/lit-aegis';
+import type { SiteConfig } from '../../shared/config.types.ts';
+
+
 const _anchorSnatcher = (event: MouseEvent) => {
 	const eventPath = event.composedPath();
-	const anchor = eventPath.find(el => el instanceof HTMLAnchorElement) as HTMLAnchorElement | undefined;
+	const anchor = eventPath.find(el => el instanceof HTMLAnchorElement);
 	if (!anchor || !anchor.classList.contains('internal'))
 		return;
 
@@ -8,12 +12,11 @@ const _anchorSnatcher = (event: MouseEvent) => {
 
 	const route = new URL(anchor.href);
 	const path = route.pathname.replace('.md', '');
-	const hash = '#' + path;
 
 	// Don't forward external origins to the parent.
 	// Either open them in a new tab or in top, depending on if ctrl is being held.
 	if (location.origin !== route.origin) {
-		if (event.ctrlKey)
+		if (event.ctrlKey || event.metaKey)
 			globalThis.open(route.href, '_blank');
 		else
 			globalThis.open(route.href, '_top');
@@ -25,14 +28,17 @@ const _anchorSnatcher = (event: MouseEvent) => {
 	if (location.pathname === path) {
 		globalThis.history.pushState({}, '', route.origin + route.pathname + route.hash);
 		globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
-
-		return;
 	}
 
 	// Intercept new routes
 	const parent = globalThis.top;
 	if (parent) {
-		parent.history.pushState({}, '', '/' + hash);
+		const { base, libDir } = ContainerLoader.get<SiteConfig>('site-config').env;
+		const hash = path
+			.replace(base + '/' + libDir, '')
+			.replace('.html', '');
+
+		parent.history.pushState({}, '', base + '/#' + hash + route.hash);
 		parent.dispatchEvent(new HashChangeEvent('hashchange'));
 	}
 };

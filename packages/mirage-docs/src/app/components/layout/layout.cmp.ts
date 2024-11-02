@@ -7,10 +7,7 @@ import type { SiteConfig } from '../../../shared/config.types.js';
 import { componentStyles } from '../../styles/component.styles.js';
 import { debounce } from '../../utilities/debounce.js';
 import { GlobalSearchCmp } from './global-search.cmp.js';
-import {
-	chevronUpIcon, Icon, listIcon,
-	moonIcon, spinningCircleIcon, sunIcon,
-} from './icons.js';
+import { chevronUpIcon, Icon, listIcon, moonIcon, spinningCircleIcon, sunIcon } from './icons.js';
 import { layoutStyles } from './layout.styles.js';
 import { SidebarCmp } from './sidebar.cmp.js';
 import { waitForPromises } from '@roenlie/core/async';
@@ -86,16 +83,17 @@ export class LayoutAdapter extends Adapter {
 	protected handleFrameLoad = () => {
 		Object.assign(this.frameQry.style, { opacity: 1 });
 
-		if (this.frameQry) {
-			const contentWindow   = this.frameQry.contentWindow;
-
-			if (contentWindow) {
+		const contentWindow = this.frameQry?.contentWindow;
+		if (contentWindow) {
+			const hashPath = location.hash.slice(1);
+			const [ _, hash ] = hashPath.split('#');
+			if (!hash) {
 				const scrollVal = Number(localStorage.getItem('pageScrollValue') ?? 0);
 				contentWindow.scrollTo(0, scrollVal);
-
-				contentWindow.addEventListener('scroll', this.handleFramePageScroll);
-				contentWindow.addEventListener('keydown', this.handleHotkeyPress);
 			}
+
+			contentWindow.addEventListener('scroll', this.handleFramePageScroll);
+			contentWindow.addEventListener('keydown', this.handleHotkeyPress);
 		}
 
 		this.loading = false;
@@ -136,17 +134,25 @@ export class LayoutAdapter extends Adapter {
 	};
 
 	protected handleHashChange = async (_ev?: HashChangeEvent) => {
-		let hash = location.hash.slice(1);
-		if (!hash) {
+		let path = location.hash.slice(1);
+		if (!path) {
 			const { base } = ContainerLoader.get<SiteConfig>('site-config').env;
 			const routes = ContainerLoader.get<string[]>('routes');
 
-			hash = routes[0] ?? '';
-			history.replaceState({}, '', base + '#' + hash);
+			path = routes[0] ?? '';
+			history.replaceState({}, '', base + '#' + path);
 		}
 
-		if (this.activeFrame === (hash + '.html'))
+		if (this.activeFrame === path)
 			return;
+
+		const activeUrl = new URL(this.activeFrame, location.origin);
+		const newUrl = new URL(path, location.origin);
+		if (activeUrl.pathname === newUrl.pathname) {
+			this.activeFrame = path;
+
+			return;
+		}
 
 		this.requestUpdate();
 		await this.updateComplete;
@@ -178,14 +184,21 @@ export class LayoutAdapter extends Adapter {
 	};
 
 	protected handleTransitionEnd = () => {
-		const hash = location.hash.slice(1);
-		if (hash) {
+		const path = location.hash.slice(1);
+		if (path) {
 			this.loading = true;
-			this.activeFrame = hash + '.html';
+			this.activeFrame = path;
 
 			const { base, libDir } = ContainerLoader.get<SiteConfig>('site-config').env;
 			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
-			frame.src = [ base, libDir, this.activeFrame ].join('/').replaceAll(/\/+/g, '/');
+
+			const pathParts = path.split('#');
+			if (!pathParts[0]!.endsWith('.html'))
+				pathParts[0] = pathParts[0] + '.html';
+			if (pathParts[1])
+				pathParts[0] = pathParts[0] + '#' + pathParts[1];
+
+			frame.src = [ base, libDir, pathParts[0] ].join('/').replaceAll(/\/+/g, '/');
 			frame.classList.toggle('active', true);
 
 			this.frameQry.replaceWith(frame);

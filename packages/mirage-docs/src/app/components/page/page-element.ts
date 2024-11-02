@@ -118,6 +118,10 @@ export class PageAdapter extends Adapter {
 		window.addEventListener('hashchange', this.handleHashChange);
 	}
 
+	public override afterConnectedCallback(): void {
+		this.handleHashChange();
+	}
+
 	public override disconnectedCallback() {
 		anchorSnatcher.unregister();
 		window.removeEventListener('hashchange', this.handleHashChange);
@@ -128,11 +132,11 @@ export class PageAdapter extends Adapter {
 	//#region logic
 	protected handleHashChange = () => {
 		const hash = window.location.hash;
-		const anchor = this.querySelector('a[href="' + hash + '"].header-anchor');
+		const anchor = document.querySelector('a[href="' + hash + '"].header-anchor');
 		anchor?.scrollIntoView({
 			behavior: 'smooth',
 			block:    'start',
-			inline:   'start',
+			inline:   'center',
 		});
 	};
 	//#endregion

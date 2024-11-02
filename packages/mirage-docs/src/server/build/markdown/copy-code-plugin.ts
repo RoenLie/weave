@@ -16,11 +16,13 @@ function renderCode(origRule?: RenderRule): RenderRule | undefined {
 
 		// This makes it so that the generated component code handles the formatting.
 		content = content
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
 			.replaceAll('`', '\\`')
 			.replaceAll('${', '\\${');
 
 		return `
-		<div style="position: relative">
+		<div class="copy-code-wrapper" style="position:relative;overflow:hidden;">
 			${ origRendered }
 			<midoc-copy-code>${ content }</midoc-copy-code>
 		</div>
