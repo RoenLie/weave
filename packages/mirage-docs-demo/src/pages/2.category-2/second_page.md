@@ -8,3 +8,12 @@ Hello, here is a little header.
 ```typescript
 const banan = 'eple';
 ```
+
+
+
+
+1. Hei
+2. hei2
+
+* nei2
+* bei

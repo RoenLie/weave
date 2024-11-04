@@ -2,10 +2,6 @@ import { css } from 'lit';
 
 
 export const componentStyles = css`
-	/* Reset */
-	${ css`
-	/* We use this instead of the more global one above,
-	as using * also overrides all :host styles. */
 	:where(article),
 	:where(aside),
 	:where(footer),
@@ -37,8 +33,10 @@ export const componentStyles = css`
 	/* Preferred box-sizing value */
 	:where(*),
 	:where(*::before),
-	:where(*::after) {
+	:where(*::after),
+	:host {
 		box-sizing: border-box;
+		-webkit-tap-highlight-color: transparent;
 	}
 
 	/* Reapply the pointer cursor for anchor tags */
@@ -46,10 +44,10 @@ export const componentStyles = css`
 		cursor: revert;
 	}
 
-	/*Remove list styles (bullets/numbers)
-	ol, ul, menu {
-		list-style: none;
-	}*/
+	/* Revert back to list styles (bullets/numbers) */
+	ol, ul {
+		list-style-type: revert;
+	}
 
 	/* removes spacing between cells in tables */
 	table {
@@ -100,7 +98,7 @@ export const componentStyles = css`
 		-webkit-user-drag: element;
 	}
 
-	/* remove margin form all H tags */
+	/* remove margin from all H tags */
 	h1,
 	h2,
 	h3,
@@ -110,7 +108,6 @@ export const componentStyles = css`
 	p {
 		margin: 0;
 	}
-	` }
 
 	/* General */
 	:host([invisible]),
@@ -121,16 +118,6 @@ export const componentStyles = css`
 	[hidden] {
 		display: none !important;
   	}
-	:host, *, *::before, *::after {
-		box-sizing: border-box;
-		-webkit-tap-highlight-color: transparent;
-	}
-	:host {
-		font-family: "Open Sans", "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", "Oxygen",
-		"Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-		sans-serif;
-		font-size: 16px;
-	}
 
 	/* Scrollbars */
 	:host::-webkit-scrollbar, *::-webkit-scrollbar {

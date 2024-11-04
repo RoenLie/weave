@@ -8,6 +8,7 @@ import { markdownStyles } from '../../styles/markdown.styles.js';
 import { anchorSnatcher } from '../../utilities/anchor-snatcher.js';
 import { subscribeToColorChange } from '../../utilities/color-subscription.js';
 import { MiDocCopyCodeCmp } from './copy-code.js';
+import { markdownTokens } from '../../styles/markdown-tokens.styles.js';
 
 MiDocCopyCodeCmp.register();
 
@@ -35,6 +36,7 @@ export class PageElement extends AegisComponent {
 	public static stylesheets = [
 		componentStyles,
 		highlightjsStyles,
+		markdownTokens,
 		markdownStyles,
 		css`
 		midoc-page {
@@ -139,42 +141,6 @@ export class PageAdapter extends Adapter {
 			inline:   'center',
 		});
 	};
-	//#endregion
-
-
-	//#region template
-	//#endregion
-
-
-	//#region styles
-	public static override styles = [
-		componentStyles,
-		highlightjsStyles,
-		markdownStyles,
-		css`
-		:host {
-			--code-font: Roboto Mono;
-
-			display: block;
-			min-height: 100vh;
-
-			border-radius: 4px;
-			padding-top: 50px;
-			padding-inline: 24px;
-		}
-		.markdown-body {
-			display: grid;
-			background: none;
-			padding-bottom: 200px;
-		}
-		.markdown-body pre {
-			border: 1px solid var(--midoc-outline);
-		}
-		.markdown-body pre code {
-			font-family: var(--code-font);
-		}
-		`,
-	];
 	//#endregion
 
 }

@@ -1,5 +1,4 @@
 @import url(theme.css);
-@import url(markdown-tokens.css);
 
 
 html,
@@ -7,7 +6,6 @@ body {
 	font-family: var(--midoc-font-family);
 	font-size: 16px;
 }
-
 body {
 	display: grid;
 	grid-template-columns: 1fr;
@@ -25,22 +23,18 @@ body {
 	--scrollbar-width: 4px;
 	--scrollbar-height: 4px;
 }
-
 *::-webkit-scrollbar {
-	width: var(--scrollbar-width, 0.6rem);
-	height: var(--scrollbar-height, 0.6rem);
+	width: var(--scrollbar-width, 0.5rem);
+	height: var(--scrollbar-height, 0.5rem);
 }
-
 *::-webkit-scrollbar-track {
 	background: var(--scrollbar-track, inherit);
 }
-
 *::-webkit-scrollbar-thumb {
 	background: var(--scrollbar-thumb-bg, hsl(0, 0%, 30%));
 	border-radius: var(--scrollbar-thumb-border-radius, 2px);
 	background-clip: padding-box;
 }
-
 *::-webkit-scrollbar-corner {
 	background: var(--scrollbar-corner, var(--scrollbar-track, inherit));
 }
