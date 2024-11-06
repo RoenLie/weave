@@ -52,6 +52,7 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 	public override connectedCallback(): void {
 		this.element.addEventListener('scroll', this.handleScroll);
 
+
 		this.setIndeterminateState();
 		this.handleSearch(this.searchValue, true);
 	}
@@ -107,8 +108,12 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 	protected handleSearch = (search: string, initial?: boolean) => {
 		const { nameReplacements } = this.siteConfig.root!.sidebar!;
 
-		const stringReplacement = (str: string) => nameReplacements!
-			.reduce((acc, [ from, to ]) => acc.replaceAll(from, to), str);
+		const stringReplacement = (str: string) => nameReplacements!.reduce((acc, [ from, to ]) => {
+			if (from instanceof RegExp)
+				return acc.replace(from, to);
+
+			return acc.replaceAll(from, to);
+		}, str);
 
 		this.filteredRoutes = this.routes.filter(path =>
 			stringReplacement(path).toUpperCase().includes(search.toUpperCase()));
