@@ -1,0 +1,15 @@
+{
+	"private": true,
+	"name": "@roenlie/handover-client",
+	"license": "© 2024 Kristoffer Roen-Lie, all rights reserved.",
+	"description": "description",
+	"authors": "author",
+	"version": "1.0.0",
+	"type": "module",
+	"main": "pathToMain",
+	"scripts": {
+		"dev": "vite"
+	},
+	"dependencies": {},
+	"devDependencies": {}
+}
