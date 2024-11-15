@@ -1,3 +1,6 @@
 [submodule "packages/sanguine"]
 	path = packages/sanguine
 	url = https://github.com/RoenLie/sanguine.git
+[submodule "apps/handover"]
+	path = apps/handover
+	url = https://github.com/RoenLie/handover.git
