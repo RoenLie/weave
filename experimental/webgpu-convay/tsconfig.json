@@ -1,0 +1,16 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"types": [
+			"@webgpu/types"
+		],
+	},
+	"include": [
+		"./**/*.ts",
+		"./**/*.d.ts"
+	],
+	"exclude": [
+		"dist",
+		"node_modules"
+	]
+}
