@@ -27,7 +27,7 @@
 		"lightningcss": "^1.25.1"
 	},
 	"peerDependencies": {
-		"vite": "^5.3.3"
+		"vite": "^6.0.0"
 	},
 	"devDependencies": {
 		"lit": "^3.1.4",

@@ -24,7 +24,7 @@
 		"build": "vite build && tsc --project ./src/tsconfig.json"
 	},
 	"peerDependencies": {
-		"vite": "^5.3.3"
+		"vite": "^6.0.0"
 	},
 	"dependencies": {
 		"@babel/parser": "^7.24.8",
