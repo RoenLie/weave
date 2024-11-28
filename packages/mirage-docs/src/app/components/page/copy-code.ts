@@ -2,7 +2,7 @@ import { css, html, svg } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { componentStyles } from '../../styles/component.styles.js';
-import { AegisElement, customElement, state } from '@roenlie/lit-aegis';
+import { AegisElement, customElement, state } from '../../aegis/index.js';
 
 
 @customElement('midoc-copy-code')

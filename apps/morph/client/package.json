@@ -22,7 +22,6 @@
 		"@faker-js/faker": "^8.4.1",
 		"@floating-ui/dom": "^1.6.5",
 		"@lit-labs/preact-signals": "^1.0.2",
-		"@roenlie/lit-aegis": "workspace:^",
 		"@roenlie/lit-context": "workspace:^",
 		"@roenlie/lit-state-store": "workspace:^",
 		"@roenlie/lit-utilities": "workspace:^",

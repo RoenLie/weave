@@ -1,4 +1,4 @@
-import { ContainerLoader } from '@roenlie/lit-aegis';
+import { ContainerLoader } from '../../aegis/index.js';
 import { css, html, LitElement, type PropertyValues, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { map } from 'lit/directives/map.js';

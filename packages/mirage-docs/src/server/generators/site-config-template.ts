@@ -4,7 +4,7 @@ import { fileExt } from '../build/helpers/is-dev-mode.js';
 
 export const siteConfigTemplate = (siteConfig: Partial<SiteConfig>, routes: string[]) =>
 `
-import { ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis.${ fileExt() }'
+import { ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis/index.${ fileExt() }'
 
 const routes = ${ JSON.stringify(routes, null, 3) };
 const siteConfig = ${ JSON.stringify(siteConfig, null, 3) };

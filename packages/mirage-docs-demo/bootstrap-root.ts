@@ -1,4 +1,4 @@
-import { ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis.js';
+import { ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis/index.js';
 import { PathTreeAdapter } from '@roenlie/mirage-docs/app/components/layout/path-tree.cmp.js';
 import type { PropertyValues } from 'lit';
 

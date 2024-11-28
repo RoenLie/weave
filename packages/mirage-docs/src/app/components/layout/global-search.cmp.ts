@@ -1,5 +1,4 @@
 import { type ElapsedTime } from '@orama/orama';
-import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '@roenlie/lit-aegis';
 import { css, html } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 import { live } from 'lit/directives/live.js';
@@ -10,6 +9,7 @@ import type { SiteConfig } from '../../../shared/config.types.js';
 import { componentStyles } from '../../styles/component.styles.js';
 import { createSearchWorker } from '../../workers/search-worker.js';
 import { Icon, xIcon } from './icons.js';
+import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '../../aegis/index.js';
 
 
 interface CustomResult {

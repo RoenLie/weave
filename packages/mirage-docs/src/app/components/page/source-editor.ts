@@ -1,4 +1,4 @@
-import { ContainerLoader } from '@roenlie/lit-aegis';
+import { ContainerLoader } from '../../aegis/index.js';
 import { css, html, LitElement, type TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { type DirectiveResult } from 'lit/directive.js';

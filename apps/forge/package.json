@@ -10,7 +10,6 @@
 	},
 	"dependencies": {
 		"@lit-labs/preact-signals": "^1.0.2",
-		"@roenlie/lit-aegis": "workspace:^",
 		"@roenlie/lit-utilities": "workspace:^",
 		"@roenlie/core": "workspace:^",
 		"@roenlie/elements": "workspace:^",

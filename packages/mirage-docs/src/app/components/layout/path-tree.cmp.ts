@@ -1,8 +1,4 @@
-import {
-	Adapter, AegisComponent,
-	ContainerLoader, customElement,
-	inject, state,
-} from '@roenlie/lit-aegis';
+import { Adapter, AegisComponent, ContainerLoader, customElement, inject, state } from '../../aegis/index.js';
 import { css, html, type PropertyValues, type TemplateResult, unsafeCSS } from 'lit';
 import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

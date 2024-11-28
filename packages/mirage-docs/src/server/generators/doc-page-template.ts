@@ -15,7 +15,7 @@ export const docPageTemplate = (props: {
 import { html } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js'
 import { mermaid } from '@roenlie/mirage-docs/app/utilities/mermaid.js';
-import { ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis.${ fileExt() }';
+import { ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis/index.${ fileExt() }';
 import { PageAdapter } from '@roenlie/mirage-docs/app/components/page/page-element.${ fileExt() }';
 // injected imports
 ${ props.imports }

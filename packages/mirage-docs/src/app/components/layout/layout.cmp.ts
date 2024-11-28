@@ -1,4 +1,4 @@
-import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '@roenlie/lit-aegis';
+import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '../../aegis/index.js';
 import { html, LitElement, unsafeCSS } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 import { when } from 'lit/directives/when.js';
