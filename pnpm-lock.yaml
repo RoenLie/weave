@@ -37,7 +37,7 @@ importers:
         version: 6.0.1(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2)
       vitest:
         specifier: ^2.1.2
-        version: 2.1.6(@types/node@22.7.4)(happy-dom@15.11.7)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2)
+        version: 2.1.6(@types/node@22.7.4)(happy-dom@15.11.7)(lightningcss@1.28.2)(terser@5.36.0)
 
   apps/builder:
     dependencies:
@@ -989,8 +989,8 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
       vite:
-        specifier: ^5.4.2
-        version: 5.4.11(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)
+        specifier: ^6.0.0
+        version: 6.0.1(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2)
     devDependencies:
       '@types/markdown-it':
         specifier: ^14.1.1
@@ -1243,8 +1243,8 @@ importers:
         specifier: ^1.25.1
         version: 1.28.2
       vite:
-        specifier: ^5.3.3
-        version: 5.4.11(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)
+        specifier: ^6.0.0
+        version: 6.0.1(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2)
     devDependencies:
       lit:
         specifier: ^3.1.4
@@ -1274,8 +1274,8 @@ importers:
         specifier: ^0.30.11
         version: 0.30.14
       vite:
-        specifier: ^5.3.3
-        version: 5.4.11(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)
+        specifier: ^6.0.0
+        version: 6.0.1(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2)
     devDependencies:
       '@types/babel__traverse':
         specifier: ^7.20.6
@@ -8547,13 +8547,13 @@ snapshots:
       chai: 5.1.2
       tinyrainbow: 1.2.0
 
-  '@vitest/mocker@2.1.6(vite@6.0.1(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2))':
+  '@vitest/mocker@2.1.6(vite@5.4.11(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0))':
     dependencies:
       '@vitest/spy': 2.1.6
       estree-walker: 3.0.3
       magic-string: 0.30.14
     optionalDependencies:
-      vite: 6.0.1(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2)
+      vite: 5.4.11(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)
 
   '@vitest/pretty-format@2.1.6':
     dependencies:
@@ -12681,16 +12681,15 @@ snapshots:
       unist-util-stringify-position: 3.0.3
       vfile-message: 3.1.4
 
-  vite-node@2.1.6(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2):
+  vite-node@2.1.6(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0):
     dependencies:
       cac: 6.7.14
       debug: 4.3.7(supports-color@5.5.0)
       es-module-lexer: 1.5.4
       pathe: 1.1.2
-      vite: 6.0.1(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2)
+      vite: 5.4.11(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)
     transitivePeerDependencies:
       - '@types/node'
-      - jiti
       - less
       - lightningcss
       - sass
@@ -12699,8 +12698,6 @@ snapshots:
       - sugarss
       - supports-color
       - terser
-      - tsx
-      - yaml
 
   vite-plugin-mkcert@1.17.6(vite@6.0.1(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2)):
     dependencies:
@@ -12735,10 +12732,10 @@ snapshots:
       terser: 5.36.0
       tsx: 4.19.2
 
-  vitest@2.1.6(@types/node@22.7.4)(happy-dom@15.11.7)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2):
+  vitest@2.1.6(@types/node@22.7.4)(happy-dom@15.11.7)(lightningcss@1.28.2)(terser@5.36.0):
     dependencies:
       '@vitest/expect': 2.1.6
-      '@vitest/mocker': 2.1.6(vite@6.0.1(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2))
+      '@vitest/mocker': 2.1.6(vite@5.4.11(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0))
       '@vitest/pretty-format': 2.1.6
       '@vitest/runner': 2.1.6
       '@vitest/snapshot': 2.1.6
@@ -12754,14 +12751,13 @@ snapshots:
       tinyexec: 0.3.1
       tinypool: 1.0.2
       tinyrainbow: 1.2.0
-      vite: 6.0.1(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2)
-      vite-node: 2.1.6(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)(tsx@4.19.2)
+      vite: 5.4.11(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)
+      vite-node: 2.1.6(@types/node@22.7.4)(lightningcss@1.28.2)(terser@5.36.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.7.4
       happy-dom: 15.11.7
     transitivePeerDependencies:
-      - jiti
       - less
       - lightningcss
       - msw
@@ -12771,8 +12767,6 @@ snapshots:
       - sugarss
       - supports-color
       - terser
-      - tsx
-      - yaml
 
   vscode-jsonrpc@8.2.0: {}
 
