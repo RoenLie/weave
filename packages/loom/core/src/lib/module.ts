@@ -1,5 +1,6 @@
 import { domId } from '@roenlie/core/dom';
 import type { Adapter } from './component.ts';
+import type { Router } from './router.ts';
 
 
 type Identifier = (string & Record<never, never>);
@@ -40,27 +41,37 @@ export class Resolver {
 
 export class Module {
 
-	constructor(
-		protected mapper: () => string = () => '',
-	) {}
+	constructor(protected scope = '') {}
 
 	public parent:     Module;
 	public entrypoint: ModuleEntrypoint;
 
 	public readonly segments: {
 		scope:          string;
+		order:          number;
 		segmentCached:  Segment | undefined;
 		segmentPromise: () => Promise<Segment>;
+	}[] = [];
+
+	public readonly routes: {
+		pattern:       string;
+		modulePromise: () => Promise<Module>;
+		moduleResult?: Module;
 	}[] = [];
 
 	public readonly moduleRegistry = new Map<Identifier, Registration[]>();
 	public readonly segmentRegistry = new Map<string, Registration[]>();
 
-	public addSegment(segment: () => Promise<Segment>, scope = ''): this {
+	public addSegment(segment: {
+		scope?:  string;
+		order?:  number;
+		segment: () => Promise<Segment>;
+	}): this {
 		this.segments.push({
-			scope,
+			scope:          segment.scope ?? '',
+			order:          0,
 			segmentCached:  undefined,
-			segmentPromise: segment,
+			segmentPromise: segment.segment,
 		});
 
 		return this;
@@ -74,11 +85,23 @@ export class Module {
 		return this;
 	}
 
+	public addRoutes(routes: {
+		pattern: string;
+		module:  () => Promise<Module>;
+	}[]): this {
+		this.routes.push(...routes.map(route => ({
+			pattern:       route.pattern,
+			modulePromise: route.module,
+		})));
+
+		return this;
+	}
+
 	public async load() {
 		this.moduleRegistry.clear();
 		this.segmentRegistry.clear();
 
-		const mappedScope = this.mapper();
+		const mappedScope = this.scope;
 		const segments = this.segments.filter(({ scope }) => scope === mappedScope);
 
 		await Promise.all(segments.map(async segment => {
@@ -96,10 +119,10 @@ export class ModuleEntrypoint {
 
 	constructor(
 		/** Function that runs prior to rendering the routes render function. */
-		public enter: (route: Resolver) => Promise<any> | any,
+		public enter: (route: Resolver) => Promise<void | boolean> | void | boolean,
 
 		/** Render function that returns the template to render for this route. */
-		public render: (route: Resolver) => Promise<unknown> | unknown,
+		public render: (route: Resolver) => Promise<HTMLElement> | HTMLElement,
 	) {}
 
 }

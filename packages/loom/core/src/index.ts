@@ -1,4 +1,4 @@
-import 'urlpattern-polyfill';
+/// <reference types="urlpattern-polyfill" />
 
 export * from './lib/module.ts';
 export * from './lib/router.ts';

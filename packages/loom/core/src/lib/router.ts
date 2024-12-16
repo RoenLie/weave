@@ -2,47 +2,84 @@ import { render } from 'lit';
 import { Resolver, type Module } from './module.ts';
 
 
+export interface Route {
+	pattern:    URLPattern,
+	rawPattern: string,
+	module?:    Module,
+}
+
+
 export class Router {
 
-	constructor(protected rootModule?: Module) {}
-	public element: HTMLElement & { __router: Router };
-	public routes = new Map<string, {
-		pattern:       URLPattern;
-		modulePromise: () => Promise<Module>;
-		moduleCache?:  Module;
-	}>();
-
-	public route(pattern: string, module: () => Promise<Module>) {
-		this.routes.set(pattern, {
-			pattern:       new URLPattern(pattern, globalThis.location.host),
-			modulePromise: module,
-			moduleCache:   undefined,
+	constructor(
+		protected element: HTMLElement,
+		protected module: Module,
+	) {
+		window.addEventListener('popstate', (ev) => {
+			// React to popstate changes to navigate routes.
 		});
 
-		console.log(this.routes);
+		window.addEventListener('click', (ev) => {
+			// React to anchor clicks to navigate routes and prevent default.
+		});
 
-
-		return this;
+		this.initialize();
 	}
 
-	public async start(element: HTMLElement): Promise<void> {
-		this.element = Object.assign(element, {
-			__router: this,
-		});
+	protected currentModuleChain: Module[] = [];
 
-		const route = '/';
-		const module = this.routes.get(route)!;
-		if (!module.moduleCache)
-			module.moduleCache = await module.modulePromise();
+	protected async initialize(): Promise<void> {
+		this.navigate();
+	}
 
-		await module.moduleCache.load();
+	protected async navigate(path = document.baseURI) {
+		let routes: Module['routes'] = this.module.routes;
+		const moduleChain: Module[] = [ this.module ];
 
-		const resolver = new Resolver(module.moduleCache);
+		let iteration = 99;
+		while (iteration-- > 0) {
+			const nextRoute = routes.find(route =>
+				new URLPattern(route.pattern, document.baseURI).test(path));
 
-		const entrypoint = module.moduleCache.entrypoint;
-		await entrypoint.enter(resolver);
+			if (!nextRoute)
+				break;
 
-		render(entrypoint.render(resolver), element);
+			if (!nextRoute.moduleResult)
+				nextRoute.moduleResult = await nextRoute.modulePromise();
+
+			moduleChain.push(nextRoute.moduleResult);
+			routes = nextRoute.moduleResult.routes;
+		}
+
+		let equal = false;
+		for (let i = 0; i < moduleChain.length; i++) {
+			equal = this.currentModuleChain[i] === moduleChain[i];
+			if (!equal)
+				break;
+		}
+
+		if (equal)
+			return;
+
+		this.currentModuleChain = moduleChain;
+
+		let renderTarget = this.element;
+		for await (const module of moduleChain) {
+			await module.load();
+
+			const resolver = new Resolver(module);
+
+			const entrypoint = module.entrypoint;
+			const shouldEnter = await entrypoint.enter(resolver);
+			if (shouldEnter === false)
+				break;
+
+			const nextTarget = await entrypoint.render(resolver);
+
+			render(nextTarget, renderTarget);
+
+			renderTarget = nextTarget;
+		}
 	}
 
 }

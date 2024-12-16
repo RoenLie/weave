@@ -1,7 +1,5 @@
 import { Router } from '@roenlie/loom';
-import { rootModule } from './root-module.ts';
+import { rootModule } from './src/pages/root/root-module.ts';
 
 
-const router = new Router();
-router.route('/', async () => rootModule);
-router.start(document.body);
+new Router(document.body, rootModule);

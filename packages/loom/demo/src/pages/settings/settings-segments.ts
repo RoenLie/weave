@@ -2,19 +2,16 @@ import { Adapter, Segment } from '@roenlie/loom';
 import { html } from 'lit';
 
 
-class RootAdapter extends Adapter {
+class SettingsAdapter extends Adapter {
 
 	public override render(): unknown {
-		console.log(this.resolver);
-
 		return html`
-		Hello from adapter.....
+		From SETTINGS adapter
 		`;
 	}
 
 }
 
 export const segment1 = new Segment(({ bind }) => {
-	bind('count').toConstant(0);
-	bind('lo-root').toAdapter(RootAdapter);
+	bind('lo-settings').toAdapter(SettingsAdapter);
 });
