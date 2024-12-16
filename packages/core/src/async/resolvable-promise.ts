@@ -12,6 +12,7 @@ export const shimPromiseWithResolvers = () => {
 
 export type ResolvablePromise<T = void> = Promise<T> & {
 	resolve(value: T): void;
+	reject(reason?: any): void;
 	done:  boolean;
 	value: T | undefined;
 };
@@ -20,13 +21,17 @@ export type ResolvablePromise<T = void> = Promise<T> & {
 export const resolvablePromise = <T = void>() => {
 	shimPromiseWithResolvers();
 
-	const { promise, resolve } = Promise.withResolvers<T>();
+	const { promise, resolve, reject } = Promise.withResolvers<T>();
 
 	const superPromise = Object.assign(promise, {
 		resolve: (value: T) => {
 			superPromise.done = true;
 			superPromise.value = value;
 			resolve(value);
+		},
+		reject: (reason?: any) => {
+			superPromise.done = true;
+			reject(reason);
 		},
 		done:  false,
 		value: undefined as T | undefined,

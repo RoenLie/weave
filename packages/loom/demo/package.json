@@ -1,0 +1,12 @@
+{
+	"name": "@roenlie/loom-demo",
+	"description": "description",
+	"authors": "author",
+	"version": "1.0.0",
+	"type": "module",
+	"main": "pathToMain",
+	"dependencies": {
+		"@roenlie/loom": "workspace:^",
+		"lit": "^3.2.1"
+	}
+}

@@ -1,108 +1,126 @@
+export type DOMPrimitive  = Element | ShadowRoot | Document | Window | Node;
+
+
 /**
- * Performs a breadth-first traversal of the DOM, starting from the specified root element.
- *
- * @param rootNode The root node to start the traversal from
- * @param callback A callback function to be invoked for each visited node.
- * an end function is supplied as the second parameter. Calling this will discontinue any future iterations.
+ * Gathering of type guards for DOM nodes.
  */
-export const breadthTraverseDOM = (
-	rootNode: Element,
-	callback: (node: (Element | ShadowRoot), end: () => void, endBranch: () => void) => void,
-): void => {
-	// Create a queue to hold the nodes that we need to visit.
-	const queue: (Element | ShadowRoot)[] = [];
-
-	// Controlls wether or not the traversal should continue.
-	let traverse = { value: true };
-	const end = () => { traverse.value = false; };
-
-	// Add the root node to the queue.
-	queue.push(rootNode);
-
-	// While there are nodes in the queue...
-	while (queue.length > 0 && traverse.value) {
-		// Remove the next node from the queue.
-		const node = queue.shift()!;
-
-		// Enables ending further traversal of this branch.
-		let endBranch = false;
-		const endBranchFn = () => endBranch = true;
-
-		// Invoke the callback function with the node.
-		callback(node, end, endBranchFn);
-
-		// End traversal of this node if the supplied function was called.
-		if (endBranch)
-			continue;
-
-		// If the node has a shadow root, add it to the queue.
-		if (node instanceof Element) {
-			if (node.shadowRoot)
-				queue.push(node.shadowRoot);
-		}
-
-		// Think slot nodes should not be traversed, as we already go through children.
-		//// If the node is a slot, add its assigned elements to the queue.
-		//if (node instanceof HTMLSlotElement)
-		//	queue.push(...node.assignedElements());
-
-
-		// Add the node's children to the queue.
-		if (node.children)
-			queue.push(...node.children);
-	}
+export const isNodeOf = {
+	/** Checks if the node is a window. */
+	window:      (node: DOMPrimitive): node is Window     => node instanceof Window,
+	/** Checks if the node is a document. */
+	document:    (node: DOMPrimitive): node is Document   => node instanceof Document,
+	/** Checks if the node is an element. */
+	element:     (node: DOMPrimitive): node is Element    => node instanceof Element,
+	/** Checks if the node is an htmlelement. */
+	htmlElement: (node: DOMPrimitive): node is Element    => node instanceof HTMLElement,
+	/** Checks if the node is a shadow root. */
+	shadowRoot:  (node: DOMPrimitive): node is ShadowRoot => node instanceof ShadowRoot,
 };
 
 
 /**
- * Performs a depth-first traversal of the DOM, starting from the specified root node.
- *
- * @param rootNode The root node to start the traversal from
- * @param callback A callback function to be invoked for each visited node
+ * Traverse the dom upwards from the `fromElement` to the root element.
  */
-export const depthTraverseDOM = (
-	rootNode: Element | ShadowRoot,
-	callback: (node: Element | ShadowRoot, end: () => void, endBranch: () => void) => void,
-): void => {
-	const traversal = (
-		rootNode: Element | ShadowRoot,
-		callback: (node: Element | ShadowRoot, end: () => void, endBranch: () => void) => void,
-		traverse = { value: true },
-	): void => {
-		if (!traverse.value)
-			return;
+export const traverseDomUp = (
+	/** The element from which the traversal starts */
+	fromElement: DOMPrimitive,
+	/**
+	 * The function to execute on each element.
+	 * A stop function is passed as the second argument to stop the traversal.
+	 */
+	func: (node: DOMPrimitive, stop: () => void) => void,
+) => {
+	let stop = false;
+	const stopFn = () => stop = true;
 
-		// Controlls wether or not the traversal should continue.
-		const end = () => { traverse.value = false; };
+	let currentElement: typeof fromElement | null = fromElement;
 
-		// Enables ending further traversal of this branch.
-		let endBranch = false;
-		const endBranchFn = () => endBranch = true;
+	do {
+		func(currentElement, stopFn);
+		if (stop)
+			break;
 
-		// Invoke the callback function with the root node.
-		callback(rootNode, end, endBranchFn);
+		// the root element (HTML).
+		if (currentElement instanceof Document || currentElement instanceof Window)
+			currentElement = null;
+		// handle shadow root elements.
+		else if (currentElement instanceof ShadowRoot)
+			currentElement = currentElement.host;
+		// if the node is in a slot, we need to traverse up to the slot itself.
+		else if (currentElement instanceof Element && currentElement.assignedSlot)
+			currentElement = currentElement.assignedSlot;
+		// handle if the node has a parent element.
+		else if (currentElement.parentElement)
+			currentElement = currentElement.parentElement;
+		// Should be no other edge cases, so we can assume it's a regular element.
+		else if (currentElement.parentNode)
+			currentElement = currentElement.parentNode;
+		else
+			currentElement = null;
+	} while (currentElement && !stop);
+};
 
-		// End traversal of this node if the supplied function was called.
-		if (endBranch)
-			return;
 
-		// If the root node has a shadow root, traverse it.
-		if (rootNode instanceof Element) {
-			if (rootNode.shadowRoot)
-				traversal(rootNode.shadowRoot, callback, traverse);
+/**
+ * Breadth-first dom traversal
+ */
+export const traverseDomDown = (
+	fromElement: DOMPrimitive,
+	func: (element: DOMPrimitive, stop: () => void) => void,
+	includeSlots = true,
+) => {
+	const visitedNodes = new WeakSet();
+
+	let stop = false;
+	const stopFn = () => stop = true;
+
+	let currentNodes: DOMPrimitive[] = [ fromElement ];
+	let nextNodes: DOMPrimitive[] = [];
+
+	while (currentNodes.length && !stop) {
+		for (const node of currentNodes) {
+			if (visitedNodes.has(node))
+				continue;
+
+			visitedNodes.add(node);
+
+			func(node, stopFn);
+			if (stop)
+				break;
+
+			if (node instanceof Window) {
+				nextNodes.push(node.document.documentElement);
+			}
+			else if (node instanceof Document) {
+				nextNodes.push(node.documentElement);
+			}
+			else if (node instanceof ShadowRoot) {
+				nextNodes.push(...node.children);
+			}
+			else if (node instanceof HTMLSlotElement) {
+				nextNodes.push(...node.assignedElements());
+			}
+			else if (node instanceof Element) {
+				if (node.shadowRoot) {
+					if (includeSlots)
+						nextNodes.push(...node.children);
+
+					nextNodes.push(node.shadowRoot);
+				}
+				else {
+					nextNodes.push(...node.children);
+				}
+			}
+			else {
+				nextNodes.push(...node.childNodes);
+			}
 		}
 
-		// Think slot nodes should not be traversed, as we already go through children.
-		//// If the root node has a slot, traverse its assigned nodes.
-		//if (rootNode instanceof HTMLSlotElement) {
-		//	if (rootNode.assignedElements)
-		//		rootNode.assignedElements().forEach(node => traversal(node, callback, traverse));
-		//}
+		// We clear current nodes so that we can reuse the array.
+		// This is a memory optimization.
+		currentNodes.length = 0;
 
-		// Traverse the root node's children.
-		if (rootNode.children)
-			[ ...rootNode.children ].forEach(node => traversal(node, callback, traverse));
-	};
-
-	traversal(rootNode, callback);
+		// Swap the arrays assignments, so that we can continue to traverse down.
+		[ currentNodes, nextNodes ] = [ nextNodes, currentNodes ];
+	}
 };

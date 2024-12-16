@@ -1,0 +1,16 @@
+{
+	"name": "@roenlie/loom",
+	"description": "description",
+	"authors": "author",
+	"version": "1.0.0",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@roenlie/core": "workspace:^",
+		"lit": "^3.2.1",
+		"tslib": "^2.8.1",
+		"urlpattern-polyfill": "^10.0.0"
+	}
+}
