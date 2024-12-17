@@ -6,7 +6,8 @@ type EventList = keyof EventMap;
  * `Event` with a strongly typed `target` known to exist.
  */
 export interface EventOf<TEl extends HTMLElement = HTMLElement> extends Event {
-	target: TEl;
+	target:        TEl;
+	currentTarget: TEl;
 }
 
 /**
@@ -27,7 +28,7 @@ export const emitEvent = <T extends EventMap, R extends EventList, K extends str
 	name: R | K,
 	options?: T[R] extends CustomEvent ? CustomEventInit<T[R]['detail']> : CustomEventInit,
 ) => {
-	const event = new CustomEvent<T[R] extends CustomEvent ? T[R]['detail'] : any>(
+	const event: CustomEvent<T[R] extends CustomEvent ? T[R]['detail'] : any> = new CustomEvent(
 		name,
 		{
 			bubbles:    true,
@@ -55,7 +56,7 @@ export const waitForEvent = <T extends EventMap, R extends EventList, K extends 
 	el: Window | HTMLElement,
 	eventName: R | K,
 	options?: {
-		bubbles?: boolean,
+		bubbles?:  boolean,
 		/** Predicate that can be used to terminate the waiting state. */
 		continue?: (ev: T[R] extends CustomEvent ? CustomEvent<T[R]['detail']> : T[R]) => boolean
 	},

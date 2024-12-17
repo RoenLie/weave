@@ -16,3 +16,8 @@ export type CompatibilityOf<T, M> = [T] extends [M]
 
 
 export type Timeout = ReturnType<typeof setTimeout> | number;
+
+
+export type ExtractReturnTypes<T extends readonly ((i: any) => any)[]> = [
+	...{ [K in keyof T]: T[K] extends ((i: any) => infer R) ? R : never }
+];

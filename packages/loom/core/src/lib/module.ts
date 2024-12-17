@@ -1,6 +1,5 @@
 import { domId } from '@roenlie/core/dom';
 import type { Adapter } from './component.ts';
-import type { Router } from './router.ts';
 
 
 type Identifier = (string & Record<never, never>);
@@ -49,7 +48,7 @@ export class Module {
 	public readonly segments: {
 		scope:          string;
 		order:          number;
-		segmentCached:  Segment | undefined;
+		segmentResult?: Segment;
 		segmentPromise: () => Promise<Segment>;
 	}[] = [];
 
@@ -70,7 +69,6 @@ export class Module {
 		this.segments.push({
 			scope:          segment.scope ?? '',
 			order:          0,
-			segmentCached:  undefined,
 			segmentPromise: segment.segment,
 		});
 
@@ -105,10 +103,10 @@ export class Module {
 		const segments = this.segments.filter(({ scope }) => scope === mappedScope);
 
 		await Promise.all(segments.map(async segment => {
-			if (!segment.segmentCached)
-				segment.segmentCached = await segment.segmentPromise();
+			if (!segment.segmentResult)
+				segment.segmentResult = await segment.segmentPromise();
 
-			segment.segmentCached.load(this);
+			segment.segmentResult.load(this);
 		}));
 	}
 

@@ -7,3 +7,4 @@ export { findInstanceOf } from './find-instance-of.js';
 export { randomElement } from './random-element.js';
 export { swapItems } from './swap-items.js';
 export { range } from './range.js';
+export { tuple } from './tuple.js';

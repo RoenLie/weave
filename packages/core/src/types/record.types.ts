@@ -75,3 +75,10 @@ export type ObjectOfKeys<TKeys extends readonly string[], TVal = any> = TKeys ex
 export type RecursiveRecord<T = any> = {
 	[P in keyof T]: RecursiveRecord<T[P]>;
 };
+
+
+export type RecursiveKeyof<T> = T extends object
+	? (T extends readonly any[]
+		? RecursiveKeyof<T[number]>
+		: (keyof T | RecursiveKeyof<T[keyof T]>))
+	: never;

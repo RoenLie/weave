@@ -1,6 +1,8 @@
 import type { Ctor } from '../types/class.types.js';
+import type { Fn } from '../types/function.types.js';
 
-export const isClass = (obj: any): obj is Ctor<any> => {
+
+export const isClass = (obj: any): obj is Ctor => {
 	// if not a function, return false.
 	if (typeof obj !== 'function')
 		return false;
@@ -28,4 +30,16 @@ export const isClass = (obj: any): obj is Ctor<any> => {
 		return false;
 
 	return !descriptor.writable;
+};
+
+
+/**
+ * Asserts that the value is a `function`.
+ */
+export const isFunction = (maybeFunction: any): maybeFunction is Fn => {
+	const isBaselineFunction = typeof maybeFunction === 'function';
+	if (!isBaselineFunction)
+		return false;
+
+	return !isClass(maybeFunction);
 };

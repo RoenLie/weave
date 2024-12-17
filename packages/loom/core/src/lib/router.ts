@@ -1,5 +1,6 @@
 import { render } from 'lit';
 import { Resolver, type Module } from './module.ts';
+import { URLPattern } from 'urlpattern-polyfill/urlpattern';
 
 
 export interface Route {

@@ -21,17 +21,23 @@ export const isNodeOf = {
 /**
  * Traverse the dom upwards from the `fromElement` to the root element.
  */
-export const traverseDomUp = (
+export const traverseDomUp = <T>(
 	/** The element from which the traversal starts */
 	fromElement: DOMPrimitive,
 	/**
 	 * The function to execute on each element.
 	 * A stop function is passed as the second argument to stop the traversal.
 	 */
-	func: (node: DOMPrimitive, stop: () => void) => void,
-) => {
+	func: (node: DOMPrimitive, stop: (value?: T) => void) => void,
+): T => {
 	let stop = false;
-	const stopFn = () => stop = true;
+	let stopValue: any = undefined;
+	const stopFn = <T>(value?: T): value is T => {
+		stop = true;
+		stopValue = value;
+
+		return true;
+	};
 
 	let currentElement: typeof fromElement | null = fromElement;
 
@@ -58,21 +64,27 @@ export const traverseDomUp = (
 		else
 			currentElement = null;
 	} while (currentElement && !stop);
+
+	return stopValue;
 };
 
 
 /**
  * Breadth-first dom traversal
  */
-export const traverseDomDown = (
+export const traverseDomDown = <T>(
 	fromElement: DOMPrimitive,
-	func: (element: DOMPrimitive, stop: () => void) => void,
+	func: (element: DOMPrimitive, stop: (value?: T) => void) => void,
 	includeSlots = true,
-) => {
+): T => {
 	const visitedNodes = new WeakSet();
 
 	let stop = false;
-	const stopFn = () => stop = true;
+	let stopValue: any = undefined;
+	const stopFn = (value?: T) => {
+		stop = true;
+		stopValue = value;
+	};
 
 	let currentNodes: DOMPrimitive[] = [ fromElement ];
 	let nextNodes: DOMPrimitive[] = [];
@@ -123,4 +135,6 @@ export const traverseDomDown = (
 		// Swap the arrays assignments, so that we can continue to traverse down.
 		[ currentNodes, nextNodes ] = [ nextNodes, currentNodes ];
 	}
+
+	return stopValue;
 };

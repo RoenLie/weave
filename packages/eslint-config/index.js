@@ -4,6 +4,7 @@ import litConfig from 'eslint-plugin-lit';
 import stylistic from '@stylistic/eslint-plugin';
 
 
+/** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigArray} */
 const base = tseslint.config({
 	name:    '@roenlie/eslint-config/base',
 	extends: [
@@ -30,8 +31,14 @@ const base = tseslint.config({
 			'multi-or-nest',
 			'consistent',
 		],
-		'prefer-arrow-callback':           'warn',
-		'prefer-const':                    'warn',
+		'prefer-arrow-callback': 'warn',
+		'prefer-const':          [
+			'warn',
+			{
+				'ignoreReadBeforeAssign': true,
+				'destructuring':          'all',
+			},
+		],
 		'no-prototype-builtins':           'off',
 		'no-unused-private-class-members': 'off',
 
@@ -150,7 +157,7 @@ const base = tseslint.config({
 		'@stylistic/max-len': [
 			'warn',
 			{
-				code:                   100,
+				code:                   120,
 				ignoreStrings:          true,
 				ignoreTemplateLiterals: true,
 				ignoreRegExpLiterals:   true,
@@ -278,22 +285,28 @@ const base = tseslint.config({
 				'ignoreRestSiblings':             true,
 			},
 		],
-		'@typescript-eslint/no-namespace':           'off',
-		'@typescript-eslint/no-dynamic-delete':      'off',
-		'@typescript-eslint/no-extraneous-class':    'off',
-		'@typescript-eslint/no-useless-constructor': 'off',
-		'@typescript-eslint/no-unused-expressions':  'off',
-		'@typescript-eslint/no-invalid-void-type':   'off',
-		'@typescript-eslint/no-empty-object-type':   'off',
+		'@typescript-eslint/no-namespace':                    'off',
+		'@typescript-eslint/no-dynamic-delete':               'off',
+		'@typescript-eslint/no-extraneous-class':             'off',
+		'@typescript-eslint/no-useless-constructor':          'off',
+		'@typescript-eslint/no-unused-expressions':           'off',
+		'@typescript-eslint/no-invalid-void-type':            'off',
+		'@typescript-eslint/no-empty-object-type':            'off',
+		'@typescript-eslint/consistent-indexed-object-style': 'off',
+		'@typescript-eslint/no-this-alias':                   'off',
+		'@typescript-eslint/no-inferrable-types':             'off',
+		'@typescript-eslint/consistent-generic-constructors': [ 'warn', 'type-annotation' ],
 	},
 });
 
 
+/** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigArray} */
 const node = tseslint.config({
 	extends: [],
 });
 
 
+/** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigArray} */
 const lit = tseslint.config({
 	extends: [ litConfig.configs['flat/recommended'] ],
 });

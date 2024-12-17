@@ -1172,8 +1172,11 @@ importers:
       '@preact/signals-core':
         specifier: ^1.8.0
         version: 1.8.0
+      '@roenlie/core':
+        specifier: workspace:^
+        version: link:../../core
       '@roenlie/reflect-metadata':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../reflect-metadata
       deepmerge-ts:
         specifier: ^7.1.0
@@ -1196,6 +1199,9 @@ importers:
 
   packages/sanguine/demo:
     dependencies:
+      '@roenlie/core':
+        specifier: workspace:^
+        version: link:../../core
       '@roenlie/sanguine':
         specifier: workspace:^
         version: link:../core

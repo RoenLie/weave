@@ -25,7 +25,7 @@ export const setsHaveSameItems = (...sets: Set<any>[]): boolean => {
 
 
 const intersection = <T>(setA: Set<T>, setB: Set<T>): Set<T> => {
-	const result = new Set<T>();
+	const result: Set<T> = new Set();
 	for (const item of setA) {
 		if (setB.has(item))
 			result.add(item);
@@ -39,7 +39,7 @@ export const getEqualItems = <T>(n: number, ...sets: Set<T>[]): Set<T> => {
 	if (sets.length < 2)
 		throw new Error('At least two sets are required');
 
-	let commonItems = new Set<T>();
+	let commonItems: Set<T> = new Set();
 	for (const set of sets) {
 		commonItems = intersection(commonItems, set);
 		if (commonItems.size < n)
