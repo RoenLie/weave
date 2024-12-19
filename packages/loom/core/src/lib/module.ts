@@ -58,8 +58,8 @@ export class Module {
 		moduleResult?: Module;
 	}[] = [];
 
-	public readonly moduleRegistry = new Map<Identifier, Registration[]>();
-	public readonly segmentRegistry = new Map<string, Registration[]>();
+	public readonly moduleRegistry:  Map<Identifier, Registration[]> = new Map();
+	public readonly segmentRegistry: Map<string, Registration[]> = new Map();
 
 	public addSegment(segment: {
 		scope?:  string;

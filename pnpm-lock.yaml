@@ -1175,15 +1175,9 @@ importers:
       '@roenlie/core':
         specifier: workspace:^
         version: link:../../core
-      '@roenlie/reflect-metadata':
-        specifier: workspace:^
-        version: link:../../reflect-metadata
       deepmerge-ts:
         specifier: ^7.1.0
         version: 7.1.3
-      inversify:
-        specifier: ^6.0.2
-        version: 6.1.1(reflect-metadata@0.2.2)
       lit:
         specifier: ^3.2.0
         version: 3.2.1
