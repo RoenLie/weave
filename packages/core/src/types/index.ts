@@ -6,7 +6,7 @@ export type { CompatibilityOf, Timeout, ExtractReturnTypes } from './utility-typ
 export type { Vector2, Vector3, Json, Interface } from './data-structure.types.js';
 export type { Path, PathValue, PathOf, PathOfLeaf } from './path-types.js';
 export type { CreatorFn, ValueProvider } from './delegates.types.js';
-export type { Increment, Decrement, Repeat } from './math.types.js';
+export type { Incr, Decr, Repeat } from './math.types.js';
 export type { stringliteral } from './strings.types.js';
 export type { Fn, AsyncFn } from './function.types.js';
 export type { Mandatory } from './mandatory.js';

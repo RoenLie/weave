@@ -1,6 +1,7 @@
 import type { ListOf } from 'ts-toolbelt/out/Union/ListOf.js';
 
 import type { HasLiteralKey } from './union.types.js';
+import type { Incr } from './math.types.js';
 
 
 /**
@@ -77,8 +78,15 @@ export type RecursiveRecord<T = any> = {
 };
 
 
-export type RecursiveKeyof<T> = T extends object
-	? (T extends readonly any[]
-		? RecursiveKeyof<T[number]>
-		: (keyof T | RecursiveKeyof<T[keyof T]>))
-	: never;
+type _RecursiveKeyof<
+	Next extends Record<keyof any, any> | string = never,
+	Count extends number = 0
+> = Next extends never
+	? string
+	: Count extends 10
+		? keyof Next
+		: Next extends Record<string, any>
+			? (keyof Next | _RecursiveKeyof<Next[keyof Next], Incr<Count>>)
+			: never;
+
+export type RecursiveKeyof<T extends Record<string, any>> = Exclude<_RecursiveKeyof<T>, number | symbol>;
