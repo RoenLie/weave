@@ -6,15 +6,35 @@ export type DOMPrimitive  = Element | ShadowRoot | Document | Window | Node;
  */
 export const isNodeOf = {
 	/** Checks if the node is a window. */
-	window:      (node: DOMPrimitive): node is Window     => node instanceof Window,
+	window:   (node: DOMPrimitive): node is Window     => node instanceof Window,
 	/** Checks if the node is a document. */
-	document:    (node: DOMPrimitive): node is Document   => node instanceof Document,
+	document: (node: DOMPrimitive): node is Document     => {
+		if ('nodeType' in node)
+			return node.nodeType === Node.DOCUMENT_NODE;
+
+		return false;
+	},
 	/** Checks if the node is an element. */
-	element:     (node: DOMPrimitive): node is Element    => node instanceof Element,
+	element: (node: DOMPrimitive): node is Element    => {
+		if ('nodeType' in node)
+			return node.nodeType === Node.ELEMENT_NODE;
+
+		return false;
+	},
 	/** Checks if the node is an htmlelement. */
-	htmlElement: (node: DOMPrimitive): node is Element    => node instanceof HTMLElement,
+	htmlElement: (node: DOMPrimitive): node is Element    => {
+		if ('nodeType' in node)
+			return node.nodeType === Node.ELEMENT_NODE && node instanceof HTMLElement;
+
+		return false;
+	},
 	/** Checks if the node is a shadow root. */
-	shadowRoot:  (node: DOMPrimitive): node is ShadowRoot => node instanceof ShadowRoot,
+	shadowRoot: (node: DOMPrimitive): node is ShadowRoot => {
+		if ('host' in node)
+			return node.nodeType === Node.DOCUMENT_FRAGMENT_NODE;
+
+		return false;
+	},
 };
 
 
@@ -29,7 +49,7 @@ export const traverseDomUp = <T>(
 	 * A stop function is passed as the second argument to stop the traversal.
 	 */
 	func: (node: DOMPrimitive, stop: (value?: T) => void) => void,
-): T => {
+): T | undefined => {
 	let stop = false;
 	let stopValue: any = undefined;
 	const stopFn = <T>(value?: T): value is T => {
@@ -47,13 +67,13 @@ export const traverseDomUp = <T>(
 			break;
 
 		// the root element (HTML).
-		if (currentElement instanceof Document || currentElement instanceof Window)
+		if (isNodeOf.document(currentElement) || isNodeOf.window(currentElement))
 			currentElement = null;
 		// handle shadow root elements.
-		else if (currentElement instanceof ShadowRoot)
+		else if (isNodeOf.shadowRoot(currentElement))
 			currentElement = currentElement.host;
 		// if the node is in a slot, we need to traverse up to the slot itself.
-		else if (currentElement instanceof Element && currentElement.assignedSlot)
+		else if (isNodeOf.element(currentElement) && currentElement.assignedSlot)
 			currentElement = currentElement.assignedSlot;
 		// handle if the node has a parent element.
 		else if (currentElement.parentElement)
