@@ -12,6 +12,9 @@ const proxy: any = new Proxy({} as any, {
 });
 
 
+export type Nameof<T> = (m: T extends object ? T : any) => any;
+
+
 /**
  * Returns either the last part of a objects path  \
  * or dotted path if the fullPath flag is set to true.

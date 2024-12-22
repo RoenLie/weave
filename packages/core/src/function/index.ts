@@ -1,5 +1,6 @@
 /* eslint-disable */
 /* auto generated */
+export type { Nameof } from './nameof.js';
 export { resolveValueProvider } from './value-provider.js';
 export { importPicker } from './import-picker.js';
 export { nameof } from './nameof.js';
