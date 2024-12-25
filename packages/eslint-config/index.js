@@ -20,12 +20,17 @@ const base = tseslint.config({
 			emitDecoratorMetadata: true,
 			sourceType:            'module',
 			ecmaVersion:           'latest',
+			ecmaFeatures:          {
+				jsx: true,
+			},
 		},
 	},
 	linterOptions: {
 		reportUnusedDisableDirectives: 'off',
 	},
-	rules: {
+	files:   [ '**/*.{js,jsx,mjs,cjs,ts,tsx}' ],
+	ignores: [ '**/dist/**' ],
+	rules:   {
 		'curly': [
 			'warn',
 			'multi-or-nest',
@@ -303,12 +308,16 @@ const base = tseslint.config({
 /** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigArray} */
 const node = tseslint.config({
 	extends: [],
+	files:   [ '**/*.{js,jsx,mjs,cjs,ts,tsx}' ],
+	ignores: [ '**/dist/**' ],
 });
 
 
 /** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigArray} */
 const lit = tseslint.config({
 	extends: [ litConfig.configs['flat/recommended'] ],
+	files:   [ '**/*.{js,jsx,mjs,cjs,ts,tsx}' ],
+	ignores: [ '**/dist/**' ],
 });
 
 
