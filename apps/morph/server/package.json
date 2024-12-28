@@ -35,7 +35,7 @@
 		"express": "^4.19.2",
 		"globby": "^14.0.1",
 		"jsonwebtoken": "^9.0.2",
-		"lit": "3.1.4",
+		"lit": "^3.2.1",
 		"mime": "^4.0.3",
 		"nodemailer": "^6.9.13",
 		"nodemon": "^3.0.3",

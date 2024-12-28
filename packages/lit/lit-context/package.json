@@ -34,7 +34,7 @@
 		"build:types": "tsc --project ./src/tsconfig.json"
 	},
 	"dependencies": {
-		"lit": "^3.2.0",
+		"lit": "^3.2.1",
 		"tslib": "^2.7.0"
 	},
 	"sideEffects": false

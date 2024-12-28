@@ -12,7 +12,7 @@ export type Init<T> = T | Req;
 export class MSchema {
 
 	public static dbIdentifier: string;
-	public static dbKey: string;
+	public static dbKey:        string;
 	public static create<T extends object>(
 		this: new () => T,
 		init: Partial<T>,
@@ -53,7 +53,7 @@ export class MimicDB {
 
 	public static connect(dbName: string, version?: number): Database {
 		const request = indexedDB.open(dbName, version);
-		const promise = new Promise<IDBDatabase>((res, rej) => {
+		const promise: Promise<IDBDatabase> = new Promise((res, rej) => {
 			request.onerror = ev => this.#handleRequestError(ev, rej);
 			request.onsuccess = ev => this.#handleRequestSuccess(ev, res);
 			request.onupgradeneeded = ev => {

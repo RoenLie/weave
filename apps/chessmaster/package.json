@@ -36,7 +36,7 @@
 		"@floating-ui/dom": "^1.0.2",
 		"@lit-labs/context": "^0.5.1",
 		"@lit-labs/virtualizer": "^2.0.13",
-		"lit": "^3.1.4",
+		"lit": "^3.2.1",
 		"nanoid": "^5.0.7",
 		"ts-pattern": "^5.2.0",
 		"tslib": "^2.4.0"

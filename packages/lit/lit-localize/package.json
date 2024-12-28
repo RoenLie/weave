@@ -44,11 +44,11 @@
 		"@roenlie/core": "workspace:^"
 	},
 	"peerDependencies": {
-		"lit": "^3.1.3",
+		"lit": "^3.2.1",
 		"@lit-labs/preact-signals": "^1.0.2"
 	},
 	"devDependencies": {
-		"lit": "^3.1.3",
+		"lit": "^3.2.1",
 		"@lit-labs/preact-signals": "^1.0.2",
 		"happy-dom": "^14.7.1"
 	},

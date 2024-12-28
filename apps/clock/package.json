@@ -18,7 +18,7 @@
 		"@roenlie/lit-utilities": "workspace:^",
 		"@roenlie/core": "workspace:^",
 		"@roenlie/elements": "workspace:^",
-		"lit": "^3.1.4",
+		"lit": "^3.2.1",
 		"tslib": "^2.6.2"
 	},
 	"devDependencies": {

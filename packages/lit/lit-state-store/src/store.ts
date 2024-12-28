@@ -8,8 +8,8 @@ export interface UpdatableElement {
 
 type ListenerRefMap = Map<ObjectRef, ListenerMap>;
 type ObjectRef = WeakRef<object>;
-type ListenerMap = Map<Function, ListenerOptions>
-interface ListenerOptions {type: 'before' | 'after', priority: number}
+type ListenerMap = Map<Function, ListenerOptions>;
+interface ListenerOptions { type: 'before' | 'after', priority: number }
 
 
 export class StateStore {
@@ -80,9 +80,9 @@ export class StateStore {
 		}
 	}
 
-	static #observers = new WeakMap<StateStore, Map<string, Set<WeakRef<UpdatableElement>>>>();
-	static #listeners = new WeakMap<StateStore, Map<string, ListenerRefMap>>();
-	static #refRegistry = new FinalizationRegistry<{origin: StateStore; ref: WeakRef<any>;}>(
+	static #observers:   WeakMap<StateStore, Map<string, Set<WeakRef<UpdatableElement>>>> = new WeakMap();
+	static #listeners:   WeakMap<StateStore, Map<string, ListenerRefMap>> = new WeakMap();
+	static #refRegistry: FinalizationRegistry<{ origin: StateStore; ref: WeakRef<any>; }> = new FinalizationRegistry(
 		({ origin, ref }) => {
 			const obsMap = StateStore.#observers.get(origin);
 			for (const set of obsMap?.values() ?? [])
