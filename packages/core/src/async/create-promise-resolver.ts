@@ -21,7 +21,7 @@ export const createPromiseResolver: CreatePromiseResolver = <T>() => {
 	let resolver: (value?: any) => void = () => {};
 	let rejector: () => void = () => {};
 
-	const promise = new Promise<T>((resolve, reject) => {
+	const promise: Promise<T> = new Promise((resolve, reject) => {
 		resolver = resolve;
 		rejector = reject;
 	});

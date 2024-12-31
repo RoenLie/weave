@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { stringliteral } from '../types/strings.types.js';
 
 
@@ -20,7 +19,7 @@ export class Phenomenon<T = any> {
 
 class Beholder {
 
-	static #beholders = new Map<string, Set<(phenom: Phenomenon) => any>>();
+	static #beholders: Map<string, Set<(phenom: Phenomenon) => any>> = new Map();
 
 	public static add<K extends keyof PhenomBeholderMap>(
 		type: K, listener: (ev: PhenomBeholderMap[K]) => any
@@ -28,7 +27,7 @@ class Beholder {
 	public static add(type: stringliteral, listener: (ev: Phenomenon) => any): void;
 	public static add(type: string, listener: (phenom: Phenomenon) => any): void {
 		const set = Beholder.#beholders.get(type) ?? (() => {
-			const set = new Set<(phenom: Phenomenon<any>) => any>();
+			const set: Set<(phenom: Phenomenon<any>) => any> = new Set();
 			Beholder.#beholders.set(type, set);
 
 			return set;

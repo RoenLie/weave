@@ -2,7 +2,7 @@ const jsonStringify = (val: any) => {
 	try {
 		return JSON.stringify(val);
 	}
-	catch (error) {
+	catch {
 		return false;
 	}
 };
@@ -11,7 +11,7 @@ const jsonParse = <T>(str: string) => {
 	try {
 		return JSON.parse(str) as T;
 	}
-	catch (e) {
+	catch {
 		return false;
 	}
 };
@@ -33,6 +33,7 @@ const parse = (val: string) => {
 
 	return val;
 };
+
 
 class LocalStorageHandler {
 

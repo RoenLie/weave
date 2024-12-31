@@ -4,7 +4,7 @@ export const isTouch = (() => {
 
 		return true;
 	}
-	catch (e) {
+	catch {
 		return false;
 	}
 })();

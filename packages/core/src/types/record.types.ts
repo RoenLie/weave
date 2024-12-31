@@ -2,6 +2,7 @@ import type { ListOf } from 'ts-toolbelt/out/Union/ListOf.js';
 
 import type { HasLiteralKey } from './union.types.js';
 import type { Incr } from './math.types.js';
+import type { Interface } from './utility-types.js';
 
 
 /**
@@ -12,20 +13,15 @@ import type { Incr } from './math.types.js';
  */
 export type RecordOf<
 	T extends object = object,
-	TK extends keyof any = keyof any, TV = any
+	TK extends keyof any = keyof any,
+	TV = any
 > = T & Record<TK, TV>;
 
 
 /**
- * Union of the type of all keys of `T`.
+ * Union of the type of all values in `T`.
  */
 export type ValueOf<T> = T[keyof T];
-
-
-/**
- * Turns a unclean object type into a singel object.
- */
-export type ComputedFlat<A> = { [K in keyof A]: A[K]; } & unknown;
 
 
 /** Mirrors the object key names as the object key value types. */
@@ -67,7 +63,7 @@ export type ObjectHasLiteralKeys<T extends object> = HasLiteralKey<keyof T>;
  */
 export type ObjectOfKeys<TKeys extends readonly string[], TVal = any> = TKeys extends []
 	? Record<string, TVal>
-	: ComputedFlat<Record<TKeys[number], TVal>>;
+	: Interface<Record<TKeys[number], TVal>>;
 
 
 /**
@@ -89,4 +85,7 @@ type _RecursiveKeyof<
 			? (keyof Next | _RecursiveKeyof<Next[keyof Next], Incr<Count>>)
 			: never;
 
+/**
+ * Recursively gets all the keys of an object.
+ */
 export type RecursiveKeyof<T extends Record<string, any>> = Exclude<_RecursiveKeyof<T>, number | symbol>;

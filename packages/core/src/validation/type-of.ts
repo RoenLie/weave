@@ -5,6 +5,7 @@ const getTypeAsString = (obj: any) => {
 		.toLowerCase();
 };
 
+
 /**
  * Wrapper for toString.call(var) to more easily and reliably get the correct type from a variable.
  * Also asserts the type for better typings.
@@ -22,11 +23,11 @@ export const typeOf = {
 	object: (value: any): value is object => {
 		return getTypeAsString(value) === 'object';
 	},
-	record: (value: any): value is Record<keyof any, any> => {
-		return getTypeAsString(value) === 'object';
-	},
 	objectLike: (value: any): value is object => {
 		return typeof value === 'object';
+	},
+	record: (value: any): value is Record<keyof any, any> => {
+		return getTypeAsString(value) === 'object';
 	},
 	function: (value: any): value is (...args: any) => any => {
 		return getTypeAsString(value) === 'function';

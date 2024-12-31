@@ -9,7 +9,7 @@ export const lazy = <T>(fn: () => T) => {
 	let initialized = false;
 
 	// Create a proxy object to intercept access to the `value` property
-	const prox = new Proxy({} as {value: T}, {
+	const prox = new Proxy({} as { value: T }, {
 		// Define a `get` trap for the proxy object
 		get: (target, prop) => {
 			// If the accessed property is not 'value', return the original property value
@@ -27,5 +27,5 @@ export const lazy = <T>(fn: () => T) => {
 		},
 	});
 
-	return prox as {value: T};
+	return prox as { value: T };
 };

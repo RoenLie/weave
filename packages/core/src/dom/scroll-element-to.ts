@@ -4,12 +4,12 @@
  * @returns a promise that resolves when the scroll finishes.
  */
 export const scrollElementTo = (element: HTMLElement, options: {
-	y?: number,
-	x?: number,
+	y?:        number,
+	x?:        number,
 	/** @default 300 */
 	duration?: number,
 	/** @default easeOutCuaic */
-	easing?: keyof typeof effects
+	easing?:   keyof typeof effects
 }) => {
 	const {
 		x = element.scrollLeft,

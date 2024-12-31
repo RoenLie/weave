@@ -4,7 +4,7 @@ export const hasKeyboardFocus = (elements: Element | Element[]) => {
 	if (!elements?.length)
 		return false;
 
-	let hasFocus = elements.some(element => {
+	const hasFocus = elements.some(element => {
 		let focusCheck = element.matches(':focus-visible');
 		if (focusCheck)
 			return true;

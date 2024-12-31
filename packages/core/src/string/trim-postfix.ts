@@ -1,4 +1,3 @@
-
 /**
  * This function removes a specified string from the end of another string
  * if the second string ends with the specified string.

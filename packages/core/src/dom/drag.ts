@@ -1,8 +1,8 @@
 export interface DragOptions {
 	/** Callback that runs as dragging occurs. */
-	onMove: (options: { x: number, y: number, event: PointerEvent }) => void;
+	onMove:       (options: { x: number, y: number, event: PointerEvent }) => void;
 	/** Callback that runs when dragging stops. */
-	onStop: (options: { x: number, y: number, event: PointerEvent }) => void;
+	onStop:       (options: { x: number, y: number, event: PointerEvent }) => void;
 	/**
 	 * When an initial event is passed, the first drag will be triggered immediately using the coordinates therein. This
 	 * is useful when the drag is initiated by a mousedown/touchstart event but you want the initial "click" to activate
@@ -13,21 +13,22 @@ export interface DragOptions {
 	passive: boolean;
 }
 
+
 export const drag = (container: HTMLElement, options?: Partial<DragOptions>) => {
 	const getXY = (ev: PointerEvent) => {
-		let dims = container.getBoundingClientRect();
-		let defaultView = container.ownerDocument.defaultView!;
-		let offsetX = dims.left + defaultView.scrollX;
-		let offsetY = dims.top + defaultView.scrollY;
-		let x = ev.pageX - offsetX;
-		let y = ev.pageY - offsetY;
+		const dims = container.getBoundingClientRect();
+		const defaultView = container.ownerDocument.defaultView!;
+		const offsetX = dims.left + defaultView.scrollX;
+		const offsetY = dims.top + defaultView.scrollY;
+		const x = ev.pageX - offsetX;
+		const y = ev.pageY - offsetY;
 
 		return { x, y };
 	};
 
 	const move = (ev: PointerEvent) => {
 		if (options?.onMove) {
-			let { x, y } = getXY(ev);
+			const { x, y } = getXY(ev);
 			options.onMove({ x, y, event: ev });
 		}
 	};
@@ -41,7 +42,7 @@ export const drag = (container: HTMLElement, options?: Partial<DragOptions>) => 
 		unsubscribe();
 
 		if (options?.onStop) {
-			let { x, y } = getXY(ev);
+			const { x, y } = getXY(ev);
 			options.onStop({ x, y, event: ev });
 		}
 	};

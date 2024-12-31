@@ -21,8 +21,8 @@ export interface GetAnimationOptions {
 }
 
 
-const defaultAnimationRegistry = new Map<string, ElementAnimation>();
-const customAnimationRegistry = new WeakMap<Element, ElementAnimationMap>();
+const defaultAnimationRegistry: Map<string, ElementAnimation> = new Map();
+const customAnimationRegistry: WeakMap<Element, ElementAnimationMap> = new WeakMap();
 
 const ensureAnimation = (animation: ElementAnimation | null) => {
 	return animation ?? { keyframes: [], options: { duration: 0 } };

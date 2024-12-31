@@ -4,7 +4,7 @@ abstract class TransformIterable<T, R> {
 
 	constructor(protected iterable: Iterable<T>) { }
 
-	public abstract pipe<P>(transformer: (value: Exclude<T, undefined>, previous: T | undefined) => P): any
+	public abstract pipe<P>(transformer: (value: Exclude<T, undefined>, previous: T | undefined) => P): any;
 
 	public [Symbol.iterator](): Iterator<Exclude<R, undefined>> {
 		const iterator = this.iterable[Symbol.iterator]();
@@ -106,8 +106,8 @@ export class IterablePipeline<T, R, O = T> extends TransformIterable<T, R> {
 type Unwrap<T extends Iterable<any>> = T extends Iterable<infer U> ? U : never;
 
 
-export function iterate<T extends Iterable<any>>(): IterablePipeline<Unwrap<T>, unknown>
-export function iterate<T extends Iterable<any>>(iterable: T): IterableTransformer<Unwrap<T>, unknown>
+export function iterate<T extends Iterable<any>>(): IterablePipeline<Unwrap<T>, unknown>;
+export function iterate<T extends Iterable<any>>(iterable: T): IterableTransformer<Unwrap<T>, unknown>;
 export function iterate<T>(iterable?: any): any {
 	if (iterable)
 		return new IterableTransformer<T, unknown>(iterable, []);

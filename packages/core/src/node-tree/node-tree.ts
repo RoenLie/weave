@@ -1,6 +1,7 @@
 import { $Augmented, augment } from './augment.js';
 import { type Key, type Rec, type RootNode, type TreeNode } from './types.js';
 
+
 export const fromSingleObject = <TObj extends Rec, const TProp extends keyof TObj>(
 	object: TObj, childProp: TProp) => _traverse(object, childProp);
 
@@ -46,7 +47,7 @@ export const fromList = <
 		[key in TChildProp]?: Item[];
 	};
 
-	const objMap = new Map<string | number, Item>();
+	const objMap: Map<string | number, Item> = new Map();
 	list.forEach(listItem => objMap.set(listItem[idProp], { ...listItem }));
 
 	const roots: Item[] = [];

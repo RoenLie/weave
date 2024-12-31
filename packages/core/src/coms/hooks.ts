@@ -15,7 +15,7 @@ type Handlers = ReflectMap<string, Fn>;
  */
 export class Hooks<TEvents extends Record<string, Fn>> {
 
-	private _handlers = new Map<keyof TEvents, Handlers>();
+	private _handlers: Map<keyof TEvents, Handlers> = new Map();
 
 	/**
 	 * Add the `handler` to the `event`.

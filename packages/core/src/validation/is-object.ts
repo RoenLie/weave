@@ -1,8 +1,10 @@
 export const isEmptyObject = (obj: object) => !Object.keys(obj).length;
 
+
 export const isObject = (obj: any) => {
 	return Object.prototype.toString.call(obj) === '[object Object]';
 };
+
 
 export const isPlainObject = (obj: any) => {
 	if (isObject(obj) === false)

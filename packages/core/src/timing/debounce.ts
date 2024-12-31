@@ -54,7 +54,7 @@ export const curryDebounce = <T extends Fn<any, ReturnType<T>> | AsyncFn<any, Re
 	func: T,
 	delay = 0,
 ) => {
-	const callbacks = new Map<string, (...args: any) => any>();
+	const callbacks: Map<string, (...args: any) => any> = new Map();
 	let timer: number;
 
 	const debounceFunc = (...args: any[]) => {

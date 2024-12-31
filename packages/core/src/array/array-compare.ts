@@ -6,7 +6,7 @@ export const hasSameElements = (array: unknown[], other: unknown[]) => {
 	if (array.length !== other.length)
 		return false;
 
-	const arraySet = new Set<unknown>(array);
+	const arraySet: Set<unknown> = new Set(array);
 
 	// Check if the Set's size is the same as the input array's length
 	if (arraySet.size !== array.length)

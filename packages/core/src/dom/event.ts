@@ -14,7 +14,8 @@ export interface EventOf<TEl extends HTMLElement = HTMLElement> extends Event {
  * `CustomEvent<T>` with a strongly typed `target` known to exist.
  */
 export interface CustomEventOf<T, TEl extends HTMLElement = HTMLElement> extends CustomEvent<T> {
-	target: TEl;
+	target:        TEl;
+	currentTarget: TEl;
 }
 
 
