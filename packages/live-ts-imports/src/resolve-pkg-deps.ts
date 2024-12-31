@@ -6,21 +6,21 @@ import { fileURLToPath } from 'node:url';
 
 export type ConditionalExportValue = string | {
 	browser?: string | {
-		import?: ConditionalExportValue;
+		import?:  ConditionalExportValue;
 		default?: ConditionalExportValue;
 	};
 	module?: string | {
-		import?: ConditionalExportValue;
+		import?:  ConditionalExportValue;
 		default?: ConditionalExportValue;
 	},
-	import?: ConditionalExportValue;
+	import?:  ConditionalExportValue;
 	default?: ConditionalExportValue;
-}
+};
 
 
 export interface PkgJson {
-	type?: 'module' | 'commonjs';
-	main?: string;
+	type?:    'module' | 'commonjs';
+	main?:    string;
 	exports?: {
 		'.'?: ConditionalExportValue
 	} & Record<string, ConditionalExportValue>;
@@ -41,11 +41,11 @@ export const getPkgDepsMap = (importMeta: ImportMeta, packageNames: string[]) =>
 		}
 	};
 
-	const depMap = new Map<string, {
-		root: string;
-		main: string;
+	const depMap: Map<string, {
+		root:    string;
+		main:    string;
 		exports: PkgJson['exports'];
-	}>();
+	}> = new Map();
 
 	const getDeps = (name: string) => {
 		if (depMap.has(name))
@@ -122,7 +122,7 @@ export const extractExports = (
 	packageName: string,
 	exports: Record<string, ConditionalExportValue>,
 ) => {
-	const map = new Map<string, string>();
+	const map: Map<string, string> = new Map();
 
 	const startingDotExp = /^./;
 	const trailingStarExp = /(?<=\/)\*$/;

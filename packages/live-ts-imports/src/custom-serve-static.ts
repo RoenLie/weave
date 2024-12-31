@@ -9,7 +9,7 @@ import parseUrl from 'parseurl';
 import ts from 'typescript';
 
 
-export const tsCache = new Map<string, string>();
+export const tsCache: Map<string, string> = new Map();
 
 
 export const tsStatic = (

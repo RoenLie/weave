@@ -11,7 +11,7 @@ export const createImportMap = (
 	if (!prefix.startsWith('.'))
 		prefix = '.' + prefix;
 
-	const imports = new Map<string, string>;
+	const imports: Map<string, string> = new Map;
 
 	// Add the client shims when in dev mode.
 	if (dev)
