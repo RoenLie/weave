@@ -1,52 +1,51 @@
 import { css, html, LitElement, svg } from 'lit';
 import { map } from 'lit/directives/map.js';
-
-
-interface GraphNode {
-	x:           number;
-	y:           number;
-	connections: GraphNode[];
-}
+import { graph, GraphNode } from './graph.ts';
+import { state } from 'lit/decorators.js';
 
 
 export class Poe2Tree extends LitElement {
 
+	@state() protected tooltip: string;
+	protected graph = graph;
 
-	protected graph = [
-		{
-			x:           50,
-			y:           200,
-			connections: [
-				{
-					x:           150,
-					y:           200,
-					connections: [],
-				},
-				{
-					x:           50,
-					y:           100,
-					connections: [],
-				},
-			],
-		},
-	];
+	protected setTooltip(ev: Event) {
+		const target = ev.currentTarget as HTMLElement;
+		this.tooltip = target.id;
+	}
+
+	protected removeTooltip() {
+		this.tooltip = '';
+	}
 
 	protected renderNode(node: GraphNode): unknown {
 		return svg`
-		<circle cx="${ node.x }" cy="${ node.y }" r="10" fill="red"/>
 		${ map(node.connections, connection => {
 			const d = `m${ node.x } ${ node.y } L${ connection.x } ${ connection.y }`;
 
 			return [
-				svg`<path id="lineAC" d=${ d } stroke="blue" stroke-width="4" fill="none"/>`,
+				svg`<path d=${ d } stroke="blue" stroke-width="4" fill="none"/>`,
 				this.renderNode(connection),
 			];
 		}) }
+		<circle
+			title=${ node.id }
+			id   =${ node.id }
+			cx   =${ node.x }
+			cy   =${ node.y }
+			r    ="10"
+			fill ="red"
+			@mouseover=${ this.setTooltip }
+			@mouseout=${ this.removeTooltip }
+		/>
 		`;
 	}
 
 	protected override render() {
 		return html`
+		<div class="title">
+			${ this.tooltip }
+		</div>
 		<svg width="1000" height="1000" style="pointer-events:none;">
 		${ map(this.graph, node => this.renderNode(node)) }
 		</svg>
@@ -55,14 +54,32 @@ export class Poe2Tree extends LitElement {
 
 	public static override styles = css`
 	:host {
+		position: relative;
 		display: block;
 		height: 100%;
+	}
+	.title{
+		position: absolute;
+		top: 0;
+		left: 0;
+		display: grid;
+
+		min-width: 200px;
+		min-height: 100px;
+		border-right: 1px solid black;
+		border-bottom: 1px solid black;
 	}
 	path, circle {
 		pointer-events: auto;
 	}
 	path:hover {
 		stroke: red;
+	}
+	path {
+		z-index: 0;
+	}
+	circle {
+		z-index: 1;
 	}
   `;
 
