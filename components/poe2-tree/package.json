@@ -1,0 +1,10 @@
+{
+	"name": "@roenlie/poe2-tree",
+	"description": "path of exile 2 passive tree web component",
+	"authors": "Kristoffer Roen-Lie",
+	"version": "0.0.1",
+	"main": "pathToMain",
+	"dependencies": {
+		"lit": "^3.2.1"
+	}
+}
