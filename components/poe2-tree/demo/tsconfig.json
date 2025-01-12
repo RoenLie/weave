@@ -1,9 +1,11 @@
 {
 	"extends": "@roenlie/tsconfig",
 	"compilerOptions": {
+		"rootDir": "..",
 		"experimentalDecorators": false,
 		"emitDecoratorMetadata": false,
-		"useDefineForClassFields": true
+		"useDefineForClassFields": false,
+		"importHelpers": true
 	},
 	"include": [
 		"./**/*.ts"
