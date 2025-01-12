@@ -12,12 +12,12 @@
 		"@roenlie/eslint-config": "workspace:^",
 		"@roenlie/package-toolbox": "workspace:^",
 		"@roenlie/tsconfig": "workspace:^",
-		"@types/node": "^22.5.0",
-		"happy-dom": "^15.7.4",
+		"@types/node": "^22.10.5",
+		"happy-dom": "^16.5.3",
 		"rimraf": "^6.0.1",
 		"tsx": "^4.19.0",
-		"typescript": "^5.5.2",
-		"vite": "^6.0.1",
+		"typescript": "^5.7.3",
+		"vite": "^6.0.7",
 		"vitest": "^2.1.2"
 	}
 }
