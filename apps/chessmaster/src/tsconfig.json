@@ -1,5 +1,5 @@
 {
-	"extends": "@eyeshare/tsconfig",
+	"extends": "@roenlie/tsconfig",
 	"compilerOptions": {
 		"rootDir": ".",
 		"outDir": "../dist/lib",

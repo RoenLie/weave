@@ -675,12 +675,24 @@ importers:
 
   components/poe2-tree:
     dependencies:
+      '@roenlie/core':
+        specifier: workspace:^
+        version: link:../../packages/core
       lit:
         specifier: ^3.2.1
         version: 3.2.1
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
+
+  components/poe2-tree/demo:
+    dependencies:
+      '@roenlie/core':
+        specifier: workspace:^
+        version: link:../../../packages/core
+      '@roenlie/poe2-tree':
+        specifier: workspace:^
+        version: link:..
 
   components/virtualizer:
     dependencies:
