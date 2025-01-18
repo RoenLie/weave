@@ -4,7 +4,7 @@ import { state } from 'lit/decorators.js';
 import { GraphNode } from '@roenlie/poe2-tree';
 import { classMap } from 'lit/directives/class-map.js';
 import { domId } from '@roenlie/core/dom';
-import { styleMap } from 'lit/directives/style-map.js';
+import { roundToNearest } from '@roenlie/core/math';
 
 
 export class Poe2Tree extends LitElement {
@@ -16,7 +16,6 @@ export class Poe2Tree extends LitElement {
 	@state() protected tooltip:       string = '';
 	protected graph:                  GraphNode[] = [];
 	protected renderedNodes:          Set<string> = new Set();
-	protected renderedConnections:    Set<string> = new Set();
 	protected abortCtrl:              AbortController;
 
 	public override connectedCallback(): void {
@@ -35,7 +34,8 @@ export class Poe2Tree extends LitElement {
 
 	public afterConnectedCallback(): void {
 		const svg = this.shadowRoot?.querySelector<HTMLDivElement>('.svg-wrapper');
-		if (!svg)
+		const centerCircle = this.shadowRoot?.querySelector<SVGElement>('#center-circle');
+		if (!svg || !centerCircle)
 			return;
 
 		const parentWidth = this.offsetWidth;
@@ -47,14 +47,11 @@ export class Poe2Tree extends LitElement {
 		svg.style.top = `${ y }px`;
 		svg.style.left = `${ x }px`;
 
-		const centerCircle = this.shadowRoot?.querySelector<SVGElement>('#center-circle');
-		if (centerCircle) {
-			centerCircle.setAttribute('cy', `${ svg.offsetHeight / 2 }`);
-			centerCircle.setAttribute('cx', `${ svg.offsetWidth / 2 }`);
-		}
+		centerCircle.setAttribute('cy', `${ svg.offsetHeight / 2 }`);
+		centerCircle.setAttribute('cx', `${ svg.offsetWidth / 2 }`);
 	}
 
-	protected setTooltip(ev: Event) {
+	protected setTooltip(_ev: Event) {
 		//const target = ev.currentTarget as HTMLElement;
 		//this.tooltip = target.id;
 	}
@@ -63,17 +60,22 @@ export class Poe2Tree extends LitElement {
 		//this.tooltip = '';
 	}
 
+	protected getScaleFactor(element?: HTMLElement): number {
+		const svgWrapper = element ?? this.shadowRoot?.querySelector<HTMLDivElement>('.svg-wrapper');
+		const scaleMatch = svgWrapper?.style.transform.match(/scale\((\d+(\.\d+)?)\)/);
+
+		return scaleMatch ? Number(scaleMatch[1]) : 1;
+	}
+
 	protected enableEditMouseEvents() {
 		const container = this.shadowRoot?.querySelector<HTMLDivElement>('.svg-wrapper');
 		if (!container)
 			return;
 
-		queueMicrotask(() => container.addEventListener(
-			'mousedown', this.onMousedownContainer,
-			{ signal: this.abortCtrl.signal },
-		));
-
-		console.log('ENABLED');
+		setTimeout(() => {
+			container.addEventListener('mousedown', this.onMousedownContainer,
+				{ signal: this.abortCtrl.signal });
+		}, 100);
 	}
 
 	protected disableEditMouseEvents() {
@@ -81,43 +83,18 @@ export class Poe2Tree extends LitElement {
 		if (!container)
 			return;
 
-		console.log(container.matches(':focus-within'));
 		container.removeEventListener('mousedown', this.onMousedownContainer);
-		console.log('DISABLED');
 	}
 
-	protected onMousedownContainer = (ev: MouseEvent) =>{
+	protected onMousedownContainer = (ev: MouseEvent) => {
 		const path = ev.composedPath();
 		const circle = path.find(el =>
 			el instanceof SVGElement && el.tagName === 'circle') as SVGElement | undefined;
 
-		// You are right clicking.
-		if (ev.buttons === 2) {
-			window.addEventListener('contextmenu',
-				(e) => e.preventDefault(), { once: true });
-
-			// You are right clicking on an existing circle
-			// We remove the circle and all connections to it
-			if (circle) {
-				const index = this.graph.findIndex(n => n.id === circle.id);
-				if (index > -1) {
-					const node = this.graph.splice(index, 1)[0]!;
-					this.graph.forEach(n => {
-						const i = n.connections.findIndex(c => c.id === node.id);
-						if (i > -1)
-							n.connections.splice(i, 1);
-					});
-				}
-			}
-
-			this.selectedNode = undefined;
-			this.requestUpdate();
-
-			return;
-		}
-
 		// You are left clicking.
 		if (ev.buttons === 1) {
+			ev.preventDefault();
+
 			// You are pressing an existing circle
 			if (circle) {
 				const node = this.graph.find(n => n.id === circle.id);
@@ -126,11 +103,16 @@ export class Poe2Tree extends LitElement {
 					// You are clicking on the same node
 					// We add listeners to move the node
 					if (this.selectedNode === node) {
-						const offsetX = ev.pageX - this.selectedNode.x;
-						const offsetY = ev.pageY - this.selectedNode.y;
+						const scale = this.getScaleFactor();
+						const offsetX = (ev.pageX - this.selectedNode.x * scale);
+						const offsetY = (ev.pageY - this.selectedNode.y * scale);
+
 						const mousemove = (mouseEv: MouseEvent) => {
-							this.selectedNode!.x = mouseEv.pageX - offsetX;
-							this.selectedNode!.y = mouseEv.pageY - offsetY;
+							const x = roundToNearest((mouseEv.pageX - offsetX) / scale, 10);
+							const y = roundToNearest((mouseEv.pageY - offsetY) / scale, 10);
+
+							this.selectedNode!.x = x;
+							this.selectedNode!.y = y;
 							this.requestUpdate();
 						};
 
@@ -157,8 +139,8 @@ export class Poe2Tree extends LitElement {
 			}
 
 			// You are adding a new circle
-			const x = ev.offsetX;
-			const y = ev.offsetY;
+			const x = roundToNearest(ev.offsetX, 10);
+			const y = roundToNearest(ev.offsetY, 10);
 
 			const node = new GraphNode(x, y, domId());
 			if (this.selectedNode) {
@@ -174,6 +156,33 @@ export class Poe2Tree extends LitElement {
 			}
 
 			this.graph.push(node);
+			this.requestUpdate();
+
+			return;
+		}
+
+		// You are right clicking.
+		if (ev.buttons === 2) {
+			ev.preventDefault();
+
+			window.addEventListener('contextmenu',
+				(e) => e.preventDefault(), { once: true });
+
+			// You are right clicking on an existing circle
+			// We remove the circle and all connections to it
+			if (circle) {
+				const index = this.graph.findIndex(n => n.id === circle.id);
+				if (index > -1) {
+					const node = this.graph.splice(index, 1)[0]!;
+					this.graph.forEach(n => {
+						const i = n.connections.findIndex(c => c.id === node.id);
+						if (i > -1)
+							n.connections.splice(i, 1);
+					});
+				}
+			}
+
+			this.selectedNode = undefined;
 			this.requestUpdate();
 
 			return;
@@ -205,25 +214,32 @@ export class Poe2Tree extends LitElement {
 		}
 	};
 
+	protected onWheelContainer = (ev: WheelEvent) => {
+		ev.preventDefault();
+		const svgWrapper = this.shadowRoot?.querySelector<HTMLDivElement>('.svg-wrapper');
+		if (!svgWrapper)
+			return;
+
+		const scale = this.getScaleFactor(svgWrapper);
+		const newScale = Math.max(0.1, Number(scale) + ev.deltaY / -1000);
+		svgWrapper.style.transform = `scale(${ newScale })`;
+	};
+
 	protected renderNode(node: GraphNode): unknown {
 		if (this.renderedNodes.has(node.id))
 			return;
 
 		this.renderedNodes.add(node.id);
 
-		const connections = node.connections.filter(v => {
-			const a = `${ node.id }-${ v.id }`;
-			const b = `${ v.id }-${ node.id }`;
-
-			return !(this.renderedConnections.has(a) || this.renderedConnections.has(b));
-		});
-
 		return svg`
-		${ map(connections, connection => {
+		${ map(node.connections, connection => {
 			const a = `${ node.id }-${ connection.id }`;
 			const b = `${ connection.id }-${ node.id }`;
-			this.renderedConnections.add(a);
-			this.renderedConnections.add(b);
+			if (this.renderedNodes.has(a) || this.renderedNodes.has(b))
+				return;
+
+			this.renderedNodes.add(a);
+			this.renderedNodes.add(b);
 
 			const d = `m${ node.x } ${ node.y } L${ connection.x } ${ connection.y }`;
 
@@ -246,13 +262,13 @@ export class Poe2Tree extends LitElement {
 
 	protected override render() {
 		this.renderedNodes.clear();
-		this.renderedConnections.clear();
 
 		return html`
 		<div class="container"
 			tabindex="0"
 			@focus=${ this.enableEditMouseEvents }
 			@blur=${ this.disableEditMouseEvents }
+			@wheel=${ this.onWheelContainer }
 		>
 			<div class="title">
 				${ this.tooltip }
