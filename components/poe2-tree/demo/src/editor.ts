@@ -1,10 +1,11 @@
-import { css, html, LitElement, svg } from 'lit';
+import { css, html, LitElement, svg, type PropertyValues } from 'lit';
 import { map } from 'lit/directives/map.js';
 import { state } from 'lit/decorators.js';
 import { GraphNode } from '@roenlie/poe2-tree';
 import { classMap } from 'lit/directives/class-map.js';
 import { domId } from '@roenlie/core/dom';
 import { roundToNearest } from '@roenlie/core/math';
+import { debounce } from '@roenlie/core/timing';
 
 
 export class Poe2Tree extends LitElement {
@@ -49,6 +50,12 @@ export class Poe2Tree extends LitElement {
 
 		centerCircle.setAttribute('cy', `${ svg.offsetHeight / 2 }`);
 		centerCircle.setAttribute('cx', `${ svg.offsetWidth / 2 }`);
+	}
+
+	protected override updated(_changedProperties: PropertyValues): void {
+		super.updated(_changedProperties);
+
+		this.autosave();
 	}
 
 	protected setTooltip(_ev: Event) {
@@ -225,6 +232,18 @@ export class Poe2Tree extends LitElement {
 		svgWrapper.style.transform = `scale(${ newScale })`;
 	};
 
+	protected autosave = debounce(async () => {
+		// A FileSystemDirectoryHandle whose type is "directory" and whose name is "".
+		const opfsRoot = await navigator.storage.getDirectory();
+		console.log(opfsRoot);
+
+		const entries = await getDirectoryEntriesRecursive(opfsRoot);
+		Object.entries(entries).forEach(([ name, entry ]) => {
+			console.log(name, entry);
+			//entry.handle.remove({ recursive: true });
+		});
+	}, 1000);
+
 	protected renderNode(node: GraphNode): unknown {
 		if (this.renderedNodes.has(node.id))
 			return;
@@ -354,6 +373,79 @@ export class Poe2Tree extends LitElement {
 }
 
 
+const getDirectoryEntriesRecursive = async (
+	directoryHandle: FileSystemDirectoryHandle,
+	relativePath: string = '.',
+) => {
+	interface File {
+		kind:         'file';
+		name:         string;
+		size:         number;
+		type:         string;
+		lastModified: number;
+		relativePath: string;
+		handle:       FileSystemFileHandle;
+	}
+
+	interface Directory {
+		kind:         'directory';
+		name:         string;
+		relativePath: string;
+		entries:      Record<string, any>;
+		handle:       FileSystemDirectoryHandle;
+	}
+
+
+	const fileHandles = [];
+	const directoryHandles = [];
+	const entries: Record<string, File | Directory> = {};
+	const directoryIterator: Iterable<Promise<FileSystemFileHandle | FileSystemDirectoryHandle>> =
+		(directoryHandle as any).values();
+
+	const directoryEntryPromises: Promise<(File | Directory)>[] = [];
+
+	for await (const handle of directoryIterator) {
+		const nestedPath = `${ relativePath }/${ handle.name }`;
+		if (handle.kind === 'file') {
+			fileHandles.push({ handle, nestedPath });
+			directoryEntryPromises.push(
+				handle.getFile().then((file) => {
+					return {
+						name:         handle.name,
+						kind:         handle.kind,
+						size:         file.size,
+						type:         file.type,
+						lastModified: file.lastModified,
+						relativePath: nestedPath,
+						handle,
+					};
+				}),
+			);
+		}
+		else if (handle.kind === 'directory') {
+			directoryHandles.push({ handle, nestedPath });
+			directoryEntryPromises.push(
+				(async () => {
+					return {
+						name:         handle.name,
+						kind:         handle.kind,
+						relativePath: nestedPath,
+						entries:
+					  await getDirectoryEntriesRecursive(handle, nestedPath),
+						handle,
+					};
+				})(),
+			);
+		}
+	}
+	const directoryEntries = await Promise.all(directoryEntryPromises);
+	directoryEntries.forEach((directoryEntry) => {
+		entries[directoryEntry.name] = directoryEntry;
+	});
+
+	return entries;
+};
+
 // d attribute of the path element
 //The following commands are available for path data:
 //M = moveto (move from one point to another point)
@@ -368,3 +460,10 @@ export class Poe2Tree extends LitElement {
 //Z = closepath (close the path)
 //Note: All of the commands above can also be expressed in lower case.
 // Upper case means absolutely positioned, lower case means relatively positioned.
+
+
+declare global {
+	interface FileSystemHandle {
+		remove(options?: { recursive?: boolean }): Promise<void>;
+	}
+}
