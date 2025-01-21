@@ -1,24 +1,30 @@
 import { css, html, LitElement, svg, type PropertyValues } from 'lit';
 import { map } from 'lit/directives/map.js';
-import { state } from 'lit/decorators.js';
-import { GraphNode } from '@roenlie/poe2-tree';
+import { query, state } from 'lit/decorators.js';
+import { Connection, GraphNode } from '@roenlie/poe2-tree';
 import { classMap } from 'lit/directives/class-map.js';
-import { domId } from '@roenlie/core/dom';
-import { roundToNearest } from '@roenlie/core/math';
 import { debounce } from '@roenlie/core/timing';
+
+
+interface Viewport { x1: number, x2: number, y1: number, y2: number }
 
 
 export class Poe2Tree extends LitElement {
 
-	static { queueMicrotask(() => customElements.define('poe2-tree', this)); }
+	public static tagName = 'poe2-tree';
+	static { queueMicrotask(() => customElements.define(this.tagName, this)); }
+
+	@query('.svg-wrapper')   protected svgWrapper:   HTMLElement;
+	@query('#center-circle') protected centerCircle: SVGElement;
 
 	@state() protected selectedNode?: GraphNode = undefined;
 	@state() protected tooltip:       string = '';
-	@state() protected graph:         GraphNode[] = [];
-	@state() protected modifyNodes:   boolean = false;
-	protected autosave:               boolean = false;
-	protected renderedNodes:          Set<string> = new Set();
-	protected abortCtrl:              AbortController;
+	@state() protected viewport:      Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
+	@state() protected nodes:         Map<string, GraphNode> = new Map();
+	@state() protected connections:   Map<string, Connection> = new Map();
+
+	protected autosave:  boolean = false;
+	protected abortCtrl: AbortController;
 
 	public override connectedCallback(): void {
 		super.connectedCallback();
@@ -32,26 +38,24 @@ export class Poe2Tree extends LitElement {
 		super.disconnectedCallback();
 
 		this.abortCtrl.abort();
-		this.disableEditMouseEvents();
 	}
 
 	public afterConnectedCallback(): void {
-		const svg = this.shadowRoot?.querySelector<HTMLDivElement>('.svg-wrapper');
-		const centerCircle = this.shadowRoot?.querySelector<SVGElement>('#center-circle');
-		if (!svg || !centerCircle)
-			return;
+		const { svgWrapper } = this;
 
 		const parentWidth = this.offsetWidth;
 		const parentHeight = this.offsetHeight;
 
 		// Align the center of the svg with the center of the parent
-		const y = parentHeight / 2 - svg.offsetHeight / 2;
-		const x = parentWidth / 2 - svg.offsetWidth / 2;
-		svg.style.top = `${ y }px`;
-		svg.style.left = `${ x }px`;
+		const y = parentHeight / 2 - svgWrapper.offsetHeight / 2;
+		const x = parentWidth / 2 - svgWrapper.offsetWidth / 2;
+		svgWrapper.style.top = `${ y }px`;
+		svgWrapper.style.left = `${ x }px`;
 
-		centerCircle.setAttribute('cy', `${ svg.offsetHeight / 2 }`);
-		centerCircle.setAttribute('cx', `${ svg.offsetWidth / 2 }`);
+		this.centerCircle.setAttribute('cy', `${ svgWrapper.offsetHeight / 2 }`);
+		this.centerCircle.setAttribute('cx', `${ svgWrapper.offsetWidth / 2 }`);
+
+		this.viewport = this.getViewport(svgWrapper);
 	}
 
 	protected async loadGraphFromStorage() {
@@ -62,15 +66,15 @@ export class Poe2Tree extends LitElement {
 
 		const file = await fileHandle.getFile();
 		const text = await file.text();
+		const parsed = JSON.parse(text) as {
+			nodes:       GraphNode[];
+			connections: Connection[]
+		};
 
-		const graph = JSON.parse(text) as GraphNode[];
-		for (const node of graph) {
-			node.connections = (node.connections as any as string[])
-				.map((id: string) => graph.find(n => n.id === id)!);
-		}
+		this.connections = new Map(parsed.connections.map(con => [ con.id, con ]));
+		this.nodes = new Map(parsed.nodes.map(node => [ node.id, node ]));
 
-		this.graph = graph;
-		this.autosave = true;
+		//this.autosave = true;
 	}
 
 	protected override updated(_changedProperties: PropertyValues): void {
@@ -89,138 +93,129 @@ export class Poe2Tree extends LitElement {
 	}
 
 	protected getScaleFactor(element?: HTMLElement): number {
-		const svgWrapper = element ?? this.shadowRoot?.querySelector<HTMLDivElement>('.svg-wrapper');
+		const svgWrapper = element ?? this.svgWrapper;
 		const scaleMatch = svgWrapper?.style.transform.match(/scale\((\d+(\.\d+)?)\)/);
 
 		return scaleMatch ? Number(scaleMatch[1]) : 1;
 	}
 
-	protected enableEditMouseEvents() {
-		const container = this.shadowRoot?.querySelector<HTMLDivElement>('.svg-wrapper');
-		if (!container)
-			return;
+	protected getViewport(svgWrapper: HTMLElement): Viewport {
+		const scale = this.getScaleFactor(svgWrapper);
+		const parentRect = this.getBoundingClientRect();
+		const viewableWidth = parentRect.width / scale;
+		const viewableHeight = parentRect.height / scale;
 
-		setTimeout(() => {
-			container.addEventListener('mousedown', this.onMousedownContainer,
-				{ signal: this.abortCtrl.signal });
-		}, 100);
+		const x1 = -svgWrapper.offsetLeft / scale;
+		const y1 = -svgWrapper.offsetTop / scale;
+		const x2 = x1 + viewableWidth;
+		const y2 = y1 + viewableHeight;
+
+		return { x1, x2, y1, y2 };
 	}
 
-	protected disableEditMouseEvents() {
-		const container = this.shadowRoot?.querySelector<HTMLDivElement>('.svg-wrapper');
-		if (!container)
+	protected onMousedownContainer(ev: MouseEvent) {
+		// This functionality is only for left clicks
+		if (ev.buttons !== 1)
 			return;
 
-		container.removeEventListener('mousedown', this.onMousedownContainer);
-	}
+		ev.preventDefault();
 
-	protected onMousedownContainer = (ev: MouseEvent) => {
 		const path = ev.composedPath();
-		const circle = path.find(el =>
-			el instanceof SVGElement && el.tagName === 'circle') as SVGElement | undefined;
+		const circleEl = path.find(el => 'tagName' in el && el.tagName === 'circle') as SVGElement | undefined;
+		const isNodeCircle = circleEl?.classList.contains('node-circle');
+		const isPathCircle = circleEl?.classList.contains('path-circle');
+		const node = this.nodes.get(circleEl?.id ?? '');
 
-		// You are left clicking.
-		if (ev.buttons === 1) {
-			ev.preventDefault();
+		if (isNodeCircle || isPathCircle) {
+			if (isNodeCircle) {
+				if (node) {
+					if (ev.shiftKey && this.selectedNode) {
+						this.connectNodes(this.selectedNode, node);
+					}
+					else {
+						this.selectedNode = node;
+						const scale = this.getScaleFactor();
+						const offsetX = (ev.pageX - node.x * scale);
+						const offsetY = (ev.pageY - node.y * scale);
 
-			// You are pressing an existing circle
-			if (circle) {
-				const node = this.graph.find(n => n.id === circle.id);
+						const mousemove = (mouseEv: MouseEvent) => {
+							node.x = (mouseEv.pageX - offsetX) / scale;
+							node.y = (mouseEv.pageY - offsetY) / scale;
 
-				if (node && this.modifyNodes) {
-					const scale = this.getScaleFactor();
-					const offsetX = (ev.pageX - node.x * scale);
-					const offsetY = (ev.pageY - node.y * scale);
+							const connections = node.connections
+								.map(id => this.connections.get(id))
+								.filter((con): con is Connection => !!con);
 
-					const mousemove = (mouseEv: MouseEvent) => {
-						const x = roundToNearest((mouseEv.pageX - offsetX) / scale, 2);
-						const y = roundToNearest((mouseEv.pageY - offsetY) / scale, 2);
+							connections.forEach(con => {
+								const point = con.start.id === node.id
+									? con.start : con.end;
 
-						node!.x = x;
-						node!.y = y;
+								point.x = node.x;
+								point.y = node.y;
+							});
 
-						this.requestUpdate();
-					};
+							this.requestUpdate();
+						};
 
-					window.addEventListener('mousemove', mousemove,
-						{ signal: this.abortCtrl.signal });
+						const mouseup = () =>
+							window.removeEventListener('mousemove', mousemove);
 
-					window.addEventListener('mouseup', () => {
-						window.removeEventListener('mousemove', mousemove);
-					}, { once: true, signal: this.abortCtrl.signal });
-
-					this.connectNodes(this.selectedNode, node);
-				}
-
-				this.selectedNode = node;
-
-				return;
-			}
-			else if (this.modifyNodes) {
-				// You are adding a new circle
-				const x = roundToNearest(ev.offsetX, 2);
-				const y = roundToNearest(ev.offsetY, 2);
-
-				const node = new GraphNode(x, y, domId());
-				if (this.selectedNode) {
-					if (!node.connections.includes(this.selectedNode))
-						node.connections.push(this.selectedNode);
-					if (!this.selectedNode.connections.includes(node))
-						this.selectedNode.connections.push(node);
-
-					this.selectedNode = node;
-				}
-				else {
-					this.selectedNode = node;
-				}
-
-				this.graph.push(node);
-				this.requestUpdate();
-
-				return;
-			}
-		}
-
-		// You are right clicking.
-		if (ev.buttons === 2) {
-			ev.preventDefault();
-
-			window.addEventListener('contextmenu',
-				(e) => e.preventDefault(), { once: true });
-
-			// You are right clicking on an existing circle
-			// We remove the circle and all connections to it
-			if (circle && this.modifyNodes) {
-				const index = this.graph.findIndex(n => n.id === circle.id);
-				if (index > -1) {
-					const node = this.graph.splice(index, 1)[0]!;
-					this.graph.forEach(n => {
-						const i = n.connections.findIndex(c => c.id === node.id);
-						if (i > -1)
-							n.connections.splice(i, 1);
-					});
+						window.addEventListener('mousemove', mousemove,
+							{ signal: this.abortCtrl.signal });
+						window.addEventListener('mouseup', mouseup,
+							{ once: true, signal: this.abortCtrl.signal });
+					}
 				}
 			}
+			else if (isPathCircle) {
+				const connection = this.connections.get(circleEl!.id)!;
 
-			this.selectedNode = undefined;
-			this.requestUpdate();
+				const scale = this.getScaleFactor();
+				const offsetX = (ev.pageX - connection.middle.x * scale);
+				const offsetY = (ev.pageY - connection.middle.y * scale);
+
+				const mousemove = (mouseEv: MouseEvent) => {
+					const x = (mouseEv.pageX - offsetX) / scale;
+					const y = (mouseEv.pageY - offsetY) / scale;
+
+					connection.middle.x = x;
+					connection.middle.y = y;
+
+					this.requestUpdate();
+				};
+
+				const mouseup = () =>
+					window.removeEventListener('mousemove', mousemove);
+
+				window.addEventListener('mousemove', mousemove,
+					{ signal: this.abortCtrl.signal });
+				window.addEventListener('mouseup', mouseup,
+					{ once: true, signal: this.abortCtrl.signal });
+			}
 
 			return;
 		}
+		else if (ev.altKey) {
+			// We add a new circle if you are holding the alt key
+			const x = ev.offsetX;
+			const y = ev.offsetY;
 
-		// You are pressing the middle mouse button
-		if (ev.buttons === 4) {
-			ev.preventDefault();
+			const node = new GraphNode(x, y);
+			this.nodes.set(node.id, node);
 
-			const svgWrapper = this.shadowRoot?.querySelector<HTMLDivElement>('.svg-wrapper');
-			if (!svgWrapper)
-				return;
+			this.requestUpdate();
+		}
+		else {
+			const { svgWrapper } = this;
 
 			const offsetY = ev.pageY - svgWrapper.offsetTop;
 			const offsetX = ev.pageX - svgWrapper.offsetLeft;
+
 			const mousemove = (mouseEv: MouseEvent) => {
 				svgWrapper.style.top = (mouseEv.pageY - offsetY) + 'px';
 				svgWrapper.style.left = (mouseEv.pageX - offsetX) + 'px';
+
+				this.viewport = this.getViewport(svgWrapper);
 			};
 
 			window.addEventListener('mousemove', mousemove,
@@ -230,20 +225,18 @@ export class Poe2Tree extends LitElement {
 				window.removeEventListener('mousemove', mousemove);
 			}, { once: true, signal: this.abortCtrl.signal });
 
-			return;
+			this.selectedNode = undefined;
+			this.requestUpdate();
 		}
 	};
 
-	protected onWheelContainer = (ev: WheelEvent) => {
+	protected onWheelContainer(ev: WheelEvent) {
 		ev.preventDefault();
-		const svgWrapper = this.shadowRoot?.querySelector<HTMLDivElement>('.svg-wrapper');
-		if (!svgWrapper)
-			return;
+		const { svgWrapper } = this;
 
 		const scale = this.getScaleFactor(svgWrapper);
 		const zoomIntensity = 0.001; // Adjust this value to control zoom intensity
 		const newScale = Math.max(0.1, scale * Math.exp(ev.deltaY * -zoomIntensity));
-		svgWrapper.style.transformOrigin = `${ 0 }px ${ 0 }px`;
 		svgWrapper.style.transform = `scale(${ newScale })`;
 
 		// Calculate the mouse position relative to the svgWrapper
@@ -259,16 +252,53 @@ export class Poe2Tree extends LitElement {
 
 		svgWrapper.style.left = `${ newLeft }px`;
 		svgWrapper.style.top = `${ newTop }px`;
+
+		this.viewport = this.getViewport(svgWrapper);
 	};
+
+	protected onKeydown(ev: KeyboardEvent) {
+		// Remove the node from the graph
+		if (ev.code === 'Delete' && this.selectedNode) {
+			ev.preventDefault();
+
+			const node = this.selectedNode;
+			this.nodes.delete(node.id);
+			node.connections.forEach(id => this.connections.delete(id));
+
+			this.requestUpdate();
+		}
+	}
 
 	protected connectNodes(nodeA?: GraphNode, nodeB?: GraphNode) {
 		if (!nodeA || !nodeB)
 			return;
 
-		if (!nodeA.connections.includes(nodeB))
-			nodeA.connections.push(nodeB);
-		if (!nodeB.connections.includes(nodeA))
-			nodeB.connections.push(nodeA);
+		const nodeHasNode = (a: GraphNode, b: GraphNode) => a.connections.some(
+			n => {
+				const connection = this.connections.get(n);
+				if (!connection)
+					return false;
+
+				return connection.start.id === b.id || connection.end.id === b.id;
+			},
+		);
+
+
+		const nodeAHasNodeB = nodeHasNode(nodeA, nodeB);
+		if (nodeAHasNodeB)
+			return;
+
+		const nodeBHasNodeA = nodeHasNode(nodeB, nodeA);
+		if (nodeBHasNodeA)
+			return;
+
+		const connection = new Connection(nodeA, nodeB);
+
+		this.connections.set(connection.id, connection);
+		nodeA.connections.push(connection.id);
+		nodeB.connections.push(connection.id);
+
+		this.requestUpdate();
 	}
 
 	protected performAutosave = debounce(async () => {
@@ -282,16 +312,10 @@ export class Poe2Tree extends LitElement {
 		});
 
 		const writable = await fileHandle.createWritable({ keepExistingData: false });
-		const clone = structuredClone(this.graph);
+		const nodes = Array.from(structuredClone(this.nodes).values());
+		const connections = Array.from(structuredClone(this.connections).values());
 
-		const storableGraph = clone.map(node => ({
-			...node,
-			connections: node.connections.map(c => c.id),
-		}));
-
-		const graph = JSON.stringify(storableGraph);
-
-		await writable.write(graph);
+		await writable.write(JSON.stringify({ nodes, connections }));
 		await writable.close();
 
 		//const entries = await getDirectoryEntriesRecursive(opfsRoot);
@@ -301,27 +325,57 @@ export class Poe2Tree extends LitElement {
 		//});
 	}, 1000);
 
-	protected renderNode(node: GraphNode): unknown {
-		if (this.renderedNodes.has(node.id))
+	protected renderConnectionPath(con: Connection) {
+		const outsideX1 = con.start.x < this.viewport.x1 && con.end.x < this.viewport.x1;
+		const outsideX2 = con.start.x > this.viewport.x2 && con.end.x > this.viewport.x2;
+		const outsideY1 = con.start.y < this.viewport.y1 && con.end.y < this.viewport.y1;
+		const outsideY2 = con.start.y > this.viewport.y2 && con.end.y > this.viewport.y2;
+		if (outsideX1 || outsideX2 || outsideY1 || outsideY2)
 			return;
 
-		this.renderedNodes.add(node.id);
+		const d = `M${ con.start.x } ${ con.start.y }`
+			+ ` Q${ con.middle.x } ${ con.middle.y }`
+			+ ` ${ con.end.x } ${ con.end.y }`;
 
 		return svg`
-		${ map(node.connections, connection => {
-			const a = `${ node.id }-${ connection.id }`;
-			const b = `${ connection.id }-${ node.id }`;
-			if (this.renderedNodes.has(a) || this.renderedNodes.has(b))
-				return;
+		<path
+			d=${ d }
+			stroke="blue"
+			stroke-width="3"
+			fill="none"
+		></path>
+		`;
+	}
 
-			this.renderedNodes.add(a);
-			this.renderedNodes.add(b);
+	protected renderConnectionHandle(con: Connection) {
+		const outsideX1 = con.start.x < this.viewport.x1 && con.end.x < this.viewport.x1;
+		const outsideX2 = con.start.x > this.viewport.x2 && con.end.x > this.viewport.x2;
+		const outsideY1 = con.start.y < this.viewport.y1 && con.end.y < this.viewport.y1;
+		const outsideY2 = con.start.y > this.viewport.y2 && con.end.y > this.viewport.y2;
+		if (outsideX1 || outsideX2 || outsideY1 || outsideY2)
+			return;
 
-			const d = `m${ node.x } ${ node.y } L${ connection.x } ${ connection.y }`;
+		return svg`
+		<circle
+			class="path-circle"
+			id=${ con.id }
+			cx=${ con.middle.x }
+			cy=${ con.middle.y }
+			r="2"
+			fill="purple"
+		></circle>
+		`;
+	}
 
-			return svg`<path d=${ d } stroke="blue" stroke-width="3" fill="none"></path>`;
-		}) }
+	protected renderNode(node: GraphNode): unknown {
+		const outsideX1 = node.x < this.viewport.x1;
+		const outsideX2 = node.x > this.viewport.x2;
+		const outsideY1 = node.y < this.viewport.y1;
+		const outsideY2 = node.y > this.viewport.y2;
+		if (outsideX1 || outsideX2 || outsideY1 || outsideY2)
+			return;
 
+		return svg`
 		<circle
 			title=${ node.id }
 			id   =${ node.id }
@@ -329,7 +383,10 @@ export class Poe2Tree extends LitElement {
 			cy   =${ node.y }
 			r    ="6"
 			fill ="red"
-			class=${ classMap({ active: this.selectedNode?.id === node.id }) }
+			class=${ classMap({
+				'node-circle': true,
+				active:        this.selectedNode?.id === node.id,
+			}) }
 			@mouseover=${ this.setTooltip }
 			@mouseout=${ this.removeTooltip }
 		></circle>
@@ -337,35 +394,25 @@ export class Poe2Tree extends LitElement {
 	}
 
 	protected override render() {
-		this.renderedNodes.clear();
-
 		return html`
 		<div class="container"
 			tabindex="0"
-			@focus=${ this.enableEditMouseEvents }
-			@blur=${ this.disableEditMouseEvents }
+			@mousedown=${ this.onMousedownContainer }
 			@wheel=${ this.onWheelContainer }
+			@keydown=${ this.onKeydown }
 		>
 			<div class="title">
-				${ this.tooltip }
+				${ this.selectedNode }
 			</div>
 			<div class="controls">
-				<div>
-					<label>Modify Nodes</label>
-					<input
-						type="checkbox"
-						?checked=${ this.modifyNodes }
-						@change=${ () => this.modifyNodes = !this.modifyNodes }
-					>
-				</div>
 			</div>
 
-			<div class="svg-wrapper" style="position: absolute;">
-				<img src="/poe2-tree.png" style="">
+			<div class="svg-wrapper" style="position:absolute;">
+				<img src="/poe2-tree.png">
 				<svg
 					width="3750"
 					height="3750"
-					style="pointer-events:none;border:1px solid black;"
+					style="pointer-events:none;"
 				>
 					<circle
 						id="center-circle"
@@ -373,7 +420,9 @@ export class Poe2Tree extends LitElement {
 						stroke="rebeccapurple"
 						stroke-width="4"
 					></circle>
-					${ map(this.graph, node => this.renderNode(node)) }
+					${ map(this.connections.values(), con => this.renderConnectionPath(con)) }
+					${ map(this.nodes.values(), node => this.renderNode(node)) }
+					${ map(this.connections.values(), con => this.renderConnectionHandle(con)) }
 				</svg>
 			</div>
 		</div>
@@ -391,6 +440,9 @@ export class Poe2Tree extends LitElement {
 		}
 		.svg-wrapper {
 			display: grid;
+			background-color: rgb(15, 16, 21);
+			transform-origin: 0px 0px;
+			scale: 1;
 
 			img {
 				position: absolute;
@@ -450,6 +502,7 @@ export class Poe2Tree extends LitElement {
 }
 
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getDirectoryEntriesRecursive = async (
 	directoryHandle: FileSystemDirectoryHandle,
 	relativePath: string = '.',
