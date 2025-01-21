@@ -1,7 +1,7 @@
 import { css, html, LitElement, svg, type PropertyValues } from 'lit';
 import { map } from 'lit/directives/map.js';
 import { query, state } from 'lit/decorators.js';
-import { Connection, GraphNode } from '@roenlie/poe2-tree';
+import { Connection, GraphNode, type StorableConnection, type StorableGraphNode } from '@roenlie/poe2-tree';
 import { classMap } from 'lit/directives/class-map.js';
 import { debounce } from '@roenlie/core/timing';
 
@@ -15,7 +15,7 @@ export class Poe2Tree extends LitElement {
 	static { queueMicrotask(() => customElements.define(this.tagName, this)); }
 
 	@query('.svg-wrapper')   protected svgWrapper:   HTMLElement;
-	@query('#center-circle') protected centerCircle: SVGElement;
+	@query('.center-circle') protected centerCircle: SVGElement;
 
 	@state() protected selectedNode?: GraphNode = undefined;
 	@state() protected tooltip:       string = '';
@@ -67,29 +67,29 @@ export class Poe2Tree extends LitElement {
 		const file = await fileHandle.getFile();
 		const text = await file.text();
 		const parsed = JSON.parse(text) as {
-			nodes:       GraphNode[];
-			connections: Connection[]
+			nodes:       StorableGraphNode[];
+			connections: StorableConnection[]
 		};
 
-		this.connections = new Map(parsed.connections.map(con => [ con.id, con ]));
-		this.nodes = new Map(parsed.nodes.map(node => [ node.id, node ]));
+		this.connections = new Map(parsed.connections.map(con => {
+			const parsed = new Connection(con);
 
-		//this.autosave = true;
+			return [ parsed.id, parsed ];
+		}));
+
+		this.nodes = new Map(parsed.nodes.map(node => {
+			const parsed = new GraphNode(node);
+
+			return [ parsed.id, parsed ];
+		}));
+
+		this.autosave = true;
 	}
 
 	protected override updated(_changedProperties: PropertyValues): void {
 		super.updated(_changedProperties);
 
 		this.performAutosave();
-	}
-
-	protected setTooltip(_ev: Event) {
-		//const target = ev.currentTarget as HTMLElement;
-		//this.tooltip = target.id;
-	}
-
-	protected removeTooltip() {
-		//this.tooltip = '';
 	}
 
 	protected getScaleFactor(element?: HTMLElement): number {
@@ -118,13 +118,12 @@ export class Poe2Tree extends LitElement {
 		if (ev.buttons !== 1)
 			return;
 
-		ev.preventDefault();
-
 		const path = ev.composedPath();
 		const circleEl = path.find(el => 'tagName' in el && el.tagName === 'circle') as SVGElement | undefined;
 		const isNodeCircle = circleEl?.classList.contains('node-circle');
 		const isPathCircle = circleEl?.classList.contains('path-circle');
 		const node = this.nodes.get(circleEl?.id ?? '');
+		const capslockOn = ev.getModifierState('CapsLock');
 
 		if (isNodeCircle || isPathCircle) {
 			if (isNodeCircle) {
@@ -132,8 +131,7 @@ export class Poe2Tree extends LitElement {
 					if (ev.shiftKey && this.selectedNode) {
 						this.connectNodes(this.selectedNode, node);
 					}
-					else {
-						this.selectedNode = node;
+					else if (capslockOn || ev.ctrlKey || ev.metaKey) {
 						const scale = this.getScaleFactor();
 						const offsetX = (ev.pageX - node.x * scale);
 						const offsetY = (ev.pageY - node.y * scale);
@@ -165,9 +163,12 @@ export class Poe2Tree extends LitElement {
 						window.addEventListener('mouseup', mouseup,
 							{ once: true, signal: this.abortCtrl.signal });
 					}
+					else {
+						this.selectedNode = node;
+					}
 				}
 			}
-			else if (isPathCircle) {
+			else if (isPathCircle && (ev.ctrlKey || ev.metaKey || capslockOn)) {
 				const connection = this.connections.get(circleEl!.id)!;
 
 				const scale = this.getScaleFactor();
@@ -200,7 +201,7 @@ export class Poe2Tree extends LitElement {
 			const x = ev.offsetX;
 			const y = ev.offsetY;
 
-			const node = new GraphNode(x, y);
+			const node = new GraphNode({ x, y });
 			this.nodes.set(node.id, node);
 
 			this.requestUpdate();
@@ -230,33 +231,35 @@ export class Poe2Tree extends LitElement {
 		}
 	};
 
-	protected onWheelContainer(ev: WheelEvent) {
-		ev.preventDefault();
-		const { svgWrapper } = this;
+	protected onWheelContainer = {
+		passive:     true,
+		handleEvent: (ev: WheelEvent) => {
+			const { svgWrapper } = this;
 
-		const scale = this.getScaleFactor(svgWrapper);
-		const zoomIntensity = 0.001; // Adjust this value to control zoom intensity
-		const newScale = Math.max(0.1, scale * Math.exp(ev.deltaY * -zoomIntensity));
-		svgWrapper.style.transform = `scale(${ newScale })`;
+			const scale = this.getScaleFactor(svgWrapper);
+			const zoomIntensity = 0.001; // Adjust this value to control zoom intensity
+			const newScale = Math.max(0.1, scale * Math.exp(ev.deltaY * -zoomIntensity));
+			svgWrapper.style.transform = `scale(${ newScale })`;
 
-		// Calculate the mouse position relative to the svgWrapper
-		const rect = svgWrapper.getBoundingClientRect();
-		const mouseX = ev.clientX - rect.left;
-		const mouseY = ev.clientY - rect.top;
+			// Calculate the mouse position relative to the svgWrapper
+			const rect = svgWrapper.getBoundingClientRect();
+			const mouseX = ev.clientX - rect.left;
+			const mouseY = ev.clientY - rect.top;
 
-		// Calculate the new position of the svgWrapper
-		const dx = (mouseX / scale) * (newScale - scale);
-		const dy = (mouseY / scale) * (newScale - scale);
-		const newLeft = (svgWrapper.offsetLeft - dx);
-		const newTop = (svgWrapper.offsetTop - dy);
+			// Calculate the new position of the svgWrapper
+			const dx = (mouseX / scale) * (newScale - scale);
+			const dy = (mouseY / scale) * (newScale - scale);
+			const newLeft = (svgWrapper.offsetLeft - dx);
+			const newTop = (svgWrapper.offsetTop - dy);
 
-		svgWrapper.style.left = `${ newLeft }px`;
-		svgWrapper.style.top = `${ newTop }px`;
+			svgWrapper.style.left = `${ newLeft }px`;
+			svgWrapper.style.top = `${ newTop }px`;
 
-		this.viewport = this.getViewport(svgWrapper);
-	};
+			this.viewport = this.getViewport(svgWrapper);
+		},
+	} satisfies AddEventListenerOptions & EventListenerObject;
 
-	protected onKeydown(ev: KeyboardEvent) {
+	protected onKeydownContainer(ev: KeyboardEvent) {
 		// Remove the node from the graph
 		if (ev.code === 'Delete' && this.selectedNode) {
 			ev.preventDefault();
@@ -266,6 +269,20 @@ export class Poe2Tree extends LitElement {
 			node.connections.forEach(id => this.connections.delete(id));
 
 			this.requestUpdate();
+		}
+	}
+
+	protected onMousemoveContainer(ev: MouseEvent) {
+		const path = ev.composedPath();
+		const circleEl = path.find(el => 'tagName' in el && el.tagName === 'circle') as SVGElement | undefined;
+		const isNodeCircle = circleEl?.classList.contains('node-circle');
+
+		if (isNodeCircle) {
+			const node = this.nodes.get(circleEl?.id ?? '');
+			this.tooltip = `Node: ${ node?.x.toFixed(2) }, ${ node?.y.toFixed(2) }`;
+		}
+		else {
+			this.tooltip = '';
 		}
 	}
 
@@ -292,7 +309,7 @@ export class Poe2Tree extends LitElement {
 		if (nodeBHasNodeA)
 			return;
 
-		const connection = new Connection(nodeA, nodeB);
+		const connection = new Connection({ start: nodeA, end: nodeB });
 
 		this.connections.set(connection.id, connection);
 		nodeA.connections.push(connection.id);
@@ -333,18 +350,47 @@ export class Poe2Tree extends LitElement {
 		if (outsideX1 || outsideX2 || outsideY1 || outsideY2)
 			return;
 
-		const d = `M${ con.start.x } ${ con.start.y }`
-			+ ` Q${ con.middle.x } ${ con.middle.y }`
-			+ ` ${ con.end.x } ${ con.end.y }`;
+		// Assuming you have start and end coordinates
+		let startX = con.start.x;
+		let startY = con.start.y;
+		let endX = con.end.x;
+		let endY = con.end.y;
+		const midX = con.middle.x;
+		const midY = con.middle.y;
 
-		return svg`
-		<path
-			d=${ d }
-			stroke="blue"
-			stroke-width="3"
-			fill="none"
-		></path>
-		`;
+		// Calculate the direction vector
+		const dxStart = midX - startX;
+		const dyStart = midY - startY;
+		const dxEnd = endX - midX;
+		const dyEnd = endY - midY;
+
+		const getReduction = (radius: number, a: number, b: number) => {
+			// Calculate the length of the direction vector
+			const lengthStart = Math.sqrt(a * a + b * b);
+
+			// Normalize the direction vector
+			const nxStart = a / lengthStart;
+			const nyStart = b / lengthStart;
+
+			// Scale the normalized vector by the radius
+			const reductionXStart = nxStart * radius;
+			const reductionYStart = nyStart * radius;
+
+			return [ reductionXStart, reductionYStart ] as const;
+		};
+
+		const startReduction = getReduction(6, dxStart, dyStart);
+		startX += startReduction[0];
+		startY += startReduction[1];
+
+		const endReduction = getReduction(6, dxEnd, dyEnd);
+		endX -= endReduction[0];
+		endY -= endReduction[1];
+
+		const d = `M${ startX } ${ startY } `
+			+ `Q${ midX } ${ midY } ${ endX } ${ endY }`;
+
+		return svg`<path class="node-path" d=${ d }></path>`;
 	}
 
 	protected renderConnectionHandle(con: Connection) {
@@ -361,8 +407,7 @@ export class Poe2Tree extends LitElement {
 			id=${ con.id }
 			cx=${ con.middle.x }
 			cy=${ con.middle.y }
-			r="2"
-			fill="purple"
+			r ="3"
 		></circle>
 		`;
 	}
@@ -377,18 +422,14 @@ export class Poe2Tree extends LitElement {
 
 		return svg`
 		<circle
-			title=${ node.id }
 			id   =${ node.id }
 			cx   =${ node.x }
 			cy   =${ node.y }
-			r    ="6"
-			fill ="red"
+			r    =${ node.radius }
 			class=${ classMap({
 				'node-circle': true,
 				active:        this.selectedNode?.id === node.id,
 			}) }
-			@mouseover=${ this.setTooltip }
-			@mouseout=${ this.removeTooltip }
 		></circle>
 		`;
 	}
@@ -396,33 +437,26 @@ export class Poe2Tree extends LitElement {
 	protected override render() {
 		return html`
 		<div class="container"
-			tabindex="0"
+			tabindex  ="0"
+			@wheel    =${ this.onWheelContainer }
+			@keydown  =${ this.onKeydownContainer }
 			@mousedown=${ this.onMousedownContainer }
-			@wheel=${ this.onWheelContainer }
-			@keydown=${ this.onKeydown }
+			@mousemove=${ this.onMousemoveContainer }
 		>
 			<div class="title">
-				${ this.selectedNode }
+				${ this.tooltip }
 			</div>
 			<div class="controls">
 			</div>
 
 			<div class="svg-wrapper" style="position:absolute;">
 				<img src="/poe2-tree.png">
-				<svg
-					width="3750"
-					height="3750"
-					style="pointer-events:none;"
-				>
-					<circle
-						id="center-circle"
-						r="227"
-						stroke="rebeccapurple"
-						stroke-width="4"
-					></circle>
-					${ map(this.connections.values(), con => this.renderConnectionPath(con)) }
-					${ map(this.nodes.values(), node => this.renderNode(node)) }
-					${ map(this.connections.values(), con => this.renderConnectionHandle(con)) }
+				<svg class="tree" width="3750" height="3750">
+					<circle class="center-circle" r="227"></circle>
+
+					${ map(this.connections.values(), c => this.renderConnectionPath(c)) }
+					${ map(this.nodes.values(),       n => this.renderNode(n)) }
+					${ map(this.connections.values(), c => this.renderConnectionHandle(c)) }
 				</svg>
 			</div>
 		</div>
@@ -446,20 +480,23 @@ export class Poe2Tree extends LitElement {
 
 			img {
 				position: absolute;
-				opacity: 0.5;
+				opacity: 0.8;
 				place-self: center;
 				padding-top: 40px;
 				padding-left: 25px;
 				z-index: -1;
 				pointer-events: none;
+				user-select: none;
 			}
 		}
 		.title {
 			position: fixed;
+			z-index: 1;
 			top: 0;
 			left: 0;
 			display: grid;
-
+			background-color: grey;
+			border-bottom-right-radius: 12px;
 			min-width: 200px;
 			min-height: 100px;
 			border-right: 1px solid black;
@@ -474,7 +511,6 @@ export class Poe2Tree extends LitElement {
 			background-color: grey;
 			border-bottom-left-radius: 12px;
 			padding: 8px;
-
 			min-width: 200px;
 			min-height: 100px;
 			border-left: 1px solid black;
@@ -484,116 +520,43 @@ export class Poe2Tree extends LitElement {
 				background: blue;
 			}
 		}
+		svg.tree {
+			pointer-events: none;
+		}
 		path, circle {
 			pointer-events: auto;
 		}
 		path {
 			z-index: 0;
 		}
+		path.node-path {
+			opacity: 0.5;
+			stroke: darkslateblue;
+			stroke-width: 2;
+			fill: none;
+		}
 		circle {
 			z-index: 1;
+		}
+		circle.center-circle {
+			stroke: rebeccapurple;
+			stroke-width: 4px;
+			fill: rgb(15 16 21 / 20%);
+		}
+		circle.node-circle {
+			fill: transparent;
+			stroke: silver;
+			stroke-width: 1;
 
 			&.active {
-				fill: green;
+				fill: silver;
 			}
+		}
+		circle.path-circle {
+			fill: transparent;
+			stroke: silver;
+			stroke-width: 1;
 		}
   	`;
 
-}
-
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getDirectoryEntriesRecursive = async (
-	directoryHandle: FileSystemDirectoryHandle,
-	relativePath: string = '.',
-) => {
-	interface File {
-		kind:         'file';
-		name:         string;
-		size:         number;
-		type:         string;
-		lastModified: number;
-		relativePath: string;
-		handle:       FileSystemFileHandle;
-	}
-
-	interface Directory {
-		kind:         'directory';
-		name:         string;
-		relativePath: string;
-		entries:      Record<string, any>;
-		handle:       FileSystemDirectoryHandle;
-	}
-
-
-	const fileHandles = [];
-	const directoryHandles = [];
-	const entries: Record<string, File | Directory> = {};
-	const directoryIterator: Iterable<Promise<FileSystemFileHandle | FileSystemDirectoryHandle>> =
-		(directoryHandle as any).values();
-
-	const directoryEntryPromises: Promise<(File | Directory)>[] = [];
-
-	for await (const handle of directoryIterator) {
-		const nestedPath = `${ relativePath }/${ handle.name }`;
-		if (handle.kind === 'file') {
-			fileHandles.push({ handle, nestedPath });
-			directoryEntryPromises.push(
-				handle.getFile().then((file) => {
-					return {
-						name:         handle.name,
-						kind:         handle.kind,
-						size:         file.size,
-						type:         file.type,
-						lastModified: file.lastModified,
-						relativePath: nestedPath,
-						handle,
-					};
-				}),
-			);
-		}
-		else if (handle.kind === 'directory') {
-			directoryHandles.push({ handle, nestedPath });
-			directoryEntryPromises.push(
-				(async () => {
-					return {
-						name:         handle.name,
-						kind:         handle.kind,
-						relativePath: nestedPath,
-						entries:
-					  await getDirectoryEntriesRecursive(handle, nestedPath),
-						handle,
-					};
-				})(),
-			);
-		}
-	}
-	const directoryEntries = await Promise.all(directoryEntryPromises);
-	directoryEntries.forEach((directoryEntry) => {
-		entries[directoryEntry.name] = directoryEntry;
-	});
-
-	return entries;
-};
-
-// d attribute of the path element
-//The following commands are available for path data:
-//M = moveto (move from one point to another point)
-//L = lineto (create a line)
-//H = horizontal lineto (create a horizontal line)
-//V = vertical lineto (create a vertical line)
-//C = curveto (create a curve)
-//S = smooth curveto (create a smooth curve)
-//Q = quadratic Bézier curve (create a quadratic Bézier curve)
-//T = smooth quadratic Bézier curveto (create a smooth quadratic Bézier curve)
-//A = elliptical Arc (create a elliptical arc)
-//Z = closepath (close the path)
-//Note: All of the commands above can also be expressed in lower case.
-// Upper case means absolutely positioned, lower case means relatively positioned.
-
-
-declare global {
-	interface FileSystemHandle {
-		remove(options?: { recursive?: boolean }): Promise<void>;
-	}
 }

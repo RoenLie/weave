@@ -1,16 +1,34 @@
 import { domId } from '@roenlie/core/dom';
 
 
-interface Vector2 { x: number, y: number; }
-interface ConnectionPoint { id: string, x: number, y: number; }
+export interface Vector2 { x: number, y: number; }
+
+export interface ConnectionPoint { id: string, x: number, y: number; }
+
+export interface StorableConnection {
+	start:   ConnectionPoint;
+	end:     ConnectionPoint;
+	middle?: Vector2;
+	id?:     string;
+}
+export interface StorableGraphNode {
+	x:            number;
+	y:            number;
+	id?:          string;
+	radius?:      number;
+	connections?: string[];
+}
+
 
 export class Connection {
 
-	constructor(start: GraphNode, end: GraphNode, id?: string) {
+	constructor(storable: StorableConnection) {
+		const { start, end, middle, id } = storable;
+
 		this.id     = id || domId();
 		this.start  = { id: start.id, x: start.x, y: start.y };
 		this.end    = { id: end.id,   x: end.x,   y: end.y };
-		this.middle = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+		this.middle = middle || { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
 	}
 
 	public id:     string;
@@ -18,30 +36,44 @@ export class Connection {
 	public middle: Vector2;
 	public end:    ConnectionPoint;
 
+	public toStorable(): StorableConnection {
+		return {
+			start:  this.start,
+			end:    this.end,
+			middle: this.middle,
+			id:     this.id,
+		};
+	}
+
 }
 
 
 export class GraphNode {
 
-	constructor(
-		public x: number,
-		public y: number,
-		id?: string,
-	) {
+	constructor(storable: StorableGraphNode) {
+		const { x, y, id, radius, connections } = storable;
+
+		this.x  = x;
+		this.y  = y;
 		this.id = id || domId();
+		this.radius = radius || 6;
+		this.connections = connections || [];
 	}
 
 	public id:          string;
-	public connections: string[] = [];
+	public x:           number;
+	public y:           number;
+	public connections: string[];
+	public radius:      number;
 
-}
-
-
-export class StorableGraphNode extends GraphNode {
-
-	constructor(node: GraphNode) {
-		super(node.x, node.y, node.id);
-		this.connections = node.connections;
+	public toStorable(): StorableGraphNode {
+		return {
+			x:           this.x,
+			y:           this.y,
+			id:          this.id,
+			radius:      this.radius,
+			connections: this.connections,
+		};
 	}
 
 }
