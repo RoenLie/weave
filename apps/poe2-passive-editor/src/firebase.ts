@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 
 
 const firebaseConfig = {
-	apiKey:            'AIzaSyDRljXq4mIhHlj2OmbXUUODIxBK90hFCi0',
+	apiKey:            '',
 	authDomain:        'poe2-passive-editor.firebaseapp.com',
 	projectId:         'poe2-passive-editor',
 	storageBucket:     'poe2-passive-editor.firebasestorage.app',
