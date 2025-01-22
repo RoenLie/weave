@@ -4,6 +4,7 @@ import { query, state } from 'lit/decorators.js';
 import { Connection, GraphNode, type StorableConnection, type StorableGraphNode } from '@roenlie/poe2-tree';
 import { classMap } from 'lit/directives/class-map.js';
 import { debounce } from '@roenlie/core/timing';
+import type { Vec2 } from '@roenlie/core/types';
 
 
 interface Viewport { x1: number, x2: number, y1: number, y2: number }
@@ -118,14 +119,16 @@ export class Poe2Tree extends LitElement {
 		if (ev.buttons !== 1)
 			return;
 
-		const path = ev.composedPath();
-		const circleEl = path.find(el => 'tagName' in el && el.tagName === 'circle') as SVGElement | undefined;
-		const isNodeCircle = circleEl?.classList.contains('node-circle');
-		const isPathCircle = circleEl?.classList.contains('path-circle');
-		const node = this.nodes.get(circleEl?.id ?? '');
 		const capslockOn = ev.getModifierState('CapsLock');
+		const path = ev.composedPath();
+		const targetEl = path.filter(el => el instanceof SVGElement)
+			.find(el => el.classList.contains('clickable'));
 
-		if (isNodeCircle || isPathCircle) {
+		if (targetEl) {
+			const node = this.nodes.get(targetEl?.id ?? '');
+			const isNodeCircle = targetEl?.classList.contains('node-circle');
+			const isPathCircle = targetEl?.classList.contains('path-handle');
+
 			if (isNodeCircle) {
 				if (node) {
 					if (ev.shiftKey && this.selectedNode) {
@@ -169,7 +172,7 @@ export class Poe2Tree extends LitElement {
 				}
 			}
 			else if (isPathCircle && (ev.ctrlKey || ev.metaKey || capslockOn)) {
-				const connection = this.connections.get(circleEl!.id)!;
+				const connection = this.connections.get(targetEl!.id)!;
 
 				const scale = this.getScaleFactor();
 				const offsetX = (ev.pageX - connection.middle.x * scale);
@@ -261,7 +264,7 @@ export class Poe2Tree extends LitElement {
 
 	protected onKeydownContainer(ev: KeyboardEvent) {
 		// Remove the node from the graph
-		if (ev.code === 'Delete' && this.selectedNode) {
+		if (this.selectedNode && ev.code === 'Delete') {
 			ev.preventDefault();
 
 			const node = this.selectedNode;
@@ -270,11 +273,26 @@ export class Poe2Tree extends LitElement {
 
 			this.requestUpdate();
 		}
+
+		if (this.selectedNode && ev.code === 'Digit1') {
+			this.selectedNode.radius = 7;
+			this.requestUpdate();
+		}
+		if (this.selectedNode && ev.code === 'Digit2') {
+			this.selectedNode.radius = 10;
+			this.requestUpdate();
+		}
+		if (this.selectedNode && ev.code === 'Digit3') {
+			this.selectedNode.radius = 15;
+			this.requestUpdate();
+		}
 	}
 
 	protected onMousemoveContainer(ev: MouseEvent) {
 		const path = ev.composedPath();
-		const circleEl = path.find(el => 'tagName' in el && el.tagName === 'circle') as SVGElement | undefined;
+		const circleEl = path.find(el =>
+			'tagName' in el && el.tagName === 'circle') as SVGElement | undefined;
+
 		const isNodeCircle = circleEl?.classList.contains('node-circle');
 
 		if (isNodeCircle) {
@@ -342,27 +360,32 @@ export class Poe2Tree extends LitElement {
 		//});
 	}, 1000);
 
+	protected isOutsideViewport(node: Vec2, padding = 0): boolean {
+		const outsideX1 = node.x < (this.viewport.x1 - padding);
+		const outsideX2 = node.x > (this.viewport.x2 + padding);
+		const outsideY1 = node.y < (this.viewport.y1 - padding);
+		const outsideY2 = node.y > (this.viewport.y2 + padding);
+
+		return outsideX1 || outsideX2 || outsideY1 || outsideY2;
+	}
+
 	protected renderConnectionPath(con: Connection) {
-		const outsideX1 = con.start.x < this.viewport.x1 && con.end.x < this.viewport.x1;
-		const outsideX2 = con.start.x > this.viewport.x2 && con.end.x > this.viewport.x2;
-		const outsideY1 = con.start.y < this.viewport.y1 && con.end.y < this.viewport.y1;
-		const outsideY2 = con.start.y > this.viewport.y2 && con.end.y > this.viewport.y2;
-		if (outsideX1 || outsideX2 || outsideY1 || outsideY2)
+		if (this.isOutsideViewport(con.start) && this.isOutsideViewport(con.end))
 			return;
 
 		// Assuming you have start and end coordinates
 		let startX = con.start.x;
 		let startY = con.start.y;
-		let endX = con.end.x;
-		let endY = con.end.y;
+		let stopX  = con.end.x;
+		let stopY  = con.end.y;
 		const midX = con.middle.x;
 		const midY = con.middle.y;
 
 		// Calculate the direction vector
 		const dxStart = midX - startX;
 		const dyStart = midY - startY;
-		const dxEnd = endX - midX;
-		const dyEnd = endY - midY;
+		const dxStop  = stopX - midX;
+		const dyStop  = stopY - midY;
 
 		const getReduction = (radius: number, a: number, b: number) => {
 			// Calculate the length of the direction vector
@@ -379,45 +402,80 @@ export class Poe2Tree extends LitElement {
 			return [ reductionXStart, reductionYStart ] as const;
 		};
 
-		const startReduction = getReduction(6, dxStart, dyStart);
+		const startRadius = this.nodes.get(con.start.id)?.radius ?? 7;
+		const startReduction = getReduction(startRadius, dxStart, dyStart);
 		startX += startReduction[0];
 		startY += startReduction[1];
 
-		const endReduction = getReduction(6, dxEnd, dyEnd);
-		endX -= endReduction[0];
-		endY -= endReduction[1];
+		const stopRadius = this.nodes.get(con.end.id)?.radius ?? 7;
+		const endReduction = getReduction(stopRadius, dxStop, dyStop);
+		stopX -= endReduction[0];
+		stopY -= endReduction[1];
 
 		const d = `M${ startX } ${ startY } `
-			+ `Q${ midX } ${ midY } ${ endX } ${ endY }`;
+			+ `Q${ midX } ${ midY } ${ stopX } ${ stopY }`;
 
 		return svg`<path class="node-path" d=${ d }></path>`;
 	}
 
 	protected renderConnectionHandle(con: Connection) {
-		const outsideX1 = con.start.x < this.viewport.x1 && con.end.x < this.viewport.x1;
-		const outsideX2 = con.start.x > this.viewport.x2 && con.end.x > this.viewport.x2;
-		const outsideY1 = con.start.y < this.viewport.y1 && con.end.y < this.viewport.y1;
-		const outsideY2 = con.start.y > this.viewport.y2 && con.end.y > this.viewport.y2;
-		if (outsideX1 || outsideX2 || outsideY1 || outsideY2)
+		if (this.isOutsideViewport(con.middle, 2))
 			return;
 
+		const calculatePathAngle = (start: Vec2, end: Vec2) => {
+			const deltaX = end.x - start.x;
+			const deltaY = end.y - start.y;
+			const angleInRadians = Math.atan2(deltaY, deltaX);
+			const angleInDegrees = angleInRadians * (180 / Math.PI);
+
+			return angleInDegrees;
+		};
+
+		const rotatePoint = (point: Vec2, angleInDegrees: number, origin = { x: 0, y: 0 }) => {
+			const angleInRadians = angleInDegrees * (Math.PI / 180);
+			const cosAngle = Math.cos(angleInRadians);
+			const sinAngle = Math.sin(angleInRadians);
+
+			const translatedX = point.x - origin.x;
+			const translatedY = point.y - origin.y;
+
+			const rotatedX = translatedX * cosAngle - translatedY * sinAngle;
+			const rotatedY = translatedX * sinAngle + translatedY * cosAngle;
+
+			return {
+				x: rotatedX + origin.x,
+				y: rotatedY + origin.y,
+			};
+		};
+
+		const rotateVertices = (vertices: Vec2[], angleInDegrees: number, origin = { x: 0, y: 0 }) => {
+			return vertices.map(vertex => rotatePoint(vertex, angleInDegrees, origin));
+		};
+
+		const length = 2;
+		const rawPoints = [
+			{ x: con.middle.x - length, y: con.middle.y },
+			{ x: con.middle.x, y: con.middle.y - length },
+			{ x: con.middle.x + length, y: con.middle.y },
+			{ x: con.middle.x, y: con.middle.y + length },
+		];
+
+		const rotated = rotateVertices(rawPoints,
+			calculatePathAngle(con.start, con.end), con.middle);
+
+		const points = rotated.map(p => `${ p.x },${ p.y }`).join(' ');
+
 		return svg`
-		<circle
-			class="path-circle"
+		<polygon
 			id=${ con.id }
-			cx=${ con.middle.x }
-			cy=${ con.middle.y }
-			r ="3"
-		></circle>
+			class="clickable path-handle"
+			points=${ points }
+		></polygon>
 		`;
 	}
 
 	protected renderNode(node: GraphNode): unknown {
-		const outsideX1 = node.x < this.viewport.x1;
-		const outsideX2 = node.x > this.viewport.x2;
-		const outsideY1 = node.y < this.viewport.y1;
-		const outsideY2 = node.y > this.viewport.y2;
-		if (outsideX1 || outsideX2 || outsideY1 || outsideY2)
+		if (this.isOutsideViewport(node, node.radius))
 			return;
 
 		return svg`
@@ -427,6 +485,7 @@ export class Poe2Tree extends LitElement {
 			cy   =${ node.y }
 			r    =${ node.radius }
 			class=${ classMap({
+				'clickable':   true,
 				'node-circle': true,
 				active:        this.selectedNode?.id === node.id,
 			}) }
@@ -523,7 +582,7 @@ export class Poe2Tree extends LitElement {
 		svg.tree {
 			pointer-events: none;
 		}
-		path, circle {
+		path, circle, polygon {
 			pointer-events: auto;
 		}
 		path {
@@ -549,13 +608,16 @@ export class Poe2Tree extends LitElement {
 			stroke-width: 1;
 
 			&.active {
-				fill: silver;
+				fill: rgb(192 192 192 / 30%);
 			}
 		}
 		circle.path-circle {
 			fill: transparent;
 			stroke: silver;
 			stroke-width: 1;
+		}
+		.path-handle {
+			fill: rgb(240 240 240 / 50%);
 		}
   	`;
 

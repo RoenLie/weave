@@ -1,0 +1,15 @@
+{
+	"name": "@roenlie/poe2-passive-editor",
+	"description": "description",
+	"authors": "author",
+	"version": "1.0.0",
+	"type": "module",
+	"main": "pathToMain",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build"
+	},
+	"dependencies": {
+		"firebase": "^11.2.0"
+	}
+}

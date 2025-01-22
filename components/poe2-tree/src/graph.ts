@@ -17,6 +17,12 @@ export interface StorableGraphNode {
 	id?:          string;
 	radius?:      number;
 	connections?: string[];
+	data?:        NodeData;
+}
+
+export interface NodeData {
+	name: string;
+	type: 'small' | 'medium' | 'large';
 }
 
 
@@ -56,7 +62,7 @@ export class GraphNode {
 		this.x  = x;
 		this.y  = y;
 		this.id = id || domId();
-		this.radius = radius || 6;
+		this.radius = radius || 7;
 		this.connections = connections || [];
 	}
 
@@ -65,6 +71,10 @@ export class GraphNode {
 	public y:           number;
 	public connections: string[];
 	public radius:      number;
+	public data: NodeData = {
+		name: '',
+		type: 'small',
+	};
 
 	public toStorable(): StorableGraphNode {
 		return {
@@ -73,6 +83,7 @@ export class GraphNode {
 			id:          this.id,
 			radius:      this.radius,
 			connections: this.connections,
+			data:        this.data,
 		};
 	}
 
