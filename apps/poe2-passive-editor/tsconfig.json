@@ -2,7 +2,8 @@
 	"extends": "@roenlie/tsconfig",
 	"compilerOptions": {},
 	"include": [
-		"./**/*.ts"
+		"./**/*.ts",
+		"./**/*.d.ts",
 	],
 	"exclude": [
 		"node_modules"

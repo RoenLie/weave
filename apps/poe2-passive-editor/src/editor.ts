@@ -1,13 +1,14 @@
 import { css, html, LitElement, svg, type PropertyValues } from 'lit';
 import { map } from 'lit/directives/map.js';
 import { query, state } from 'lit/decorators.js';
-import { Connection, GraphNode, type StorableConnection, type StorableGraphNode } from './graph.ts';
+import { Connection, GraphNode } from './graph.ts';
 import { classMap } from 'lit/directives/class-map.js';
 import { debounce } from '@roenlie/core/timing';
 import type { Vec2 } from '@roenlie/core/types';
-import { app } from './firebase.ts';
+import { app, assignTypes, db } from './firebase.ts';
 import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
 import { when } from 'lit/directives/when.js';
+import { query as fbQuery, orderBy, limit, collection, getDocs, updateDoc, doc, addDoc } from 'firebase/firestore';
 
 
 interface Viewport { x1: number, x2: number, y1: number, y2: number }
@@ -28,6 +29,8 @@ export class Poe2Tree extends LitElement {
 	@state() protected connections:   Map<string, Connection> = new Map();
 	@state() protected currentUser:   User | null = null;
 
+	protected nodeDocId: string | undefined;
+	protected conDocId:  string | undefined;
 	protected autosave:  boolean = false;
 	protected abortCtrl: AbortController;
 
@@ -37,9 +40,8 @@ export class Poe2Tree extends LitElement {
 		const auth = getAuth(app);
 		auth.onAuthStateChanged(user => {
 			if (user) {
-				console.log('signed in', user);
+				this.currentUser = user;
 				this.loadGraphFromStorage();
-				this.svgWrapper.inert = false;
 			}
 			else {
 				console.log('signed out');
@@ -74,36 +76,43 @@ export class Poe2Tree extends LitElement {
 		this.viewport = this.getViewport(svgWrapper);
 	}
 
-	protected override willUpdate(changedProperties: PropertyValues): void {
-		super.willUpdate(changedProperties);
-	}
-
 	protected async loadGraphFromStorage() {
-		const opfsRoot = await navigator.storage.getDirectory();
-		const fileHandle = await opfsRoot.getFileHandle('tree', {
-			create: true,
-		});
+		const nodeCol = collection(db, 'passive-tree-nodes')
+			.withConverter(assignTypes<{ nodes: GraphNode[] }>());
+		const nodeQry = fbQuery(nodeCol, orderBy('created'), limit(1));
 
-		const file = await fileHandle.getFile();
-		const text = await file.text();
-		const parsed = JSON.parse(text) as {
-			nodes:       StorableGraphNode[];
-			connections: StorableConnection[]
-		};
+		const conCol = collection(db, 'passive-tree-connections')
+			.withConverter(assignTypes<{ connections: Connection[] }>());
+		const conQry = fbQuery(conCol, orderBy('created'), limit(1));
 
-		this.connections = new Map(parsed.connections.map(con => {
+		const [ nodeDoc, conDoc ] = await Promise.all([
+			(await getDocs(nodeQry)).docs[0],
+			(await getDocs(conQry)).docs[0],
+		]);
+
+		if (!nodeDoc || !conDoc)
+			return console.error('No nodes or connections found in the database');
+
+		this.nodeDocId = nodeDoc.id;
+		this.conDocId = conDoc.id;
+
+		const nodes = nodeDoc.data().nodes;
+		const connections = conDoc.data().connections;
+
+		this.connections = new Map(connections.map(con => {
 			const parsed = new Connection(con);
 
 			return [ parsed.id, parsed ];
 		}));
 
-		this.nodes = new Map(parsed.nodes.map(node => {
+		this.nodes = new Map(nodes.map(node => {
 			const parsed = new GraphNode(node);
 
 			return [ parsed.id, parsed ];
 		}));
 
 		this.autosave = true;
+		this.svgWrapper.inert = false;
 	}
 
 	protected override updated(_changedProperties: PropertyValues): void {
@@ -372,6 +381,38 @@ export class Poe2Tree extends LitElement {
 		await writable.write(JSON.stringify({ nodes, connections }));
 		await writable.close();
 
+		const nodeQry = fbQuery(collection(db, 'passive-tree-nodes'), orderBy('created'), limit(1));
+		const nodeDoc = (await getDocs(nodeQry)).docs[0];
+		if (nodeDoc) {
+			await updateDoc(doc(db, 'passive-tree-nodes', nodeDoc.id), {
+				updated: new Date().toISOString(),
+				nodes,
+			});
+		}
+		else {
+			await addDoc(collection(db, 'passive-tree-nodes'), {
+				created: new Date().toISOString(),
+				updated: new Date().toISOString(),
+				nodes,
+			});
+		}
+
+		const conQry = fbQuery(collection(db, 'passive-tree-connections'), orderBy('created'), limit(1));
+		const conDoc = (await getDocs(conQry)).docs[0];
+		if (conDoc) {
+			await updateDoc(doc(db, 'passive-tree-connections', conDoc.id), {
+				updated: new Date().toISOString(),
+				connections,
+			});
+		}
+		else {
+			await addDoc(collection(db, 'passive-tree-connections'), {
+				created: new Date().toISOString(),
+				updated: new Date().toISOString(),
+				connections,
+			});
+		}
+
 		//const entries = await getDirectoryEntriesRecursive(opfsRoot);
 		//Object.entries(entries).forEach(([ name, entry ]) => {
 		//	console.log(name, entry);
@@ -404,6 +445,7 @@ export class Poe2Tree extends LitElement {
 	}
 
 	protected renderConnectionPath(con: Connection) {
+		// TODO, this should rather be based on how much of the svg is visible
 		if (this.getScaleFactor() < 0.3)
 			return;
 		if (this.isOutsideViewport(con.start) && this.isOutsideViewport(con.end))
@@ -455,6 +497,7 @@ export class Poe2Tree extends LitElement {
 	}
 
 	protected renderConnectionHandle(con: Connection) {
+		// TODO, this should rather be based on how much of the svg is visible
 		if (this.getScaleFactor() < 0.5)
 			return;
 		if (this.isOutsideViewport(con.middle, 2))
