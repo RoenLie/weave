@@ -404,6 +404,8 @@ export class Poe2Tree extends LitElement {
 	}
 
 	protected renderConnectionPath(con: Connection) {
+		if (this.getScaleFactor() < 0.3)
+			return;
 		if (this.isOutsideViewport(con.start) && this.isOutsideViewport(con.end))
 			return;
 
@@ -453,6 +455,8 @@ export class Poe2Tree extends LitElement {
 	}
 
 	protected renderConnectionHandle(con: Connection) {
+		if (this.getScaleFactor() < 0.5)
+			return;
 		if (this.isOutsideViewport(con.middle, 2))
 			return;
 
