@@ -1,7 +1,5 @@
-import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence, initializeAuth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence, initializeAuth } from 'firebase/auth';
 import { app } from './firebase.ts';
-
-app;
 
 //import { getFirestore } from 'firebase/firestore';
 
