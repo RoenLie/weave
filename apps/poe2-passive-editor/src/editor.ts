@@ -1,4 +1,4 @@
-import { css, html, LitElement, svg, type PropertyValues } from 'lit';
+import { css, html, LitElement, svg } from 'lit';
 import { map } from 'lit/directives/map.js';
 import { query, state } from 'lit/decorators.js';
 import { Connection, GraphNode } from './graph.ts';
@@ -72,7 +72,6 @@ export class Poe2Tree extends LitElement {
 
 		this.centerCircle.setAttribute('cy', `${ svgWrapper.offsetHeight / 2 }`);
 		this.centerCircle.setAttribute('cx', `${ svgWrapper.offsetWidth / 2 }`);
-
 		this.viewport = this.getViewport(svgWrapper);
 	}
 
@@ -113,12 +112,6 @@ export class Poe2Tree extends LitElement {
 
 		this.autosave = true;
 		this.svgWrapper.inert = false;
-	}
-
-	protected override updated(_changedProperties: PropertyValues): void {
-		super.updated(_changedProperties);
-
-		this.performAutosave();
 	}
 
 	protected getScaleFactor(element?: HTMLElement): number {
@@ -186,8 +179,10 @@ export class Poe2Tree extends LitElement {
 							this.requestUpdate();
 						};
 
-						const mouseup = () =>
+						const mouseup = () => {
 							window.removeEventListener('mousemove', mousemove);
+							this.performAutosave();
+						};
 
 						window.addEventListener('mousemove', mousemove,
 							{ signal: this.abortCtrl.signal });
@@ -216,8 +211,10 @@ export class Poe2Tree extends LitElement {
 					this.requestUpdate();
 				};
 
-				const mouseup = () =>
+				const mouseup = () => {
 					window.removeEventListener('mousemove', mousemove);
+					this.performAutosave();
+				};
 
 				window.addEventListener('mousemove', mousemove,
 					{ signal: this.abortCtrl.signal });
@@ -227,8 +224,8 @@ export class Poe2Tree extends LitElement {
 
 			return;
 		}
+		// We add a new circle if you are holding the alt key
 		else if (ev.altKey) {
-			// We add a new circle if you are holding the alt key
 			const x = ev.offsetX;
 			const y = ev.offsetY;
 
@@ -236,7 +233,9 @@ export class Poe2Tree extends LitElement {
 			this.nodes.set(node.id, node);
 
 			this.requestUpdate();
+			this.performAutosave();
 		}
+		// We are moving the svgWrapper
 		else {
 			const { svgWrapper } = this;
 
@@ -300,19 +299,23 @@ export class Poe2Tree extends LitElement {
 			node.connections.forEach(id => this.connections.delete(id));
 
 			this.requestUpdate();
+			this.performAutosave();
 		}
 
 		if (this.selectedNode && ev.code === 'Digit1') {
 			this.selectedNode.radius = 7;
 			this.requestUpdate();
+			this.performAutosave();
 		}
 		if (this.selectedNode && ev.code === 'Digit2') {
 			this.selectedNode.radius = 10;
 			this.requestUpdate();
+			this.performAutosave();
 		}
 		if (this.selectedNode && ev.code === 'Digit3') {
 			this.selectedNode.radius = 15;
 			this.requestUpdate();
+			this.performAutosave();
 		}
 	}
 
@@ -362,6 +365,7 @@ export class Poe2Tree extends LitElement {
 		nodeB.connections.push(connection.id);
 
 		this.requestUpdate();
+		this.performAutosave();
 	}
 
 	protected performAutosave = debounce(async () => {
@@ -418,7 +422,7 @@ export class Poe2Tree extends LitElement {
 		//	console.log(name, entry);
 		//	//entry.handle.remove({ recursive: true });
 		//});
-	}, 1000);
+	}, 5000);
 
 	protected isOutsideViewport(node: Vec2, padding = 0): boolean {
 		const outsideX1 = node.x < (this.viewport.x1 - padding);
