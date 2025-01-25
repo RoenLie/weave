@@ -1,4 +1,4 @@
-import { css, html, LitElement, svg } from 'lit';
+import { css, html, LitElement, render, svg } from 'lit';
 import { map } from 'lit/directives/map.js';
 import { query, state } from 'lit/decorators.js';
 import { Connection, GraphNode } from './graph.ts';
@@ -28,6 +28,7 @@ export class Poe2Tree extends LitElement {
 	@state() protected nodes:         Map<string, GraphNode> = new Map();
 	@state() protected connections:   Map<string, Connection> = new Map();
 	@state() protected currentUser:   User | null = null;
+	@state() protected connectionImg: string = '';
 
 	protected nodeDocId: string | undefined;
 	protected conDocId:  string | undefined;
@@ -116,9 +117,8 @@ export class Poe2Tree extends LitElement {
 
 	protected getScaleFactor(element?: HTMLElement): number {
 		const svgWrapper = element ?? this.svgWrapper;
-		const scaleMatch = svgWrapper?.style.transform.match(/scale\((\d+(\.\d+)?)\)/);
 
-		return scaleMatch ? Number(scaleMatch[1]) : 1;
+		return Number(svgWrapper.style.scale) || 1;
 	}
 
 	protected getViewport(svgWrapper: HTMLElement): Viewport {
@@ -269,7 +269,7 @@ export class Poe2Tree extends LitElement {
 			const scale = this.getScaleFactor(svgWrapper);
 			const zoomIntensity = 0.001; // Adjust this value to control zoom intensity
 			const newScale = Math.max(0.1, scale * Math.exp(ev.deltaY * -zoomIntensity));
-			svgWrapper.style.transform = `scale(${ newScale })`;
+			svgWrapper.style.scale = '' + newScale;
 
 			// Calculate the mouse position relative to the svgWrapper
 			const rect = svgWrapper.getBoundingClientRect();
@@ -372,50 +372,26 @@ export class Poe2Tree extends LitElement {
 		if (!this.autosave)
 			return;
 
-		// A FileSystemDirectoryHandle whose type is "directory" and whose name is "".
-		const opfsRoot = await navigator.storage.getDirectory();
-		const fileHandle = await opfsRoot.getFileHandle('tree', {
-			create: true,
-		});
-
-		const writable = await fileHandle.createWritable({ keepExistingData: false });
 		const nodes = Array.from(structuredClone(this.nodes).values());
 		const connections = Array.from(structuredClone(this.connections).values());
 
-		await writable.write(JSON.stringify({ nodes, connections }));
-		await writable.close();
+		// A FileSystemDirectoryHandle whose type is "directory" and whose name is "".
+		//const opfsRoot   = await navigator.storage.getDirectory();
+		//const fileHandle = await opfsRoot.getFileHandle('tree', { create: true });
+		//const writable   = await fileHandle.createWritable({ keepExistingData: false });
+		//await writable.write(JSON.stringify({ nodes, connections }));
+		//await writable.close();
 
-		const nodeQry = fbQuery(collection(db, 'passive-tree-nodes'), orderBy('created'), limit(1));
-		const nodeDoc = (await getDocs(nodeQry)).docs[0];
-		if (nodeDoc) {
-			await updateDoc(doc(db, 'passive-tree-nodes', nodeDoc.id), {
+		await Promise.allSettled([
+			updateDoc(doc(db, 'passive-tree-nodes', this.nodeDocId!), {
 				updated: new Date().toISOString(),
 				nodes,
-			});
-		}
-		else {
-			await addDoc(collection(db, 'passive-tree-nodes'), {
-				created: new Date().toISOString(),
-				updated: new Date().toISOString(),
-				nodes,
-			});
-		}
-
-		const conQry = fbQuery(collection(db, 'passive-tree-connections'), orderBy('created'), limit(1));
-		const conDoc = (await getDocs(conQry)).docs[0];
-		if (conDoc) {
-			await updateDoc(doc(db, 'passive-tree-connections', conDoc.id), {
+			}),
+			updateDoc(doc(db, 'passive-tree-connections', this.conDocId!), {
 				updated: new Date().toISOString(),
 				connections,
-			});
-		}
-		else {
-			await addDoc(collection(db, 'passive-tree-connections'), {
-				created: new Date().toISOString(),
-				updated: new Date().toISOString(),
-				connections,
-			});
-		}
+			}),
+		]);
 
 		//const entries = await getDirectoryEntriesRecursive(opfsRoot);
 		//Object.entries(entries).forEach(([ name, entry ]) => {
@@ -433,6 +409,29 @@ export class Poe2Tree extends LitElement {
 		return outsideX1 || outsideX2 || outsideY1 || outsideY2;
 	}
 
+	protected getVisiblePercentage(): number {
+		if (!this.svgWrapper)
+			return 0;
+
+		const svgWrapperRect = this.svgWrapper.getBoundingClientRect();
+		const viewportRect = this.getBoundingClientRect();
+
+		const intersectionRect = {
+			top:    Math.max(svgWrapperRect.top, viewportRect.top),
+			left:   Math.max(svgWrapperRect.left, viewportRect.left),
+			bottom: Math.min(svgWrapperRect.bottom, viewportRect.bottom),
+			right:  Math.min(svgWrapperRect.right, viewportRect.right),
+		};
+
+		const intersectionWidth = Math.max(0, intersectionRect.right - intersectionRect.left);
+		const intersectionHeight = Math.max(0, intersectionRect.bottom - intersectionRect.top);
+		const intersectionArea = intersectionWidth * intersectionHeight;
+
+		const svgWrapperArea = svgWrapperRect.width * svgWrapperRect.height;
+
+		return (intersectionArea / svgWrapperArea) * 100;
+	}
+
 	protected async login() {
 		const auth = getAuth(app);
 		await setPersistence(auth, browserLocalPersistence);
@@ -448,11 +447,74 @@ export class Poe2Tree extends LitElement {
 		await auth.signOut();
 	}
 
-	protected renderConnectionPath(con: Connection) {
-		// TODO, this should rather be based on how much of the svg is visible
-		if (this.getScaleFactor() < 0.3)
+	protected async connectionsToImg() {
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+		if (!ctx)
 			return;
-		if (this.isOutsideViewport(con.start) && this.isOutsideViewport(con.end))
+
+		const renderedSvg = this.svgWrapper.querySelector('svg')!;
+		const renderedWidth = renderedSvg.width.baseVal.value;
+		const renderedHeight = renderedSvg.height.baseVal.value;
+
+		const root = render(html`
+		<svg width=${ renderedWidth } height=${ renderedHeight }>
+			<style>
+			path.node-path {
+				stroke: darkslateblue;
+				stroke-width: 2;
+				fill: none;
+			}
+			</style>
+			<circle cx="1875" cy="1875" r="227" fill="transparent" stroke="rebeccapurple" stroke-width="4"></circle>
+			${ this.connections.values().map(c => this.renderConnectionPath(c, false, false)) }
+		</svg>
+		`, document.createElement('div'));
+
+		const svg = (root.parentNode as Element).querySelector('svg')!;
+
+		for (let i = svg.childNodes.length - 1; i >= 0; i--) {
+			const child = svg.childNodes[i];
+			if (child instanceof Comment)
+				child.remove();
+		}
+
+		const svgData = new XMLSerializer().serializeToString(svg);
+		const blob = new Blob([ svgData ], { type: 'image/svg+xml' });
+		const svgDataUrl = URL.createObjectURL(blob);
+
+		const image = new Image();
+		image.addEventListener('load', () => {
+			console.log('image loaded');
+
+			const width = Number(svg.getAttribute('width')) * 4;
+			const height = Number(svg.getAttribute('height')) * 4;
+			const canvas = document.createElement('canvas');
+
+			canvas.setAttribute('width', '' + width);
+			canvas.setAttribute('height', '' + height);
+
+			const context = canvas.getContext('2d')!;
+			context.drawImage(image, 0, 0, Number(width), Number(height));
+
+			const dataUrl = canvas.toDataURL('image/png');
+			this.connectionImg = dataUrl;
+
+			//const link = document.createElement('a');
+			//link.href = dataUrl;
+			//link.download = 'connections.png';
+			//link.click();
+
+			//URL.revokeObjectURL(svgDataUrl);
+		});
+
+		image.src = svgDataUrl;
+	}
+
+	protected renderConnectionPath(con: Connection, skip = false, checkViewport = true) {
+		if (skip)
+			return;
+		if (checkViewport && this.isOutsideViewport(con.start) && this.isOutsideViewport(con.end))
 			return;
 
 		// Assuming you have start and end coordinates
@@ -500,9 +562,8 @@ export class Poe2Tree extends LitElement {
 		return svg`<path class="node-path" d=${ d }></path>`;
 	}
 
-	protected renderConnectionHandle(con: Connection) {
-		// TODO, this should rather be based on how much of the svg is visible
-		if (this.getScaleFactor() < 0.5)
+	protected renderConnectionHandle(con: Connection, skip = false) {
+		if (skip)
 			return;
 		if (this.isOutsideViewport(con.middle, 2))
 			return;
@@ -579,6 +640,9 @@ export class Poe2Tree extends LitElement {
 	}
 
 	protected override render() {
+		const skipConnections = this.getVisiblePercentage() > 40;
+		const skipConnectionHandles = this.getVisiblePercentage() > 5;
+
 		return html`
 		<div class="container"
 			tabindex  ="0"
@@ -591,6 +655,7 @@ export class Poe2Tree extends LitElement {
 				${ this.tooltip }
 			</div>
 			<div class="controls">
+				<button @click=${ this.connectionsToImg }>Save connections as img</button>
 				${ when(this.currentUser, () => html`
 				<button @click=${ this.logout }>Logout</button>
 				`, () => html`
@@ -599,13 +664,19 @@ export class Poe2Tree extends LitElement {
 			</div>
 
 			<div inert class="svg-wrapper" style="position:absolute;">
-				<img src="/poe2-tree.png">
+				${ when(!this.connectionImg, () => html`
+				<img id="placeholder" src="/poe2-tree.png">
+				`) }
+				${ when(this.connectionImg, () => html`
+				<img id="connections" src=${ this.connectionImg } width="3750" height="3750">
+				`) }
+
 				<svg class="tree" width="3750" height="3750">
 					<circle class="center-circle" r="227"></circle>
 
-					${ map(this.connections.values(), c => this.renderConnectionPath(c)) }
+					${ map(this.connections.values(), c => this.renderConnectionPath(c, skipConnections)) }
 					${ map(this.nodes.values(),       n => this.renderNode(n)) }
-					${ map(this.connections.values(), c => this.renderConnectionHandle(c)) }
+					${ map(this.connections.values(), c => this.renderConnectionHandle(c, skipConnectionHandles)) }
 				</svg>
 			</div>
 		</div>
@@ -627,12 +698,20 @@ export class Poe2Tree extends LitElement {
 			transform-origin: 0px 0px;
 			scale: 1;
 
-			img {
+			img#placeholder {
 				position: absolute;
 				opacity: 0.8;
 				place-self: center;
 				padding-top: 40px;
 				padding-left: 25px;
+				z-index: -1;
+				pointer-events: none;
+				user-select: none;
+			}
+			img#connections {
+				position: absolute;
+				opacity: 0.8;
+				place-self: center;
 				z-index: -1;
 				pointer-events: none;
 				user-select: none;
@@ -675,17 +754,11 @@ export class Poe2Tree extends LitElement {
 		path, circle, polygon {
 			pointer-events: auto;
 		}
-		path {
-			z-index: 0;
-		}
 		path.node-path {
 			opacity: 0.5;
 			stroke: darkslateblue;
 			stroke-width: 2;
 			fill: none;
-		}
-		circle {
-			z-index: 1;
 		}
 		circle.center-circle {
 			stroke: rebeccapurple;
