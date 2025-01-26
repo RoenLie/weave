@@ -7,7 +7,7 @@ import { app, assignTypes, db } from './firebase.ts';
 import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
 import { when } from 'lit/directives/when.js';
 import { query as fbQuery, orderBy, limit, collection, getDocs, updateDoc, doc } from 'firebase/firestore';
-import { Path, type Viewport, PassiveTreeSvg } from './graph-svg-rendering.ts';
+import { Path, type Viewport } from './graph-svg-rendering.ts';
 
 
 export class Poe2Tree extends LitElement {

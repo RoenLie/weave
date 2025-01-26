@@ -1,8 +1,9 @@
 import type { Vec2 } from '@roenlie/core/types';
 import type { Connection, GraphNode } from './graph.ts';
-import { html, render, svg } from 'lit';
+import { html, svg } from 'lit';
 import { map } from 'lit/directives/map.js';
-import { effect, signal } from './effect.ts';
+import { css, CustomElement, signal } from './custom-element.ts';
+import { Signal } from 'signal-polyfill';
 
 export interface Viewport { x1: number, x2: number, y1: number, y2: number }
 
@@ -17,16 +18,41 @@ export function isOutsideViewport(viewport: Viewport, node: Vec2, padding = 0): 
 };
 
 
-export class PassiveTreeSvg extends HTMLElement {
+export class PassiveTreeSvg extends CustomElement {
 
-	static { queueMicrotask(() => customElements.define('passive-tree-svg', this)); }
+	static { this.register('passive-tree-svg'); }
 
-	constructor() {
-		super();
-		this.#root = this.attachShadow({ mode: 'open' });
+	@signal public accessor updated:      number;
+	@signal public accessor viewport:     Viewport;
+	@signal public accessor nodes:        Map<string, GraphNode>;
+	@signal public accessor connections:  Map<string, Connection>;
+	@signal public accessor selectedNode: { id: string } | undefined;
+	@signal public accessor skipConnections = false;
+	@signal public accessor skipConnectionHandles = false;
 
-		const styles = new CSSStyleSheet();
-		styles.replaceSync(`
+	protected test = new Signal.State(0);
+
+	public override connectedCallback(): void {
+		super.connectedCallback();
+	}
+
+	protected override afterRender(changedProps: Set<string>): void {
+		console.log(changedProps);
+	}
+
+	protected override render(): unknown {
+		return html`
+		<svg class="tree" width="4000" height="4000">
+			<circle class="center-circle" r="227" cy="2000" cx="2000"></circle>
+
+			${ Path.map(this.connections, this.nodes, this.viewport, this.skipConnections) }
+			${ Node.map(this.nodes, this.viewport, this.selectedNode) }
+			${ PathHandle.map(this.connections, this.viewport, this.skipConnectionHandles) }
+		</svg>
+		`;
+	}
+
+	public static override styles = css`
 		svg.tree {
 			pointer-events: none;
 		}
@@ -52,47 +78,7 @@ export class PassiveTreeSvg extends HTMLElement {
 		.path-handle {
 			fill: rgb(240 240 240 / 50%);
 		}
-		`);
-
-		this.#root.adoptedStyleSheets = [ styles ];
-	}
-
-	#root: ShadowRoot;
-
-	@signal public accessor updated:      number;
-	@signal public accessor viewport:     Viewport;
-	@signal public accessor nodes:        Map<string, GraphNode>;
-	@signal public accessor connections:  Map<string, Connection>;
-	@signal public accessor selectedNode: { id: string } | undefined;
-	@signal public accessor skipConnections = false;
-	@signal public accessor skipConnectionHandles = false;
-
-	protected unsubEffect?: () => void;
-
-	public connectedCallback() {
-		this.unsubEffect = effect(() => {
-			for (const prop of (this as any).__signalProps)
-				(this as any)[prop];
-
-			render(this.render(), this.#root);
-		});
-	}
-
-	public disconnectedCallback() {
-		this.unsubEffect?.();
-	}
-
-	public render() {
-		return html`
-		<svg class="tree" width="4000" height="4000">
-			<circle class="center-circle" r="227" cy="2000" cx="2000"></circle>
-
-			${ Path.map(this.connections, this.nodes, this.viewport, this.skipConnections) }
-			${ Node.map(this.nodes, this.viewport, this.selectedNode) }
-			${ PathHandle.map(this.connections, this.viewport, this.skipConnectionHandles) }
-		</svg>
-		`;
-	}
+	`;
 
 }
 

@@ -40,31 +40,3 @@ export function effect(callback: () => any) {
 		cleanup = undefined;
 	};
 }
-
-
-export function signal<C, V>(
-	target: ClassAccessorDecoratorTarget<C, V>,
-	context: ClassAccessorDecoratorContext<C, V>,
-): ClassAccessorDecoratorResult<C, V> {
-	const { get } = target;
-
-	context.addInitializer(function() {
-		(this as any).__signalProps ??= [];
-		(this as any).__signalProps.push(context.name);
-	});
-
-	return {
-		get() {
-			const signal = (get.call(this) as Signal.State<V>);
-
-			return signal.get();
-		},
-		set(value: V) {
-			const signal = (get.call(this) as Signal.State<V>);
-			signal.set(value);
-		},
-		init(value: any): any {
-			return new Signal.State(value);
-		},
-	};
-}
