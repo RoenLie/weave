@@ -2,7 +2,6 @@ import type { Vec2 } from '@roenlie/core/types';
 import type { Connection, GraphNode } from './graph.ts';
 import { html, render, svg } from 'lit';
 import { map } from 'lit/directives/map.js';
-import { resolvablePromise } from '@roenlie/core/async';
 import { effect, signal } from './effect.ts';
 
 export interface Viewport { x1: number, x2: number, y1: number, y2: number }
@@ -60,6 +59,7 @@ export class PassiveTreeSvg extends HTMLElement {
 
 	#root: ShadowRoot;
 
+	@signal public accessor updated:      number;
 	@signal public accessor viewport:     Viewport;
 	@signal public accessor nodes:        Map<string, GraphNode>;
 	@signal public accessor connections:  Map<string, Connection>;

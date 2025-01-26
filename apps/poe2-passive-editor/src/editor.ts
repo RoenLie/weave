@@ -26,11 +26,11 @@ export class Poe2Tree extends LitElement {
 	@state() protected accessor currentUser:   User | null = null;
 	@state() protected accessor connectionImg: string = '';
 
-	protected svgTreeElement: PassiveTreeSvg;
-	protected nodeDocId:      string | undefined;
-	protected conDocId:       string | undefined;
-	protected autosave:       boolean = false;
-	protected abortCtrl:      AbortController;
+	protected graphUpdated = Date.now();
+	protected nodeDocId: string | undefined;
+	protected conDocId:  string | undefined;
+	protected autosave:  boolean = false;
+	protected abortCtrl: AbortController;
 
 	public override connectedCallback(): void {
 		super.connectedCallback();
@@ -187,6 +187,7 @@ export class Poe2Tree extends LitElement {
 								point.y = node.y;
 							});
 
+							this.graphUpdated = Date.now();
 							this.requestUpdate();
 						};
 
@@ -219,6 +220,7 @@ export class Poe2Tree extends LitElement {
 					connection.middle.x = x;
 					connection.middle.y = y;
 
+					this.graphUpdated = Date.now();
 					this.requestUpdate();
 				};
 
@@ -243,6 +245,7 @@ export class Poe2Tree extends LitElement {
 			const node = new GraphNode({ x, y });
 			this.nodes.set(node.id, node);
 
+			this.graphUpdated = Date.now();
 			this.requestUpdate();
 			this.performAutosave();
 		}
@@ -309,22 +312,26 @@ export class Poe2Tree extends LitElement {
 			this.nodes.delete(node.id);
 			node.connections.forEach(id => this.connections.delete(id));
 
+			this.graphUpdated = Date.now();
 			this.requestUpdate();
 			this.performAutosave();
 		}
 
 		if (this.selectedNode && ev.code === 'Digit1') {
 			this.selectedNode.radius = 7;
+			this.graphUpdated = Date.now();
 			this.requestUpdate();
 			this.performAutosave();
 		}
 		if (this.selectedNode && ev.code === 'Digit2') {
 			this.selectedNode.radius = 10;
+			this.graphUpdated = Date.now();
 			this.requestUpdate();
 			this.performAutosave();
 		}
 		if (this.selectedNode && ev.code === 'Digit3') {
 			this.selectedNode.radius = 15;
+			this.graphUpdated = Date.now();
 			this.requestUpdate();
 			this.performAutosave();
 		}
@@ -375,6 +382,7 @@ export class Poe2Tree extends LitElement {
 		nodeA.connections.push(connection.id);
 		nodeB.connections.push(connection.id);
 
+		this.graphUpdated = Date.now();
 		this.requestUpdate();
 		this.performAutosave();
 	}
@@ -526,9 +534,6 @@ export class Poe2Tree extends LitElement {
 		const skipConnections = this.getVisiblePercentage() > 40;
 		const skipConnectionHandles = this.getVisiblePercentage() > 5;
 
-		this.svgTreeElement ??= document.createElement('passive-tree-svg') as PassiveTreeSvg;
-
-
 		return html`
 		<div class="container"
 			tabindex  ="0"
@@ -565,6 +570,7 @@ export class Poe2Tree extends LitElement {
 				`) }
 
 				<passive-tree-svg
+					.updated					  = ${ this.graphUpdated }
 					.nodes                 = ${ this.nodes }
 					.connections           = ${ this.connections }
 					.viewport              = ${ this.viewport }

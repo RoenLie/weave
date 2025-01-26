@@ -26,7 +26,7 @@ export function effect(callback: () => any) {
 	let cleanup: ((...args: any) => any) | undefined = undefined;
 
 	const computed = new Signal.Computed(() => {
-		typeof cleanup === 'function' && cleanup();
+		cleanup?.();
 		cleanup = callback();
 	});
 
