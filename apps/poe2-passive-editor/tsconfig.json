@@ -1,6 +1,9 @@
 {
 	"extends": "@roenlie/tsconfig",
-	"compilerOptions": {},
+	"compilerOptions": {
+		"experimentalDecorators": false,
+		"emitDecoratorMetadata": false
+	},
 	"include": [
 		"./**/*.ts",
 		"./**/*.d.ts",

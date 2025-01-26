@@ -1,17 +1,13 @@
-import { css, html, LitElement, render, svg } from 'lit';
-import { map } from 'lit/directives/map.js';
+import { css, html, LitElement, render } from 'lit';
 import { query, state } from 'lit/decorators.js';
 import { Connection, GraphNode } from './graph.ts';
-import { classMap } from 'lit/directives/class-map.js';
 import { debounce } from '@roenlie/core/timing';
 import type { Vec2 } from '@roenlie/core/types';
 import { app, assignTypes, db } from './firebase.ts';
 import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
 import { when } from 'lit/directives/when.js';
-import { query as fbQuery, orderBy, limit, collection, getDocs, updateDoc, doc, addDoc } from 'firebase/firestore';
-
-
-interface Viewport { x1: number, x2: number, y1: number, y2: number }
+import { query as fbQuery, orderBy, limit, collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { Path, type Viewport, PassiveTreeSvg } from './graph-svg-rendering.ts';
 
 
 export class Poe2Tree extends LitElement {
@@ -19,21 +15,22 @@ export class Poe2Tree extends LitElement {
 	public static tagName = 'poe2-tree';
 	static { queueMicrotask(() => customElements.define(this.tagName, this)); }
 
-	@query('.svg-wrapper')   protected svgWrapper:   HTMLElement;
-	@query('.center-circle') protected centerCircle: SVGElement;
+	@query('.svg-wrapper')   protected accessor svgWrapper:   HTMLElement;
+	@query('.center-circle') protected accessor centerCircle: SVGElement;
 
-	@state() protected selectedNode?: GraphNode = undefined;
-	@state() protected tooltip:       string = '';
-	@state() protected viewport:      Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
-	@state() protected nodes:         Map<string, GraphNode> = new Map();
-	@state() protected connections:   Map<string, Connection> = new Map();
-	@state() protected currentUser:   User | null = null;
-	@state() protected connectionImg: string = '';
+	@state() protected accessor selectedNode:  GraphNode | undefined;
+	@state() protected accessor tooltip:       string = '';
+	@state() protected accessor viewport:      Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
+	@state() protected accessor nodes:         Map<string, GraphNode> = new Map();
+	@state() protected accessor connections:   Map<string, Connection> = new Map();
+	@state() protected accessor currentUser:   User | null = null;
+	@state() protected accessor connectionImg: string = '';
 
-	protected nodeDocId: string | undefined;
-	protected conDocId:  string | undefined;
-	protected autosave:  boolean = false;
-	protected abortCtrl: AbortController;
+	protected svgTreeElement: PassiveTreeSvg;
+	protected nodeDocId:      string | undefined;
+	protected conDocId:       string | undefined;
+	protected autosave:       boolean = false;
+	protected abortCtrl:      AbortController;
 
 	public override connectedCallback(): void {
 		super.connectedCallback();
@@ -71,19 +68,23 @@ export class Poe2Tree extends LitElement {
 		svgWrapper.style.top = `${ y }px`;
 		svgWrapper.style.left = `${ x }px`;
 
-		this.centerCircle.setAttribute('cy', `${ svgWrapper.offsetHeight / 2 }`);
-		this.centerCircle.setAttribute('cx', `${ svgWrapper.offsetWidth / 2 }`);
-		this.viewport = this.getViewport(svgWrapper);
+		this.updateViewport();
 	}
 
 	protected async loadGraphFromStorage() {
-		const nodeCol = collection(db, 'passive-tree-nodes')
-			.withConverter(assignTypes<{ nodes: GraphNode[] }>());
-		const nodeQry = fbQuery(nodeCol, orderBy('created'), limit(1));
+		const nodeQry = fbQuery(
+			collection(db, 'passive-tree-nodes')
+				.withConverter(assignTypes<{ nodes: GraphNode[] }>()),
+			orderBy('created'),
+			limit(1),
+		);
 
-		const conCol = collection(db, 'passive-tree-connections')
-			.withConverter(assignTypes<{ connections: Connection[] }>());
-		const conQry = fbQuery(conCol, orderBy('created'), limit(1));
+		const conQry = fbQuery(
+			collection(db, 'passive-tree-connections')
+				.withConverter(assignTypes<{ connections: Connection[] }>()),
+			orderBy('created'),
+			limit(1),
+		);
 
 		const [ nodeDoc, conDoc ] = await Promise.all([
 			(await getDocs(nodeQry)).docs[0],
@@ -118,7 +119,7 @@ export class Poe2Tree extends LitElement {
 	protected getScaleFactor(element?: HTMLElement): number {
 		const svgWrapper = element ?? this.svgWrapper;
 
-		return Number(svgWrapper.style.scale) || 1;
+		return svgWrapper ? Number(svgWrapper.style.scale) || 1 : 1;
 	}
 
 	protected getViewport(svgWrapper: HTMLElement): Viewport {
@@ -133,6 +134,16 @@ export class Poe2Tree extends LitElement {
 		const y2 = y1 + viewableHeight;
 
 		return { x1, x2, y1, y2 };
+	}
+
+	protected updateViewport() {
+		const { svgWrapper } = this;
+		if (!svgWrapper)
+			return;
+
+		const newViewport = this.getViewport(svgWrapper);
+		if (JSON.stringify(newViewport) !== JSON.stringify(this.viewport))
+			this.viewport = newViewport;
 	}
 
 	protected onMousedownContainer(ev: MouseEvent) {
@@ -246,7 +257,7 @@ export class Poe2Tree extends LitElement {
 				svgWrapper.style.top = (mouseEv.pageY - offsetY) + 'px';
 				svgWrapper.style.left = (mouseEv.pageX - offsetX) + 'px';
 
-				this.viewport = this.getViewport(svgWrapper);
+				this.updateViewport();
 			};
 
 			window.addEventListener('mousemove', mousemove,
@@ -285,7 +296,7 @@ export class Poe2Tree extends LitElement {
 			svgWrapper.style.left = `${ newLeft }px`;
 			svgWrapper.style.top = `${ newTop }px`;
 
-			this.viewport = this.getViewport(svgWrapper);
+			this.updateViewport();
 		},
 	} satisfies AddEventListenerOptions & EventListenerObject;
 
@@ -467,7 +478,7 @@ export class Poe2Tree extends LitElement {
 			}
 			</style>
 			<circle cx="1875" cy="1875" r="227" fill="transparent" stroke="rebeccapurple" stroke-width="4"></circle>
-			${ this.connections.values().map(c => this.renderConnectionPath(c, false, false)) }
+			${ this.connections.values().map(c => Path.render(this.nodes, this.viewport, c, false, false)) }
 		</svg>
 		`, document.createElement('div'));
 
@@ -511,137 +522,12 @@ export class Poe2Tree extends LitElement {
 		image.src = svgDataUrl;
 	}
 
-	protected renderConnectionPath(con: Connection, skip = false, checkViewport = true) {
-		if (skip)
-			return;
-		if (checkViewport && this.isOutsideViewport(con.start) && this.isOutsideViewport(con.end))
-			return;
-
-		// Assuming you have start and end coordinates
-		let startX = con.start.x;
-		let startY = con.start.y;
-		let stopX  = con.end.x;
-		let stopY  = con.end.y;
-		const midX = con.middle.x;
-		const midY = con.middle.y;
-
-		// Calculate the direction vector
-		const dxStart = midX - startX;
-		const dyStart = midY - startY;
-		const dxStop  = stopX - midX;
-		const dyStop  = stopY - midY;
-
-		const getReduction = (radius: number, a: number, b: number) => {
-			// Calculate the length of the direction vector
-			const lengthStart = Math.sqrt(a * a + b * b);
-
-			// Normalize the direction vector
-			const nxStart = a / lengthStart;
-			const nyStart = b / lengthStart;
-
-			// Scale the normalized vector by the radius
-			const reductionXStart = nxStart * radius;
-			const reductionYStart = nyStart * radius;
-
-			return [ reductionXStart, reductionYStart ] as const;
-		};
-
-		const startRadius = this.nodes.get(con.start.id)?.radius ?? 7;
-		const startReduction = getReduction(startRadius, dxStart, dyStart);
-		startX += startReduction[0];
-		startY += startReduction[1];
-
-		const stopRadius = this.nodes.get(con.end.id)?.radius ?? 7;
-		const endReduction = getReduction(stopRadius, dxStop, dyStop);
-		stopX -= endReduction[0];
-		stopY -= endReduction[1];
-
-		const d = `M${ startX } ${ startY } `
-			+ `Q${ midX } ${ midY } ${ stopX } ${ stopY }`;
-
-		return svg`<path class="node-path" d=${ d }></path>`;
-	}
-
-	protected renderConnectionHandle(con: Connection, skip = false) {
-		if (skip)
-			return;
-		if (this.isOutsideViewport(con.middle, 2))
-			return;
-
-		const calculatePathAngle = (start: Vec2, end: Vec2) => {
-			const deltaX = end.x - start.x;
-			const deltaY = end.y - start.y;
-			const angleInRadians = Math.atan2(deltaY, deltaX);
-			const angleInDegrees = angleInRadians * (180 / Math.PI);
-
-			return angleInDegrees;
-		};
-
-		const rotatePoint = (point: Vec2, angleInDegrees: number, origin = { x: 0, y: 0 }) => {
-			const angleInRadians = angleInDegrees * (Math.PI / 180);
-			const cosAngle = Math.cos(angleInRadians);
-			const sinAngle = Math.sin(angleInRadians);
-
-			const translatedX = point.x - origin.x;
-			const translatedY = point.y - origin.y;
-
-			const rotatedX = translatedX * cosAngle - translatedY * sinAngle;
-			const rotatedY = translatedX * sinAngle + translatedY * cosAngle;
-
-			return {
-				x: rotatedX + origin.x,
-				y: rotatedY + origin.y,
-			};
-		};
-
-		const rotateVertices = (vertices: Vec2[], angleInDegrees: number, origin = { x: 0, y: 0 }) => {
-			return vertices.map(vertex => rotatePoint(vertex, angleInDegrees, origin));
-		};
-
-		const length = 2;
-		const rawPoints = [
-			{ x: con.middle.x - length, y: con.middle.y },
-			{ x: con.middle.x, y: con.middle.y - length },
-			{ x: con.middle.x + length, y: con.middle.y },
-			{ x: con.middle.x, y: con.middle.y + length },
-		];
-
-		const rotated = rotateVertices(rawPoints,
-			calculatePathAngle(con.start, con.end), con.middle);
-
-		const points = rotated.map(p => `${ p.x },${ p.y }`).join(' ');
-
-		return svg`
-		<polygon
-			id=${ con.id }
-			class="clickable path-handle"
-			points=${ points }
-		></polygon>
-		`;
-	}
-
-	protected renderNode(node: GraphNode): unknown {
-		if (this.isOutsideViewport(node, node.radius))
-			return;
-
-		return svg`
-		<circle
-			id   =${ node.id }
-			cx   =${ node.x }
-			cy   =${ node.y }
-			r    =${ node.radius }
-			class=${ classMap({
-				'clickable':   true,
-				'node-circle': true,
-				active:        this.selectedNode?.id === node.id,
-			}) }
-		></circle>
-		`;
-	}
-
 	protected override render() {
 		const skipConnections = this.getVisiblePercentage() > 40;
 		const skipConnectionHandles = this.getVisiblePercentage() > 5;
+
+		this.svgTreeElement ??= document.createElement('passive-tree-svg') as PassiveTreeSvg;
+
 
 		return html`
 		<div class="container"
@@ -655,11 +541,18 @@ export class Poe2Tree extends LitElement {
 				${ this.tooltip }
 			</div>
 			<div class="controls">
-				<button @click=${ this.connectionsToImg }>Save connections as img</button>
+				<button @click=${ this.connectionsToImg }>
+					Save connections as img
+				</button>
+
 				${ when(this.currentUser, () => html`
-				<button @click=${ this.logout }>Logout</button>
+				<button @click=${ this.logout }>
+					Logout
+				</button>
 				`, () => html`
-				<button @click=${ this.login }>Login</button>
+				<button @click=${ this.login }>
+					Login
+				</button>
 				`) }
 			</div>
 
@@ -671,19 +564,23 @@ export class Poe2Tree extends LitElement {
 				<img id="connections" src=${ this.connectionImg } width="3750" height="3750">
 				`) }
 
-				<svg class="tree" width="3750" height="3750">
-					<circle class="center-circle" r="227"></circle>
-
-					${ map(this.connections.values(), c => this.renderConnectionPath(c, skipConnections)) }
-					${ map(this.nodes.values(),       n => this.renderNode(n)) }
-					${ map(this.connections.values(), c => this.renderConnectionHandle(c, skipConnectionHandles)) }
-				</svg>
+				<passive-tree-svg
+					.nodes                 = ${ this.nodes }
+					.connections           = ${ this.connections }
+					.viewport              = ${ this.viewport }
+					.selectedNode          = ${ this.selectedNode }
+					.skipConnections       = ${ skipConnections }
+					.skipConnectionHandles = ${ skipConnectionHandles }
+				></passive-tree-svg>
 			</div>
 		</div>
 		`;
 	}
 
 	public static override styles = css`
+		:host {
+			contain: strict;
+		}
 		:host, .container {
 			overflow: hidden;
 			display: block;
@@ -747,40 +644,6 @@ export class Poe2Tree extends LitElement {
 			button.active {
 				background: blue;
 			}
-		}
-		svg.tree {
-			pointer-events: none;
-		}
-		path, circle, polygon {
-			pointer-events: auto;
-		}
-		path.node-path {
-			opacity: 0.5;
-			stroke: darkslateblue;
-			stroke-width: 2;
-			fill: none;
-		}
-		circle.center-circle {
-			stroke: rebeccapurple;
-			stroke-width: 4px;
-			fill: rgb(15 16 21 / 20%);
-		}
-		circle.node-circle {
-			fill: transparent;
-			stroke: silver;
-			stroke-width: 1;
-
-			&.active {
-				fill: rgb(192 192 192 / 30%);
-			}
-		}
-		circle.path-circle {
-			fill: transparent;
-			stroke: silver;
-			stroke-width: 1;
-		}
-		.path-handle {
-			fill: rgb(240 240 240 / 50%);
 		}
   	`;
 
