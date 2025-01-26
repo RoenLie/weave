@@ -1,38 +1,43 @@
-import { css, html, LitElement, render } from 'lit';
-import { query, state } from 'lit/decorators.js';
 import { Connection, GraphNode } from './graph.ts';
 import { debounce } from '@roenlie/core/timing';
 import type { Vec2 } from '@roenlie/core/types';
 import { app, assignTypes, db } from './firebase.ts';
 import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
-import { when } from 'lit/directives/when.js';
 import { query as fbQuery, orderBy, limit, collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { Path, type Viewport } from './graph-svg-rendering.ts';
+import { css, CustomElement, signal } from './custom-element.ts';
+import { html, render } from 'lit-html';
+import { when } from 'lit-html/directives/when.js';
+import { DetailsPanel } from './details-panel.ts';
 
 
-export class Poe2Tree extends LitElement {
+export class Poe2Tree extends CustomElement {
 
-	public static tagName = 'poe2-tree';
-	static { queueMicrotask(() => customElements.define(this.tagName, this)); }
+	static {
+		this.register('poe2-tree');
+		DetailsPanel;
+	}
 
-	@query('.svg-wrapper')   protected accessor svgWrapper:   HTMLElement;
-	@query('.center-circle') protected accessor centerCircle: SVGElement;
+	protected get svgWrapper() {
+		return this.shadowRoot?.querySelector('.svg-wrapper') as HTMLElement;
+	}
 
-	@state() protected accessor selectedNode:  GraphNode | undefined;
-	@state() protected accessor tooltip:       string = '';
-	@state() protected accessor viewport:      Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
-	@state() protected accessor nodes:         Map<string, GraphNode> = new Map();
-	@state() protected accessor connections:   Map<string, Connection> = new Map();
-	@state() protected accessor currentUser:   User | null = null;
-	@state() protected accessor connectionImg: string = '';
+	@signal protected accessor showNodeDetails: boolean = false;
+	@signal protected accessor selectedNode:  GraphNode | undefined;
+	@signal protected accessor tooltip:       string = '';
+	@signal protected accessor viewport:      Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
+	@signal protected accessor nodes:         Map<string, GraphNode> = new Map();
+	@signal protected accessor connections:   Map<string, Connection> = new Map();
+	@signal protected accessor currentUser:   User | null = null;
+	@signal protected accessor connectionImg: string = '';
+	@signal protected accessor graphUpdated = Date.now();
 
-	protected graphUpdated = Date.now();
 	protected nodeDocId: string | undefined;
 	protected conDocId:  string | undefined;
 	protected autosave:  boolean = false;
 	protected abortCtrl: AbortController;
 
-	public override connectedCallback(): void {
+	protected override connectedCallback(): void {
 		super.connectedCallback();
 
 		const auth = getAuth(app);
@@ -47,16 +52,15 @@ export class Poe2Tree extends LitElement {
 		});
 
 		this.abortCtrl = new AbortController();
-		this.updateComplete.then(() => this.afterConnectedCallback());
 	}
 
-	public override disconnectedCallback(): void {
+	protected override disconnectedCallback(): void {
 		super.disconnectedCallback();
 
 		this.abortCtrl.abort();
 	}
 
-	public afterConnectedCallback(): void {
+	protected override afterConnected(): void {
 		const { svgWrapper } = this;
 
 		const parentWidth = this.offsetWidth;
@@ -152,21 +156,27 @@ export class Poe2Tree extends LitElement {
 			return;
 
 		const capslockOn = ev.getModifierState('CapsLock');
-		const path = ev.composedPath();
-		const targetEl = path.filter(el => el instanceof SVGElement)
+		const path       = ev.composedPath();
+		const targetEl   = path.filter(el => el instanceof SVGElement)
 			.find(el => el.classList.contains('clickable'));
 
+		// We are modifying a node or a connection
 		if (targetEl) {
 			const node = this.nodes.get(targetEl?.id ?? '');
 			const isNodeCircle = targetEl?.classList.contains('node-circle');
 			const isPathCircle = targetEl?.classList.contains('path-handle');
 
+			// We are modifying a node
 			if (isNodeCircle) {
 				if (node) {
+					ev.preventDefault();
+
 					if (ev.shiftKey && this.selectedNode) {
 						this.connectNodes(this.selectedNode, node);
 					}
 					else if (capslockOn || ev.ctrlKey || ev.metaKey) {
+						this.selectedNode = node;
+
 						const scale = this.getScaleFactor();
 						const offsetX = (ev.pageX - node.x * scale);
 						const offsetY = (ev.pageY - node.y * scale);
@@ -188,7 +198,6 @@ export class Poe2Tree extends LitElement {
 							});
 
 							this.graphUpdated = Date.now();
-							this.requestUpdate();
 						};
 
 						const mouseup = () => {
@@ -201,12 +210,18 @@ export class Poe2Tree extends LitElement {
 						window.addEventListener('mouseup', mouseup,
 							{ once: true, signal: this.abortCtrl.signal });
 					}
+					else if (ev.altKey) {
+						this.showNodeDetails = !this.showNodeDetails;
+						this.selectedNode = node;
+					}
 					else {
 						this.selectedNode = node;
 					}
 				}
 			}
+			// We are modifying a connection
 			else if (isPathCircle && (ev.ctrlKey || ev.metaKey || capslockOn)) {
+				this.selectedNode = undefined;
 				const connection = this.connections.get(targetEl!.id)!;
 
 				const scale = this.getScaleFactor();
@@ -221,7 +236,6 @@ export class Poe2Tree extends LitElement {
 					connection.middle.y = y;
 
 					this.graphUpdated = Date.now();
-					this.requestUpdate();
 				};
 
 				const mouseup = () => {
@@ -246,8 +260,9 @@ export class Poe2Tree extends LitElement {
 			this.nodes.set(node.id, node);
 
 			this.graphUpdated = Date.now();
-			this.requestUpdate();
 			this.performAutosave();
+
+			return;
 		}
 		// We are moving the svgWrapper
 		else {
@@ -271,9 +286,26 @@ export class Poe2Tree extends LitElement {
 			}, { once: true, signal: this.abortCtrl.signal });
 
 			this.selectedNode = undefined;
-			this.requestUpdate();
+
+			return;
 		}
 	};
+
+	protected onMousemoveContainer(ev: MouseEvent) {
+		const path = ev.composedPath();
+		const circleEl = path.find(el =>
+			'tagName' in el && el.tagName === 'circle') as SVGElement | undefined;
+
+		const isNodeCircle = circleEl?.classList.contains('node-circle');
+
+		if (isNodeCircle) {
+			const node = this.nodes.get(circleEl?.id ?? '');
+			this.tooltip = `Node: ${ node?.x.toFixed(2) }, ${ node?.y.toFixed(2) }`;
+		}
+		else {
+			this.tooltip = '';
+		}
+	}
 
 	protected onWheelContainer = {
 		passive:     true,
@@ -312,44 +344,25 @@ export class Poe2Tree extends LitElement {
 			this.nodes.delete(node.id);
 			node.connections.forEach(id => this.connections.delete(id));
 
+			this.selectedNode = undefined;
 			this.graphUpdated = Date.now();
-			this.requestUpdate();
 			this.performAutosave();
 		}
 
 		if (this.selectedNode && ev.code === 'Digit1') {
 			this.selectedNode.radius = 7;
 			this.graphUpdated = Date.now();
-			this.requestUpdate();
 			this.performAutosave();
 		}
 		if (this.selectedNode && ev.code === 'Digit2') {
 			this.selectedNode.radius = 10;
 			this.graphUpdated = Date.now();
-			this.requestUpdate();
 			this.performAutosave();
 		}
 		if (this.selectedNode && ev.code === 'Digit3') {
 			this.selectedNode.radius = 15;
 			this.graphUpdated = Date.now();
-			this.requestUpdate();
 			this.performAutosave();
-		}
-	}
-
-	protected onMousemoveContainer(ev: MouseEvent) {
-		const path = ev.composedPath();
-		const circleEl = path.find(el =>
-			'tagName' in el && el.tagName === 'circle') as SVGElement | undefined;
-
-		const isNodeCircle = circleEl?.classList.contains('node-circle');
-
-		if (isNodeCircle) {
-			const node = this.nodes.get(circleEl?.id ?? '');
-			this.tooltip = `Node: ${ node?.x.toFixed(2) }, ${ node?.y.toFixed(2) }`;
-		}
-		else {
-			this.tooltip = '';
 		}
 	}
 
@@ -383,7 +396,6 @@ export class Poe2Tree extends LitElement {
 		nodeB.connections.push(connection.id);
 
 		this.graphUpdated = Date.now();
-		this.requestUpdate();
 		this.performAutosave();
 	}
 
@@ -579,11 +591,24 @@ export class Poe2Tree extends LitElement {
 					.skipConnectionHandles = ${ skipConnectionHandles }
 				></passive-tree-svg>
 			</div>
+
+			${ when(this.showNodeDetails, () => html`
+			<s-node-details @mousedown=${ (ev: Event) => ev.stopPropagation() }>
+				<button @click=${ () => this.showNodeDetails = false }>
+					Close
+				</button>
+
+				<details-panel
+					.data=${ this.selectedNode?.data }
+				></details-panel>
+			</s-node-details>
+			`) }
 		</div>
 		`;
 	}
 
-	public static override styles = css`
+	public static override styles = [
+		css`
 		:host {
 			contain: strict;
 		}
@@ -605,8 +630,8 @@ export class Poe2Tree extends LitElement {
 				position: absolute;
 				opacity: 0.8;
 				place-self: center;
-				padding-top: 40px;
-				padding-left: 25px;
+				padding-top: 33px;
+				padding-left: 21px;
 				z-index: -1;
 				pointer-events: none;
 				user-select: none;
@@ -651,6 +676,30 @@ export class Poe2Tree extends LitElement {
 				background: blue;
 			}
 		}
-  	`;
+  		`,
+		css`
+		s-node-details {
+			position: fixed;
+			z-index: 1;
+			bottom: 0px;
+			left: 0px;
+			right: 0px;
+			height: 500px;
+			background-color: rgb(15, 16, 21);
+			border: 1px solid black;
+			padding: 8px;
+			border-radius: 8px;
+		}
+		s-node-details button {
+			background-color: darkgoldenrod;
+			border: 1px solid black;
+			border-radius: 4px;
+			padding: 4px;
+			position: absolute;
+			top: 0;
+			right: 0;
+		}
+		`,
+	];
 
 }

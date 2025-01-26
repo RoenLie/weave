@@ -1,9 +1,8 @@
 import type { Vec2 } from '@roenlie/core/types';
 import type { Connection, GraphNode } from './graph.ts';
-import { html, svg } from 'lit';
-import { map } from 'lit/directives/map.js';
 import { css, CustomElement, signal } from './custom-element.ts';
-import { Signal } from 'signal-polyfill';
+import { html, svg } from 'lit-html';
+import { map } from 'lit-html/directives/map.js';
 
 export interface Viewport { x1: number, x2: number, y1: number, y2: number }
 
@@ -29,16 +28,6 @@ export class PassiveTreeSvg extends CustomElement {
 	@signal public accessor selectedNode: { id: string } | undefined;
 	@signal public accessor skipConnections = false;
 	@signal public accessor skipConnectionHandles = false;
-
-	protected test = new Signal.State(0);
-
-	public override connectedCallback(): void {
-		super.connectedCallback();
-	}
-
-	protected override afterRender(changedProps: Set<string>): void {
-		console.log(changedProps);
-	}
 
 	protected override render(): unknown {
 		return html`

@@ -1,6 +1,7 @@
-import { render } from 'lit';
+import { render } from 'lit-html';
 import { effect } from './effect.ts';
 import { Signal } from 'signal-polyfill';
+import { resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
 
 
 export type CSSStyle = CSSStyleSheet | CSSStyleSheet[] | CSSStyle[];
@@ -52,42 +53,90 @@ export class CustomElement extends HTMLElement {
 		this.shadowRoot!.adoptedStyleSheets = base.elementStyles;
 	}
 
+	public renderComplete:   ResolvablePromise<void> = resolvablePromise.resolve<void>(undefined);
 	private __unsubEffect?:  () => void;
 	private __signalProps:   string[] = [];
 	private __changedProps:  Set<string> = new Set();
 	private __previousProps: Map<string, any> = new Map();
+	private __hasConnected:  boolean = false;
+	private __hasRendered:   boolean = false;
 
-	public connectedCallback() {
-		this.__unsubEffect = effect(() => {
-			// We can do an untracked read here.
-			// But since these are signal props we are probably
-			// always interested in changes.
-			for (const prop of this.__signalProps) {
-				const value = this[prop as keyof this];
+	protected connectedCallback() {
+		const ref = new WeakRef(this);
 
-				if (this.__previousProps.get(prop) !== value)
-					this.__changedProps.add(prop);
+		// eslint-disable-next-line prefer-arrow-callback
+		this.__unsubEffect = effect(function() {
+			// We utilize a WeakRef to avoid a potential leak from
+			// locking a direct reference to the instance in this scope.
+			const self = ref.deref();
+			if (!self)
+				return;
 
-				this.__previousProps.set(prop, value);
-			}
-
-			this.beforeRender(this.__changedProps);
-			render(this.render(), this.shadowRoot!);
-			this.afterRender(this.__changedProps);
-
-			this.__changedProps.clear();
+			self.scheduleRender();
 		});
+
+		if (!this.__hasConnected) {
+			this.__hasConnected = true;
+			this.firstConnected();
+		}
 	}
 
-	public disconnectedCallback() {
+	protected disconnectedCallback() {
 		this.__unsubEffect?.();
+		this.__unsubEffect = undefined;
 		this.__changedProps.clear();
 		this.__previousProps.clear();
 	}
 
+	public scheduleRender() {
+		for (const prop of this.__signalProps) {
+			const value = this[prop as keyof typeof this];
+
+			if (this.__previousProps.get(prop) !== value)
+				this.__changedProps.add(prop);
+
+			this.__previousProps.set(prop, value);
+		}
+
+		if (!this.renderComplete.done)
+			return;
+
+		this.renderComplete = resolvablePromise();
+
+		queueMicrotask(() => {
+			this.performRender();
+			this.renderComplete.resolve();
+		});
+	}
+
+	public performRender() {
+		this.beforeRender(this.__changedProps);
+
+		render(this.render(), this.shadowRoot!, { host: this });
+
+		// We need to wait for the next frame to ensure the DOM has been updated.
+		requestAnimationFrame(() => {
+			this.afterRender(this.__changedProps);
+			this.__changedProps.clear();
+
+			if (!this.__hasRendered) {
+				this.__hasRendered = true;
+				this.afterConnected();
+			}
+		});
+	}
+
+	/** Runs the immediatly after connectedCallback, the first time this component connects. */
+	protected firstConnected() {}
+
+	/** Runs after render has completed and dom has been painted after a connectedCallback. */
+	protected afterConnected() {}
+
+	/** Runs immediatly before render is performed. */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	protected beforeRender(changedProps: Set<string>) {}
 
+	/** Runs after render has completed and dom has painted. */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	protected afterRender(changedProps: Set<string>) {}
 
