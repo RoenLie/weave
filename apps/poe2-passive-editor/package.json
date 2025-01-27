@@ -7,7 +7,8 @@
 	"main": "pathToMain",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build"
+		"build": "vite build",
+		"firebase-deploy": "firebase deploy --only hosting"
 	},
 	"dependencies": {
 		"@roenlie/core": "workspace:^",

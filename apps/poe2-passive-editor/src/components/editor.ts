@@ -221,7 +221,6 @@ export class Poe2Tree extends CustomElement {
 			}
 			// We are modifying a connection
 			else if (isPathCircle && (ev.ctrlKey || ev.metaKey || capslockOn)) {
-				this.selectedNode = undefined;
 				const connection = this.connections.get(targetEl!.id)!;
 
 				const scale = this.getScaleFactor();
@@ -342,6 +341,7 @@ export class Poe2Tree extends CustomElement {
 			this.nodes.delete(node.id);
 			node.connections.forEach(id => this.connections.delete(id));
 
+			this.showNodeDetails = false;
 			this.selectedNode = undefined;
 			this.graphUpdated = Date.now();
 			this.performAutosave();
@@ -363,8 +363,10 @@ export class Poe2Tree extends CustomElement {
 			this.performAutosave();
 		}
 
-		if (this.selectedNode && ev.code === 'Escape')
+		if (this.selectedNode && ev.code === 'Escape') {
+			this.showNodeDetails = false;
 			this.selectedNode = undefined;
+		}
 	}
 
 	protected connectNodes(nodeA?: GraphNode, nodeB?: GraphNode) {
