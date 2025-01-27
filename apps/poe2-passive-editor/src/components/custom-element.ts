@@ -1,5 +1,5 @@
 import { render } from 'lit-html';
-import { effect } from './effect.ts';
+import { effect } from '../effect.ts';
 import { Signal } from 'signal-polyfill';
 import { resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
 
@@ -53,13 +53,13 @@ export class CustomElement extends HTMLElement {
 		this.shadowRoot!.adoptedStyleSheets = base.elementStyles;
 	}
 
-	public renderComplete:   ResolvablePromise<void> = resolvablePromise.resolve<void>(undefined);
-	private __unsubEffect?:  () => void;
-	private __signalProps:   string[] = [];
-	private __changedProps:  Set<string> = new Set();
-	private __previousProps: Map<string, any> = new Map();
-	private __hasConnected:  boolean = false;
-	private __hasRendered:   boolean = false;
+	public renderComplete:        ResolvablePromise<void> = resolvablePromise.resolve<void>(undefined);
+	private __unsubEffect?:       () => void;
+	private __signalProps:        string[] = [];
+	private __changedProps:       Set<string> = new Set();
+	private __previousProps:      Map<string, any> = new Map();
+	public readonly hasConnected: boolean = false;
+	public readonly hasRendered:  boolean = false;
 
 	protected connectedCallback() {
 		const ref = new WeakRef(this);
@@ -75,8 +75,8 @@ export class CustomElement extends HTMLElement {
 			self.scheduleRender();
 		});
 
-		if (!this.__hasConnected) {
-			this.__hasConnected = true;
+		if (!this.hasConnected) {
+			(this.hasConnected as boolean) = true;
 			this.firstConnected();
 		}
 	}
@@ -119,8 +119,8 @@ export class CustomElement extends HTMLElement {
 			this.afterRender(this.__changedProps);
 			this.__changedProps.clear();
 
-			if (!this.__hasRendered) {
-				this.__hasRendered = true;
+			if (!this.hasRendered) {
+				(this.hasRendered as boolean) = true;
 				this.afterConnected();
 			}
 		});

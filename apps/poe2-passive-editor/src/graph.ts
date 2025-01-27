@@ -17,13 +17,10 @@ export interface StorableGraphNode {
 	id?:          string;
 	radius?:      number;
 	connections?: string[];
-	data?:        NodeData;
+	data?:        Record<string, any>;
 }
 
-export interface NodeData {
-	name: string;
-	type: 'small' | 'medium' | 'large';
-}
+export interface NodeData extends Map<string, any> { }
 
 
 export class Connection {
@@ -64,6 +61,7 @@ export class GraphNode {
 		this.id = id || domId();
 		this.radius = radius || 7;
 		this.connections = connections || [];
+		this.data = new Map(Object.entries(storable.data || {}));
 	}
 
 	public id:          string;
@@ -71,10 +69,7 @@ export class GraphNode {
 	public y:           number;
 	public connections: string[];
 	public radius:      number;
-	public data: NodeData = {
-		name: '',
-		type: 'small',
-	};
+	public data:        Map<string, any>;
 
 	public toStorable(): StorableGraphNode {
 		return {
@@ -83,7 +78,7 @@ export class GraphNode {
 			id:          this.id,
 			radius:      this.radius,
 			connections: this.connections,
-			data:        this.data,
+			data:        Object.fromEntries(this.data),
 		};
 	}
 

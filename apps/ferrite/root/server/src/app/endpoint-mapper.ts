@@ -6,8 +6,8 @@ import { basename, join, resolve } from 'path';
 import { Endpoint } from './endpoint.js';
 
 
-const registerCache = new Set<string>();
-const patternCache = new Set<string>();
+const registerCache: Set<string> = new Set();
+const patternCache: Set<string> = new Set();
 
 
 export interface ControllerMethod {

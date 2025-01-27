@@ -1,7 +1,7 @@
-import { Connection, GraphNode } from './graph.ts';
+import { Connection, GraphNode } from '../graph.ts';
 import { debounce } from '@roenlie/core/timing';
 import type { Vec2 } from '@roenlie/core/types';
-import { app, assignTypes, db } from './firebase.ts';
+import { app, assignTypes, db } from '../firebase.ts';
 import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
 import { query as fbQuery, orderBy, limit, collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { Path, type Viewport } from './graph-svg-rendering.ts';
@@ -285,8 +285,6 @@ export class Poe2Tree extends CustomElement {
 				window.removeEventListener('mousemove', mousemove);
 			}, { once: true, signal: this.abortCtrl.signal });
 
-			this.selectedNode = undefined;
-
 			return;
 		}
 	};
@@ -364,6 +362,9 @@ export class Poe2Tree extends CustomElement {
 			this.graphUpdated = Date.now();
 			this.performAutosave();
 		}
+
+		if (this.selectedNode && ev.code === 'Escape')
+			this.selectedNode = undefined;
 	}
 
 	protected connectNodes(nodeA?: GraphNode, nodeB?: GraphNode) {
@@ -403,9 +404,6 @@ export class Poe2Tree extends CustomElement {
 		if (!this.autosave)
 			return;
 
-		const nodes = Array.from(structuredClone(this.nodes).values());
-		const connections = Array.from(structuredClone(this.connections).values());
-
 		// A FileSystemDirectoryHandle whose type is "directory" and whose name is "".
 		//const opfsRoot   = await navigator.storage.getDirectory();
 		//const fileHandle = await opfsRoot.getFileHandle('tree', { create: true });
@@ -416,11 +414,11 @@ export class Poe2Tree extends CustomElement {
 		await Promise.allSettled([
 			updateDoc(doc(db, 'passive-tree-nodes', this.nodeDocId!), {
 				updated: new Date().toISOString(),
-				nodes,
+				nodes:   this.nodes.values().map(node => node.toStorable()).toArray(),
 			}),
 			updateDoc(doc(db, 'passive-tree-connections', this.conDocId!), {
-				updated: new Date().toISOString(),
-				connections,
+				updated:     new Date().toISOString(),
+				connections: this.connections.values().map(con => con.toStorable()).toArray(),
 			}),
 		]);
 
@@ -430,15 +428,6 @@ export class Poe2Tree extends CustomElement {
 		//	//entry.handle.remove({ recursive: true });
 		//});
 	}, 5000);
-
-	protected isOutsideViewport(node: Vec2, padding = 0): boolean {
-		const outsideX1 = node.x < (this.viewport.x1 - padding);
-		const outsideX2 = node.x > (this.viewport.x2 + padding);
-		const outsideY1 = node.y < (this.viewport.y1 - padding);
-		const outsideY2 = node.y > (this.viewport.y2 + padding);
-
-		return outsideX1 || outsideX2 || outsideY1 || outsideY2;
-	}
 
 	protected getVisiblePercentage(): number {
 		if (!this.svgWrapper)
@@ -548,15 +537,10 @@ export class Poe2Tree extends CustomElement {
 
 		return html`
 		<div class="container"
-			tabindex  ="0"
 			@wheel    =${ this.onWheelContainer }
-			@keydown  =${ this.onKeydownContainer }
 			@mousedown=${ this.onMousedownContainer }
 			@mousemove=${ this.onMousemoveContainer }
 		>
-			<div class="title">
-				${ this.tooltip }
-			</div>
 			<div class="controls">
 				<button @click=${ this.connectionsToImg }>
 					Save connections as img
@@ -582,6 +566,7 @@ export class Poe2Tree extends CustomElement {
 				`) }
 
 				<passive-tree-svg
+					tabindex				     = "0"
 					.updated					  = ${ this.graphUpdated }
 					.nodes                 = ${ this.nodes }
 					.connections           = ${ this.connections }
@@ -589,6 +574,7 @@ export class Poe2Tree extends CustomElement {
 					.selectedNode          = ${ this.selectedNode }
 					.skipConnections       = ${ skipConnections }
 					.skipConnectionHandles = ${ skipConnectionHandles }
+					@keydown  =${ this.onKeydownContainer }
 				></passive-tree-svg>
 			</div>
 
@@ -679,8 +665,9 @@ export class Poe2Tree extends CustomElement {
   		`,
 		css`
 		s-node-details {
-			position: fixed;
 			z-index: 1;
+			position: fixed;
+			display: grid;
 			bottom: 0px;
 			left: 0px;
 			right: 0px;
@@ -689,6 +676,7 @@ export class Poe2Tree extends CustomElement {
 			border: 1px solid black;
 			padding: 8px;
 			border-radius: 8px;
+			padding-top: 28px;
 		}
 		s-node-details button {
 			background-color: darkgoldenrod;
@@ -698,6 +686,9 @@ export class Poe2Tree extends CustomElement {
 			position: absolute;
 			top: 0;
 			right: 0;
+		}
+		s-node-details details-panel {
+
 		}
 		`,
 	];

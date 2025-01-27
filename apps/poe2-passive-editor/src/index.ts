@@ -1,1 +1,1 @@
-import './editor.ts';
+import './components/editor.ts';

@@ -1,12 +1,14 @@
 {
 	"extends": "@roenlie/tsconfig",
 	"compilerOptions": {
-		"experimentalDecorators": false,
-		"emitDecoratorMetadata": false
+		"target": "ESNext",
+		"moduleResolution": "bundler",
+		"emitDecoratorMetadata": false,
+		"experimentalDecorators": false
 	},
 	"include": [
 		"./**/*.ts",
-		"./**/*.d.ts",
+		"./**/*.d.ts"
 	],
 	"exclude": [
 		"**/node_modules/**"
