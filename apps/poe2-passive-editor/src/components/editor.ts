@@ -1,6 +1,5 @@
 import { Connection, GraphNode } from '../graph.ts';
 import { debounce } from '@roenlie/core/timing';
-import type { Vec2 } from '@roenlie/core/types';
 import { app, assignTypes, db } from '../firebase.ts';
 import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
 import { query as fbQuery, orderBy, limit, collection, getDocs, updateDoc, doc } from 'firebase/firestore';
@@ -118,6 +117,8 @@ export class Poe2Tree extends CustomElement {
 
 		this.autosave = true;
 		this.svgWrapper.inert = false;
+
+		console.log(this.nodes, this.connections);
 	}
 
 	protected getScaleFactor(element?: HTMLElement): number {
@@ -174,6 +175,10 @@ export class Poe2Tree extends CustomElement {
 					if (ev.shiftKey && this.selectedNode) {
 						this.connectNodes(this.selectedNode, node);
 					}
+					else if (ev.detail === 2) {
+						ev.preventDefault();
+						this.showNodeDetails = !this.showNodeDetails;
+					}
 					else if (capslockOn || ev.ctrlKey || ev.metaKey) {
 						this.selectedNode = node;
 
@@ -209,10 +214,6 @@ export class Poe2Tree extends CustomElement {
 							{ signal: this.abortCtrl.signal });
 						window.addEventListener('mouseup', mouseup,
 							{ once: true, signal: this.abortCtrl.signal });
-					}
-					else if (ev.altKey) {
-						this.showNodeDetails = !this.showNodeDetails;
-						this.selectedNode = node;
 					}
 					else {
 						this.selectedNode = node;
@@ -251,12 +252,16 @@ export class Poe2Tree extends CustomElement {
 			return;
 		}
 		// We add a new circle if you are holding the alt key
-		else if (ev.altKey) {
+		else if (ev.detail === 2 || ev.altKey) {
+			ev.preventDefault();
+
 			const x = ev.offsetX;
 			const y = ev.offsetY;
 
 			const node = new GraphNode({ x, y });
 			this.nodes.set(node.id, node);
+
+			this.selectedNode = node;
 
 			this.graphUpdated = Date.now();
 			this.performAutosave();
@@ -406,21 +411,24 @@ export class Poe2Tree extends CustomElement {
 		if (!this.autosave)
 			return;
 
+		const nodes = this.nodes.values().map(node => node.toStorable()).toArray();
+		const connections =  this.connections.values().map(con => con.toStorable()).toArray();
+
 		// A FileSystemDirectoryHandle whose type is "directory" and whose name is "".
-		//const opfsRoot   = await navigator.storage.getDirectory();
-		//const fileHandle = await opfsRoot.getFileHandle('tree', { create: true });
-		//const writable   = await fileHandle.createWritable({ keepExistingData: false });
-		//await writable.write(JSON.stringify({ nodes, connections }));
-		//await writable.close();
+		const opfsRoot   = await navigator.storage.getDirectory();
+		const fileHandle = await opfsRoot.getFileHandle('tree', { create: true });
+		const writable   = await fileHandle.createWritable({ keepExistingData: false });
+		await writable.write(JSON.stringify({ nodes, connections }));
+		await writable.close();
 
 		await Promise.allSettled([
 			updateDoc(doc(db, 'passive-tree-nodes', this.nodeDocId!), {
 				updated: new Date().toISOString(),
-				nodes:   this.nodes.values().map(node => node.toStorable()).toArray(),
+				nodes,
 			}),
 			updateDoc(doc(db, 'passive-tree-connections', this.conDocId!), {
-				updated:     new Date().toISOString(),
-				connections: this.connections.values().map(con => con.toStorable()).toArray(),
+				updated: new Date().toISOString(),
+				connections,
 			}),
 		]);
 
@@ -689,9 +697,9 @@ export class Poe2Tree extends CustomElement {
 			top: 0;
 			right: 0;
 		}
-		s-node-details details-panel {
+		/*s-node-details details-panel {
 
-		}
+		}*/
 		`,
 	];
 
