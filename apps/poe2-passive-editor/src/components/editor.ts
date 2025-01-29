@@ -411,6 +411,8 @@ export class Poe2Tree extends CustomElement {
 		if (!this.autosave)
 			return;
 
+		this.autosave = false;
+
 		const nodes = this.nodes.values().map(node => node.toStorable()).toArray();
 		const connections =  this.connections.values().map(con => con.toStorable()).toArray();
 
@@ -431,6 +433,8 @@ export class Poe2Tree extends CustomElement {
 				connections,
 			}),
 		]);
+
+		this.autosave = true;
 
 		//const entries = await getDirectoryEntriesRecursive(opfsRoot);
 		//Object.entries(entries).forEach(([ name, entry ]) => {
