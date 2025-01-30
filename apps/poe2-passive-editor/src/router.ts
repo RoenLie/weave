@@ -1,5 +1,5 @@
 import { html } from 'lit-html';
-import { CustomElement } from './app/custom-element.ts';
+import { css, CustomElement, type CSSStyle } from './app/custom-element.ts';
 import { Router } from '@sanguinejs/router';
 
 
@@ -38,5 +38,11 @@ export class RouterCmp extends CustomElement {
 		${ this.routes.outlet() }
 		`;
 	}
+
+	public static override styles: CSSStyle = css`
+		:host {
+			display: grid;
+		}
+	`;
 
 }
