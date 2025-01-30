@@ -1,1 +1,1 @@
-import './components/editor.ts';
+import './router.ts';

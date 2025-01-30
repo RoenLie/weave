@@ -1,19 +1,19 @@
-import { Connection, GraphNode } from '../graph.ts';
 import { debounce } from '@roenlie/core/timing';
-import { app, assignTypes, db } from '../firebase.ts';
 import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
 import { query as fbQuery, orderBy, limit, collection, getDocs, updateDoc, doc } from 'firebase/firestore';
-import { Path, type Viewport } from './graph-svg-rendering.ts';
-import { css, CustomElement, signal } from './custom-element.ts';
 import { html, render } from 'lit-html';
 import { when } from 'lit-html/directives/when.js';
 import { DetailsPanel } from './details-panel.ts';
+import { app, assignTypes, db } from '../../app/firebase.ts';
+import { Connection, GraphNode } from '../../app/graph.ts';
+import { Path, type Viewport } from './graph-svg-rendering.ts';
+import { css, CustomElement, signal } from '../../app/custom-element.ts';
 
 
 export class Poe2Tree extends CustomElement {
 
 	static {
-		this.register('poe2-tree');
+		this.register('poe-svg-editor');
 		DetailsPanel;
 	}
 
@@ -117,8 +117,6 @@ export class Poe2Tree extends CustomElement {
 
 		this.autosave = true;
 		this.svgWrapper.inert = false;
-
-		console.log(this.nodes, this.connections);
 	}
 
 	protected getScaleFactor(element?: HTMLElement): number {

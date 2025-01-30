@@ -1,13 +1,14 @@
 import { render } from 'lit-html';
-import { effect } from '../effect.ts';
 import { Signal } from 'signal-polyfill';
-import { resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
+import { resolvablePromise as promise, type ResolvablePromise } from '@roenlie/core/async';
+import { effect } from './effect.ts';
+import type { ReactiveController, ReactiveControllerHost } from './reactive-controller.ts';
 
 
 export type CSSStyle = CSSStyleSheet | CSSStyleSheet[] | CSSStyle[];
 
 
-export class CustomElement extends HTMLElement {
+export class CustomElement extends HTMLElement implements ReactiveControllerHost {
 
 	public static tagName: string;
 	protected static register(tagName: string) {
@@ -53,13 +54,15 @@ export class CustomElement extends HTMLElement {
 		this.shadowRoot!.adoptedStyleSheets = base.elementStyles;
 	}
 
-	public renderComplete:        ResolvablePromise<void> = resolvablePromise.resolve<void>(undefined);
-	private __unsubEffect?:       () => void;
-	private __signalProps:        string[] = [];
-	private __changedProps:       Set<string> = new Set();
-	private __previousProps:      Map<string, any> = new Map();
-	public readonly hasConnected: boolean = false;
-	public readonly hasRendered:  boolean = false;
+	public readonly updateComplete: ResolvablePromise<boolean> = promise.resolve(true);
+	public readonly hasConnected:   boolean = false;
+	public readonly hasRendered:    boolean = false;
+
+	private __unsubEffect?:  () => void;
+	private __signalProps:   string[] = [];
+	private __changedProps:  Set<string> = new Set();
+	private __previousProps: Map<string, any> = new Map();
+	private __controllers:   Set<ReactiveController> = new Set();
 
 	protected connectedCallback() {
 		const ref = new WeakRef(this);
@@ -72,13 +75,16 @@ export class CustomElement extends HTMLElement {
 			if (!self)
 				return;
 
-			self.scheduleRender();
+			self.requestUpdate();
 		});
 
 		if (!this.hasConnected) {
 			(this.hasConnected as boolean) = true;
 			this.firstConnected();
 		}
+
+		for (const controller of this.__controllers)
+			controller.hostConnected?.();
 	}
 
 	protected disconnectedCallback() {
@@ -86,9 +92,12 @@ export class CustomElement extends HTMLElement {
 		this.__unsubEffect = undefined;
 		this.__changedProps.clear();
 		this.__previousProps.clear();
+
+		for (const controller of this.__controllers)
+			controller.hostDisconnected?.();
 	}
 
-	public scheduleRender() {
+	public requestUpdate() {
 		for (const prop of this.__signalProps) {
 			const value = this[prop as keyof typeof this];
 
@@ -98,18 +107,18 @@ export class CustomElement extends HTMLElement {
 			this.__previousProps.set(prop, value);
 		}
 
-		if (!this.renderComplete.done)
+		if (!this.updateComplete.done)
 			return;
 
-		this.renderComplete = resolvablePromise();
+		(this.updateComplete as any) = promise();
 
 		queueMicrotask(() => {
-			this.performRender();
-			this.renderComplete.resolve();
+			this.performUpdate();
+			this.updateComplete.resolve(true);
 		});
 	}
 
-	public performRender() {
+	public performUpdate() {
 		this.beforeRender(this.__changedProps);
 
 		render(this.render(), this.shadowRoot!, { host: this });
@@ -126,6 +135,17 @@ export class CustomElement extends HTMLElement {
 		});
 	}
 
+	public addController(controller: ReactiveController): void {
+		this.__controllers.add(controller);
+
+		if (this.hasConnected)
+			controller.hostConnected?.();
+	}
+
+	public removeController(controller: ReactiveController): void {
+		this.__controllers.delete(controller);
+	}
+
 	/** Runs the immediatly after connectedCallback, the first time this component connects. */
 	protected firstConnected() {}
 
@@ -134,11 +154,17 @@ export class CustomElement extends HTMLElement {
 
 	/** Runs immediatly before render is performed. */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	protected beforeRender(changedProps: Set<string>) {}
+	protected beforeRender(changedProps: Set<string>) {
+		for (const controller of this.__controllers)
+			controller.hostUpdate?.();
+	}
 
 	/** Runs after render has completed and dom has painted. */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	protected afterRender(changedProps: Set<string>) {}
+	protected afterRender(changedProps: Set<string>) {
+		for (const controller of this.__controllers)
+			controller.hostUpdated?.();
+	}
 
 	protected render(): unknown {
 		return;

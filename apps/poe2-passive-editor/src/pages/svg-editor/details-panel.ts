@@ -1,7 +1,7 @@
-import { css, CustomElement, signal } from './custom-element.ts';
 import { EditorView, basicSetup } from 'codemirror';
 import { json } from '@codemirror/lang-json';
 import { basicDark } from 'cm6-theme-basic-dark';
+import { css, CustomElement, signal } from '../../app/custom-element.ts';
 
 
 export class DetailsPanel extends CustomElement {

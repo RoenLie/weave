@@ -1,8 +1,8 @@
 import type { Vec2 } from '@roenlie/core/types';
-import type { Connection, GraphNode } from '../graph.ts';
-import { css, CustomElement, signal } from './custom-element.ts';
 import { html, svg } from 'lit-html';
 import { map } from 'lit-html/directives/map.js';
+import type { Connection, GraphNode } from '../../app/graph.ts';
+import { css, CustomElement, signal } from '../../app/custom-element.ts';
 
 export interface Viewport { x1: number, x2: number, y1: number, y2: number }
 
