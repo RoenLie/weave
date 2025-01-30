@@ -2,6 +2,10 @@ import { html } from 'lit-html';
 import { css, CustomElement, type CSSStyle } from '../../app/custom-element.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { tuple } from '@roenlie/core/array';
+import { Connection, GraphNode, type StorableConnection, type StorableGraphNode } from '../../app/graph.ts';
+import graph from '../../app/tree.json' with { type: 'json'};
+import { isOutsideViewport, type Viewport } from '../../app/is-outside-viewport.ts';
+import { debounce } from '@roenlie/core/timing';
 
 
 export class PoeCanvasTree extends CustomElement {
@@ -15,28 +19,35 @@ export class PoeCanvasTree extends CustomElement {
 	protected image:       HTMLImageElement;
 	protected imageVec:    Vec2 = { x: 0, y: 0 };
 	protected objects:     any[] = [];
-	protected bgView:      View = new View();
-	protected mainView:    View = new View();
+	protected nodes:       Map<string, GraphNode> = new Map();
+	protected connections: Map<string, Connection> = new Map();
+	protected viewport:    Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
+	protected pauseRender: boolean = false;
 
-	protected resizeObserver = new ResizeObserver(entries => {
+	protected readonly bgView:   View = new View();
+	protected readonly mainView: View = new View();
+	protected readonly resizeObserver = new ResizeObserver(entries => {
 		if (!this.image)
 			return;
 
+		this.pauseRender = true;
+
 		const entry = entries[0]!;
+		const width = entry.contentRect.width;
+		const height = entry.contentRect.height;
 
-		const parentWidth = entry.contentRect.width;
-		const parentHeight = entry.contentRect.height;
+		this.mainCanvas.width = width;
+		this.mainCanvas.height = height;
+		this.bgCanvas.width = width;
+		this.bgCanvas.height = height;
 
-		this.mainCanvas.width = parentWidth;
-		this.mainCanvas.height = parentHeight;
-		this.bgCanvas.width = parentWidth;
-		this.bgCanvas.height = parentHeight;
-
-		this.bgView.apply();
-		this.mainView.apply();
+		this.bgView.applyTransform();
+		this.mainView.applyTransform();
 
 		this.renderBgCanvasContent();
 		this.renderMainCanvasContent();
+
+		this.debouncedEnableRender();
 	});
 
 	protected override disconnectedCallback(): void {
@@ -59,21 +70,24 @@ export class PoeCanvasTree extends CustomElement {
 		this.bgCanvas.width = this.offsetWidth;
 		this.bgCanvas.height = this.offsetHeight;
 
-		const randI = (min: number, max = min + (min = 0)) =>
-			(Math.random() * (max - min) + min) | 0;
+		this.connections = new Map(graph.connections.map(
+			(con: StorableConnection) => {
+				const parsed = new Connection(con);
 
-		const rand = (min: number, max = min + (min = 0)) =>
-			Math.random() * (max - min) + min;
+				return [ parsed.id, parsed ];
+			},
+		));
 
-		for (let i = 0; i < 100; i++) {
-			this.objects.push({
-				x:   rand(this.mainCanvas.width),
-				y:   rand(this.mainCanvas.height),
-				w:   rand(40),
-				h:   rand(40),
-				col: `rgb(${ randI(255) },${ randI(255) },${ randI(255) })`,
-			});
-		}
+		this.nodes = new Map(graph.nodes.map(
+			(node: StorableGraphNode) => {
+				const parsed = new GraphNode(node);
+				parsed.x -= 1457;
+				parsed.y -= 1614;
+
+				return [ parsed.id, parsed ];
+			},
+		));
+
 
 		const img = new Image();
 		img.onload = () => {
@@ -90,7 +104,27 @@ export class PoeCanvasTree extends CustomElement {
 
 		this.bgView.setContext(this.bgContext);
 		this.mainView.setContext(this.mainContext);
+		this.viewport = this.getViewport();
 		this.boundDraw();
+	}
+
+	protected debouncedEnableRender = debounce(() => {
+		this.pauseRender = false;
+	}, 500);
+
+	protected getViewport(): Viewport {
+		const { x, y } = this.mainView.getPosition();
+		const scale = this.mainView.getScale();
+
+		const viewableWidth = this.offsetWidth;
+		const viewableHeight = this.offsetHeight;
+
+		const x1 = -x / scale;
+		const y1 = -y / scale;
+		const x2 = x1 + (viewableWidth / scale);
+		const y2 = y1 + (viewableHeight / scale);
+
+		return { x1, x2, y1, y2 };
 	}
 
 	protected onMousewheel(event: WheelEvent) {
@@ -108,6 +142,8 @@ export class PoeCanvasTree extends CustomElement {
 			this.mainView.scaleAt({ x, y }, 1 / 1.1);
 		}
 
+		this.viewport = this.getViewport();
+
 		e.preventDefault();
 	}
 
@@ -121,6 +157,7 @@ export class PoeCanvasTree extends CustomElement {
 		const mousemove = (ev: MouseEvent) => {
 			this.bgView.moveTo(ev.offsetX - x, ev.offsetY - y);
 			this.mainView.moveTo(ev.offsetX - x, ev.offsetY - y);
+			this.viewport = this.getViewport();
 		};
 		const mouseup = () => {
 			removeEventListener('mousemove', mousemove);
@@ -132,27 +169,28 @@ export class PoeCanvasTree extends CustomElement {
 	}
 
 	protected drawBackgroundCanvas() {
-		const { bgView, bgCanvas, bgContext } = this;
+		const { bgView, bgContext, bgCanvas: { width, height } } = this;
 
-		if (this.image && this.bgView.isDirty()) { // has the view changed, then draw all
-			bgContext.setTransform(1, 0, 0, 1, 0, 0); // default transform for clear
-			bgContext.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-			bgView.apply(); // set the 2D context transform to the view
-
-			this.renderBgCanvasContent();
+		if (this.bgView.isDirty()) {
+			bgContext.setTransform(1, 0, 0, 1, 0, 0);
+			bgContext.clearRect(0, 0, width, height);
+			bgView.applyTransform();
 		}
+
+		if (this.image)
+			this.renderBgCanvasContent();
 	}
 
 	protected drawMainCanvas() {
-		const { mainView, mainContext, mainCanvas } = this;
+		const { mainView, mainContext, mainCanvas: { width, height } } = this;
 
-		if (this.mainView.isDirty()) { // has the view changed, then draw all
-			mainContext.setTransform(1, 0, 0, 1, 0, 0); // default transform for clear
-			mainContext.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-			mainView.apply(); // set the 2D context transform to the view
-
-			this.renderMainCanvasContent();
+		if (this.mainView.isDirty()) {
+			mainContext.setTransform(1, 0, 0, 1, 0, 0);
+			mainContext.clearRect(0, 0, width, height);
+			mainView.applyTransform();
 		}
+
+		this.renderMainCanvasContent();
 	}
 
 	protected renderBgCanvasContent() {
@@ -161,15 +199,24 @@ export class PoeCanvasTree extends CustomElement {
 	}
 
 	protected renderMainCanvasContent() {
-		const { objects, mainContext } = this;
+		const { nodes, mainContext } = this;
 
-		for (const obj of objects) {
-			mainContext.fillStyle = obj.col;
-			mainContext.fillRect(obj.x, obj.y, obj.h, obj.h);
+		for (const node of nodes.values()) {
+			if (isOutsideViewport(this.viewport, node))
+				continue;
+
+			mainContext.beginPath();
+			mainContext.arc(node.x, node.y, node.radius, 0, 2 * Math.PI, false);
+			mainContext.lineWidth = 1;
+			mainContext.strokeStyle = 'silver';
+			mainContext.stroke();
 		}
 	}
 
 	protected boundDraw = () => {
+		if (this.pauseRender)
+			return requestAnimationFrame(this.boundDraw);
+
 		this.drawBackgroundCanvas();
 		this.drawMainCanvas();
 
@@ -217,7 +264,8 @@ class View {
 		this.dirty = true;
 	};
 
-	public apply() {
+	/** set the 2D context transform to the view */
+	public applyTransform() {
 		if (this.dirty)
 			this.update();
 

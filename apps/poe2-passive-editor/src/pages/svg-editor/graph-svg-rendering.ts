@@ -3,18 +3,7 @@ import { html, svg } from 'lit-html';
 import { map } from 'lit-html/directives/map.js';
 import type { Connection, GraphNode } from '../../app/graph.ts';
 import { css, CustomElement, signal } from '../../app/custom-element.ts';
-
-export interface Viewport { x1: number, x2: number, y1: number, y2: number }
-
-
-export function isOutsideViewport(viewport: Viewport, node: Vec2, padding = 0): boolean {
-	const outsideX1 = node.x < (viewport.x1 - padding);
-	const outsideX2 = node.x > (viewport.x2 + padding);
-	const outsideY1 = node.y < (viewport.y1 - padding);
-	const outsideY2 = node.y > (viewport.y2 + padding);
-
-	return outsideX1 || outsideX2 || outsideY1 || outsideY2;
-};
+import { isOutsideViewport, type Viewport } from '../../app/is-outside-viewport.ts';
 
 
 export class PassiveTreeSvg extends CustomElement {

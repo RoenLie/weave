@@ -6,8 +6,9 @@ import { when } from 'lit-html/directives/when.js';
 import { DetailsPanel } from './details-panel.ts';
 import { app, assignTypes, db } from '../../app/firebase.ts';
 import { Connection, GraphNode } from '../../app/graph.ts';
-import { Path, type Viewport } from './graph-svg-rendering.ts';
+import { Path } from './graph-svg-rendering.ts';
 import { css, CustomElement, signal } from '../../app/custom-element.ts';
+import type { Viewport } from '../../app/is-outside-viewport.ts';
 
 
 export class Poe2Tree extends CustomElement {

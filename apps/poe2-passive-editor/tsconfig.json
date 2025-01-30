@@ -4,7 +4,8 @@
 		"target": "ESNext",
 		"moduleResolution": "bundler",
 		"emitDecoratorMetadata": false,
-		"experimentalDecorators": false
+		"experimentalDecorators": false,
+		"resolveJsonModule": false
 	},
 	"include": [
 		"./**/*.ts",
