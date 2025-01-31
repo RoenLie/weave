@@ -39,6 +39,9 @@ export class Connection {
 	public middle: Vector2;
 	public end:    ConnectionPoint;
 
+	public path:       Path2D | undefined;
+	public pathHandle: Path2D | undefined;
+
 	public toStorable(): StorableConnection {
 		return {
 			start:  this.start,
@@ -68,8 +71,10 @@ export class GraphNode {
 	public x:           number;
 	public y:           number;
 	public connections: string[];
-	public radius:      number;
 	public data:        Map<string, any>;
+	public radius:      number;
+	public path:        Path2D | undefined;
+
 
 	public toStorable(): StorableGraphNode {
 		return {

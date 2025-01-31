@@ -449,12 +449,20 @@ export class Poe2Tree extends CustomElement {
 		const svgWrapperRect = this.svgWrapper.getBoundingClientRect();
 		const viewportRect = this.getBoundingClientRect();
 
+		//console.log('top', svgWrapperRect.top, viewportRect.top);
+		//console.log('left', svgWrapperRect.left, viewportRect.left);
+		//console.log('bottom', svgWrapperRect.bottom, viewportRect.bottom);
+		//console.log('right', svgWrapperRect.right, viewportRect.right);
+
 		const intersectionRect = {
 			top:    Math.max(svgWrapperRect.top, viewportRect.top),
 			left:   Math.max(svgWrapperRect.left, viewportRect.left),
 			bottom: Math.min(svgWrapperRect.bottom, viewportRect.bottom),
 			right:  Math.min(svgWrapperRect.right, viewportRect.right),
 		};
+
+		console.log('intersectionRect', intersectionRect);
+
 
 		const intersectionWidth = Math.max(0, intersectionRect.right - intersectionRect.left);
 		const intersectionHeight = Math.max(0, intersectionRect.bottom - intersectionRect.top);
