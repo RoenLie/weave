@@ -183,7 +183,7 @@ export class PathHandle {
 	}
 
 	public static render(viewport: Viewport, con: Connection, skip = false) {
-		if (skip || isOutsideViewport(viewport, con.middle, 2))
+		if (skip || isOutsideViewport(viewport, con.middle))
 			return;
 
 		const length = 2;
@@ -225,7 +225,7 @@ export class Node {
 	public static render(
 		viewport: Viewport, node: GraphNode, state: 'selected' | '',
 	): unknown {
-		if (isOutsideViewport(viewport, node, node.radius))
+		if (isOutsideViewport(viewport, node))
 			return;
 
 		let style = 'stroke:silver;stroke-width:1;';
