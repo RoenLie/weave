@@ -1,15 +1,17 @@
 import { domId } from '@roenlie/core/dom';
+import type { Canvas2DObject } from '../pages/canvas-editor/canvas-object.ts';
+import type { Optional } from '@roenlie/core/types';
+import { getPathReduction } from './path-helpers.ts';
 
 
 export interface Vector2 { x: number, y: number; }
-
 export interface ConnectionPoint { id: string, x: number, y: number; }
-
 export interface StorableConnection {
-	start:   ConnectionPoint;
-	end:     ConnectionPoint;
-	middle?: Vector2;
-	id?:     string;
+	start: ConnectionPoint;
+	stop:  ConnectionPoint;
+	m1:    Vector2;
+	m2:    Vector2;
+	id?:   string;
 }
 export interface StorableGraphNode {
 	x:            number;
@@ -20,34 +22,51 @@ export interface StorableGraphNode {
 	data?:        Record<string, any>;
 }
 
-export interface NodeData extends Map<string, any> { }
-
 
 export class Connection {
 
-	constructor(storable: StorableConnection) {
-		const { start, end, middle, id } = storable;
+	constructor(
+		nodes: Map<string, GraphNode>,
+		storable: Optional<StorableConnection, 'm1' | 'm2'>,
+	) {
+		const { start, stop, m1, m2, id } = storable;
 
-		this.id     = id || domId();
-		this.start  = { id: start.id, x: start.x, y: start.y };
-		this.end    = { id: end.id,   x: end.x,   y: end.y };
-		this.middle = middle || { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+		this.id    = id || domId();
+		this.start = { id: start.id, x: start.x, y: start.y };
+		this.stop   = { id: stop.id,   x: stop.x,   y: stop.y };
+
+		const mid = { x: (start.x + stop.x) / 2, y: (start.y + stop.y) / 2 };
+		this.m1 = m1 || { x: (start.x + mid.x) / 2, y: (start.y + mid.y) / 2 };
+		this.m2 = m2 || { x: (mid.x + stop.x) / 2, y: (mid.y + stop.y) / 2 };
+
+		const startRadius = nodes.get(this.start.id)!.radius / 2;
+		const stopRadius   = nodes.get(this.stop.id)!.radius / 2;
+		const [ reductionX1, reductionY1 ] = getPathReduction(startRadius, this.start, this.m1);
+		const [ reductionX2, reductionY2 ] = getPathReduction(stopRadius, this.m2, this.stop);
+
+		this.m1.x += reductionX1;
+		this.m1.y += reductionY1;
+		this.m2.x -= reductionX2;
+		this.m2.y -= reductionY2;
 	}
 
-	public id:     string;
-	public start:  ConnectionPoint;
-	public middle: Vector2;
-	public end:    ConnectionPoint;
+	public id:    string;
+	public start: ConnectionPoint;
+	public stop:  ConnectionPoint;
+	public m1:    Vector2;
+	public m2:    Vector2;
 
-	public path:       Path2D | undefined;
-	public pathHandle: Path2D | undefined;
+	public path:        Canvas2DObject | undefined;
+	public pathHandle1: Canvas2DObject | undefined;
+	public pathHandle2: Canvas2DObject | undefined;
 
 	public toStorable(): StorableConnection {
 		return {
-			start:  this.start,
-			end:    this.end,
-			middle: this.middle,
-			id:     this.id,
+			start: this.start,
+			stop:  this.stop,
+			m1:    this.m1,
+			m2:    this.m2,
+			id:    this.id,
 		};
 	}
 
@@ -56,25 +75,47 @@ export class Connection {
 
 export class GraphNode {
 
+	public static isGraphNode(obj: any): obj is GraphNode {
+		return obj instanceof GraphNode;
+	}
+
 	constructor(storable: StorableGraphNode) {
-		const { x, y, id, radius, connections } = storable;
+		const { x, y, id, radius } = storable;
 
 		this.x  = x;
 		this.y  = y;
 		this.id = id || domId();
 		this.radius = radius || 7;
-		this.connections = connections || [];
 		this.data = new Map(Object.entries(storable.data || {}));
+		this.connectionIds = storable.connections || [];
 	}
 
 	public id:          string;
 	public x:           number;
 	public y:           number;
-	public connections: string[];
-	public data:        Map<string, any>;
 	public radius:      number;
-	public path:        Path2D | undefined;
+	public path:        Canvas2DObject | undefined;
+	public data:        Map<string, any>;
+	public connections: Connection[] = [];
 
+	protected connectionIds:         string[];
+	protected haveMappedConnections: boolean = false;
+
+	public mapConnections(connections: Map<string, Connection>) {
+		if (this.haveMappedConnections)
+			return;
+
+		this.haveMappedConnections = true;
+		this.connections.length = 0;
+
+		for (const id of this.connectionIds) {
+			const connection = connections.get(id);
+			if (!connection)
+				continue;
+
+			this.connections.push(connection);
+		}
+	}
 
 	public toStorable(): StorableGraphNode {
 		return {
@@ -82,7 +123,7 @@ export class GraphNode {
 			y:           this.y,
 			id:          this.id,
 			radius:      this.radius,
-			connections: this.connections,
+			connections: this.connections.map(c => c.id),
 			data:        Object.fromEntries(this.data),
 		};
 	}

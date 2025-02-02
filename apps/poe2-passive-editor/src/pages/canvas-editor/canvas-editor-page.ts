@@ -1,26 +1,31 @@
 import { html } from 'lit-html';
 import { css, CustomElement, type CSSStyle } from '../../app/custom-element.ts';
-import type { Vec2 } from '@roenlie/core/types';
+import type { Repeat, Vec2 } from '@roenlie/core/types';
 import { tuple } from '@roenlie/core/array';
 import { Connection, GraphNode, type StorableConnection, type StorableGraphNode } from '../../app/graph.ts';
 import { isOutsideViewport, type Viewport } from '../../app/is-outside-viewport.ts';
 import { loadImage } from '../../app/load-image.ts';
+import { Canvas2DObject } from './canvas-object.ts';
+import { oneOf } from '@roenlie/core/validation';
+import { getPathReduction } from '../../app/path-helpers.ts';
 
 
 export class PoeCanvasTree extends CustomElement {
 
 	static { this.register('poe-canvas-editor'); }
 
-	protected bgCanvas:    HTMLCanvasElement;
-	protected bgContext:   CanvasRenderingContext2D;
-	protected mainCanvas:  HTMLCanvasElement;
-	protected mainContext: CanvasRenderingContext2D;
-	protected image:       HTMLImageElement;
-	protected imageVec:    Vec2 = { x: 0, y: 0 };
-	protected objects:     any[] = [];
-	protected nodes:       Map<string, GraphNode> = new Map();
-	protected connections: Map<string, Connection> = new Map();
-	protected pauseRender: boolean = false;
+	protected bgCanvas:      HTMLCanvasElement;
+	protected bgContext:     CanvasRenderingContext2D;
+	protected mainCanvas:    HTMLCanvasElement;
+	protected mainContext:   CanvasRenderingContext2D;
+	protected image:         HTMLImageElement;
+	protected imageVec:      Vec2 = { x: 0, y: 0 };
+	protected nodes:         Map<string, GraphNode> = new Map();
+	protected connections:   Map<string, Connection> = new Map();
+	protected selectedNode?: GraphNode;
+	protected updated?:      number;
+	protected saveOngoing:   boolean = false;
+	protected saveInterval?: ReturnType<typeof setInterval>;
 
 	protected readonly bgView:   View = new View();
 	protected readonly mainView: View = new View();
@@ -42,15 +47,24 @@ export class PoeCanvasTree extends CustomElement {
 		this.drawMainCanvas();
 	});
 
+	protected override connectedCallback(): void {
+		super.connectedCallback();
+		this.tabIndex = 0;
+	}
+
 	protected override disconnectedCallback(): void {
 		super.disconnectedCallback();
 		this.resizeObserver.unobserve(this);
+		this.removeEventListener('keydown', this.onKeydown);
+
+		clearInterval(this.saveInterval);
 	}
 
 	protected override async afterConnected(): Promise<void> {
 		super.afterConnected();
 
 		this.resizeObserver.observe(this);
+		this.addEventListener('keydown', this.onKeydown);
 
 		const width = this.offsetWidth;
 		const height = this.offsetHeight;
@@ -74,36 +88,58 @@ export class PoeCanvasTree extends CustomElement {
 		const opfsRoot   = await navigator.storage.getDirectory();
 		const fileHandle = await opfsRoot.getFileHandle('tree-canvas', { create: true });
 		const file       = await fileHandle.getFile();
-		const { connections, nodes } = JSON.parse(await file.text());
+		const { connections, nodes } = JSON.parse(await file.text()) as {
+			nodes:       StorableGraphNode[];
+			connections: StorableConnection[];
+		};
 
-		this.nodes = new Map(nodes.map(
-			(node: StorableGraphNode) => {
-				const parsed = new GraphNode(node);
+		this.nodes = new Map(nodes.map(node => {
+			const parsed = new GraphNode(node);
 
-				return [ parsed.id, parsed ];
-			},
-		));
-		this.connections = new Map(connections.map(
-			(con: StorableConnection) => {
-				const parsed = new Connection(con);
+			return [ parsed.id, parsed ];
+		}));
+		this.connections = new Map(connections.map(con => {
+			const parsed = new Connection(this.nodes, con);
 
-				return [ parsed.id, parsed ];
-			},
-		));
+			return [ parsed.id, parsed ];
+		}));
 
-		//(async () => {
-		//	const nodes = this.nodes.values().map(node => node.toStorable()).toArray();
-		//	const connections =  this.connections.values().map(con => con.toStorable()).toArray();
+		for (const node of this.nodes.values())
+			node.mapConnections(this.connections);
 
-		//	// A FileSystemDirectoryHandle whose type is "directory" and whose name is "".
-		//	const opfsRoot   = await navigator.storage.getDirectory();
-		//	const fileHandle = await opfsRoot.getFileHandle('tree-canvas', { create: true });
-		//	const writable   = await fileHandle.createWritable({ keepExistingData: false });
-		//	await writable.write(JSON.stringify({ nodes, connections }));
-		//	await writable.close();
-		//})();
+		this.saveInterval = setInterval(this.save.bind(this), 5000);
 
 		this.drawMainCanvas();
+	}
+
+	protected async save() {
+		// Only save if the graph has been updated and a save is not already ongoing.
+		if (!this.updated || this.saveOngoing)
+			return;
+
+		// We clear the updated flag so that a new update can be detected
+		this.updated = undefined;
+
+		// We set the saveOngoing flag to prevent multiple saves at the same time
+		this.saveOngoing = true;
+
+		await this.saveToOPFS();
+
+		this.saveOngoing = false;
+	}
+
+	protected async saveToOPFS() {
+		const nodes = this.nodes.values().map(node => node.toStorable()).toArray();
+		const connections =  this.connections.values().map(con => con.toStorable()).toArray();
+
+		// A FileSystemDirectoryHandle whose type is "directory" and whose name is "".
+		const opfsRoot   = await navigator.storage.getDirectory();
+		const fileHandle = await opfsRoot.getFileHandle('tree-canvas', { create: true });
+		const writable   = await fileHandle.createWritable({ keepExistingData: false });
+		await writable.write(JSON.stringify({ nodes, connections }));
+		await writable.close();
+
+		console.log('Saved to OPFS');
 	}
 
 	protected async loadBackgroundImage() {
@@ -134,6 +170,57 @@ export class PoeCanvasTree extends CustomElement {
 		return percentage;
 	}
 
+	protected getVec2(vec: Vec2): Vec2 | undefined {
+		// If found, returns the node at the mouse position.
+		for (const [ , node ] of this.nodes) {
+			if (!node.path)
+				continue;
+
+			const isInPath = this.mainContext.isPointInPath(node.path, vec.x, vec.y);
+			if (isInPath)
+				return node;
+		}
+
+		// If found, returns the handle vector at the mouse position.
+		for (const [ , con ] of this.connections) {
+			if (con.pathHandle1) {
+				const isInPath = this.mainContext.isPointInPath(con.pathHandle1, vec.x, vec.y);
+				if (isInPath)
+					return con.m1;
+			}
+			if (con.pathHandle2) {
+				const isInPath = this.mainContext.isPointInPath(con.pathHandle2, vec.x, vec.y);
+				if (isInPath)
+					return con.m2;
+			}
+		}
+	}
+
+	protected connectNodes(nodeA?: GraphNode, nodeB?: GraphNode) {
+		if (!nodeA || !nodeB)
+			return;
+
+		const nodeHasNode = (a: GraphNode, b: GraphNode) => a.connections.some(
+			connection => connection.start.id === b.id || connection.stop.id === b.id,
+		);
+
+		const nodeAHasNodeB = nodeHasNode(nodeA, nodeB);
+		if (nodeAHasNodeB)
+			return;
+
+		const nodeBHasNodeA = nodeHasNode(nodeB, nodeA);
+		if (nodeBHasNodeA)
+			return;
+
+		const connection = new Connection(this.nodes, { start: nodeA, stop: nodeB });
+
+		this.connections.set(connection.id, connection);
+		nodeA.connections.push(connection);
+		nodeB.connections.push(connection);
+
+		this.updated = Date.now();
+	}
+
 	protected onMousewheel(ev: WheelEvent) {
 		ev.preventDefault();
 
@@ -156,6 +243,8 @@ export class PoeCanvasTree extends CustomElement {
 	}
 
 	protected onMousedown(ev: MouseEvent) {
+		this.focus();
+
 		if (ev.buttons !== 1)
 			return;
 
@@ -170,86 +259,109 @@ export class PoeCanvasTree extends CustomElement {
 		const realX = viewOffsetX / scale;
 		const realY = viewOffsetY / scale;
 
-		// Try to find a node at the mouse position
-		let node: GraphNode | undefined;
-		this.nodes.forEach(n => {
-			if (!n.path)
-				return;
-
-			const isInPath = this.mainContext
-				.isPointInPath(n.path, ev.offsetX, ev.offsetY);
-
-			if (isInPath)
-				node = n;
-		});
-
-		// Try to find a connection at the mouse position
-		let con: Connection | undefined;
-		this.connections.forEach(c => {
-			if (!c.pathHandle)
-				return;
-
-			const isInPath = this.mainContext
-				.isPointInPath(c.pathHandle, ev.offsetX, ev.offsetY);
-
-			if (isInPath)
-				con = c;
-		});
+		// Try to find a node or connection at the mouse position
+		const nodeOrVec = this.getVec2({ x: ev.offsetX, y: ev.offsetY });
 
 		// If we found a node or a connection, we want to move it
-		if (node || con?.middle) {
-			const vec: Vec2 = node ? node : con!.middle;
+		if (nodeOrVec) {
+			// We setup the mousemove and mouseup events
+			// For moving the node or connection
+			const mouseOffsetX = (realX - nodeOrVec.x) * scale;
+			const mouseOffsetY = (realY - nodeOrVec.y) * scale;
 
-			const mouseOffsetX = (realX - vec.x) * scale;
-			const mouseOffsetY = (realY - vec.y) * scale;
-
-			const mousemove = (ev: MouseEvent) => {
-				const scale = this.mainView.getScale();
-
-				const x = ev.offsetX - this.mainView.getPosition().x - mouseOffsetX;
-				const y = ev.offsetY - this.mainView.getPosition().y - mouseOffsetY;
-
-				vec.x = x / scale;
-				vec.y = y / scale;
-
-				if (vec === node) {
-					node.path = this.createNode(node);
-
-					const connections = node.connections
-						.map(id => this.connections.get(id))
-						.filter((con): con is Connection => !!con);
-
-					connections.forEach(con => {
-						const point = con.start.id === node!.id
-							? con.start
-							: con.end;
-
-						point.x = node!.x;
-						point.y = node!.y;
-
-						con.path = this.drawPath(this.nodes, con);
-					});
-				}
-				else if (vec === con?.middle) {
-					con.middle.x = vec.x;
-					con.middle.y = vec.y;
-
-					con.path = this.drawPath(this.nodes, con);
-					con.pathHandle = this.createPathHandle(con);
-				}
-
-				this.mainView.markDirty();
-				this.drawMainCanvas();
-			};
+			let mousemove: (ev: MouseEvent) => void = () => {};
 			const mouseup = () => {
 				removeEventListener('mousemove', mousemove);
 				removeEventListener('mouseup', mouseup);
 			};
+
+			// We are clicking on a node
+			if (GraphNode.isGraphNode(nodeOrVec)) {
+				if (ev.shiftKey) {
+					this.connectNodes(this.selectedNode, nodeOrVec);
+				}
+				else {
+					if (this.selectedNode?.path)
+						this.selectedNode.path.fillStyle = '';
+
+					this.selectedNode = nodeOrVec;
+					nodeOrVec.path = this.createNode(nodeOrVec);
+				}
+
+				this.mainView.markDirty();
+				this.drawMainCanvas();
+
+				mousemove = (ev: MouseEvent) => {
+					const scale = this.mainView.getScale();
+
+					const x = ev.offsetX - this.mainView.getPosition().x - mouseOffsetX;
+					const y = ev.offsetY - this.mainView.getPosition().y - mouseOffsetY;
+					nodeOrVec.x = x / scale;
+					nodeOrVec.y = y / scale;
+
+					nodeOrVec.path = this.createNode(nodeOrVec);
+
+					for (const con of nodeOrVec.connections) {
+						const point = con.start.id === nodeOrVec.id
+							? con.start
+							: con.stop;
+
+						point.x = nodeOrVec.x;
+						point.y = nodeOrVec.y;
+
+						con.path = this.createPath(this.nodes, con);
+						con.pathHandle1 = this.createPathHandle1(con);
+						con.pathHandle2 = this.createPathHandle2(con);
+					}
+
+					this.mainView.markDirty();
+					this.drawMainCanvas();
+					this.updated = Date.now();
+				};
+			}
+			else {
+				const con = this.connections.values()
+					.find(c => c.m1 === nodeOrVec || c.m2 === nodeOrVec);
+
+				if (!con)
+					return;
+
+				mousemove = (ev: MouseEvent) => {
+					const scale = this.mainView.getScale();
+
+					const x = ev.offsetX - this.mainView.getPosition().x - mouseOffsetX;
+					const y = ev.offsetY - this.mainView.getPosition().y - mouseOffsetY;
+					nodeOrVec.x = x / scale;
+					nodeOrVec.y = y / scale;
+
+					con.path = this.createPath(this.nodes, con);
+					con.pathHandle1 = this.createPathHandle1(con);
+					con.pathHandle2 = this.createPathHandle2(con);
+
+					this.mainView.markDirty();
+					this.drawMainCanvas();
+					this.updated = Date.now();
+				};
+			}
+
 			addEventListener('mousemove', mousemove);
 			addEventListener('mouseup', mouseup);
 		}
 		// If we didn't find a node or a connection, we want to pan the view
 		else {
+			// We are holding alt or double clicking the canvas
+			// so we want to create a new node
+			if (ev.detail === 2 || ev.altKey) {
+				const node = new GraphNode({ x: realX, y: realY });
+
+				this.nodes.set(node.id, node);
+				this.updated = Date.now();
+				this.mainView.markDirty();
+				this.drawMainCanvas();
+			}
+
+			// We setup the mousemove and mouseup events
+			// For panning the view
 			const mousemove = (ev: MouseEvent) => {
 				this.bgView.moveTo(ev.offsetX - viewOffsetX, ev.offsetY - viewOffsetY);
 				this.mainView.moveTo(ev.offsetX - viewOffsetX, ev.offsetY - viewOffsetY);
@@ -267,80 +379,98 @@ export class PoeCanvasTree extends CustomElement {
 		}
 	}
 
+	protected onKeydown = (ev: KeyboardEvent) => {
+		//console.log(ev);
+
+		if (this.selectedNode) {
+			const node = this.selectedNode;
+
+			if (oneOf(ev.code, 'Digit1', 'Digit2', 'Digit3')) {
+				if (ev.code === 'Digit1')
+					node.radius = 7;
+
+				if (ev.code === 'Digit2')
+					node.radius = 10;
+
+				if (ev.code === 'Digit3')
+					node.radius = 15;
+
+				node.path = this.createNode(node);
+				this.updated = Date.now();
+			}
+			else if (ev.code === 'Escape') {
+				this.selectedNode = undefined;
+				node.path = this.createNode(node);
+			}
+			else if (ev.code === 'Delete') {
+				node.connections.forEach(con => this.connections.delete(con.id));
+				this.nodes.delete(node.id);
+				this.updated = Date.now();
+			}
+
+			this.mainView.markDirty();
+			this.drawMainCanvas();
+		}
+	};
+
 	//#region path
-	protected getPathReduction(radius: number, a: number, b: number) {
-		// Calculate the length of the direction vector
-		const lengthStart = Math.sqrt(a * a + b * b);
+	protected createPath(nodes: Map<string, GraphNode>, con: Connection) {
+		const startVec = structuredClone(con.start);
+		const stopVec = structuredClone(con.stop);
+		const mid1Vec = structuredClone(con.m1);
+		const mid2Vec = structuredClone(con.m2);
 
-		// Normalize the direction vector
-		const nxStart = a / lengthStart;
-		const nyStart = b / lengthStart;
+		const startRadius = nodes.get(con.start.id)!.radius;
+		const [ startXreduce, startYreduce ] = getPathReduction(startRadius, startVec, mid1Vec);
+		startVec.x += startXreduce;
+		startVec.y += startYreduce;
 
-		// Scale the normalized vector by the radius
-		const reductionXStart = nxStart * radius;
-		const reductionYStart = nyStart * radius;
+		const stopRadius = nodes.get(con.stop.id)!.radius;
+		const [ stopXreduce, stopYreduce ] = getPathReduction(stopRadius, mid2Vec, stopVec);
+		stopVec.x -= stopXreduce;
+		stopVec.y -= stopYreduce;
 
-		return [ reductionXStart, reductionYStart ] as const;
-	}
+		const path = new Canvas2DObject();
+		path.strokeStyle = 'darkslateblue';
+		path.lineWidth = 2;
 
-	protected drawPath(nodes: Map<string, GraphNode>, con: Connection) {
-		// Assuming you have start and end coordinates
-		let startX = con.start.x;
-		let startY = con.start.y;
-		let stopX  = con.end.x;
-		let stopY  = con.end.y;
-		const midX = con.middle.x;
-		const midY = con.middle.y;
-
-		// Calculate the direction vector
-		const dxStart = midX - startX;
-		const dyStart = midY - startY;
-		const dxStop  = stopX - midX;
-		const dyStop  = stopY - midY;
-
-		const startRadius = nodes.get(con.start.id)?.radius ?? 7;
-		const startReduction = this.getPathReduction(startRadius, dxStart, dyStart);
-		startX += startReduction[0];
-		startY += startReduction[1];
-
-		const stopRadius = nodes.get(con.end.id)?.radius ?? 7;
-		const endReduction = this.getPathReduction(stopRadius, dxStop, dyStop);
-		stopX -= endReduction[0];
-		stopY -= endReduction[1];
-
-		const start = { x: startX, y: startY };
-		const cp1 = { x: midX, y: midY };
-		const end = { x: stopX, y: stopY };
-
-		const path = new Path2D();
-		path.moveTo(start.x, start.y);
-		path.quadraticCurveTo(cp1.x, cp1.y, end.x, end.y);
+		path.moveTo(startVec.x, startVec.y);
+		path.bezierCurveTo(
+			mid1Vec.x, mid1Vec.y,
+			mid2Vec.x, mid2Vec.y,
+			stopVec.x, stopVec.y,
+		);
 
 		return path;
 	}
 
 	protected mapPaths() {
 		for (const con of this.connections.values()) {
-			const outsideStart  = isOutsideViewport(this.mainView.viewport, con.start);
-			const outsideMiddle = isOutsideViewport(this.mainView.viewport, con.middle);
-			const outsideEnd    = isOutsideViewport(this.mainView.viewport, con.end);
-			if (outsideStart && outsideEnd && outsideMiddle)
+			const outsideStart = isOutsideViewport(this.mainView.viewport, con.start);
+			const outsideMid1  = isOutsideViewport(this.mainView.viewport, con.m1);
+			const outsideMid2  = isOutsideViewport(this.mainView.viewport, con.m2);
+			const outsideStop  = isOutsideViewport(this.mainView.viewport, con.stop);
+			if (outsideStart && outsideStop && outsideMid1 && outsideMid2)
 				continue;
 
-			if (!con.path)
-				con.path = this.drawPath(this.nodes, con);
-
-			this.mainContext.strokeStyle = 'darkslateblue';
-			this.mainContext.lineWidth = 2;
-			this.mainContext.stroke(con.path);
+			con.path ??= this.createPath(this.nodes, con);
+			con.path.draw(this.mainContext);
 		}
 	}
 	//#endregion
 
 	//#region node
 	protected createNode(node: GraphNode) {
-		const path = new Path2D();
+		const path = new Canvas2DObject();
 		path.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+
+		path.lineWidth = 1;
+		path.strokeStyle = 'silver';
+
+		if (this.selectedNode === node)
+			path.fillStyle = 'rgba(255, 255, 255, 0.5)';
+		else
+			path.fillStyle = '';
 
 		return path;
 	}
@@ -350,20 +480,16 @@ export class PoeCanvasTree extends CustomElement {
 			if (isOutsideViewport(this.mainView.viewport, node))
 				continue;
 
-			if (!node.path)
-				node.path = this.createNode(node);
-
-			this.mainContext.lineWidth = 1;
-			this.mainContext.strokeStyle = 'silver';
-			this.mainContext.stroke(node.path);
+			node.path ??= this.createNode(node);
+			node.path.draw(this.mainContext);
 		}
 	}
 	//#endregion
 
 	//#region handle
-	protected calculatePathAngle(start: Vec2, end: Vec2) {
-		const deltaX = end.x - start.x;
-		const deltaY = end.y - start.y;
+	protected calculatePathAngle(start: Vec2, stop: Vec2) {
+		const deltaX = stop.x - start.x;
+		const deltaY = stop.y - start.y;
 		const angleInRadians = Math.atan2(deltaY, deltaX);
 		const angleInDegrees = angleInRadians * (180 / Math.PI);
 
@@ -391,41 +517,66 @@ export class PoeCanvasTree extends CustomElement {
 		return vertices.map(vertex => this.rotatePoint(vertex, angleInDegrees, origin));
 	}
 
-	protected createPathHandle(con: Connection) {
-		const length = 2;
+	protected createPathHandle1(con: Connection) {
+		const len = 2;
 		const rawPoints = [
-			{ x: con.middle.x - length, y: con.middle.y },
-			{ x: con.middle.x, y: con.middle.y - length },
-			{ x: con.middle.x + length, y: con.middle.y },
-			{ x: con.middle.x, y: con.middle.y + length },
+			{ x: con.m1.x - len, y: con.m1.y       },
+			{ x: con.m1.x,       y: con.m1.y - len },
+			{ x: con.m1.x + len, y: con.m1.y       },
+			{ x: con.m1.x,       y: con.m1.y + len },
 		];
 
 		const points = this.rotateVertices(
-			rawPoints,
-			this.calculatePathAngle(con.start, con.end),
-			con.middle,
-		) as [ Vec2, Vec2, Vec2, Vec2 ];
+			rawPoints, this.calculatePathAngle(con.start, con.m2), con.m1,
+		) as Repeat<4, Vec2>;
 
-		const path = new Path2D();
+		const path = new Canvas2DObject();
 		path.moveTo(points[0].x, points[0].y);
 		path.lineTo(points[1].x, points[1].y);
 		path.lineTo(points[2].x, points[2].y);
 		path.lineTo(points[3].x, points[3].y);
 		path.closePath();
 
+		path.fillStyle = 'rgb(240 240 240 / 50%)';
+
+		return path;
+	}
+
+	protected createPathHandle2(con: Connection) {
+		const len = 2;
+		const rawPoints = [
+			{ x: con.m2.x - len, y: con.m2.y       },
+			{ x: con.m2.x,       y: con.m2.y - len },
+			{ x: con.m2.x + len, y: con.m2.y       },
+			{ x: con.m2.x,       y: con.m2.y + len },
+		];
+
+		const points = this.rotateVertices(
+			rawPoints, this.calculatePathAngle(con.m1, con.stop), con.m2,
+		) as Repeat<4, Vec2>;
+
+		const path = new Canvas2DObject();
+		path.moveTo(points[0].x, points[0].y);
+		path.lineTo(points[1].x, points[1].y);
+		path.lineTo(points[2].x, points[2].y);
+		path.lineTo(points[3].x, points[3].y);
+		path.closePath();
+
+		path.fillStyle = 'rgb(240 240 240 / 50%)';
+
 		return path;
 	}
 
 	protected mapPathHandles() {
 		for (const con of this.connections.values()) {
-			if (isOutsideViewport(this.mainView.viewport, con.middle))
-				continue;
-
-			if (!con.pathHandle)
-				con.pathHandle = this.createPathHandle(con);
-
-			this.mainContext.fillStyle = 'rgb(240 240 240 / 50%)';
-			this.mainContext.fill(con.pathHandle);
+			if (!isOutsideViewport(this.mainView.viewport, con.m1)) {
+				con.pathHandle1 ??= this.createPathHandle1(con);
+				con.pathHandle1.draw(this.mainContext);
+			}
+			if (!isOutsideViewport(this.mainView.viewport, con.m2)) {
+				con.pathHandle2 ??= this.createPathHandle2(con);
+				con.pathHandle2.draw(this.mainContext);
+			}
 		}
 	}
 	//#endregion
@@ -469,7 +620,7 @@ export class PoeCanvasTree extends CustomElement {
 		return html`
 		<canvas id="background"></canvas>
 		<canvas id="main"
-			@mousedown=${ this.onMousedown }
+			@mousedown =${ this.onMousedown }
 			@mousewheel=${ this.onMousewheel }
 		></canvas>
 		`;
@@ -479,6 +630,7 @@ export class PoeCanvasTree extends CustomElement {
 		:host {
 			contain: strict;
 			display: grid;
+			outline: none;
 		}
 		canvas {
 			grid-row: 1/2;
@@ -511,6 +663,7 @@ class View {
 		this.ctx.canvas.height = height;
 	}
 
+	/** Calculcates the current viewport dimensions for the view. */
 	protected updateViewport(): void {
 		const { x, y } = this.getPosition();
 		const scale = this.getScale();

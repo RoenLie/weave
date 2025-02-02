@@ -195,7 +195,7 @@ export class Poe2Tree extends CustomElement {
 
 							connections.forEach(con => {
 								const point = con.start.id === node.id
-									? con.start : con.end;
+									? con.start : con.stop;
 
 								point.x = node.x;
 								point.y = node.y;
@@ -383,10 +383,9 @@ export class Poe2Tree extends CustomElement {
 				if (!connection)
 					return false;
 
-				return connection.start.id === b.id || connection.end.id === b.id;
+				return connection.start.id === b.id || connection.stop.id === b.id;
 			},
 		);
-
 
 		const nodeAHasNodeB = nodeHasNode(nodeA, nodeB);
 		if (nodeAHasNodeB)

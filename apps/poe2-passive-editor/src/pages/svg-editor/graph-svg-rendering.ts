@@ -102,15 +102,15 @@ export class Path {
 			skip ||
 			(checkViewport
 			&& isOutsideViewport(viewport, con.start)
-			&& isOutsideViewport(viewport, con.end))
+			&& isOutsideViewport(viewport, con.stop))
 		)
 			return;
 
 		// Assuming you have start and end coordinates
 		let startX = con.start.x;
 		let startY = con.start.y;
-		let stopX  = con.end.x;
-		let stopY  = con.end.y;
+		let stopX  = con.stop.x;
+		let stopY  = con.stop.y;
 		const midX = con.middle.x;
 		const midY = con.middle.y;
 
@@ -125,7 +125,7 @@ export class Path {
 		startX += startReduction[0];
 		startY += startReduction[1];
 
-		const stopRadius = nodes.get(con.end.id)?.radius ?? 7;
+		const stopRadius = nodes.get(con.stop.id)?.radius ?? 7;
 		const endReduction = this.getReduction(stopRadius, dxStop, dyStop);
 		stopX -= endReduction[0];
 		stopY -= endReduction[1];
@@ -195,7 +195,7 @@ export class PathHandle {
 		];
 
 		const rotated = this.rotateVertices(rawPoints,
-			this.calculatePathAngle(con.start, con.end), con.middle);
+			this.calculatePathAngle(con.start, con.stop), con.middle);
 
 		const points = rotated.map(p => `${ p.x },${ p.y }`).join(' ');
 
