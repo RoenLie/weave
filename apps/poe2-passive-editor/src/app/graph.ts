@@ -29,25 +29,33 @@ export class Connection {
 		nodes: Map<string, GraphNode>,
 		storable: Optional<StorableConnection, 'm1' | 'm2'>,
 	) {
-		const { start, stop, m1, m2, id } = storable;
+		let { start, stop, m1, m2, id } = storable;
 
 		this.id    = id || domId();
 		this.start = { id: start.id, x: start.x, y: start.y };
-		this.stop   = { id: stop.id,   x: stop.x,   y: stop.y };
+		this.stop  = { id: stop.id,   x: stop.x,   y: stop.y };
 
-		const mid = { x: (start.x + stop.x) / 2, y: (start.y + stop.y) / 2 };
-		this.m1 = m1 || { x: (start.x + mid.x) / 2, y: (start.y + mid.y) / 2 };
-		this.m2 = m2 || { x: (mid.x + stop.x) / 2, y: (mid.y + stop.y) / 2 };
+		if (!m1 || !m2) {
+			const mid = { x: (start.x + stop.x) / 2, y: (start.y + stop.y) / 2 };
+			m1 = { x: (start.x + mid.x) / 2, y: (start.y + mid.y) / 2 };
+			m2 = { x: (mid.x + stop.x) / 2, y: (mid.y + stop.y) / 2 };
 
-		const startRadius = nodes.get(this.start.id)!.radius / 2;
-		const stopRadius   = nodes.get(this.stop.id)!.radius / 2;
-		const [ reductionX1, reductionY1 ] = getPathReduction(startRadius, this.start, this.m1);
-		const [ reductionX2, reductionY2 ] = getPathReduction(stopRadius, this.m2, this.stop);
+			const startRadius = nodes.get(this.start.id)!.radius / 2;
+			const stopRadius   = nodes.get(this.stop.id)!.radius / 2;
+			const [ x1, y1 ] = getPathReduction(startRadius, this.start, this.m1);
+			const [ x2, y2 ] = getPathReduction(stopRadius, this.m2, this.stop);
 
-		this.m1.x += reductionX1;
-		this.m1.y += reductionY1;
-		this.m2.x -= reductionX2;
-		this.m2.y -= reductionY2;
+			m1.x += x1;
+			m1.y += y1;
+			m2.x -= x2;
+			m2.y -= y2;
+
+			this.m1 = m1;
+			this.m2 = m2;
+		}
+
+		this.m1 = m1;
+		this.m2 = m2;
 	}
 
 	public id:    string;
