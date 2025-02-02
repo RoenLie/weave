@@ -16,7 +16,7 @@ export default defineConfig({
 			return {
 				name: 'save-graph-api',
 				configureServer(server) {
-					server.middlewares.use(bodyparser.json({ limit: '20mb' }));
+					server.middlewares.use(bodyparser.json({ limit: '20mb', type: 'application/json' }));
 					server.middlewares.use(async (req, res, next) => {
 						if (req.url !== '/save-graph-to-file')
 							return void next();
