@@ -1,4 +1,9 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
+import bodyparser from 'body-parser';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import type { StorableConnection, StorableGraphNode } from './src/app/graph.ts';
+
 
 export default defineConfig({
 	esbuild: {
@@ -6,4 +11,36 @@ export default defineConfig({
 			'top-level-await': true,
 		},
 	},
+	plugins: [
+		(() => {
+			return {
+				name: 'save-graph-api',
+				configureServer(server) {
+					server.middlewares.use(bodyparser.json({ limit: '20mb' }));
+					server.middlewares.use(async (req, res, next) => {
+						if (req.url !== '/save-graph-to-file')
+							return void next();
+						if (req.method !== 'POST')
+							return void res.end('Invalid method');
+						if (!('body' in req))
+							return void res.end('Invalid body');
+
+						const body = req.body as {
+							version:     number;
+							nodes:       StorableGraphNode[];
+							connections: StorableConnection[];
+						};
+
+						const dirPath = join(resolve(), 'public', 'graphs');
+						const filePath = join(dirPath, `graph-version-${ body.version }.json`);
+
+						await mkdir(dirPath, { recursive: true });
+						await writeFile(filePath, JSON.stringify(body, null, 2));
+
+						return void res.end('Saved');
+					});
+				},
+			} satisfies Plugin as Plugin;
+		})(),
+	],
 });

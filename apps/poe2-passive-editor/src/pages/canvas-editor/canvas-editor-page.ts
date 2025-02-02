@@ -1,13 +1,14 @@
 import { html } from 'lit-html';
 import { css, CustomElement, type CSSStyle } from '../../app/custom-element.ts';
 import type { Repeat, Vec2 } from '@roenlie/core/types';
-import { tuple } from '@roenlie/core/array';
 import { Connection, GraphNode, type StorableConnection, type StorableGraphNode } from '../../app/graph.ts';
-import { isOutsideViewport, type Viewport } from '../../app/is-outside-viewport.ts';
+import { isOutsideViewport } from '../../app/is-outside-viewport.ts';
 import { loadImage } from '../../app/load-image.ts';
 import { Canvas2DObject } from './canvas-object.ts';
 import { oneOf } from '@roenlie/core/validation';
 import { getPathReduction } from '../../app/path-helpers.ts';
+import { View } from '../../app/canvas-view.ts';
+import { maybe } from '@roenlie/core/async';
 
 
 export class PoeCanvasTree extends CustomElement {
@@ -37,11 +38,8 @@ export class PoeCanvasTree extends CustomElement {
 		const width = entry.contentRect.width;
 		const height = entry.contentRect.height;
 
-		this.bgView.setDimensions(width, height);
-		this.bgView.applyTransform();
-
-		this.mainView.setDimensions(width, height);
-		this.mainView.applyTransform();
+		this.bgView.setCanvasSize(width, height);
+		this.mainView.setCanvasSize(width, height);
 
 		this.drawBackgroundCanvas();
 		this.drawMainCanvas();
@@ -66,32 +64,23 @@ export class PoeCanvasTree extends CustomElement {
 		this.resizeObserver.observe(this);
 		this.addEventListener('keydown', this.onKeydown);
 
-		const width = this.offsetWidth;
-		const height = this.offsetHeight;
-
 		this.mainCanvas = this.shadowRoot!.querySelector('#main') as HTMLCanvasElement;
 		this.mainContext = this.mainCanvas.getContext('2d') as CanvasRenderingContext2D;
 
 		this.bgCanvas = this.shadowRoot!.querySelector('#background') as HTMLCanvasElement;
 		this.bgContext = this.bgCanvas.getContext('2d') as CanvasRenderingContext2D;
 
+		const width = this.offsetWidth;
+		const height = this.offsetHeight;
+
 		this.bgView.setContext(this.bgContext);
-		this.bgView.setDimensions(width, height);
+		this.bgView.setCanvasSize(width, height);
 		this.mainView.setContext(this.mainContext);
-		this.mainView.setDimensions(width, height);
+		this.mainView.setCanvasSize(width, height);
 
 		await this.loadBackgroundImage();
-		await this.loadFromOPFS();
-	}
-
-	protected async loadFromOPFS() {
-		const opfsRoot   = await navigator.storage.getDirectory();
-		const fileHandle = await opfsRoot.getFileHandle('tree-canvas', { create: true });
-		const file       = await fileHandle.getFile();
-		const { connections, nodes } = JSON.parse(await file.text()) as {
-			nodes:       StorableGraphNode[];
-			connections: StorableConnection[];
-		};
+		//const { nodes, connections } = await this.loadFromOPFS();
+		const { nodes, connections } = await this.loadFromPublicFile();
 
 		this.nodes = new Map(nodes.map(node => {
 			const parsed = new GraphNode(node);
@@ -108,8 +97,31 @@ export class PoeCanvasTree extends CustomElement {
 			node.mapConnections(this.connections);
 
 		this.saveInterval = setInterval(this.save.bind(this), 5000);
-
 		this.drawMainCanvas();
+	}
+
+	protected async loadFromOPFS() {
+		const opfsRoot   = await navigator.storage.getDirectory();
+		const fileHandle = await opfsRoot.getFileHandle('tree-canvas', { create: true });
+		const file       = await fileHandle.getFile();
+
+		return JSON.parse(await file.text()) as {
+			nodes:       StorableGraphNode[];
+			connections: StorableConnection[];
+		};
+	}
+
+	protected async loadFromPublicFile() {
+		const [ data, err ] = await maybe(fetch('/graphs/graph-version-1.json')
+			.then(res => res.json()));
+
+		if (err)
+			throw err;
+
+		return data as {
+			nodes:       StorableGraphNode[];
+			connections: StorableConnection[];
+		};
 	}
 
 	protected async save() {
@@ -123,15 +135,16 @@ export class PoeCanvasTree extends CustomElement {
 		// We set the saveOngoing flag to prevent multiple saves at the same time
 		this.saveOngoing = true;
 
-		await this.saveToOPFS();
+		const nodes = this.nodes.values().map(node => node.toStorable()).toArray();
+		const connections =  this.connections.values().map(con => con.toStorable()).toArray();
+
+		//await this.saveToOPFS(nodes, connections);
+		await this.saveToLocalFile(nodes, connections);
 
 		this.saveOngoing = false;
 	}
 
-	protected async saveToOPFS() {
-		const nodes = this.nodes.values().map(node => node.toStorable()).toArray();
-		const connections =  this.connections.values().map(con => con.toStorable()).toArray();
-
+	protected async saveToOPFS(nodes: StorableGraphNode[], connections: StorableConnection[]) {
 		// A FileSystemDirectoryHandle whose type is "directory" and whose name is "".
 		const opfsRoot   = await navigator.storage.getDirectory();
 		const fileHandle = await opfsRoot.getFileHandle('tree-canvas', { create: true });
@@ -140,6 +153,19 @@ export class PoeCanvasTree extends CustomElement {
 		await writable.close();
 
 		console.log('Saved to OPFS');
+	}
+
+	protected async saveToLocalFile(nodes: StorableGraphNode[], connections: StorableConnection[]) {
+		const [ , err ] = await maybe(fetch('/save-graph-to-file', {
+			method:  'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body:    JSON.stringify({ version: 1, nodes, connections }),
+		}).then(res => res.status));
+
+		if (err)
+			console.error(err);
+		else
+			console.log('Saved to local filesystem');
 	}
 
 	protected async loadBackgroundImage() {
@@ -154,20 +180,6 @@ export class PoeCanvasTree extends CustomElement {
 		this.mainView.moveTo(x, y);
 		this.drawBackgroundCanvas();
 		this.drawMainCanvas();
-	}
-
-	protected getVisiblePercentage(): number {
-		const imageWidth     = this.image.naturalWidth;
-		const imageHeight    = this.image.naturalHeight;
-		const canvasViewport = this.mainView.viewport;
-
-		const totalArea    = imageWidth * imageHeight;
-		const viewportArea = (canvasViewport.x2 - canvasViewport.x1)
-			* (canvasViewport.y2 - canvasViewport.y1);
-
-		const percentage = (viewportArea / totalArea) * 100;
-
-		return percentage;
 	}
 
 	protected getVec2(vec: Vec2): Vec2 | undefined {
@@ -238,17 +250,15 @@ export class PoeCanvasTree extends CustomElement {
 
 		this.drawBackgroundCanvas();
 		this.drawMainCanvas();
-
-		this.getVisiblePercentage();
 	}
 
 	protected onMousedown(ev: MouseEvent) {
-		this.focus();
-
+		// We only care about left clicks
 		if (ev.buttons !== 1)
 			return;
 
 		ev.preventDefault();
+		this.focus();
 
 		// Get the offset from the corner of the current view to the mouse position
 		const viewOffsetX = ev.offsetX - this.mainView.getPosition().x;
@@ -348,10 +358,11 @@ export class PoeCanvasTree extends CustomElement {
 			addEventListener('mouseup', mouseup);
 		}
 		// If we didn't find a node or a connection, we want to pan the view
+		// and create a node if alt/cmd is pressed
 		else {
 			// We are holding alt or double clicking the canvas
 			// so we want to create a new node
-			if (ev.detail === 2 || ev.altKey) {
+			if (ev.altKey || ev.metaKey) {
 				const node = new GraphNode({ x: realX, y: realY });
 
 				this.nodes.set(node.id, node);
@@ -468,7 +479,7 @@ export class PoeCanvasTree extends CustomElement {
 		path.strokeStyle = 'silver';
 
 		if (this.selectedNode === node)
-			path.fillStyle = 'rgba(255, 255, 255, 0.5)';
+			path.fillStyle = 'rgba(255, 255, 255, 0.2)';
 		else
 			path.fillStyle = '';
 
@@ -605,7 +616,9 @@ export class PoeCanvasTree extends CustomElement {
 			mainView.applyTransform();
 		}
 
-		const percentage = this.getVisiblePercentage();
+		const percentage = this.mainView.getVisiblePercentage(
+			this.image.naturalWidth, this.image.naturalHeight,
+		);
 
 		if (percentage < 50)
 			this.mapPaths();
@@ -639,88 +652,5 @@ export class PoeCanvasTree extends CustomElement {
 			height: 100%;
 		}
 	`;
-
-}
-
-
-class View {
-
-	public viewport: Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
-	protected matrix = tuple(1, 0, 0, 1, 0, 0); // current view transform
-	protected pos:   Vec2 = { x: 0, y: 0 }; // current position of origin
-	protected ctx:   CanvasRenderingContext2D; // reference to the 2D context
-	protected scale: number = 1; // current scale
-	protected dirty: boolean = true;
-
-	public setContext(context: CanvasRenderingContext2D) {
-		this.ctx = context;
-		this.dirty = true;
-	};
-
-	/** Sets canvas width and height. */
-	public setDimensions(width: number, height: number) {
-		this.ctx.canvas.width = width;
-		this.ctx.canvas.height = height;
-	}
-
-	/** Calculcates the current viewport dimensions for the view. */
-	protected updateViewport(): void {
-		const { x, y } = this.getPosition();
-		const scale = this.getScale();
-
-		const viewableWidth = this.ctx.canvas.width;
-		const viewableHeight = this.ctx.canvas.height;
-
-		const x1 = -x / scale;
-		const y1 = -y / scale;
-		const x2 = x1 + (viewableWidth / scale);
-		const y2 = y1 + (viewableHeight / scale);
-
-		this.viewport = { x1, x2, y1, y2 };
-	}
-
-	/** set the 2D context transform to the view */
-	public applyTransform() {
-		if (this.dirty)
-			this.update();
-
-		const { matrix: m, ctx } = this;
-		ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
-
-		this.updateViewport();
-	};
-
-	public getScale() { return this.scale; };
-	public getPosition() { return this.pos; }
-	public markDirty() { this.dirty = true; }
-	public isDirty() { return this.dirty; }
-	public update() {
-		const { matrix: m, scale, pos } = this;
-
-		this.dirty = false;
-		m[3] = m[0] = scale;
-		m[2] = m[1] = 0;
-		m[4] = pos.x;
-		m[5] = pos.y;
-	};
-
-	public scaleAt(at: Vec2, amount: number) {
-		if (this.dirty)
-			this.update();
-
-		this.scale *= amount;
-		this.pos.x = at.x - (at.x - this.pos.x) * amount;
-		this.pos.y = at.y - (at.y - this.pos.y) * amount;
-		this.dirty = true;
-	};
-
-	public moveTo(x: number, y: number) {
-		if (this.dirty)
-			this.update();
-
-		this.pos.x = x;
-		this.pos.y = y;
-		this.dirty = true;
-	};
 
 }

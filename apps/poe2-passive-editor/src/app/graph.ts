@@ -41,9 +41,9 @@ export class Connection {
 			m2 = { x: (mid.x + stop.x) / 2, y: (mid.y + stop.y) / 2 };
 
 			const startRadius = nodes.get(this.start.id)!.radius / 2;
-			const stopRadius   = nodes.get(this.stop.id)!.radius / 2;
-			const [ x1, y1 ] = getPathReduction(startRadius, this.start, this.m1);
-			const [ x2, y2 ] = getPathReduction(stopRadius, this.m2, this.stop);
+			const stopRadius  = nodes.get(this.stop.id)!.radius  / 2;
+			const [ x1, y1 ] = getPathReduction(startRadius, this.start, m1);
+			const [ x2, y2 ] = getPathReduction(stopRadius, m2, this.stop);
 
 			m1.x += x1;
 			m1.y += y1;
