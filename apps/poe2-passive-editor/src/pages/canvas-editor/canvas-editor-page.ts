@@ -455,18 +455,18 @@ export class PoeCanvasTree extends CustomElement {
 		const mid2Vec = structuredClone(con.m2);
 
 		const startRadius = nodes.get(con.start.id)!.radius;
-		const [ startXreduce, startYreduce ] = getPathReduction(startRadius, startVec, mid1Vec);
-		startVec.x += startXreduce;
-		startVec.y += startYreduce;
+		const [ startXReduce, startYReduce ] = getPathReduction(startRadius, startVec, mid1Vec);
+		startVec.x += startXReduce;
+		startVec.y += startYReduce;
 
 		const stopRadius = nodes.get(con.stop.id)!.radius;
-		const [ stopXreduce, stopYreduce ] = getPathReduction(stopRadius, mid2Vec, stopVec);
-		stopVec.x -= stopXreduce;
-		stopVec.y -= stopYreduce;
+		const [ stopXReduce, stopYReduce ] = getPathReduction(stopRadius, mid2Vec, stopVec);
+		stopVec.x -= stopXReduce;
+		stopVec.y -= stopYReduce;
 
 		const path = new Canvas2DObject();
-		path.strokeStyle = 'darkslateblue';
-		path.lineWidth = 2;
+		path.strokeStyle = 'rgb(72 61 139)';
+		path.lineWidth = 6;
 
 		path.moveTo(startVec.x, startVec.y);
 		path.bezierCurveTo(
@@ -498,11 +498,11 @@ export class PoeCanvasTree extends CustomElement {
 		const path = new Canvas2DObject();
 		path.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
 
-		path.lineWidth = 1;
-		path.strokeStyle = 'silver';
+		path.lineWidth = 4;
+		path.strokeStyle = 'rgb(241 194 50)';
 
 		if (this.selectedNode === node)
-			path.fillStyle = 'rgba(255, 255, 255, 0.2)';
+			path.fillStyle = 'rgb(255 255 255 / 20%)';
 		else
 			path.fillStyle = '';
 
@@ -552,7 +552,7 @@ export class PoeCanvasTree extends CustomElement {
 	}
 
 	protected createPathHandle1(con: Connection) {
-		const len = 2;
+		const len = 6;
 		const rawPoints = [
 			{ x: con.m1.x - len, y: con.m1.y       },
 			{ x: con.m1.x,       y: con.m1.y - len },
@@ -577,7 +577,7 @@ export class PoeCanvasTree extends CustomElement {
 	}
 
 	protected createPathHandle2(con: Connection) {
-		const len = 2;
+		const len = 6;
 		const rawPoints = [
 			{ x: con.m2.x - len, y: con.m2.y       },
 			{ x: con.m2.x,       y: con.m2.y - len },

@@ -25,7 +25,7 @@ export class View {
 		this.applyTransform();
 	}
 
-	/** Calculcates the current viewport dimensions for the view. */
+	/** Calculates the current viewport dimensions for the view. */
 	protected updateViewport(): void {
 		const { x, y } = this.getPosition();
 		const scale = this.getScale();
