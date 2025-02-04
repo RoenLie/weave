@@ -12,6 +12,7 @@ export class View {
 	protected scale: number = 1; // current scale
 	protected dirty: boolean = true;
 
+
 	public setContext(context: CanvasRenderingContext2D) {
 		this.ctx = context;
 		this.dirty = true;

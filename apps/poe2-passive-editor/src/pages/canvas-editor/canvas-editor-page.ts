@@ -202,9 +202,9 @@ export class PoeCanvasTree extends CustomElement {
 		const dx2 = dx1 + this.chunkSize;
 		const dy2 = dy1 + this.chunkSize;
 
-		const { x1: vx1, x2: vx2, y1: vy1, y2: vy2 } = this.bgView.viewport;
+		const { x1, x2, y1, y2 } = this.bgView.viewport;
 
-		return isRectInsideAnother([ dx1, dy1, dx2, dy2 ], [ vx1, vy1, vx2, vy2 ]);
+		return isRectInsideAnother([ dx1, dy1, dx2, dy2 ], [ x1, y1, x2, y2 ]);
 	}
 
 	protected getVec2(vec: Vec2): Vec2 | undefined {
@@ -387,9 +387,13 @@ export class PoeCanvasTree extends CustomElement {
 		else {
 			// We are holding alt or double clicking the canvas
 			// so we want to create a new node
-			if (ev.altKey || ev.metaKey) {
+			if (ev.detail === 2 || ev.altKey || ev.metaKey) {
 				const node = new GraphNode({ x: realX, y: realY });
 
+				if (this.selectedNode?.path)
+					this.selectedNode.path.fillStyle = '';
+
+				this.selectedNode = node;
 				this.nodes.set(node.id, node);
 				this.updated = Date.now();
 				this.mainView.markDirty();
@@ -466,7 +470,7 @@ export class PoeCanvasTree extends CustomElement {
 
 		const path = new Canvas2DObject();
 		path.strokeStyle = 'rgb(72 61 139)';
-		path.lineWidth = 6;
+		path.lineWidth = 4;
 
 		path.moveTo(startVec.x, startVec.y);
 		path.bezierCurveTo(
@@ -498,7 +502,7 @@ export class PoeCanvasTree extends CustomElement {
 		const path = new Canvas2DObject();
 		path.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
 
-		path.lineWidth = 4;
+		path.lineWidth = 2;
 		path.strokeStyle = 'rgb(241 194 50)';
 
 		if (this.selectedNode === node)
@@ -647,6 +651,20 @@ export class PoeCanvasTree extends CustomElement {
 
 		if (foundUnloadedImages)
 			waitForPromises(this.imagePromises).then(() => this.drawBackgroundCanvas());
+
+		// Trying to debug an issue where a quad is not being drawn.
+		//const status = this.images.reduce((acc, img, i) => {
+		//	const row = Math.floor(i / 10);
+		//	const col = i % 10;
+
+		//	acc[row] ??= [];
+		//	acc[row][col] = this.isImgInView(img) ? '❤️' : '☠️';
+
+		//	return acc;
+		//}, []);
+
+		//console.clear();
+		//console.table(status);
 	}
 
 	protected drawMainCanvas() {
@@ -665,7 +683,8 @@ export class PoeCanvasTree extends CustomElement {
 		if (percentage < 50)
 			this.mapPaths();
 
-		this.mapNodes();
+		if (percentage < 50)
+			this.mapNodes();
 
 		if (percentage < 10)
 			this.mapPathHandles();
