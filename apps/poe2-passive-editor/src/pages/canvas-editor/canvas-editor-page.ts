@@ -1,14 +1,15 @@
 import { html } from 'lit-html';
 import { css, CustomElement, type CSSStyle } from '../../app/custom-element.ts';
 import type { Repeat, Vec2 } from '@roenlie/core/types';
-import { Connection, GraphNode, type StorableConnection, type StorableGraphNode } from '../../app/graph.ts';
+import { Connection, GraphNode, type StorableConnection, type StorableGraphNode, type StringVec2 } from '../../app/graph.ts';
 import { isOutsideViewport } from '../../app/is-outside-viewport.ts';
 import { loadImage } from '../../app/load-image.ts';
 import { Canvas2DObject } from './canvas-object.ts';
 import { oneOf } from '@roenlie/core/validation';
-import { getPathReduction } from '../../app/path-helpers.ts';
+import { getPathReduction, isRectInsideAnother } from '../../app/path-helpers.ts';
 import { View } from '../../app/canvas-view.ts';
-import { maybe } from '@roenlie/core/async';
+import { maybe, waitForPromises } from '@roenlie/core/async';
+import { range } from '@roenlie/core/array';
 
 
 export class PoeCanvasTree extends CustomElement {
@@ -19,20 +20,26 @@ export class PoeCanvasTree extends CustomElement {
 	protected bgContext:     CanvasRenderingContext2D;
 	protected mainCanvas:    HTMLCanvasElement;
 	protected mainContext:   CanvasRenderingContext2D;
-	protected image:         HTMLImageElement;
-	protected imageVec:      Vec2 = { x: 0, y: 0 };
 	protected nodes:         Map<string, GraphNode> = new Map();
 	protected connections:   Map<string, Connection> = new Map();
 	protected selectedNode?: GraphNode;
 	protected updated?:      number;
 	protected saveOngoing:   boolean = false;
 	protected saveInterval?: ReturnType<typeof setInterval>;
+	protected imageSize = 13000;
+	protected chunkSize = 1300;
+	protected images:        {
+		x:        number,
+		y:        number;
+		image:    HTMLImageElement | undefined;
+		getImage: () => Promise<HTMLImageElement>;
+	}[] = [];
 
 	protected readonly bgView:   View = new View();
 	protected readonly mainView: View = new View();
 	protected readonly resizeObserver = new ResizeObserver(entries => {
 		const entry = entries[0];
-		if (!this.image || !entry)
+		if (!entry)
 			return;
 
 		const width = entry.contentRect.width;
@@ -112,7 +119,7 @@ export class PoeCanvasTree extends CustomElement {
 	}
 
 	protected async loadFromPublicFile() {
-		const [ data, err ] = await maybe(fetch('/graphs/graph-version-1.json')
+		const [ data, err ] = await maybe(fetch('/graphs/graph-version-2.json')
 			.then(res => res.json()));
 
 		if (err)
@@ -159,7 +166,7 @@ export class PoeCanvasTree extends CustomElement {
 		const [ , err ] = await maybe(fetch('/save-graph-to-file', {
 			method:  'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body:    JSON.stringify({ version: 1, nodes, connections }),
+			body:    JSON.stringify({ version: 2, nodes, connections }),
 		}).then(res => res.status));
 
 		if (err)
@@ -169,17 +176,35 @@ export class PoeCanvasTree extends CustomElement {
 	}
 
 	protected async loadBackgroundImage() {
-		this.image = await loadImage('/poe2-tree.png');
+		this.images = range(0, 100).map(i => {
+			return {
+				getImage: () => loadImage(`/background/v2/poe2-bg${ i + 1 }.webp`),
+				image:    undefined,
+				x:        (i % 10) * this.chunkSize,
+				y:        Math.floor(i / 10) * this.chunkSize,
+			};
+		});
 
+		const imageSize = this.imageSize;
 		const parentWidth = this.offsetWidth;
 		const parentHeight = this.offsetHeight;
-		const y = parentHeight / 2 - this.image.naturalHeight / 2;
-		const x = parentWidth  / 2 - this.image.naturalWidth  / 2;
+		const y = parentHeight / 2 - imageSize / 2;
+		const x = parentWidth  / 2 - imageSize  / 2;
 
 		this.bgView.moveTo(x, y);
 		this.mainView.moveTo(x, y);
 		this.drawBackgroundCanvas();
 		this.drawMainCanvas();
+	}
+
+	protected isImgInView(img: { x: number, y: number }) {
+		const { x: dx1, y: dy1 } = img;
+		const dx2 = dx1 + this.chunkSize;
+		const dy2 = dy1 + this.chunkSize;
+
+		const { x1: vx1, x2: vx2, y1: vy1, y2: vy2 } = this.bgView.viewport;
+
+		return isRectInsideAnother([ dx1, dy1, dx2, dy2 ], [ vx1, vy1, vx2, vy2 ]);
 	}
 
 	protected getVec2(vec: Vec2): Vec2 | undefined {
@@ -391,20 +416,18 @@ export class PoeCanvasTree extends CustomElement {
 	}
 
 	protected onKeydown = (ev: KeyboardEvent) => {
-		//console.log(ev);
-
 		if (this.selectedNode) {
 			const node = this.selectedNode;
 
 			if (oneOf(ev.code, 'Digit1', 'Digit2', 'Digit3')) {
 				if (ev.code === 'Digit1')
-					node.radius = 7;
+					node.radius = node.sizes[0]!;
 
 				if (ev.code === 'Digit2')
-					node.radius = 10;
+					node.radius = node.sizes[1]!;
 
 				if (ev.code === 'Digit3')
-					node.radius = 15;
+					node.radius = node.sizes[2]!;
 
 				node.path = this.createNode(node);
 				this.updated = Date.now();
@@ -592,10 +615,9 @@ export class PoeCanvasTree extends CustomElement {
 	}
 	//#endregion
 
-	protected drawBackgroundCanvas() {
-		if (!this.image)
-			return;
+	protected imagePromises: Map<StringVec2, Promise<any>> = new Map();
 
+	protected drawBackgroundCanvas() {
 		const { bgView, bgContext, bgCanvas: { width, height } } = this;
 
 		if (this.bgView.isDirty()) {
@@ -604,7 +626,27 @@ export class PoeCanvasTree extends CustomElement {
 			bgView.applyTransform();
 		}
 
-		bgContext.drawImage(this.image, this.imageVec.x, this.imageVec.y);
+		let foundUnloadedImages = false;
+		for (const image of this.images) {
+			if (!this.isImgInView(image))
+				continue;
+
+			const imgId = `x${ image.x }y${ image.y }` as StringVec2;
+			const x = image.x;
+			const y = image.y;
+
+			if (image.image) {
+				bgContext.drawImage(image.image, x, y);
+			}
+			else if (!this.imagePromises.has(imgId)) {
+				const loadImage = image.getImage().then(img => image.image = img);
+				this.imagePromises.set(imgId, loadImage);
+				foundUnloadedImages = true;
+			}
+		}
+
+		if (foundUnloadedImages)
+			waitForPromises(this.imagePromises).then(() => this.drawBackgroundCanvas());
 	}
 
 	protected drawMainCanvas() {
@@ -617,7 +659,7 @@ export class PoeCanvasTree extends CustomElement {
 		}
 
 		const percentage = this.mainView.getVisiblePercentage(
-			this.image.naturalWidth, this.image.naturalHeight,
+			this.imageSize, this.imageSize,
 		);
 
 		if (percentage < 50)

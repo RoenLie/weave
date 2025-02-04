@@ -1,16 +1,16 @@
 import { domId } from '@roenlie/core/dom';
 import type { Canvas2DObject } from '../pages/canvas-editor/canvas-object.ts';
-import type { Optional } from '@roenlie/core/types';
+import type { Optional, Vec2 } from '@roenlie/core/types';
 import { getPathReduction } from './path-helpers.ts';
 
 
-export interface Vector2 { x: number, y: number; }
+export type StringVec2 = `x${ number }y${ number }`;
 export interface ConnectionPoint { id: string, x: number, y: number; }
 export interface StorableConnection {
 	start: ConnectionPoint;
 	stop:  ConnectionPoint;
-	m1:    Vector2;
-	m2:    Vector2;
+	m1:    Vec2;
+	m2:    Vec2;
 	id?:   string;
 }
 export interface StorableGraphNode {
@@ -61,8 +61,8 @@ export class Connection {
 	public id:    string;
 	public start: ConnectionPoint;
 	public stop:  ConnectionPoint;
-	public m1:    Vector2;
-	public m2:    Vector2;
+	public m1:    Vec2;
+	public m2:    Vec2;
 
 	public path:        Canvas2DObject | undefined;
 	public pathHandle1: Canvas2DObject | undefined;
@@ -93,7 +93,7 @@ export class GraphNode {
 		this.x  = x;
 		this.y  = y;
 		this.id = id || domId();
-		this.radius = radius || 7;
+		this.radius = radius || this.sizes[0]!;
 		this.data = new Map(Object.entries(storable.data || {}));
 		this.connectionIds = storable.connections || [];
 	}
@@ -102,6 +102,7 @@ export class GraphNode {
 	public x:           number;
 	public y:           number;
 	public radius:      number;
+	public sizes:       number[] = [ 24, 36, 56 ];
 	public path:        Canvas2DObject | undefined;
 	public data:        Map<string, any>;
 	public connections: Connection[] = [];
