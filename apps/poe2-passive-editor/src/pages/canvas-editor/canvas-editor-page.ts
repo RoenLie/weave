@@ -16,10 +16,6 @@ export class PoeCanvasTree extends CustomElement {
 
 	static { this.register('poe-canvas-editor'); }
 
-	protected bgCanvas:      HTMLCanvasElement;
-	protected bgContext:     CanvasRenderingContext2D;
-	protected mainCanvas:    HTMLCanvasElement;
-	protected mainContext:   CanvasRenderingContext2D;
 	protected nodes:         Map<string, GraphNode> = new Map();
 	protected connections:   Map<string, Connection> = new Map();
 	protected selectedNode?: GraphNode;
@@ -28,6 +24,7 @@ export class PoeCanvasTree extends CustomElement {
 	protected saveInterval?: ReturnType<typeof setInterval>;
 	protected imageSize = 13000;
 	protected chunkSize = 1300;
+	protected imagePromises: Map<StringVec2, Promise<any>> = new Map();
 	protected images:        {
 		x:        number,
 		y:        number;
@@ -71,18 +68,15 @@ export class PoeCanvasTree extends CustomElement {
 		this.resizeObserver.observe(this);
 		this.addEventListener('keydown', this.onKeydown);
 
-		this.mainCanvas = this.shadowRoot!.querySelector('#main') as HTMLCanvasElement;
-		this.mainContext = this.mainCanvas.getContext('2d') as CanvasRenderingContext2D;
-
-		this.bgCanvas = this.shadowRoot!.querySelector('#background') as HTMLCanvasElement;
-		this.bgContext = this.bgCanvas.getContext('2d') as CanvasRenderingContext2D;
-
 		const width = this.offsetWidth;
 		const height = this.offsetHeight;
 
-		this.bgView.setContext(this.bgContext);
+		const bgCanvas = this.shadowRoot!.querySelector('#background') as HTMLCanvasElement;
+		this.bgView.setContext(bgCanvas);
 		this.bgView.setCanvasSize(width, height);
-		this.mainView.setContext(this.mainContext);
+
+		const mainCanvas = this.shadowRoot!.querySelector('#main') as HTMLCanvasElement;
+		this.mainView.setContext(mainCanvas);
 		this.mainView.setCanvasSize(width, height);
 
 		await this.loadBackgroundImage();
@@ -213,7 +207,7 @@ export class PoeCanvasTree extends CustomElement {
 			if (!node.path)
 				continue;
 
-			const isInPath = this.mainContext.isPointInPath(node.path, vec.x, vec.y);
+			const isInPath = this.mainView.offscreenCtx.isPointInPath(node.path, vec.x, vec.y);
 			if (isInPath)
 				return node;
 		}
@@ -221,12 +215,12 @@ export class PoeCanvasTree extends CustomElement {
 		// If found, returns the handle vector at the mouse position.
 		for (const [ , con ] of this.connections) {
 			if (con.pathHandle1) {
-				const isInPath = this.mainContext.isPointInPath(con.pathHandle1, vec.x, vec.y);
+				const isInPath = this.mainView.offscreenCtx.isPointInPath(con.pathHandle1, vec.x, vec.y);
 				if (isInPath)
 					return con.m1;
 			}
 			if (con.pathHandle2) {
-				const isInPath = this.mainContext.isPointInPath(con.pathHandle2, vec.x, vec.y);
+				const isInPath = this.mainView.offscreenCtx.isPointInPath(con.pathHandle2, vec.x, vec.y);
 				if (isInPath)
 					return con.m2;
 			}
@@ -492,7 +486,7 @@ export class PoeCanvasTree extends CustomElement {
 				continue;
 
 			con.path ??= this.createPath(this.nodes, con);
-			con.path.draw(this.mainContext);
+			con.path.draw(this.mainView.offscreenCtx);
 		}
 	}
 	//#endregion
@@ -503,7 +497,8 @@ export class PoeCanvasTree extends CustomElement {
 		path.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
 
 		path.lineWidth = 2;
-		path.strokeStyle = 'rgb(241 194 50)';
+		//path.strokeStyle = 'rgb(241 194 50)';
+		path.strokeStyle = 'white';
 
 		if (this.selectedNode === node)
 			path.fillStyle = 'rgb(255 255 255 / 20%)';
@@ -519,7 +514,7 @@ export class PoeCanvasTree extends CustomElement {
 				continue;
 
 			node.path ??= this.createNode(node);
-			node.path.draw(this.mainContext);
+			node.path.draw(this.mainView.offscreenCtx);
 		}
 	}
 	//#endregion
@@ -609,26 +604,22 @@ export class PoeCanvasTree extends CustomElement {
 		for (const con of this.connections.values()) {
 			if (!isOutsideViewport(this.mainView.viewport, con.m1)) {
 				con.pathHandle1 ??= this.createPathHandle1(con);
-				con.pathHandle1.draw(this.mainContext);
+				con.pathHandle1.draw(this.mainView.offscreenCtx);
 			}
 			if (!isOutsideViewport(this.mainView.viewport, con.m2)) {
 				con.pathHandle2 ??= this.createPathHandle2(con);
-				con.pathHandle2.draw(this.mainContext);
+				con.pathHandle2.draw(this.mainView.offscreenCtx);
 			}
 		}
 	}
 	//#endregion
 
-	protected imagePromises: Map<StringVec2, Promise<any>> = new Map();
 
 	protected drawBackgroundCanvas() {
-		const { bgView, bgContext, bgCanvas: { width, height } } = this;
+		const { bgView } = this;
 
-		if (this.bgView.isDirty()) {
-			bgContext.setTransform(1, 0, 0, 1, 0, 0);
-			bgContext.clearRect(0, 0, width, height);
-			bgView.applyTransform();
-		}
+		if (this.bgView.isDirty())
+			bgView.clearContext();
 
 		let foundUnloadedImages = false;
 		for (const image of this.images) {
@@ -640,7 +631,7 @@ export class PoeCanvasTree extends CustomElement {
 			const y = image.y;
 
 			if (image.image) {
-				bgContext.drawImage(image.image, x, y);
+				bgView.offscreenCtx.drawImage(image.image, x, y);
 			}
 			else if (!this.imagePromises.has(imgId)) {
 				const loadImage = image.getImage().then(img => image.image = img);
@@ -651,6 +642,8 @@ export class PoeCanvasTree extends CustomElement {
 
 		if (foundUnloadedImages)
 			waitForPromises(this.imagePromises).then(() => this.drawBackgroundCanvas());
+
+		bgView.transferToOnscreenCanvas();
 
 		// Trying to debug an issue where a quad is not being drawn.
 		//const status = this.images.reduce((acc, img, i) => {
@@ -668,13 +661,10 @@ export class PoeCanvasTree extends CustomElement {
 	}
 
 	protected drawMainCanvas() {
-		const { mainView, mainContext, mainCanvas: { width, height } } = this;
+		const { mainView } = this;
 
-		if (this.mainView.isDirty()) {
-			mainContext.setTransform(1, 0, 0, 1, 0, 0);
-			mainContext.clearRect(0, 0, width, height);
-			mainView.applyTransform();
-		}
+		if (this.mainView.isDirty())
+			mainView.clearContext();
 
 		const percentage = this.mainView.getVisiblePercentage(
 			this.imageSize, this.imageSize,
@@ -688,6 +678,8 @@ export class PoeCanvasTree extends CustomElement {
 
 		if (percentage < 10)
 			this.mapPathHandles();
+
+		mainView.transferToOnscreenCanvas();
 	}
 
 	protected override render(): unknown {

@@ -6,20 +6,31 @@ import type { Viewport } from './is-outside-viewport.ts';
 export class View {
 
 	public viewport: Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
-	protected matrix = tuple(1, 0, 0, 1, 0, 0); // current view transform
-	protected pos:   Vec2 = { x: 0, y: 0 }; // current position of origin
-	protected ctx:   CanvasRenderingContext2D; // reference to the 2D context
-	protected scale: number = 1; // current scale
+	protected matrix = tuple(1, 0, 0, 1, 0, 0);
+	protected pos:   Vec2 = { x: 0, y: 0 };
+	public canvas:   HTMLCanvasElement;
+	public ctx:      ImageBitmapRenderingContext;
+	protected scale: number = 1;
 	protected dirty: boolean = true;
 
+	public offscreenCanvas: OffscreenCanvas;
+	public offscreenCtx:    OffscreenCanvasRenderingContext2D;
 
-	public setContext(context: CanvasRenderingContext2D) {
-		this.ctx = context;
+	public setContext(canvas: HTMLCanvasElement) {
 		this.dirty = true;
+
+		this.canvas = canvas;
+		this.ctx = canvas.getContext('bitmaprenderer')!;
+
+		this.offscreenCanvas = new OffscreenCanvas(canvas.width, canvas.height);
+		this.offscreenCtx = this.offscreenCanvas.getContext('2d')!;
 	};
 
 	/** Sets canvas width and height. */
 	public setCanvasSize(width: number, height: number) {
+		this.offscreenCanvas.width = width;
+		this.offscreenCanvas.height = height;
+
 		this.ctx.canvas.width = width;
 		this.ctx.canvas.height = height;
 
@@ -31,8 +42,8 @@ export class View {
 		const { x, y } = this.getPosition();
 		const scale = this.getScale();
 
-		const viewableWidth = this.ctx.canvas.width;
-		const viewableHeight = this.ctx.canvas.height;
+		const viewableWidth = this.offscreenCanvas.width;
+		const viewableHeight = this.offscreenCanvas.height;
 
 		const x1 = -x / scale;
 		const y1 = -y / scale;
@@ -47,26 +58,24 @@ export class View {
 		if (this.dirty)
 			this.update();
 
-		const { matrix: m, ctx } = this;
-		ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+		const { matrix: m, offscreenCtx } = this;
+		offscreenCtx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
 
 		this.updateViewport();
 	};
 
-	public getVisiblePercentage(width: number, height: number): number {
-		const totalArea    = width * height;
-		const viewportArea = (this.viewport.x2 - this.viewport.x1)
-			* (this.viewport.y2 - this.viewport.y1);
-
-		const percentage = (viewportArea / totalArea) * 100;
-
-		return percentage;
+	public clearContext() {
+		const  { width, height } = this.offscreenCanvas;
+		this.offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
+		this.offscreenCtx.clearRect(0, 0, width, height);
+		this.applyTransform();
 	}
 
-	public getScale() { return this.scale; };
-	public getPosition() { return this.pos; }
-	public markDirty() { this.dirty = true; }
-	public isDirty() { return this.dirty; }
+	public transferToOnscreenCanvas() {
+		const bitmapOne = this.offscreenCanvas.transferToImageBitmap();
+		this.ctx.transferFromImageBitmap(bitmapOne);
+	}
+
 	public update() {
 		const { matrix: m, scale, pos } = this;
 
@@ -95,5 +104,19 @@ export class View {
 		this.pos.y = y;
 		this.dirty = true;
 	};
+
+	public getScale() { return this.scale; };
+	public getPosition() { return this.pos; }
+	public markDirty() { this.dirty = true; }
+	public isDirty() { return this.dirty; }
+	public getVisiblePercentage(width: number, height: number): number {
+		const totalArea    = width * height;
+		const viewportArea = (this.viewport.x2 - this.viewport.x1)
+			* (this.viewport.y2 - this.viewport.y1);
+
+		const percentage = (viewportArea / totalArea) * 100;
+
+		return percentage;
+	}
 
 }

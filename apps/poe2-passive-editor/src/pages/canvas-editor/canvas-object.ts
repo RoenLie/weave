@@ -8,7 +8,7 @@ export class Canvas2DObject extends Path2D {
 	public strokeStyle: string = '';
 	public lineWidth:   number = 0;
 
-	public draw(ctx: CanvasRenderingContext2D) {
+	public draw(ctx: OffscreenCanvasRenderingContext2D) {
 		ctx.fillStyle = this.fillStyle;
 		ctx.strokeStyle = this.strokeStyle;
 		ctx.lineWidth = this.lineWidth;
