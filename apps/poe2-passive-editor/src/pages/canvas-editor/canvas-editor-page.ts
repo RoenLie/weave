@@ -19,6 +19,7 @@ export class PoeCanvasTree extends CustomElement {
 	protected nodes:         Map<string, GraphNode> = new Map();
 	protected connections:   Map<string, Connection> = new Map();
 	protected selectedNode?: GraphNode;
+	protected hoveredNode?:  GraphNode;
 	protected updated?:      number;
 	protected saveOngoing:   boolean = false;
 	protected saveInterval?: ReturnType<typeof setInterval>;
@@ -31,6 +32,14 @@ export class PoeCanvasTree extends CustomElement {
 		image:    HTMLImageElement | undefined;
 		getImage: () => Promise<HTMLImageElement>;
 	}[] = [];
+
+	protected editingFeatures = {
+		moveNode:     false,
+		createNode:   false,
+		resizeNodes:  false,
+		deleteNodes:  false,
+		connectNodes: true,
+	};
 
 	protected readonly bgView:   View = new View();
 	protected readonly mainView: View = new View();
@@ -201,26 +210,28 @@ export class PoeCanvasTree extends CustomElement {
 		return isRectInsideAnother([ dx1, dy1, dx2, dy2 ], [ x1, y1, x2, y2 ]);
 	}
 
-	protected getVec2(vec: Vec2): Vec2 | undefined {
+	protected getGraphNode(vec: Vec2): GraphNode | undefined {
 		// If found, returns the node at the mouse position.
 		for (const [ , node ] of this.nodes) {
 			if (!node.path)
 				continue;
 
-			const isInPath = this.mainView.offscreenCtx.isPointInPath(node.path, vec.x, vec.y);
+			const isInPath = node.path.isPointInPath(this.mainView.offscreenCtx, vec.x, vec.y);
 			if (isInPath)
 				return node;
 		}
+	}
 
+	protected getPathHandle(vec: Vec2): Vec2 | undefined {
 		// If found, returns the handle vector at the mouse position.
 		for (const [ , con ] of this.connections) {
 			if (con.pathHandle1) {
-				const isInPath = this.mainView.offscreenCtx.isPointInPath(con.pathHandle1, vec.x, vec.y);
+				const isInPath = con.pathHandle1.isPointInPath(this.mainView.offscreenCtx, vec.x, vec.y);
 				if (isInPath)
 					return con.m1;
 			}
 			if (con.pathHandle2) {
-				const isInPath = this.mainView.offscreenCtx.isPointInPath(con.pathHandle2, vec.x, vec.y);
+				const isInPath = con.pathHandle2.isPointInPath(this.mainView.offscreenCtx, vec.x, vec.y);
 				if (isInPath)
 					return con.m2;
 			}
@@ -250,6 +261,33 @@ export class PoeCanvasTree extends CustomElement {
 		nodeB.connections.push(connection);
 
 		this.updated = Date.now();
+	}
+
+	protected onMousemove(ev: MouseEvent) {
+		const vec = { x: ev.offsetX, y: ev.offsetY };
+		const node = this.getGraphNode(vec);
+
+		if (node) {
+			if (node !== this.hoveredNode) {
+				if (this.hoveredNode) {
+					const prevNode = this.hoveredNode;
+					this.hoveredNode = node;
+					prevNode.path = this.createNode(prevNode);
+				}
+
+				this.hoveredNode ??= node;
+				this.hoveredNode.path = this.createNode(node);
+				this.mainView.markDirty();
+				this.drawMainCanvas();
+			}
+		}
+		else if (this.hoveredNode) {
+			const node = this.hoveredNode;
+			this.hoveredNode = undefined;
+			node.path = this.createNode(node);
+			this.mainView.markDirty();
+			this.drawMainCanvas();
+		}
 	}
 
 	protected onMousewheel(ev: WheelEvent) {
@@ -288,8 +326,9 @@ export class PoeCanvasTree extends CustomElement {
 		const realX = viewOffsetX / scale;
 		const realY = viewOffsetY / scale;
 
+		const vec = { x: ev.offsetX, y: ev.offsetY };
 		// Try to find a node or connection at the mouse position
-		const nodeOrVec = this.getVec2({ x: ev.offsetX, y: ev.offsetY });
+		const nodeOrVec = this.getGraphNode(vec) ?? this.getPathHandle(vec);
 
 		// If we found a node or a connection, we want to move it
 		if (nodeOrVec) {
@@ -306,12 +345,15 @@ export class PoeCanvasTree extends CustomElement {
 
 			// We are clicking on a node
 			if (GraphNode.isGraphNode(nodeOrVec)) {
-				if (ev.shiftKey) {
+				if (ev.shiftKey && this.editingFeatures.connectNodes) {
 					this.connectNodes(this.selectedNode, nodeOrVec);
 				}
 				else {
-					if (this.selectedNode?.path)
-						this.selectedNode.path.fillStyle = '';
+					if (this.selectedNode?.path) {
+						const node = this.selectedNode;
+						this.selectedNode = undefined;
+						node.path = this.createNode(node);
+					}
 
 					this.selectedNode = nodeOrVec;
 					nodeOrVec.path = this.createNode(nodeOrVec);
@@ -320,7 +362,7 @@ export class PoeCanvasTree extends CustomElement {
 				this.mainView.markDirty();
 				this.drawMainCanvas();
 
-				mousemove = (ev: MouseEvent) => {
+				this.editingFeatures.moveNode && (mousemove = (ev: MouseEvent) => {
 					const scale = this.mainView.getScale();
 
 					const x = ev.offsetX - this.mainView.getPosition().x - mouseOffsetX;
@@ -346,7 +388,7 @@ export class PoeCanvasTree extends CustomElement {
 					this.mainView.markDirty();
 					this.drawMainCanvas();
 					this.updated = Date.now();
-				};
+				});
 			}
 			else {
 				const con = this.connections.values()
@@ -381,11 +423,14 @@ export class PoeCanvasTree extends CustomElement {
 		else {
 			// We are holding alt or double clicking the canvas
 			// so we want to create a new node
-			if (ev.detail === 2 || ev.altKey || ev.metaKey) {
+			if (this.editingFeatures.createNode && (ev.detail === 2 || ev.altKey || ev.metaKey)) {
 				const node = new GraphNode({ x: realX, y: realY });
 
-				if (this.selectedNode?.path)
-					this.selectedNode.path.fillStyle = '';
+				if (this.selectedNode?.path) {
+					const node = this.selectedNode;
+					this.selectedNode = undefined;
+					node.path = this.createNode(node);
+				}
 
 				this.selectedNode = node;
 				this.nodes.set(node.id, node);
@@ -417,7 +462,7 @@ export class PoeCanvasTree extends CustomElement {
 		if (this.selectedNode) {
 			const node = this.selectedNode;
 
-			if (oneOf(ev.code, 'Digit1', 'Digit2', 'Digit3')) {
+			if (this.editingFeatures.resizeNodes && oneOf(ev.code, 'Digit1', 'Digit2', 'Digit3')) {
 				if (ev.code === 'Digit1')
 					node.radius = node.sizes[0]!;
 
@@ -430,14 +475,14 @@ export class PoeCanvasTree extends CustomElement {
 				node.path = this.createNode(node);
 				this.updated = Date.now();
 			}
-			else if (ev.code === 'Escape') {
-				this.selectedNode = undefined;
-				node.path = this.createNode(node);
-			}
-			else if (ev.code === 'Delete') {
+			else if (this.editingFeatures.deleteNodes && ev.code === 'Delete') {
 				node.connections.forEach(con => this.connections.delete(con.id));
 				this.nodes.delete(node.id);
 				this.updated = Date.now();
+			}
+			else if (ev.code === 'Escape') {
+				this.selectedNode = undefined;
+				node.path = this.createNode(node);
 			}
 
 			this.mainView.markDirty();
@@ -463,15 +508,35 @@ export class PoeCanvasTree extends CustomElement {
 		stopVec.y -= stopYReduce;
 
 		const path = new Canvas2DObject();
-		path.strokeStyle = 'rgb(72 61 139)';
-		path.lineWidth = 4;
+		path.clear()
+			.layer(
+				(path2D) => {
+					path2D.moveTo(startVec.x, startVec.y);
+					path2D.bezierCurveTo(
+						mid1Vec.x, mid1Vec.y,
+						mid2Vec.x, mid2Vec.y,
+						stopVec.x, stopVec.y,
+					);
+				},
+				(ctx, path2D) => {
+					ctx.strokeStyle = 'rgb(72 61 139)';
+					ctx.lineWidth = 4;
+					ctx.stroke(path2D);
 
-		path.moveTo(startVec.x, startVec.y);
-		path.bezierCurveTo(
-			mid1Vec.x, mid1Vec.y,
-			mid2Vec.x, mid2Vec.y,
-			stopVec.x, stopVec.y,
-		);
+					ctx.lineWidth = 0;
+					ctx.strokeStyle = '';
+				},
+			);
+
+		//path.strokeStyle = 'rgb(72 61 139)';
+		//path.lineWidth = 4;
+
+		//path.moveTo(startVec.x, startVec.y);
+		//path.bezierCurveTo(
+		//	mid1Vec.x, mid1Vec.y,
+		//	mid2Vec.x, mid2Vec.y,
+		//	stopVec.x, stopVec.y,
+		//);
 
 		return path;
 	}
@@ -494,16 +559,31 @@ export class PoeCanvasTree extends CustomElement {
 	//#region node
 	protected createNode(node: GraphNode) {
 		const path = new Canvas2DObject();
-		path.arc(node.x, node.y, node.radius, 0, 2 * Math.PI);
+		path.clear()
+			.layer(
+				(path2D) => {
+					path2D.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+				},
+				(ctx, path2D) => {
+					//ctx.strokeStyle = 'rgb(241 194 50)';
+					ctx.strokeStyle = 'white';
+					ctx.lineWidth = 2;
+					ctx.stroke(path2D);
 
-		path.lineWidth = 2;
-		//path.strokeStyle = 'rgb(241 194 50)';
-		path.strokeStyle = 'white';
+					if (this.selectedNode === node) {
+						ctx.fillStyle = 'rgb(255 255 255 / 20%)';
+						ctx.fill(path2D);
+					}
+					else if (this.hoveredNode === node) {
+						ctx.fillStyle = 'rgb(241 194 50 / 50%)';
+						ctx.fill(path2D);
+					}
 
-		if (this.selectedNode === node)
-			path.fillStyle = 'rgb(255 255 255 / 20%)';
-		else
-			path.fillStyle = '';
+					ctx.lineWidth = 0;
+					ctx.strokeStyle = '';
+					ctx.fillStyle = '';
+				},
+			);
 
 		return path;
 	}
@@ -564,13 +644,22 @@ export class PoeCanvasTree extends CustomElement {
 		) as Repeat<4, Vec2>;
 
 		const path = new Canvas2DObject();
-		path.moveTo(points[0].x, points[0].y);
-		path.lineTo(points[1].x, points[1].y);
-		path.lineTo(points[2].x, points[2].y);
-		path.lineTo(points[3].x, points[3].y);
-		path.closePath();
+		path.clear()
+			.layer(
+				(path2D) => {
+					path2D.moveTo(points[0].x, points[0].y);
+					path2D.lineTo(points[1].x, points[1].y);
+					path2D.lineTo(points[2].x, points[2].y);
+					path2D.lineTo(points[3].x, points[3].y);
+					path2D.closePath();
+				},
+				(ctx, path2D) => {
+					ctx.fillStyle = 'rgb(240 240 240 / 50%)';
+					ctx.fill(path2D);
 
-		path.fillStyle = 'rgb(240 240 240 / 50%)';
+					ctx.fillStyle = '';
+				},
+			);
 
 		return path;
 	}
@@ -589,13 +678,22 @@ export class PoeCanvasTree extends CustomElement {
 		) as Repeat<4, Vec2>;
 
 		const path = new Canvas2DObject();
-		path.moveTo(points[0].x, points[0].y);
-		path.lineTo(points[1].x, points[1].y);
-		path.lineTo(points[2].x, points[2].y);
-		path.lineTo(points[3].x, points[3].y);
-		path.closePath();
+		path.clear()
+			.layer(
+				(path2D) => {
+					path2D.moveTo(points[0].x, points[0].y);
+					path2D.lineTo(points[1].x, points[1].y);
+					path2D.lineTo(points[2].x, points[2].y);
+					path2D.lineTo(points[3].x, points[3].y);
+					path2D.closePath();
+				},
+				(ctx, path2D) => {
+					ctx.fillStyle = 'rgb(240 240 240 / 50%)';
+					ctx.fill(path2D);
 
-		path.fillStyle = 'rgb(240 240 240 / 50%)';
+					ctx.fillStyle = '';
+				},
+			);
 
 		return path;
 	}
@@ -686,6 +784,7 @@ export class PoeCanvasTree extends CustomElement {
 		return html`
 		<canvas id="background"></canvas>
 		<canvas id="main"
+			@mousemove=${ this.onMousemove }
 			@mousedown =${ this.onMousedown }
 			@mousewheel=${ this.onMousewheel }
 		></canvas>

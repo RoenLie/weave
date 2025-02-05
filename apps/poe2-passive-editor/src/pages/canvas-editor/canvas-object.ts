@@ -1,22 +1,33 @@
-export class Canvas2DObject extends Path2D {
+export class Canvas2DObject {
 
-	constructor() {
-		super();
+	public readonly layers: [path2D: Path2D, (ctx: OffscreenCanvasRenderingContext2D, path2D: Path2D) => void][] = [];
+
+	public isPointInPath(ctx: OffscreenCanvasRenderingContext2D, x: number, y: number) {
+		return this.layers.some(([ path2D ]) => ctx.isPointInPath(path2D, x, y));
 	}
 
-	public fillStyle:   string = '';
-	public strokeStyle: string = '';
-	public lineWidth:   number = 0;
+	public clear() {
+		this.layers.length = 0;
+
+		return this;
+	}
+
+	public layer(
+		path: (path2D: Path2D) => void,
+		paint: (ctx: OffscreenCanvasRenderingContext2D, path2D: Path2D) => void,
+	) {
+		const path2D = new Path2D();
+		path(path2D);
+
+		this.layers.push([ path2D, paint ]);
+
+		return this;
+	}
+
 
 	public draw(ctx: OffscreenCanvasRenderingContext2D) {
-		ctx.fillStyle = this.fillStyle;
-		ctx.strokeStyle = this.strokeStyle;
-		ctx.lineWidth = this.lineWidth;
-
-		if (this.fillStyle)
-			ctx.fill(this);
-		if (this.strokeStyle)
-			ctx.stroke(this);
+		for (const [ path2D, paint ] of this.layers)
+			paint(ctx, path2D);
 	}
 
 }
