@@ -72,8 +72,8 @@ export class View {
 	}
 
 	public transferToOnscreenCanvas() {
-		const bitmapOne = this.offscreenCanvas.transferToImageBitmap();
-		this.ctx.transferFromImageBitmap(bitmapOne);
+		const bitmap = this.offscreenCanvas.transferToImageBitmap();
+		this.ctx.transferFromImageBitmap(bitmap);
 	}
 
 	public update() {

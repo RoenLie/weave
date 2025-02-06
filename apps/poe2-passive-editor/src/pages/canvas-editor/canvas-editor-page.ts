@@ -34,11 +34,12 @@ export class PoeCanvasTree extends CustomElement {
 	}[] = [];
 
 	protected editingFeatures = {
-		moveNode:     false,
-		createNode:   false,
-		resizeNodes:  false,
-		deleteNodes:  false,
-		connectNodes: true,
+		moveNode:        false,
+		createNode:      false,
+		resizeNodes:     false,
+		deleteNodes:     false,
+		connectNodes:    true,
+		moveConnections: true,
 	};
 
 	protected readonly bgView:   View = new View();
@@ -397,7 +398,7 @@ export class PoeCanvasTree extends CustomElement {
 				if (!con)
 					return;
 
-				mousemove = (ev: MouseEvent) => {
+				this.editingFeatures.moveConnections && (mousemove = (ev: MouseEvent) => {
 					const scale = this.mainView.getScale();
 
 					const x = ev.offsetX - this.mainView.getPosition().x - mouseOffsetX;
@@ -412,7 +413,7 @@ export class PoeCanvasTree extends CustomElement {
 					this.mainView.markDirty();
 					this.drawMainCanvas();
 					this.updated = Date.now();
-				};
+				});
 			}
 
 			addEventListener('mousemove', mousemove);
