@@ -1,15 +1,12 @@
 export class Canvas2DObject {
 
-	public readonly layers: [path2D: Path2D, (ctx: OffscreenCanvasRenderingContext2D, path2D: Path2D) => void][] = [];
+	public readonly layers: [
+		path2D: Path2D,
+		(ctx: OffscreenCanvasRenderingContext2D, path2D: Path2D) => void
+	][] = [];
 
 	public isPointInPath(ctx: OffscreenCanvasRenderingContext2D, x: number, y: number) {
 		return this.layers.some(([ path2D ]) => ctx.isPointInPath(path2D, x, y));
-	}
-
-	public clear() {
-		this.layers.length = 0;
-
-		return this;
 	}
 
 	public layer(
