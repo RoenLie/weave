@@ -126,7 +126,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 		const vec = { x: ev.offsetX, y: ev.offsetY };
 		// Try to find a node or connection at the mouse position
-		const nodeOrVec = this.getGraphNode(vec) ?? this.getPathHandle(vec);
+		const nodeOrVec = this.getGraphNode(vec) ?? this.getConnectionHandle(vec);
 
 		// If we found a node or a connection, we want to move it
 		if (nodeOrVec) {
@@ -150,11 +150,11 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 					if (this.selectedNode?.path) {
 						const node = this.selectedNode;
 						this.selectedNode = undefined;
-						node.path = this.createNode(node);
+						node.path = this.createNodePath2D(node);
 					}
 
 					this.selectedNode = nodeOrVec;
-					nodeOrVec.path = this.createNode(nodeOrVec);
+					nodeOrVec.path = this.createNodePath2D(nodeOrVec);
 				}
 
 				this.drawMainCanvas.debounced();
@@ -167,7 +167,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 					nodeOrVec.x = x / scale;
 					nodeOrVec.y = y / scale;
 
-					nodeOrVec.path = this.createNode(nodeOrVec);
+					nodeOrVec.path = this.createNodePath2D(nodeOrVec);
 
 					for (const con of nodeOrVec.connections) {
 						const point = con.start.id === nodeOrVec.id
@@ -177,9 +177,9 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 						point.x = nodeOrVec.x;
 						point.y = nodeOrVec.y;
 
-						con.path = this.createPath(this.nodes, con);
-						con.pathHandle1 = this.createPathHandle(con, 1);
-						con.pathHandle2 = this.createPathHandle(con, 2);
+						con.path = this.createConnectionPath2D(this.nodes, con);
+						con.pathHandle1 = this.createConnectionHandle2D(con, 1);
+						con.pathHandle2 = this.createConnectionHandle2D(con, 2);
 					}
 
 					this.drawMainCanvas.debounced();
@@ -201,9 +201,9 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 					nodeOrVec.x = x / scale;
 					nodeOrVec.y = y / scale;
 
-					con.path = this.createPath(this.nodes, con);
-					con.pathHandle1 = this.createPathHandle(con, 1);
-					con.pathHandle2 = this.createPathHandle(con, 2);
+					con.path = this.createConnectionPath2D(this.nodes, con);
+					con.pathHandle1 = this.createConnectionHandle2D(con, 1);
+					con.pathHandle2 = this.createConnectionHandle2D(con, 2);
 
 					this.drawMainCanvas.debounced();
 					this.updated = Date.now();
@@ -224,7 +224,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				if (this.selectedNode?.path) {
 					const node = this.selectedNode;
 					this.selectedNode = undefined;
-					node.path = this.createNode(node);
+					node.path = this.createNodePath2D(node);
 				}
 
 				this.selectedNode = node;
@@ -266,7 +266,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				if (ev.code === 'Digit3')
 					node.radius = node.sizes[2]!;
 
-				node.path = this.createNode(node);
+				node.path = this.createNodePath2D(node);
 				this.updated = Date.now();
 			}
 			else if (this.editingFeatures.deleteNodes && ev.code === 'Delete') {
@@ -276,15 +276,30 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 			}
 			else if (ev.code === 'Escape') {
 				this.selectedNode = undefined;
-				node.path = this.createNode(node);
+				node.path = this.createNodePath2D(node);
 			}
 
 			this.drawMainCanvas.debounced();
 		}
 	};
 
-	//#region handle
-	protected calculatePathAngle(start: Vec2, stop: Vec2) {
+	/** If found, returns the handle vector at the mouse position. */
+	protected getConnectionHandle(vec: Vec2): Vec2 | undefined {
+		for (const [ , con ] of this.connections) {
+			if (con.pathHandle1) {
+				const isInPath = con.pathHandle1.isPointInPath(this.mainView.context, vec.x, vec.y);
+				if (isInPath)
+					return con.m1;
+			}
+			if (con.pathHandle2) {
+				const isInPath = con.pathHandle2.isPointInPath(this.mainView.context, vec.x, vec.y);
+				if (isInPath)
+					return con.m2;
+			}
+		}
+	}
+
+	protected calculateConnectionAngle(start: Vec2, stop: Vec2) {
 		const deltaX = stop.x - start.x;
 		const deltaY = stop.y - start.y;
 		const angleInRadians = Math.atan2(deltaY, deltaX);
@@ -314,7 +329,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		return vertices.map(vertex => this.rotatePoint(vertex, angleInDegrees, origin));
 	}
 
-	protected createPathHandle(con: Connection, handle: 1 | 2) {
+	protected createConnectionHandle2D(con: Connection, handle: 1 | 2) {
 		const vec2  = handle === 1 ? con.m1 : con.m2;
 		const start = handle === 1 ? con.start : con.m1;
 		const stop  = handle === 1 ? con.m2 : con.stop;
@@ -328,7 +343,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		];
 
 		const points = this.rotateVertices(
-			rawPoints, this.calculatePathAngle(start, stop), vec2,
+			rawPoints, this.calculateConnectionAngle(start, stop), vec2,
 		) as Repeat<4, Vec2>;
 
 		const path = new Canvas2DObject();
@@ -351,25 +366,24 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		return path;
 	}
 
-	protected mapPathHandles() {
+	protected mapConnectionHandle2Ds() {
 		for (const con of this.connections.values()) {
 			if (!isOutsideViewport(this.mainView.viewport, con.m1)) {
-				con.pathHandle1 ??= this.createPathHandle(con, 1);
+				con.pathHandle1 ??= this.createConnectionHandle2D(con, 1);
 				con.pathHandle1.draw(this.mainView.context);
 			}
 			if (!isOutsideViewport(this.mainView.viewport, con.m2)) {
-				con.pathHandle2 ??= this.createPathHandle(con, 2);
+				con.pathHandle2 ??= this.createConnectionHandle2D(con, 2);
 				con.pathHandle2.draw(this.mainView.context);
 			}
 		}
 	}
-	//#endregion
 
 	protected override drawMain() {
 		super.drawMain();
 
 		if (this.mainView.visiblePercentage < 1)
-			this.mapPathHandles();
+			this.mapConnectionHandle2Ds();
 	}
 
 	protected override render(): unknown {

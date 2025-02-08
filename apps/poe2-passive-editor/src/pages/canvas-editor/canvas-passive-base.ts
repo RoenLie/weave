@@ -162,43 +162,23 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		}
 	}
 
-	protected getPathHandle(vec: Vec2): Vec2 | undefined {
-		// If found, returns the handle vector at the mouse position.
-		for (const [ , con ] of this.connections) {
-			if (con.pathHandle1) {
-				const isInPath = con.pathHandle1.isPointInPath(this.mainView.context, vec.x, vec.y);
-				if (isInPath)
-					return con.m1;
-			}
-			if (con.pathHandle2) {
-				const isInPath = con.pathHandle2.isPointInPath(this.mainView.context, vec.x, vec.y);
-				if (isInPath)
-					return con.m2;
-			}
-		}
-	}
-
 	protected onMousemove(ev: MouseEvent) {
 		const vec = { x: ev.offsetX, y: ev.offsetY };
 		const node = this.getGraphNode(vec);
 
-		if (node) {
-			if (node !== this.hoveredNode) {
-				if (this.hoveredNode) {
-					const prevNode = this.hoveredNode;
-					this.hoveredNode = node;
-					prevNode.path = this.createNode(prevNode);
-				}
-
-				this.hoveredNode ??= node;
-				this.hoveredNode.path = this.createNode(node);
-				this.drawMainCanvas.debounced();
-			}
-		}
-		else if (this.hoveredNode) {
+		// Remove the hover effect if no node, or a new node is hovered
+		if (this.hoveredNode && node !== this.hoveredNode) {
 			const node = this.hoveredNode;
 			this.hoveredNode = undefined;
-			node.path = this.createNode(node);
+
+			node.path = this.createNodePath2D(node);
+			this.drawMainCanvas.debounced();
+		}
+
+		// Add the hover effect if a node is hovered
+		if (node && node !== this.hoveredNode) {
+			this.hoveredNode ??= node;
+			this.hoveredNode.path = this.createNodePath2D(node);
 			this.drawMainCanvas.debounced();
 		}
 	}
@@ -235,22 +215,20 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		const viewOffsetY = ev.offsetY - this.mainView.position.y;
 
 		const vec = { x: ev.offsetX, y: ev.offsetY };
-		// Try to find a node or connection at the mouse position
-		const nodeOrVec = this.getGraphNode(vec) ?? this.getPathHandle(vec);
+		// Try to find a node at the mouse position
+		const node = this.getGraphNode(vec);
 
-		// If we found a node or a connection, we want to move it
-		if (nodeOrVec) {
+		// If we found a node, we want to move it
+		if (node) {
 			// We are clicking on a node
-			if (GraphNode.isGraphNode(nodeOrVec)) {
-				if (this.selectedNode?.path) {
-					const node = this.selectedNode;
-					this.selectedNode = undefined;
-					node.path = this.createNode(node);
-				}
-
-				this.selectedNode = nodeOrVec;
-				nodeOrVec.path = this.createNode(nodeOrVec);
+			if (this.selectedNode?.path) {
+				const node = this.selectedNode;
+				this.selectedNode = undefined;
+				node.path = this.createNodePath2D(node);
 			}
+
+			this.selectedNode = node;
+			node.path = this.createNodePath2D(node);
 
 			this.drawMainCanvas.debounced();
 		}
@@ -276,8 +254,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		}
 	}
 
-	//#region path
-	protected createPath(nodes: Map<string, GraphNode>, con: Connection) {
+	protected createConnectionPath2D(nodes: Map<string, GraphNode>, con: Connection) {
 		const startVec = structuredClone(con.start);
 		const stopVec = structuredClone(con.stop);
 		const mid1Vec = structuredClone(con.m1);
@@ -316,7 +293,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		return path;
 	}
 
-	protected mapPaths() {
+	protected mapConnectionPath2Ds() {
 		for (const con of this.connections.values()) {
 			const outsideStart = isOutsideViewport(this.mainView.viewport, con.start);
 			const outsideMid1  = isOutsideViewport(this.mainView.viewport, con.m1);
@@ -325,14 +302,12 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			if (outsideStart && outsideStop && outsideMid1 && outsideMid2)
 				continue;
 
-			con.path ??= this.createPath(this.nodes, con);
+			con.path ??= this.createConnectionPath2D(this.nodes, con);
 			con.path.draw(this.mainView.context);
 		}
 	}
-	//#endregion
 
-	//#region node
-	protected createNode(node: GraphNode) {
+	protected createNodePath2D(node: GraphNode) {
 		const path = new Canvas2DObject();
 		path.layer(
 			(path2D) => {
@@ -362,16 +337,15 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		return path;
 	}
 
-	protected mapNodes() {
+	protected mapNodePath2Ds() {
 		for (const node of this.nodes.values()) {
 			if (isOutsideViewport(this.mainView.viewport, node))
 				continue;
 
-			node.path ??= this.createNode(node);
+			node.path ??= this.createNodePath2D(node);
 			node.path.draw(this.mainView.context);
 		}
 	}
-	//#endregion
 
 	protected drawBackground() {
 		const { bgView } = this;
@@ -419,10 +393,10 @@ export class PoeCanvasPassiveBase extends CustomElement {
 
 		const percentage = this.mainView.visiblePercentage;
 		if (percentage < 50)
-			this.mapPaths();
+			this.mapConnectionPath2Ds();
 
 		if (percentage < 50)
-			this.mapNodes();
+			this.mapNodePath2Ds();
 	}
 
 	protected drawBackgroundCanvas = new ImmediateOrDebounced(this.drawBackground.bind(this));
