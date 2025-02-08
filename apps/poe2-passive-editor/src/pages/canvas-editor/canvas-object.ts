@@ -24,10 +24,26 @@ export class Canvas2DObject {
 		return this;
 	}
 
-
 	public draw(ctx: OffscreenCanvasRenderingContext2D) {
 		for (const [ path2D, paint ] of this.layers)
 			paint(ctx, path2D);
+	}
+
+}
+
+
+export class TimeTracker {
+
+	private total = 0;
+	private count = 0;
+
+	public addMeasurement(time: number) {
+		this.total += time;
+		this.count++;
+	}
+
+	public getAverage(): number {
+		return this.count ? this.total / this.count : 0;
 	}
 
 }

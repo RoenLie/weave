@@ -4,11 +4,11 @@ import type { Repeat, Vec2 } from '@roenlie/core/types';
 import { Connection, GraphNode, type StorableConnection, type StorableGraphNode, type StringVec2 } from '../../app/graph.ts';
 import { isOutsideViewport } from '../../app/is-outside-viewport.ts';
 import { loadImage } from '../../app/load-image.ts';
-import { Canvas2DObject } from './canvas-object.ts';
+import { Canvas2DObject, TimeTracker } from './canvas-object.ts';
 import { oneOf } from '@roenlie/core/validation';
 import { getPathReduction, isRectInsideAnother } from '../../app/path-helpers.ts';
-import { View } from '../../app/canvas-view.ts';
-import { maybe, waitForPromises } from '@roenlie/core/async';
+import { ImmediateOrDebounced, View } from '../../app/canvas-view.ts';
+import { maybe } from '@roenlie/core/async';
 import { range } from '@roenlie/core/array';
 
 
@@ -42,6 +42,9 @@ export class PoeCanvasTree extends CustomElement {
 		moveConnections: true,
 	};
 
+	protected mainTimetracker = new TimeTracker();
+	protected bgTimetracker = new TimeTracker();
+
 	protected readonly bgView:   View = new View();
 	protected readonly mainView: View = new View();
 	protected readonly resizeObserver = new ResizeObserver(entries => {
@@ -55,13 +58,20 @@ export class PoeCanvasTree extends CustomElement {
 		this.bgView.setCanvasSize(width, height);
 		this.mainView.setCanvasSize(width, height);
 
-		this.drawBackgroundCanvas();
-		this.drawMainCanvas();
+		this.drawBackgroundCanvas.immediate();
+		this.drawMainCanvas.debounced();
 	});
 
 	protected override connectedCallback(): void {
 		super.connectedCallback();
 		this.tabIndex = 0;
+
+		//setInterval(() => {
+		//	console.log({
+		//		bg:   this.bgTimetracker.getAverage(),
+		//		main: this.mainTimetracker.getAverage(),
+		//	});
+		//}, 1000);
 	}
 
 	protected override disconnectedCallback(): void {
@@ -108,7 +118,9 @@ export class PoeCanvasTree extends CustomElement {
 			node.mapConnections(this.connections);
 
 		this.saveInterval = setInterval(this.save.bind(this), 5000);
-		this.drawMainCanvas();
+
+		this.drawBackgroundCanvas.debounced();
+		this.drawMainCanvas.debounced();
 	}
 
 	protected async loadFromOPFS() {
@@ -197,8 +209,8 @@ export class PoeCanvasTree extends CustomElement {
 
 		this.bgView.moveTo(x, y);
 		this.mainView.moveTo(x, y);
-		this.drawBackgroundCanvas();
-		this.drawMainCanvas();
+		this.drawBackgroundCanvas.debounced();
+		this.drawMainCanvas.debounced();
 	}
 
 	protected isImgInView(img: { x: number, y: number }) {
@@ -278,16 +290,14 @@ export class PoeCanvasTree extends CustomElement {
 
 				this.hoveredNode ??= node;
 				this.hoveredNode.path = this.createNode(node);
-				this.mainView.markDirty();
-				this.drawMainCanvas();
+				this.drawMainCanvas.debounced();
 			}
 		}
 		else if (this.hoveredNode) {
 			const node = this.hoveredNode;
 			this.hoveredNode = undefined;
 			node.path = this.createNode(node);
-			this.mainView.markDirty();
-			this.drawMainCanvas();
+			this.drawMainCanvas.debounced();
 		}
 	}
 
@@ -306,8 +316,8 @@ export class PoeCanvasTree extends CustomElement {
 			this.mainView.scaleAt({ x, y }, 1 / 1.1);
 		}
 
-		this.drawBackgroundCanvas();
-		this.drawMainCanvas();
+		this.drawBackgroundCanvas.debounced();
+		this.drawMainCanvas.debounced();
 	}
 
 	protected onMousedown(ev: MouseEvent) {
@@ -360,8 +370,7 @@ export class PoeCanvasTree extends CustomElement {
 					nodeOrVec.path = this.createNode(nodeOrVec);
 				}
 
-				this.mainView.markDirty();
-				this.drawMainCanvas();
+				this.drawMainCanvas.debounced();
 
 				this.editingFeatures.moveNode && (mousemove = (ev: MouseEvent) => {
 					const scale = this.mainView.getScale();
@@ -382,12 +391,11 @@ export class PoeCanvasTree extends CustomElement {
 						point.y = nodeOrVec.y;
 
 						con.path = this.createPath(this.nodes, con);
-						con.pathHandle1 = this.createPathHandle1(con);
-						con.pathHandle2 = this.createPathHandle2(con);
+						con.pathHandle1 = this.createPathHandle(con, 1);
+						con.pathHandle2 = this.createPathHandle(con, 2);
 					}
 
-					this.mainView.markDirty();
-					this.drawMainCanvas();
+					this.drawMainCanvas.debounced();
 					this.updated = Date.now();
 				});
 			}
@@ -407,11 +415,10 @@ export class PoeCanvasTree extends CustomElement {
 					nodeOrVec.y = y / scale;
 
 					con.path = this.createPath(this.nodes, con);
-					con.pathHandle1 = this.createPathHandle1(con);
-					con.pathHandle2 = this.createPathHandle2(con);
+					con.pathHandle1 = this.createPathHandle(con, 1);
+					con.pathHandle2 = this.createPathHandle(con, 2);
 
-					this.mainView.markDirty();
-					this.drawMainCanvas();
+					this.drawMainCanvas.debounced();
 					this.updated = Date.now();
 				});
 			}
@@ -436,8 +443,7 @@ export class PoeCanvasTree extends CustomElement {
 				this.selectedNode = node;
 				this.nodes.set(node.id, node);
 				this.updated = Date.now();
-				this.mainView.markDirty();
-				this.drawMainCanvas();
+				this.drawMainCanvas.debounced();
 			}
 
 			// We setup the mousemove and mouseup events
@@ -446,8 +452,8 @@ export class PoeCanvasTree extends CustomElement {
 				this.bgView.moveTo(ev.offsetX - viewOffsetX, ev.offsetY - viewOffsetY);
 				this.mainView.moveTo(ev.offsetX - viewOffsetX, ev.offsetY - viewOffsetY);
 
-				this.drawBackgroundCanvas();
-				this.drawMainCanvas();
+				this.drawBackgroundCanvas.debounced();
+				this.drawMainCanvas.debounced();
 			};
 			const mouseup = () => {
 				removeEventListener('mousemove', mousemove);
@@ -486,10 +492,92 @@ export class PoeCanvasTree extends CustomElement {
 				node.path = this.createNode(node);
 			}
 
-			this.mainView.markDirty();
-			this.drawMainCanvas();
+			this.drawMainCanvas.debounced();
 		}
 	};
+
+	//#region handle
+	protected calculatePathAngle(start: Vec2, stop: Vec2) {
+		const deltaX = stop.x - start.x;
+		const deltaY = stop.y - start.y;
+		const angleInRadians = Math.atan2(deltaY, deltaX);
+		const angleInDegrees = angleInRadians * (180 / Math.PI);
+
+		return angleInDegrees;
+	};
+
+	protected rotatePoint(point: Vec2, angleInDegrees: number, origin = { x: 0, y: 0 }) {
+		const angleInRadians = angleInDegrees * (Math.PI / 180);
+		const cosAngle = Math.cos(angleInRadians);
+		const sinAngle = Math.sin(angleInRadians);
+
+		const translatedX = point.x - origin.x;
+		const translatedY = point.y - origin.y;
+
+		const rotatedX = translatedX * cosAngle - translatedY * sinAngle;
+		const rotatedY = translatedX * sinAngle + translatedY * cosAngle;
+
+		return {
+			x: rotatedX + origin.x,
+			y: rotatedY + origin.y,
+		};
+	};
+
+	protected rotateVertices(vertices: Vec2[], angleInDegrees: number, origin = { x: 0, y: 0 }) {
+		return vertices.map(vertex => this.rotatePoint(vertex, angleInDegrees, origin));
+	}
+
+	protected createPathHandle(con: Connection, handle: 1 | 2) {
+		const vec2  = handle === 1 ? con.m1 : con.m2;
+		const start = handle === 1 ? con.start : con.m1;
+		const stop  = handle === 1 ? con.m2 : con.stop;
+
+		const len = 6;
+		const rawPoints = [
+			{ x: vec2.x - len, y: vec2.y       },
+			{ x: vec2.x,       y: vec2.y - len },
+			{ x: vec2.x + len, y: vec2.y       },
+			{ x: vec2.x,       y: vec2.y + len },
+		];
+
+		const points = this.rotateVertices(
+			rawPoints, this.calculatePathAngle(start, stop), vec2,
+		) as Repeat<4, Vec2>;
+
+		const path = new Canvas2DObject();
+		path.clear()
+			.layer(
+				(path2D) => {
+					path2D.moveTo(points[0].x, points[0].y);
+					path2D.lineTo(points[1].x, points[1].y);
+					path2D.lineTo(points[2].x, points[2].y);
+					path2D.lineTo(points[3].x, points[3].y);
+					path2D.closePath();
+				},
+				(ctx, path2D) => {
+					ctx.fillStyle = 'rgb(240 240 240 / 50%)';
+					ctx.fill(path2D);
+
+					ctx.fillStyle = '';
+				},
+			);
+
+		return path;
+	}
+
+	protected mapPathHandles() {
+		for (const con of this.connections.values()) {
+			if (!isOutsideViewport(this.mainView.viewport, con.m1)) {
+				con.pathHandle1 ??= this.createPathHandle(con, 1);
+				con.pathHandle1.draw(this.mainView.offscreenCtx);
+			}
+			if (!isOutsideViewport(this.mainView.viewport, con.m2)) {
+				con.pathHandle2 ??= this.createPathHandle(con, 2);
+				con.pathHandle2.draw(this.mainView.offscreenCtx);
+			}
+		}
+	}
+	//#endregion
 
 	//#region path
 	protected createPath(nodes: Map<string, GraphNode>, con: Connection) {
@@ -600,127 +688,12 @@ export class PoeCanvasTree extends CustomElement {
 	}
 	//#endregion
 
-	//#region handle
-	protected calculatePathAngle(start: Vec2, stop: Vec2) {
-		const deltaX = stop.x - start.x;
-		const deltaY = stop.y - start.y;
-		const angleInRadians = Math.atan2(deltaY, deltaX);
-		const angleInDegrees = angleInRadians * (180 / Math.PI);
-
-		return angleInDegrees;
-	};
-
-	protected rotatePoint(point: Vec2, angleInDegrees: number, origin = { x: 0, y: 0 }) {
-		const angleInRadians = angleInDegrees * (Math.PI / 180);
-		const cosAngle = Math.cos(angleInRadians);
-		const sinAngle = Math.sin(angleInRadians);
-
-		const translatedX = point.x - origin.x;
-		const translatedY = point.y - origin.y;
-
-		const rotatedX = translatedX * cosAngle - translatedY * sinAngle;
-		const rotatedY = translatedX * sinAngle + translatedY * cosAngle;
-
-		return {
-			x: rotatedX + origin.x,
-			y: rotatedY + origin.y,
-		};
-	};
-
-	protected rotateVertices(vertices: Vec2[], angleInDegrees: number, origin = { x: 0, y: 0 }) {
-		return vertices.map(vertex => this.rotatePoint(vertex, angleInDegrees, origin));
-	}
-
-	protected createPathHandle1(con: Connection) {
-		const len = 6;
-		const rawPoints = [
-			{ x: con.m1.x - len, y: con.m1.y       },
-			{ x: con.m1.x,       y: con.m1.y - len },
-			{ x: con.m1.x + len, y: con.m1.y       },
-			{ x: con.m1.x,       y: con.m1.y + len },
-		];
-
-		const points = this.rotateVertices(
-			rawPoints, this.calculatePathAngle(con.start, con.m2), con.m1,
-		) as Repeat<4, Vec2>;
-
-		const path = new Canvas2DObject();
-		path.clear()
-			.layer(
-				(path2D) => {
-					path2D.moveTo(points[0].x, points[0].y);
-					path2D.lineTo(points[1].x, points[1].y);
-					path2D.lineTo(points[2].x, points[2].y);
-					path2D.lineTo(points[3].x, points[3].y);
-					path2D.closePath();
-				},
-				(ctx, path2D) => {
-					ctx.fillStyle = 'rgb(240 240 240 / 50%)';
-					ctx.fill(path2D);
-
-					ctx.fillStyle = '';
-				},
-			);
-
-		return path;
-	}
-
-	protected createPathHandle2(con: Connection) {
-		const len = 6;
-		const rawPoints = [
-			{ x: con.m2.x - len, y: con.m2.y       },
-			{ x: con.m2.x,       y: con.m2.y - len },
-			{ x: con.m2.x + len, y: con.m2.y       },
-			{ x: con.m2.x,       y: con.m2.y + len },
-		];
-
-		const points = this.rotateVertices(
-			rawPoints, this.calculatePathAngle(con.m1, con.stop), con.m2,
-		) as Repeat<4, Vec2>;
-
-		const path = new Canvas2DObject();
-		path.clear()
-			.layer(
-				(path2D) => {
-					path2D.moveTo(points[0].x, points[0].y);
-					path2D.lineTo(points[1].x, points[1].y);
-					path2D.lineTo(points[2].x, points[2].y);
-					path2D.lineTo(points[3].x, points[3].y);
-					path2D.closePath();
-				},
-				(ctx, path2D) => {
-					ctx.fillStyle = 'rgb(240 240 240 / 50%)';
-					ctx.fill(path2D);
-
-					ctx.fillStyle = '';
-				},
-			);
-
-		return path;
-	}
-
-	protected mapPathHandles() {
-		for (const con of this.connections.values()) {
-			if (!isOutsideViewport(this.mainView.viewport, con.m1)) {
-				con.pathHandle1 ??= this.createPathHandle1(con);
-				con.pathHandle1.draw(this.mainView.offscreenCtx);
-			}
-			if (!isOutsideViewport(this.mainView.viewport, con.m2)) {
-				con.pathHandle2 ??= this.createPathHandle2(con);
-				con.pathHandle2.draw(this.mainView.offscreenCtx);
-			}
-		}
-	}
-	//#endregion
-
-
-	protected drawBackgroundCanvas() {
+	protected drawBackgroundCanvas = new ImmediateOrDebounced(() => {
 		const { bgView } = this;
+		const now = performance.now();
 
-		if (this.bgView.isDirty())
-			bgView.clearContext();
+		bgView.clearContext();
 
-		let foundUnloadedImages = false;
 		for (const image of this.images) {
 			if (!this.isImgInView(image))
 				continue;
@@ -733,16 +706,18 @@ export class PoeCanvasTree extends CustomElement {
 				bgView.offscreenCtx.drawImage(image.image, x, y);
 			}
 			else if (!this.imagePromises.has(imgId)) {
-				const loadImage = image.getImage().then(img => image.image = img);
-				this.imagePromises.set(imgId, loadImage);
-				foundUnloadedImages = true;
+				this.imagePromises.set(
+					imgId,
+					image.getImage().then(img => {
+						image.image = img;
+						this.imagePromises.delete(imgId);
+						this.drawBackgroundCanvas.debounced();
+					}),
+				);
 			}
 		}
 
-		if (foundUnloadedImages)
-			waitForPromises(this.imagePromises).then(() => this.drawBackgroundCanvas());
-
-		bgView.transferToOnscreenCanvas();
+		this.bgTimetracker.addMeasurement(performance.now() - now);
 
 		// Trying to debug an issue where a quad is not being drawn.
 		//const status = this.images.reduce((acc, img, i) => {
@@ -757,13 +732,13 @@ export class PoeCanvasTree extends CustomElement {
 
 		//console.clear();
 		//console.table(status);
-	}
+	});
 
-	protected drawMainCanvas() {
+	protected drawMainCanvas = new ImmediateOrDebounced(() => {
 		const { mainView } = this;
+		const now = performance.now();
 
-		if (this.mainView.isDirty())
-			mainView.clearContext();
+		mainView.clearContext();
 
 		const percentage = this.mainView.getVisiblePercentage(
 			this.imageSize, this.imageSize,
@@ -778,8 +753,8 @@ export class PoeCanvasTree extends CustomElement {
 		if (percentage < 10)
 			this.mapPathHandles();
 
-		mainView.transferToOnscreenCanvas();
-	}
+		this.mainTimetracker.addMeasurement(performance.now() - now);
+	});
 
 	protected override render(): unknown {
 		return html`
@@ -801,8 +776,6 @@ export class PoeCanvasTree extends CustomElement {
 		canvas {
 			grid-row: 1/2;
 			grid-column: 1/2;
-			width: 100%;
-			height: 100%;
 		}
 	`;
 
