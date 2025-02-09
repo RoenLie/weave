@@ -1,7 +1,23 @@
 import { loadImage } from '../../app/load-image.ts';
 
-export const smallNeutralAttr = await (async () => {
-	const imgData = await import('../../assets/small-neutral-attr.webp?inline');
 
-	return await loadImage(imgData.default);
+export const getBackgroundChunk = (() => {
+	const rawGlob = import.meta.glob('../../assets/background/v2/*.webp', { query: 'inline' });
+	const files = Object.entries(rawGlob).sort((a, b) => {
+		const aMatch = a[0].match(/(\d+)\.webp/)?.[1];
+		const bMatch = b[0].match(/(\d+)\.webp/)?.[1];
+		if (!aMatch || !bMatch)
+			return 0;
+
+		return parseInt(aMatch) - parseInt(bMatch);
+	}).map(([ ,imp ]) => imp as () => Promise<{ default: string }>);
+
+	return async (chunk: number) => {
+		const imp = files[chunk];
+		const imgData = await imp?.();
+		if (!imgData)
+			throw new Error('Invalid chunk');
+
+		return await loadImage(imgData.default);
+	};
 })();

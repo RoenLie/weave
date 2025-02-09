@@ -1,7 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 import bodyparser from 'body-parser';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { join, resolve } from 'node:path/posix';
 import type { StorableConnection, StorableGraphNode } from './src/app/graph.ts';
 
 
@@ -13,6 +13,9 @@ export default defineConfig({
 	},
 	plugins: [
 		(() => {
+			const sourceDir = join('src', 'assets', 'graphs');
+			const dirPath = join(resolve(), sourceDir);
+
 			return {
 				name: 'save-graph-api',
 				configureServer(server) {
@@ -31,7 +34,6 @@ export default defineConfig({
 							connections: StorableConnection[];
 						};
 
-						const dirPath = join(resolve(), 'public', 'graphs');
 						const filePath = join(dirPath, `graph-version-${ body.version }.json`);
 
 						await mkdir(dirPath, { recursive: true });
@@ -39,6 +41,11 @@ export default defineConfig({
 
 						return void res.end('Saved');
 					});
+				},
+				// We prevent the page from reloading when a graph is saved.
+				handleHotUpdate(ctx) {
+					if (ctx.file.includes(sourceDir))
+						return [];
 				},
 			} satisfies Plugin as Plugin;
 		})(),

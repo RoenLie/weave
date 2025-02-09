@@ -107,24 +107,28 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		this.updated = Date.now();
 	}
 
-	protected override onMousedown(ev: MouseEvent) {
+	protected override onMousedown(downEv: MouseEvent) {
 		// We only care about left clicks
-		if (ev.buttons !== 1)
+		if (downEv.buttons !== 1)
 			return;
 
-		ev.preventDefault();
+		downEv.preventDefault();
 		this.focus();
 
+		const rect = this.getBoundingClientRect();
+		const deltaY = rect.top;
+		const deltaX = rect.left;
+
 		// Get the offset from the corner of the current view to the mouse position
-		const viewOffsetX = ev.offsetX - this.mainView.position.x;
-		const viewOffsetY = ev.offsetY - this.mainView.position.y;
+		const viewOffsetX = downEv.offsetX - this.mainView.position.x;
+		const viewOffsetY = downEv.offsetY - this.mainView.position.y;
 
 		// Get the mouse position in relation to the current view
 		const scale = this.mainView.scale;
 		const realX = viewOffsetX / scale;
 		const realY = viewOffsetY / scale;
 
-		const vec = { x: ev.offsetX, y: ev.offsetY };
+		const vec = { x: downEv.offsetX, y: downEv.offsetY };
 		// Try to find a node or connection at the mouse position
 		const nodeOrVec = this.getGraphNode(vec) ?? this.getConnectionHandle(vec);
 
@@ -143,7 +147,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 			// We are clicking on a node
 			if (GraphNode.isGraphNode(nodeOrVec)) {
-				if (ev.shiftKey && this.editingFeatures.connectNodes) {
+				if (downEv.shiftKey && this.editingFeatures.connectNodes) {
 					this.connectNodes(this.selectedNode, nodeOrVec);
 				}
 				else {
@@ -162,8 +166,8 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				this.editingFeatures.moveNode && (mousemove = (ev: MouseEvent) => {
 					const scale = this.mainView.scale;
 
-					const x = ev.offsetX - this.mainView.position.x - mouseOffsetX;
-					const y = ev.offsetY - this.mainView.position.y - mouseOffsetY;
+					const x = ev.offsetX - deltaX - this.mainView.position.x - mouseOffsetX;
+					const y = ev.offsetY - deltaY - this.mainView.position.y - mouseOffsetY;
 					nodeOrVec.x = x / scale;
 					nodeOrVec.y = y / scale;
 
@@ -196,8 +200,8 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				this.editingFeatures.moveConnections && (mousemove = (ev: MouseEvent) => {
 					const scale = this.mainView.scale;
 
-					const x = ev.offsetX - this.mainView.position.x - mouseOffsetX;
-					const y = ev.offsetY - this.mainView.position.y - mouseOffsetY;
+					const x = ev.offsetX - deltaX - this.mainView.position.x - mouseOffsetX;
+					const y = ev.offsetY - deltaY - this.mainView.position.y - mouseOffsetY;
 					nodeOrVec.x = x / scale;
 					nodeOrVec.y = y / scale;
 
@@ -218,7 +222,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		else {
 			// We are holding alt or double clicking the canvas
 			// so we want to create a new node
-			if (this.editingFeatures.createNode && (ev.detail === 2 || ev.altKey || ev.metaKey)) {
+			if (this.editingFeatures.createNode && (downEv.detail === 2 || downEv.altKey || downEv.metaKey)) {
 				const node = new GraphNode({ x: realX, y: realY });
 
 				if (this.selectedNode?.path) {
@@ -235,9 +239,12 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 			// We setup the mousemove and mouseup events
 			// For panning the view
-			const mousemove = (ev: MouseEvent) => {
-				this.bgView.moveTo(ev.offsetX - viewOffsetX, ev.offsetY - viewOffsetY);
-				this.mainView.moveTo(ev.offsetX - viewOffsetX, ev.offsetY - viewOffsetY);
+			const mousemove = (moveEv: MouseEvent) => {
+				const x = moveEv.offsetX - deltaX - viewOffsetX;
+				const y = moveEv.offsetY - deltaY - viewOffsetY;
+
+				this.bgView.moveTo(x, y);
+				this.mainView.moveTo(x, y);
 
 				this.drawBackgroundCanvas.debounced();
 				this.drawMainCanvas.debounced();

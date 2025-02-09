@@ -3,12 +3,12 @@ import { css, CustomElement, type CSSStyle } from '../../app/custom-element.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { Connection, GraphNode, type StorableConnection, type StorableGraphNode, type StringVec2 } from '../../app/graph.ts';
 import { isOutsideViewport } from '../../app/is-outside-viewport.ts';
-import { loadImage } from '../../app/load-image.ts';
 import { Canvas2DObject } from './canvas-object.ts';
 import { getPathReduction, isRectInsideAnother } from '../../app/path-helpers.ts';
 import { ImmediateOrDebounced, View } from '../../app/canvas-view.ts';
 import { maybe } from '@roenlie/core/async';
 import { range } from '@roenlie/core/array';
+import { getBackgroundChunk } from './image-assets.ts';
 
 
 export class PoeCanvasPassiveBase extends CustomElement {
@@ -57,30 +57,15 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	protected override async afterConnected(): Promise<void> {
 		super.afterConnected();
 
-		this.resizeObserver.observe(this);
-
-		const width = this.offsetWidth;
-		const height = this.offsetHeight;
-
-		const bgCanvas = this.shadowRoot!.querySelector('#background') as HTMLCanvasElement;
-		this.bgView.setContext(bgCanvas);
-		this.bgView.setCanvasSize(width, height);
-		this.bgView.setTotalArea(this.imageSize, this.imageSize);
-
-		const mainCanvas = this.shadowRoot!.querySelector('#main') as HTMLCanvasElement;
-		this.mainView.setContext(mainCanvas);
-		this.mainView.setCanvasSize(width, height);
-		this.mainView.setTotalArea(this.imageSize, this.imageSize);
-
-		await this.loadBackgroundImage();
 		//const { nodes, connections } = await this.loadFromOPFS();
-		const { nodes, connections } = await this.loadFromPublicFile();
+		const { nodes, connections } = await this.loadFromLocalAsset();
 
 		this.nodes = new Map(nodes.map(node => {
 			const parsed = new GraphNode(node);
 
 			return [ parsed.id, parsed ];
 		}));
+
 		this.connections = new Map(connections.map(con => {
 			const parsed = new Connection(this.nodes, con);
 
@@ -90,8 +75,21 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		for (const node of this.nodes.values())
 			node.mapConnections(this.connections);
 
-		this.drawBackgroundCanvas.debounced();
-		this.drawMainCanvas.debounced();
+		const width = this.offsetWidth;
+		const height = this.offsetHeight;
+
+		const bgCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#background')!;
+		this.bgView.setContext(bgCanvas);
+		this.bgView.setCanvasSize(width, height);
+		this.bgView.setTotalArea(this.imageSize, this.imageSize);
+
+		const mainCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#main')!;
+		this.mainView.setContext(mainCanvas);
+		this.mainView.setCanvasSize(width, height);
+		this.mainView.setTotalArea(this.imageSize, this.imageSize);
+
+		this.initializeBackground();
+		this.resizeObserver.observe(this);
 	}
 
 	protected async loadFromOPFS() {
@@ -105,26 +103,26 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		};
 	}
 
-	protected async loadFromPublicFile() {
-		const [ data, err ] = await maybe(fetch('/graphs/graph-version-2.json')
-			.then(res => res.json()));
+	protected async loadFromLocalAsset() {
+		const [ data, err ] = await maybe(import('../../assets/graphs/graph-version-2.json?inline')
+			.then(res => res.default));
 
 		if (err)
 			throw err;
 
-		return data as {
+		return data as any as {
 			nodes:       StorableGraphNode[];
 			connections: StorableConnection[];
 		};
 	}
 
-	protected async loadBackgroundImage() {
+	protected initializeBackground() {
 		this.images = range(0, 100).map(i => {
 			return {
-				getImage: () => loadImage(`/background/v2/poe2-bg${ i + 1 }.webp`),
-				image:    undefined,
 				x:        (i % 10) * this.chunkSize,
 				y:        Math.floor(i / 10) * this.chunkSize,
+				image:    undefined,
+				getImage: () => getBackgroundChunk(i),
 			};
 		});
 
@@ -136,6 +134,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 
 		this.bgView.moveTo(x, y);
 		this.mainView.moveTo(x, y);
+
 		this.drawBackgroundCanvas.debounced();
 		this.drawMainCanvas.debounced();
 	}
@@ -202,19 +201,23 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		this.drawMainCanvas.debounced();
 	}
 
-	protected onMousedown(ev: MouseEvent) {
+	protected onMousedown(downEv: MouseEvent) {
 		// We only care about left clicks
-		if (ev.buttons !== 1)
+		if (downEv.buttons !== 1)
 			return;
 
-		ev.preventDefault();
+		downEv.preventDefault();
 		this.focus();
 
-		// Get the offset from the corner of the current view to the mouse position
-		const viewOffsetX = ev.offsetX - this.mainView.position.x;
-		const viewOffsetY = ev.offsetY - this.mainView.position.y;
+		const rect = this.getBoundingClientRect();
+		const deltaY = rect.top;
+		const deltaX = rect.left;
 
-		const vec = { x: ev.offsetX, y: ev.offsetY };
+		// Get the offset from the corner of the current view to the mouse position
+		const viewOffsetX = downEv.offsetX - this.mainView.position.x;
+		const viewOffsetY = downEv.offsetY - this.mainView.position.y;
+
+		const vec = { x: downEv.offsetX, y: downEv.offsetY };
 		// Try to find a node at the mouse position
 		const node = this.getGraphNode(vec);
 
@@ -237,9 +240,12 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		else {
 			// We setup the mousemove and mouseup events
 			// For panning the view
-			const mousemove = (ev: MouseEvent) => {
-				this.bgView.moveTo(ev.offsetX - viewOffsetX, ev.offsetY - viewOffsetY);
-				this.mainView.moveTo(ev.offsetX - viewOffsetX, ev.offsetY - viewOffsetY);
+			const mousemove = (moveEv: MouseEvent) => {
+				const x = moveEv.offsetX - deltaX - viewOffsetX;
+				const y = moveEv.offsetY - deltaY - viewOffsetY;
+
+				this.bgView.moveTo(x, y);
+				this.mainView.moveTo(x, y);
 
 				this.drawBackgroundCanvas.debounced();
 				this.drawMainCanvas.debounced();

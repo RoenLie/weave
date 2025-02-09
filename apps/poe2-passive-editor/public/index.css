@@ -1,0 +1,18 @@
+body {
+	padding: 0px;
+	margin: 0px;
+	height: 100vh;
+	display: grid;
+	color: rgb(240 240 240);
+	background-color: rgb(30 30 30);
+}
+
+:root {
+	font-family: 'Inter', sans-serif;
+}
+
+@supports (font-variation-settings: normal) {
+	:root {
+		font-family: 'Inter var', sans-serif;
+	}
+}
