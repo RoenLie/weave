@@ -1,5 +1,5 @@
 import { html } from 'lit-html';
-import { css, CustomElement, type CSSStyle } from '../../app/custom-element.ts';
+import { css, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { Connection, GraphNode, type StorableConnection, type StorableGraphNode, type StringVec2 } from '../../app/graph.ts';
 import { isOutsideViewport } from '../../app/is-outside-viewport.ts';
@@ -9,6 +9,7 @@ import { ImmediateOrDebounced, View } from '../../app/canvas-view.ts';
 import { maybe } from '@roenlie/core/async';
 import { range } from '@roenlie/core/array';
 import { getBackgroundChunk } from './image-assets.ts';
+import { CustomElement } from '../../app/custom-element/custom-element.ts';
 
 
 export class PoeCanvasPassiveBase extends CustomElement {

@@ -1,7 +1,8 @@
 import { EditorView, basicSetup } from 'codemirror';
 import { json } from '@codemirror/lang-json';
 import { basicDark } from 'cm6-theme-basic-dark';
-import { css, CustomElement, signal } from '../../app/custom-element.ts';
+import { css, signal } from '../../app/custom-element/signal-element.ts';
+import { CustomElement } from '../../app/custom-element/custom-element.ts';
 
 
 export class DetailsPanel extends CustomElement {
@@ -36,10 +37,10 @@ export class DetailsPanel extends CustomElement {
 		});
 	}
 
-	protected override beforeRender(changedProps: Set<string>): void {
-		super.beforeRender(changedProps);
+	protected override beforeUpdate(changedProps: Set<string>): void {
+		super.beforeUpdate(changedProps);
 
-		if (this.hasRendered && changedProps.has('data')) {
+		if (this.hasUpdated && changedProps.has('data')) {
 			if (!this.data)
 				this.style.visibility = 'hidden';
 			else

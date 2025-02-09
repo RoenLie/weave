@@ -7,8 +7,9 @@ import { DetailsPanel } from './details-panel.ts';
 import { app, assignTypes, db } from '../../app/firebase.ts';
 import { Connection, GraphNode } from '../../app/graph.ts';
 import { Path } from './graph-svg-rendering.ts';
-import { css, CustomElement, signal } from '../../app/custom-element.ts';
+import { css, signal } from '../../app/custom-element/signal-element.ts';
 import type { Viewport } from '../../app/is-outside-viewport.ts';
+import { CustomElement } from '../../app/custom-element/custom-element.ts';
 
 
 export class Poe2Tree extends CustomElement {

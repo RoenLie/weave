@@ -33,7 +33,6 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 	protected override disconnectedCallback(): void {
 		super.disconnectedCallback();
-		this.removeEventListener('keydown', this.onKeydown);
 
 		clearInterval(this.saveInterval);
 	}
@@ -259,7 +258,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		}
 	}
 
-	protected onKeydown = (ev: KeyboardEvent) => {
+	protected onKeydown(ev: KeyboardEvent) {
 		if (this.selectedNode) {
 			const node = this.selectedNode;
 

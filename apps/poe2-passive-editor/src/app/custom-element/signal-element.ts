@@ -1,17 +1,14 @@
 import { render } from 'lit-html';
 import { Signal } from 'signal-polyfill';
 import { resolvablePromise as promise, type ResolvablePromise } from '@roenlie/core/async';
-import { effect } from './effect.ts';
-import type { ReactiveController, ReactiveControllerHost } from './reactive-controller.ts';
+import { effect } from '../effect.ts';
+import { DisposingEventHost } from './auto-disposing-event-host.ts';
 
 
-export type CSSStyle = CSSStyleSheet | CSSStyleSheet[] | CSSStyle[];
-
-
-export class CustomElement extends HTMLElement implements ReactiveControllerHost {
+export class SignalElement extends DisposingEventHost {
 
 	public static tagName: string;
-	protected static register(tagName: string) {
+	protected static register(tagName: string): void {
 		this.tagName = tagName;
 		queueMicrotask(() => customElements.define(this.tagName, this));
 	}
@@ -49,22 +46,21 @@ export class CustomElement extends HTMLElement implements ReactiveControllerHost
 		super();
 
 		this.attachShadow({ mode: 'open' });
-		const base = (this.constructor as typeof CustomElement);
+		const base = (this.constructor as typeof SignalElement);
 		base.defineStyles();
 		this.shadowRoot!.adoptedStyleSheets = base.elementStyles;
 	}
 
 	public readonly updateComplete: ResolvablePromise<boolean> = promise.resolve(true);
 	public readonly hasConnected:   boolean = false;
-	public readonly hasRendered:    boolean = false;
+	public readonly hasUpdated:     boolean = false;
 
 	private __unsubEffect?:  () => void;
 	private __signalProps:   string[] = [];
 	private __changedProps:  Set<string> = new Set();
 	private __previousProps: Map<string, any> = new Map();
-	private __controllers:   Set<ReactiveController> = new Set();
 
-	protected connectedCallback() {
+	protected connectedCallback(): void {
 		const ref = new WeakRef(this);
 
 		// eslint-disable-next-line prefer-arrow-callback
@@ -82,22 +78,18 @@ export class CustomElement extends HTMLElement implements ReactiveControllerHost
 			(this.hasConnected as boolean) = true;
 			this.firstConnected();
 		}
-
-		for (const controller of this.__controllers)
-			controller.hostConnected?.();
 	}
 
-	protected disconnectedCallback() {
+	protected override disconnectedCallback(): void {
+		super.disconnectedCallback();
+
 		this.__unsubEffect?.();
 		this.__unsubEffect = undefined;
 		this.__changedProps.clear();
 		this.__previousProps.clear();
-
-		for (const controller of this.__controllers)
-			controller.hostDisconnected?.();
 	}
 
-	public requestUpdate() {
+	public requestUpdate(): Promise<boolean> {
 		for (const prop of this.__signalProps) {
 			const value = this[prop as keyof typeof this];
 
@@ -108,73 +100,57 @@ export class CustomElement extends HTMLElement implements ReactiveControllerHost
 		}
 
 		if (!this.updateComplete.done)
-			return;
+			return this.updateComplete;
 
 		(this.updateComplete as any) = promise();
 
-		queueMicrotask(() => {
-			this.performUpdate();
-			this.updateComplete.resolve(true);
-		});
+		queueMicrotask(() => this.performUpdate());
+
+		return this.updateComplete;
 	}
 
-	public performUpdate() {
-		this.beforeRender(this.__changedProps);
+	public performUpdate(): void {
+		this.beforeUpdate(this.__changedProps);
 
 		render(this.render(), this.shadowRoot!, { host: this });
 
 		// We need to wait for the next frame to ensure the DOM has been updated.
 		requestAnimationFrame(() => {
-			this.afterRender(this.__changedProps);
+			this.afterUpdate(this.__changedProps);
 			this.__changedProps.clear();
 
-			if (!this.hasRendered) {
-				(this.hasRendered as boolean) = true;
+			if (!this.hasUpdated) {
+				(this.hasUpdated as boolean) = true;
 				this.afterConnected();
 			}
+
+			this.updateComplete.resolve(true);
 		});
 	}
 
-	public addController(controller: ReactiveController): void {
-		this.__controllers.add(controller);
-
-		if (this.hasConnected)
-			controller.hostConnected?.();
-	}
-
-	public removeController(controller: ReactiveController): void {
-		this.__controllers.delete(controller);
-	}
-
 	/** Runs the immediatly after connectedCallback, the first time this component connects. */
-	protected firstConnected() {}
+	protected firstConnected(): void {}
 
 	/** Runs after render has completed and dom has been painted after a connectedCallback. */
-	protected afterConnected() {}
+	protected afterConnected(): void {}
 
 	/** Runs immediatly before render is performed. */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	protected beforeRender(changedProps: Set<string>) {
-		for (const controller of this.__controllers)
-			controller.hostUpdate?.();
-	}
+	protected beforeUpdate(changedProps: Set<string>): void {}
 
 	/** Runs after render has completed and dom has painted. */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	protected afterRender(changedProps: Set<string>) {
-		for (const controller of this.__controllers)
-			controller.hostUpdated?.();
-	}
+	protected afterUpdate(changedProps: Set<string>): void {}
 
-	protected render(): unknown {
-		return;
-	}
+	/** Return a value which will be rendered into the componens shadowroot. */
+	protected render(): unknown { return; }
 
 	public static styles: CSSStyle;
 
 }
 
 
+export type CSSStyle = CSSStyleSheet | CSSStyleSheet[] | CSSStyle[];
 export const css = (strings: TemplateStringsArray, ...values: any[]): CSSStyle => {
 	const stylesheet = new CSSStyleSheet();
 	stylesheet.replaceSync(strings.reduce((acc, str, i) => acc + str + values[i], ''));
@@ -183,7 +159,7 @@ export const css = (strings: TemplateStringsArray, ...values: any[]): CSSStyle =
 };
 
 
-export const signal = <C extends CustomElement, V>(
+export const signal = <C extends SignalElement, V>(
 	target: ClassAccessorDecoratorTarget<C, V>,
 	context: ClassAccessorDecoratorContext<C, V>,
 ): ClassAccessorDecoratorResult<C, V> => {
