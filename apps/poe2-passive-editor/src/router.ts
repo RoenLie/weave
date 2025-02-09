@@ -67,9 +67,9 @@ export class RouterCmp extends CustomElement {
 			</nav>
 
 			${ when(this.currentUser, () => html`
-			<button @click=${ this.logout }>
+			<login-button @click=${ this.logout }>
 				Logout
-			</button>
+			</login-button>
 			`) }
 		</header>
 		${ when(
@@ -90,14 +90,17 @@ export class RouterCmp extends CustomElement {
 		:host {
 			display: grid;
 			grid-template-rows: auto 1fr;
+			background-color: #334155;
 		}
 		header {
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			height: 52px;
-			background-color: #333;
+			height: 64px;
+			padding-inline: 12px;
 			color: white;
+			contain: strict;
+			border-bottom: 1px solid #263140;
 
 			a {
 				color: white;
@@ -108,7 +111,6 @@ export class RouterCmp extends CustomElement {
 		article {
 			display: grid;
 			place-items: center;
-			background-color: #334155;
 		}
 	`;
 
@@ -121,11 +123,11 @@ export class LoginBtnCmp extends CustomElement {
 
 	protected override render(): unknown {
 		return html`
-		<s-base>
-			<button class="button-67" role="button">
+		<!--<s-base>-->
+			<button>
 				<slot></slot>
 			</button>
-		</s-base>
+		<!--</s-base>-->
 		`;
 	}
 
@@ -134,14 +136,17 @@ export class LoginBtnCmp extends CustomElement {
 		:host {
 			display: block;
 			color: #cfd7e2;
+
+			--border-radius: 12px;
+			--base-padding: 14px;
+			--background: #334155;
 		}
 		s-base {
 			display: grid;
 			place-items: center;
-			height: 128px;
-			width: 128px;
-			background-color: #334155;
-			border-radius: 32px;
+			padding: var(--base-padding);
+			background-color: var(--background);
+			border-radius: calc(var(--base-padding) + var(--border-radius));
 
 			box-shadow: inset -1px -1px 0px 0px #252E3C,
 						inset -2px -2px 2px 0px #2A3646,
@@ -152,13 +157,49 @@ export class LoginBtnCmp extends CustomElement {
 			cursor: pointer;
 			display: grid;
 			place-items: center;
-			height: 80px;
-			width: 80px;
-			border-radius: 24px;
-			background-color: #334155;
+			height: 44px;
+			padding-inline: 12px;
+			border-radius: var(--border-radius);
+			background-color: var(--background);
 
-			box-shadow: 8px 8px 16px 0px #263140,
-						-8px -8px 16px 0px #394960;
+			--sh-x: 7px;
+			--sh-y: 7px;
+			--sh-neg-x: calc(var(--sh-x) * -1);
+			--sh-neg-y: calc(var(--sh-y) * -1);
+
+			--sh-blur: 14px;
+			--sh-spread: 0px;
+			--sh-color1: #263140;
+			--sh-color2: #394960;
+
+			--outset-empty: 0px 0px 0px 0px transparent;
+			--inset-empty: inset 0px 0px 0px 0px transparent;
+
+			--outset-shadow1: var(--sh-x)     var(--sh-y)     var(--sh-blur) var(--sh-spread) var(--sh-color1);
+			--outset-shadow2: var(--sh-neg-x) var(--sh-neg-y) var(--sh-blur) var(--sh-spread) var(--sh-color2);
+			--inset-shadow1: var(--inset-empty);
+			--inset-shadow2: var(--inset-empty);
+
+			transition: box-shadow 0.1s ease-out;
+			box-shadow: var(--outset-shadow1),
+							var(--outset-shadow2),
+							var(--inset-shadow1),
+							var(--inset-shadow2);
+		}
+		button:focus-visible {
+			border: 1px solid orange;
+		}
+		@media (hover: hover) {
+			button:hover {
+				--sh-spread: 6px;
+			}
+			button:active, button:focus-within:not(:focus-visible) {
+				--sh-spread: 0px;
+				--outset-shadow1: var(--outset-empty);
+				--outset-shadow2: var(--outset-empty);
+				--inset-shadow1: inset var(--sh-x)     var(--sh-y)     var(--sh-blur) var(--sh-spread) var(--sh-color1);
+				--inset-shadow2: inset var(--sh-neg-x) var(--sh-neg-y) var(--sh-blur) var(--sh-spread) var(--sh-color2);
+			}
 		}
 	`;
 

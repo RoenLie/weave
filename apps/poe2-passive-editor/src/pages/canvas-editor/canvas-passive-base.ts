@@ -424,6 +424,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			contain: strict;
 			display: grid;
 			outline: none;
+			background-color: rgb(8, 12, 18);
 		}
 		canvas {
 			grid-row: 1/2;
