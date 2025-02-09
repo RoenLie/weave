@@ -1,15 +1,24 @@
 import type { Repeat, Vec2 } from '@roenlie/core/types';
-import { Connection, GraphNode, type StorableConnection, type StorableGraphNode } from '../../app/graph.ts';
-import { isOutsideViewport } from '../../app/is-outside-viewport.ts';
+import { Connection, GraphNode, type StorableConnection, type StorableGraphNode } from '../../app/graph/graph.ts';
+import { isOutsideViewport } from '../../app/canvas/is-outside-viewport.ts';
 import { Canvas2DObject } from './canvas-object.ts';
 import { oneOf } from '@roenlie/core/validation';
 import { maybe } from '@roenlie/core/async';
 import { PoeCanvasPassiveBase } from './canvas-passive-base.ts';
+import { html } from 'lit-html';
+import { when } from 'lit-html/directives/when.js';
+import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
+import { DetailsPanel } from './details-panel.ts';
 
 
 export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
-	static { this.register('poe-canvas-editor'); }
+	static {
+		this.register('poe-canvas-editor');
+		DetailsPanel;
+	}
+
+	@signal public accessor showNodeDetails: boolean = false;
 
 	protected updated?:      number;
 	protected saveOngoing:   boolean = false;
@@ -158,6 +167,9 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 					this.selectedNode = nodeOrVec;
 					nodeOrVec.path = this.createNodePath2D(nodeOrVec);
+
+					if (downEv.detail === 2)
+						this.showNodeDetails = true;
 				}
 
 				this.drawMainCanvas.debounced();
@@ -393,19 +405,51 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 	}
 
 	protected override render(): unknown {
-		return super.render();
+		return [
+			super.render(),
+			html`
+			${ when(this.showNodeDetails, () => html`
+			<s-node-details @mousedown=${ (ev: Event) => ev.stopPropagation() }>
+				<button @click=${ () => this.showNodeDetails = false }>
+					Close
+				</button>
+
+				<details-panel
+					.data=${ this.selectedNode?.data }
+				></details-panel>
+			</s-node-details>
+			`) }
+			`,
+		];
 	}
 
-	//public static override styles: CSSStyle = css`
-	//	:host {
-	//		contain: strict;
-	//		display: grid;
-	//		outline: none;
-	//	}
-	//	canvas {
-	//		grid-row: 1/2;
-	//		grid-column: 1/2;
-	//	}
-	//`;
+	public static override styles: CSSStyle = css`
+		s-node-details {
+			z-index: 1;
+			position: fixed;
+			display: grid;
+			bottom: 0px;
+			left: 0px;
+			right: 0px;
+			height: 500px;
+			background-color: rgb(15, 16, 21);
+			border: 1px solid black;
+			padding: 8px;
+			border-radius: 8px;
+			padding-top: 28px;
+		}
+		s-node-details button {
+			background-color: darkgoldenrod;
+			border: 1px solid black;
+			border-radius: 4px;
+			padding: 4px;
+			position: absolute;
+			top: 0;
+			right: 0;
+		}
+		/*s-node-details details-panel {
+
+		}*/
+	`;
 
 }

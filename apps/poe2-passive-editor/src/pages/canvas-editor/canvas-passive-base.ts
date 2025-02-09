@@ -1,23 +1,26 @@
 import { html } from 'lit-html';
-import { css, type CSSStyle } from '../../app/custom-element/signal-element.ts';
+import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import type { Vec2 } from '@roenlie/core/types';
-import { Connection, GraphNode, type StorableConnection, type StorableGraphNode, type StringVec2 } from '../../app/graph.ts';
-import { isOutsideViewport } from '../../app/is-outside-viewport.ts';
+import { Connection, GraphNode, type StorableConnection, type StorableGraphNode, type StringVec2 } from '../../app/graph/graph.ts';
+import { isOutsideViewport } from '../../app/canvas/is-outside-viewport.ts';
 import { Canvas2DObject } from './canvas-object.ts';
-import { getPathReduction, isRectInsideAnother } from '../../app/path-helpers.ts';
-import { ImmediateOrDebounced, View } from '../../app/canvas-view.ts';
+import { getPathReduction, isRectInsideAnother } from '../../app/canvas/path-helpers.ts';
 import { maybe } from '@roenlie/core/async';
 import { range } from '@roenlie/core/array';
 import { getBackgroundChunk } from './image-assets.ts';
 import { CustomElement } from '../../app/custom-element/custom-element.ts';
+import { ImmediateOrDebounced, View } from '../../app/canvas/canvas-view.ts';
+import { when } from 'lit-html/directives/when.js';
+import { styleMap } from 'lit-html/directives/style-map.js';
 
 
 export class PoeCanvasPassiveBase extends CustomElement {
 
+	@signal protected accessor selectedNode: GraphNode | undefined;
+	@signal protected accessor hoveredNode:  GraphNode | undefined;
+
 	protected nodes:         Map<string, GraphNode> = new Map();
 	protected connections:   Map<string, Connection> = new Map();
-	protected selectedNode?: GraphNode;
-	protected hoveredNode?:  GraphNode;
 	protected imageSize:     number = 13000;
 	protected chunkSize:     number = 1300;
 	protected imagePromises: Map<StringVec2, Promise<any>> = new Map();
@@ -93,6 +96,18 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		this.resizeObserver.observe(this);
 	}
 
+	protected override afterUpdate(changedProps: Set<string>): void {
+		super.afterUpdate(changedProps);
+
+		if (changedProps.has('hoveredNode')) {
+			if (this.hoveredNode) {
+				const tooltip = this.shadowRoot?.querySelector<HTMLElement>('article[popover="manual"]');
+				if (tooltip)
+					tooltip.showPopover();
+			}
+		}
+	}
+
 	protected async loadFromOPFS() {
 		const opfsRoot   = await navigator.storage.getDirectory();
 		const fileHandle = await opfsRoot.getFileHandle('tree-canvas', { create: true });
@@ -166,20 +181,23 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		const vec = { x: ev.offsetX, y: ev.offsetY };
 		const node = this.getGraphNode(vec);
 
-		// Remove the hover effect if no node, or a new node is hovered
-		if (this.hoveredNode && node !== this.hoveredNode) {
-			const node = this.hoveredNode;
-			this.hoveredNode = undefined;
+		// Holding alt or the meta key will prevent hover behavior.
+		if ((!ev.altKey && !ev.metaKey)) {
+			// Remove the hover effect if no node, or a new node is hovered
+			if (this.hoveredNode && node !== this.hoveredNode) {
+				const node = this.hoveredNode;
+				this.hoveredNode = undefined;
 
-			node.path = this.createNodePath2D(node);
-			this.drawMainCanvas.debounced();
-		}
+				node.path = this.createNodePath2D(node);
+				this.drawMainCanvas.debounced();
+			}
 
-		// Add the hover effect if a node is hovered
-		if (node && node !== this.hoveredNode) {
-			this.hoveredNode ??= node;
-			this.hoveredNode.path = this.createNodePath2D(node);
-			this.drawMainCanvas.debounced();
+			// Add the hover effect if a node is hovered
+			if (node && node !== this.hoveredNode) {
+				this.hoveredNode ??= node;
+				this.hoveredNode.path = this.createNodePath2D(node);
+				this.drawMainCanvas.debounced();
+			}
 		}
 	}
 
@@ -404,10 +422,20 @@ export class PoeCanvasPassiveBase extends CustomElement {
 
 		if (percentage < 50)
 			this.mapNodePath2Ds();
+
+		this.requestUpdate();
 	}
 
 	protected drawBackgroundCanvas = new ImmediateOrDebounced(this.drawBackground.bind(this));
 	protected drawMainCanvas = new ImmediateOrDebounced(this.drawMain.bind(this));
+
+	protected renderTooltip(node: GraphNode): unknown {
+		return html`
+		<div style="white-space:nowrap;">id: ${ node.id }</div>
+		<div style="white-space:nowrap;">name: ${ node.data.name }</div>
+		<div>description: ${ node.data.description }</div>
+		`;
+	}
 
 	protected override render(): unknown {
 		return html`
@@ -417,6 +445,23 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			@mousedown =${ this.onMousedown }
 			@mousewheel=${ this.onMousewheel }
 		></canvas>
+
+		${ when(this.hoveredNode, node => {
+			const rect = this.getBoundingClientRect();
+			const scale = this.mainView.scale;
+			const x = (node.x * scale) + (this.mainView.position.x + rect.left) + (node.radius * scale);
+			const y = (node.y * scale) + (this.mainView.position.y + rect.top)  - (node.radius * scale);
+
+			return html`
+			<article
+				style=${ styleMap({ top: y + 'px', left: x + 'px' }) }
+				class="tooltip"
+				popover="manual"
+			>
+				<s-tooltip>${ this.renderTooltip(node) }</s-tooltip>
+			</article>
+			`;
+		}) }
 		`;
 	}
 
@@ -430,6 +475,29 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		canvas {
 			grid-row: 1/2;
 			grid-column: 1/2;
+		}
+		article.tooltip:popover-open {
+			position: absolute;
+			background: unset;
+			overflow: unset;
+			padding:  unset;
+			margin:   unset;
+			border:   unset;
+			height:   unset;
+			width:    unset;
+			inset:    unset;
+			color:    unset;
+		}
+		s-tooltip {
+			position: absolute;
+			bottom: 0px;
+			left: 0px;
+			border: 1px solid rgb(241 194 50);
+			background: rgb(241 194 50);
+			color: black;
+			padding-block: 8px;
+			padding-inline: 12px;
+			border-radius: 8px;
 		}
 	`;
 

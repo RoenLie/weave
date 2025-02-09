@@ -1,10 +1,10 @@
 import { html } from 'lit-html';
-import { css, signal, type CSSStyle } from './app/custom-element/signal-element.ts';
+import { css, signal, type CSSStyle } from '../app/custom-element/signal-element.ts';
 import { Router } from '@sanguinejs/router';
 import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
 import { when } from 'lit-html/directives/when.js';
-import { app } from './app/firebase.ts';
-import { CustomElement } from './app/custom-element/custom-element.ts';
+import { app } from '../app/firebase.ts';
+import { CustomElement } from '../app/custom-element/custom-element.ts';
 
 
 export class RouterCmp extends CustomElement {
@@ -21,7 +21,7 @@ export class RouterCmp extends CustomElement {
 		{
 			path:  '/canvas-editor',
 			enter: async () => {
-				await import('./pages/canvas-editor/canvas-editor-page.ts');
+				await import('./canvas-editor/canvas-editor-page.ts');
 
 				return true;
 			},
@@ -31,8 +31,6 @@ export class RouterCmp extends CustomElement {
 
 	protected override connectedCallback(): void {
 		super.connectedCallback();
-
-		console.dir(this);
 
 		const auth = getAuth(app);
 		auth.onAuthStateChanged(user => {

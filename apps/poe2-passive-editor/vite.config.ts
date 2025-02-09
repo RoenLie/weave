@@ -2,7 +2,7 @@ import { defineConfig, type Plugin } from 'vite';
 import bodyparser from 'body-parser';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path/posix';
-import type { StorableConnection, StorableGraphNode } from './src/app/graph.ts';
+import type { StorableConnection, StorableGraphNode } from './src/app/graph/graph.ts';
 
 
 export default defineConfig({

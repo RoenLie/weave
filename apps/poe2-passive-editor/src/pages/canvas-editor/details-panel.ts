@@ -51,6 +51,8 @@ export class DetailsPanel extends CustomElement {
 	}
 
 	protected setEditorFromData() {
+		console.log('setEditorFromData');
+
 		try {
 			const docString = this.editor.state.doc.toString();
 			const docMap = new Map(Object.entries(JSON.parse(docString)));

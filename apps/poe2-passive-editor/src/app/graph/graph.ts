@@ -1,7 +1,7 @@
 import { domId } from '@roenlie/core/dom';
-import type { Canvas2DObject } from '../pages/canvas-editor/canvas-object.ts';
+import type { Canvas2DObject } from '../../pages/canvas-editor/canvas-object.ts';
 import type { Optional, Vec2 } from '@roenlie/core/types';
-import { getPathReduction } from './path-helpers.ts';
+import { getPathReduction } from '../canvas/path-helpers.ts';
 
 
 export type StringVec2 = `x${ number }y${ number }`;
@@ -19,7 +19,11 @@ export interface StorableGraphNode {
 	id?:          string;
 	radius?:      number;
 	connections?: string[];
-	data?:        Record<string, any>;
+	data?:        {
+		name:        string;
+		description: string;
+		properties:  Record<string, any>;
+	};
 }
 
 
@@ -94,8 +98,13 @@ export class GraphNode {
 		this.y  = y;
 		this.id = id || domId();
 		this.radius = radius || this.sizes[0]!;
-		this.data = new Map(Object.entries(storable.data || {}));
 		this.connectionIds = storable.connections || [];
+		this.data = {
+			name:        '',
+			description: '',
+			...storable.data,
+			properties:  new Map(Object.entries(storable.data?.properties || {})),
+		};
 	}
 
 	public id:          string;
@@ -104,8 +113,13 @@ export class GraphNode {
 	public radius:      number;
 	public sizes:       number[] = [ 24, 36, 56 ];
 	public path:        Canvas2DObject | undefined;
-	public data:        Map<string, any>;
 	public connections: Connection[] = [];
+	public data:        {
+		name:        string;
+		description: string;
+		properties:  Map<string, any>;
+	};
+
 
 	protected connectionIds:         string[];
 	protected haveMappedConnections: boolean = false;
@@ -133,8 +147,102 @@ export class GraphNode {
 			id:          this.id,
 			radius:      this.radius,
 			connections: this.connections.map(c => c.id),
-			data:        Object.fromEntries(this.data),
+			data:        {
+				name:        this.data.name,
+				description: this.data.description,
+				properties:  Object.fromEntries(this.data.properties),
+			},
 		};
 	}
 
 }
+
+
+class Mod {
+
+	constructor(public name: string, public description: string) {}
+
+	public toString() {
+		return this.name;
+	}
+
+}
+
+
+const mod = {
+	hits: new Mod('hits',
+		'Any damage that is not a Damage Over Time is hit damage.'),
+	evaded: {
+		name:        'evaded',
+		description: '',
+	},
+	critical_hits: {
+		name:        'critical_hits',
+		description: '',
+	},
+	'two-handed_axes': {
+		name:        'two-handed_axes',
+		description: '',
+	},
+	maces: {
+		name:        'maces',
+		description: '',
+	},
+	swords: {
+		name:        'swords',
+		description: '',
+	},
+	attribute: {
+		name:        'attribute',
+		description: '',
+	},
+	stun_treshold: {
+		name:        'stun_treshold',
+		description: '',
+	},
+};
+
+
+export const nodeTypes = [
+	{
+		name:  'minor',
+		nodes: [
+			{
+				name:        'attribute',
+				description: '+5 to any attribute',
+			},
+		],
+	},
+	{
+		name:  'notable',
+		nodes: [
+			{
+				name:        'raw_power',
+				description: `20% increased spell damage. +10 to intelligence`,
+			},
+		],
+	},
+	{
+		name:  'keystone',
+		nodes: [
+			{
+				name:        'resolute_technique',
+				description: `Your ${ mod.hits } can't be evaded. Never deal critical strikes.`,
+			},
+			{
+				name:        `giant's_blood`,
+				description: `You can wield ${ mod['two-handed_axes'] }, ${ mod.maces }`
+				+ ` and ${ mod.swords } in one hand.`
+				+ ` Tripple ${ mod.attribute } requirements of weapons.`,
+			},
+			{
+				name:        `unwavering_stance`,
+				description: `Your ${ mod.stun_treshold } is doubled. Cannot dodge roll`,
+			},
+			{
+				name:        `Avatar of Fire`,
+				description: `75% of damage converted to fire damage. Deal no non-fire damage.`,
+			},
+		],
+	},
+];

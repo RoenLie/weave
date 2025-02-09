@@ -1,9 +1,9 @@
 import type { Vec2 } from '@roenlie/core/types';
 import { html, svg } from 'lit-html';
 import { map } from 'lit-html/directives/map.js';
-import type { Connection, GraphNode } from '../../app/graph.ts';
+import type { Connection, GraphNode } from '../../app/graph/graph.ts';
 import { css, signal } from '../../app/custom-element/signal-element.ts';
-import { isOutsideViewport, type Viewport } from '../../app/is-outside-viewport.ts';
+import { isOutsideViewport, type Viewport } from '../../app/canvas/is-outside-viewport.ts';
 import { CustomElement } from '../../app/custom-element/custom-element.ts';
 
 

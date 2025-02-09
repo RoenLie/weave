@@ -1,4 +1,4 @@
-import { loadImage } from '../../app/load-image.ts';
+import { loadImage } from '../../app/canvas/load-image.ts';
 
 
 export const getBackgroundChunk = (() => {

@@ -1,7 +1,7 @@
 import { render } from 'lit-html';
 import { Signal } from 'signal-polyfill';
 import { resolvablePromise as promise, type ResolvablePromise } from '@roenlie/core/async';
-import { effect } from '../effect.ts';
+import { effect } from './effect.ts';
 import { DisposingEventHost } from './auto-disposing-event-host.ts';
 
 
