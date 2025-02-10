@@ -9,6 +9,9 @@ import { html } from 'lit-html';
 import { when } from 'lit-html/directives/when.js';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import { DetailsPanel } from './details-panel.ts';
+import { nodeDataCatalog, type NodeData, type NodeDataCatalog } from '../../app/graph/node-catalog.ts';
+import { map } from 'lit-html/directives/map.js';
+import { join } from 'lit-html/directives/join.js';
 
 
 export class PoeCanvasTree extends PoeCanvasPassiveBase {
@@ -404,52 +407,142 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 			this.mapConnectionHandle2Ds();
 	}
 
-	protected override render(): unknown {
-		return [
-			super.render(),
-			html`
-			${ when(this.showNodeDetails, () => html`
-			<s-node-details @mousedown=${ (ev: Event) => ev.stopPropagation() }>
-				<button @click=${ () => this.showNodeDetails = false }>
-					Close
-				</button>
 
-				<details-panel
-					.data=${ this.selectedNode?.data }
-				></details-panel>
-			</s-node-details>
-			`) }
-			`,
-		];
+	@signal protected accessor selectedNodeMenu: keyof NodeDataCatalog | undefined = undefined;
+	@signal protected accessor showNodeSelectorMenu: boolean = false;
+	protected nodeSelectorMenus = [ 'minor', 'notable', 'keystone' ] as const;
+
+	protected override beforeCloseTooltip(): void {
+		this.selectedNodeMenu = undefined;
+	}
+
+	protected assignNodeData(node: GraphNode, data: NodeData | undefined) {
+		node.data = data;
+		this.updated = Date.now();
+		node.path = this.createNodePath2D(node);
+		this.drawMainCanvas.debounced();
+	}
+
+	protected override renderTooltip(node: GraphNode): unknown {
+		if (!node.data || this.showNodeSelectorMenu) {
+			return html`
+			<s-node-selector>
+				<s-selector-header>
+					Select node data to assign.
+				</s-selector-header>
+
+				${ when(this.selectedNodeMenu, () => html`
+				<button @click=${ () => this.selectedNodeMenu = undefined }>
+					<svg width="22px" height="22px" fill="currentColor">
+						<use xlink:href="bootstrap-icons.svg#arrow-left"/>
+					</svg>
+				</button>
+				`) }
+				<ul>
+					${ when(
+						this.selectedNodeMenu,
+						menu => html`
+						<li @click=${ () => this.assignNodeData(node, undefined) }>
+							~ empty ~
+						</li>
+						${ map(nodeDataCatalog[menu], data => html`
+						<li @click=${ () => this.assignNodeData(node, data) }>
+							${ data.id.replaceAll('_', ' ') }
+						</li>
+						`) }
+						`,
+						() => map(this.nodeSelectorMenus, (menu) => html`
+						<li @click=${ () => this.selectedNodeMenu = menu }>${ menu }</li>
+						`),
+					) }
+				</ul>
+			</s-node-selector>
+			`;
+		}
+
+		return super.renderTooltip(node);
 	}
 
 	public static override styles: CSSStyle = css`
-		s-node-details {
-			z-index: 1;
-			position: fixed;
+		s-node-selector ul { all: unset; }
+		s-node-selector li { all: unset; }
+		s-node-selector {
 			display: grid;
-			bottom: 0px;
-			left: 0px;
-			right: 0px;
-			height: 500px;
-			background-color: rgb(15, 16, 21);
-			border: 1px solid black;
-			padding: 8px;
-			border-radius: 8px;
-			padding-top: 28px;
-		}
-		s-node-details button {
-			background-color: darkgoldenrod;
-			border: 1px solid black;
-			border-radius: 4px;
-			padding: 4px;
-			position: absolute;
-			top: 0;
-			right: 0;
-		}
-		/*s-node-details details-panel {
+			grid-template-rows: auto 1fr;
+			grid-template-columns: auto 1fr;
 
-		}*/
+			border: 1px solid rgb(241 194 50);
+			background: rgb(241 194 50);
+			color: black;
+
+			padding-left: 8px;
+
+			border-radius: 8px;
+			border-top-right-radius: 2px;
+			border-bottom-right-radius: 2px;
+
+			min-width: 200px;
+			width: fit-content;
+			max-width: 600px;
+
+			min-height: 50px;
+			height: fit-content;
+			max-height: 400px;
+
+			s-selector-header {
+				white-space: nowrap;
+				display: block;
+				grid-row: 1 / 2;
+				grid-column: 1 / 3;
+				padding-inline: 8px;
+			}
+
+			button {
+				all: unset;
+				grid-row: 2 / 3;
+				grid-column: 1 / 2;
+				cursor: pointer;
+				padding-right: 8px;
+				height: fit-content;
+				place-self: center;
+			}
+			ul {
+				rid-row: 2 / 3;
+				grid-column: 2 / 3;
+				display: flex;
+				flex-flow: column;
+				overflow-x: hidden;
+
+				&::-webkit-scrollbar {
+					width: 8px;
+					height: 8px;
+				}
+				&::-webkit-scrollbar-track {
+					background: transparent;
+				}
+				&::-webkit-scrollbar-thumb {
+					background: rgb(30 30 30 / 50%);
+					border-radius: 2px;
+					-webkit-background-clip: padding-box;
+					background-clip: padding-box;
+				}
+				&::-webkit-scrollbar-corner {
+					background: rgba(0, 0, 0, 0);
+				}
+			}
+			li {
+				cursor: pointer;
+				white-space: nowrap;
+
+				&:hover {
+					background: rgb(30 30 30 / 20%);
+				}
+			}
+			s-separator {
+				margin: 5px 0;
+				border-top: 1px solid rgb(30 30 30 / 50%);
+			}
+		}
 	`;
 
 }

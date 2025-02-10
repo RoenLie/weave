@@ -14,6 +14,19 @@ import { when } from 'lit-html/directives/when.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
 
 
+const unsetPopover = css`
+background: unset;
+overflow: unset;
+padding:  unset;
+margin:   unset;
+border:   unset;
+height:   unset;
+width:    unset;
+inset:    unset;
+color:    unset;
+`;
+
+
 export class PoeCanvasPassiveBase extends CustomElement {
 
 	@signal protected accessor selectedNode: GraphNode | undefined;
@@ -186,6 +199,8 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			// Remove the hover effect if no node, or a new node is hovered
 			if (this.hoveredNode && node !== this.hoveredNode) {
 				const node = this.hoveredNode;
+
+				this.beforeCloseTooltip(node);
 				this.hoveredNode = undefined;
 
 				node.path = this.createNodePath2D(node);
@@ -194,7 +209,8 @@ export class PoeCanvasPassiveBase extends CustomElement {
 
 			// Add the hover effect if a node is hovered
 			if (node && node !== this.hoveredNode) {
-				this.hoveredNode ??= node;
+				this.beforeOpenTooltip(node);
+				this.hoveredNode = node;
 				this.hoveredNode.path = this.createNodePath2D(node);
 				this.drawMainCanvas.debounced();
 			}
@@ -339,8 +355,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 				path2D.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
 			},
 			(ctx, path2D) => {
-				//ctx.strokeStyle = 'rgb(241 194 50)';
-				ctx.strokeStyle = 'white';
+				ctx.strokeStyle = !node.data ? 'white' : '';
 				ctx.lineWidth = 2;
 				ctx.stroke(path2D);
 
@@ -429,11 +444,21 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	protected drawBackgroundCanvas = new ImmediateOrDebounced(this.drawBackground.bind(this));
 	protected drawMainCanvas = new ImmediateOrDebounced(this.drawMain.bind(this));
 
+
+	protected beforeCloseTooltip(node: GraphNode) {}
+	protected beforeOpenTooltip(node: GraphNode) {}
+
 	protected renderTooltip(node: GraphNode): unknown {
+		if (!node.data)
+			return 'MISSING DATA';
+
 		return html`
-		<div style="white-space:nowrap;">id: ${ node.id }</div>
-		<div style="white-space:nowrap;">name: ${ node.data.name }</div>
-		<div>description: ${ node.data.description }</div>
+		<div style="white-space:nowrap;">
+			name: ${ node.data.id }
+		</div>
+		<div>
+			description: ${ node.data.description }
+		</div>
 		`;
 	}
 
@@ -477,27 +502,15 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			grid-column: 1/2;
 		}
 		article.tooltip:popover-open {
+			${ unsetPopover }
 			position: absolute;
-			background: unset;
-			overflow: unset;
-			padding:  unset;
-			margin:   unset;
-			border:   unset;
-			height:   unset;
-			width:    unset;
-			inset:    unset;
-			color:    unset;
+			display: grid;
+			place-items: center start;
 		}
 		s-tooltip {
 			position: absolute;
-			bottom: 0px;
-			left: 0px;
-			border: 1px solid rgb(241 194 50);
-			background: rgb(241 194 50);
-			color: black;
-			padding-block: 8px;
-			padding-inline: 12px;
-			border-radius: 8px;
+			display: block;
+			width: max-content;
 		}
 	`;
 

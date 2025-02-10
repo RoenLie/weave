@@ -152,8 +152,14 @@ export class SignalElement extends DisposingEventHost {
 
 export type CSSStyle = CSSStyleSheet | CSSStyleSheet[] | CSSStyle[];
 export const css = (strings: TemplateStringsArray, ...values: any[]): CSSStyle => {
-	const stylesheet = new CSSStyleSheet();
-	stylesheet.replaceSync(strings.reduce((acc, str, i) => acc + str + values[i], ''));
+	const stylesheet = new EnhancedCSSStyleSheet();
+	stylesheet.replaceSync(strings.reduce((acc, str, i) => {
+		const value = values[i]!;
+		if (value instanceof EnhancedCSSStyleSheet)
+			return acc + str + value.text;
+
+		return acc + str + values[i];
+	}, ''));
 
 	return stylesheet;
 };
@@ -184,3 +190,15 @@ export const signal = <C extends SignalElement, V>(
 		},
 	};
 };
+
+
+export class EnhancedCSSStyleSheet extends CSSStyleSheet {
+
+	public text: string;
+
+	public override replaceSync(text: string): void {
+		this.text = text;
+		super.replaceSync(text);
+	}
+
+}
