@@ -11,7 +11,6 @@ import { css, signal, type CSSStyle } from '../../app/custom-element/signal-elem
 import { DetailsPanel } from './details-panel.ts';
 import { nodeDataCatalog, type NodeData, type NodeDataCatalog } from '../../app/graph/node-catalog.ts';
 import { map } from 'lit-html/directives/map.js';
-import { join } from 'lit-html/directives/join.js';
 
 
 export class PoeCanvasTree extends PoeCanvasPassiveBase {
@@ -443,7 +442,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 						this.selectedNodeMenu,
 						menu => html`
 						<li @click=${ () => this.assignNodeData(node, undefined) }>
-							~ empty ~
+							~ clear ~
 						</li>
 						${ map(nodeDataCatalog[menu], data => html`
 						<li @click=${ () => this.assignNodeData(node, data) }>
@@ -460,10 +459,44 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 			`;
 		}
 
-		return super.renderTooltip(node);
+		return html`
+		<s-node-editor-tooltip>
+			<button @click=${ () => { this.assignNodeData(node, undefined); } }>
+				<svg width="22px" height="22px" fill="currentColor">
+					<use xlink:href="bootstrap-icons.svg#x"/>
+				</svg>
+			</button>
+			<div style="white-space:nowrap;">
+				${ node.data.id }
+			</div>
+			<div>
+				${ node.data.description }
+			</div>
+		</s-node-editor-tooltip>
+		`;
 	}
 
 	public static override styles: CSSStyle = css`
+		s-node-editor-tooltip {
+			display: grid;
+			background: rgb(241 194 50);
+			color: black;
+			border: 1px solid rgb(241 194 50);
+			border-radius: 8px;
+			padding: 8px;
+			padding-top: 18px;
+
+			button {
+				position: absolute;
+				top: 0px;
+				right: 0px;
+				padding: 0px;
+				border: unset;
+				background: none;
+				cursor: pointer;
+			}
+		}
+
 		s-node-selector ul { all: unset; }
 		s-node-selector li { all: unset; }
 		s-node-selector {

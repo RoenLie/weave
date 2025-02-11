@@ -9,7 +9,8 @@
       "connections": [
         "UemNtfrG2zgsPIEWgTYPX",
         "YM_TTcrRJXiuwjvHqcD9D"
-      ]
+      ],
+      "data": "armour"
     },
     {
       "x": 5534.903483721572,
@@ -44,7 +45,8 @@
       "connections": [
         "bOC7l1zOPMKHkHdkziA1V",
         "g9leFviGqEEKvj5ITdtfy"
-      ]
+      ],
+      "data": "melee_damage_10"
     },
     {
       "x": 5417.628677987487,
@@ -65,7 +67,8 @@
         "piXmU8HtxAmNRLoWSQig8",
         "TtFF6PtB9Q-vIzBMBBkCc",
         "bOC7l1zOPMKHkHdkziA1V"
-      ]
+      ],
+      "data": "melee_damage_8"
     },
     {
       "x": 5357.589152005701,
@@ -75,7 +78,8 @@
       "connections": [
         "piXmU8HtxAmNRLoWSQig8",
         "VHCEhltUnajAqea5GoCmr"
-      ]
+      ],
+      "data": "melee_damage_8"
     },
     {
       "x": 5261.736575438288,
@@ -85,7 +89,8 @@
       "connections": [
         "fLXFfeCbLITnttINLSwGT",
         "VHCEhltUnajAqea5GoCmr"
-      ]
+      ],
+      "data": "melee_damage_10"
     },
     {
       "x": 5230.663487430171,
@@ -105,7 +110,8 @@
       "connections": [
         "ZxdTDxrljIFrmXe0iR9Fi",
         "fLXFfeCbLITnttINLSwGT"
-      ]
+      ],
+      "data": "melee_damage_10"
     },
     {
       "x": 5056.601528333852,
@@ -28582,12 +28588,12 @@
         "y": 8069.621692080057
       },
       "m1": {
-        "x": 7535.91589503491,
-        "y": 8056.493557238408
+        "x": 7540.390350297825,
+        "y": 8118.298574037259
       },
       "m2": {
-        "x": 7607.44124237295,
-        "y": 8063.652234039096
+        "x": 7613.346005995816,
+        "y": 8108.36851681691
       },
       "id": "Yyp3Xp0gOIKUBRQ9HUnVt"
     }

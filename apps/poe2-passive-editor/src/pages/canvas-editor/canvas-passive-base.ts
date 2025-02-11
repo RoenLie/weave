@@ -12,6 +12,7 @@ import { CustomElement } from '../../app/custom-element/custom-element.ts';
 import { ImmediateOrDebounced, View } from '../../app/canvas/canvas-view.ts';
 import { when } from 'lit-html/directives/when.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
+import { drawParallelBezierCurve, type Bezier } from '../../app/canvas/parallel-bezier-curve.ts';
 
 
 const unsetPopover = css`
@@ -209,7 +210,6 @@ export class PoeCanvasPassiveBase extends CustomElement {
 
 			// Add the hover effect if a node is hovered
 			if (node && node !== this.hoveredNode) {
-				this.beforeOpenTooltip(node);
 				this.hoveredNode = node;
 				this.hoveredNode.path = this.createNodePath2D(node);
 				this.drawMainCanvas.debounced();
@@ -313,6 +313,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 
 		const path = new Canvas2DObject();
 		path.layer(
+			// Middle bezier curve
 			(path2D) => {
 				path2D.moveTo(startVec.x, startVec.y);
 				path2D.bezierCurveTo(
@@ -322,12 +323,33 @@ export class PoeCanvasPassiveBase extends CustomElement {
 				);
 			},
 			(ctx, path2D) => {
-				ctx.strokeStyle = 'rgb(72 61 139)';
-				ctx.lineWidth = 4;
+				ctx.strokeStyle = 'rgb(33, 29, 16)';
+				ctx.lineWidth = 3;
 				ctx.stroke(path2D);
 
-				ctx.lineWidth = 0;
 				ctx.strokeStyle = '';
+				ctx.lineWidth = 0;
+			},
+		).layer(
+			// Parallel bezier curves
+			(path2D) => {
+				const bezier = [
+					[ startVec.x, startVec.y ],
+					[ mid1Vec.x, mid1Vec.y ],
+					[ mid2Vec.x, mid2Vec.y ],
+					[ stopVec.x, stopVec.y ],
+				] as Bezier;
+
+				drawParallelBezierCurve(path2D, bezier, 2);
+				drawParallelBezierCurve(path2D, bezier, -2);
+			},
+			(ctx, path2D) => {
+				ctx.strokeStyle = 'rgb(67, 63, 54)';
+				ctx.lineWidth = 2;
+				ctx.stroke(path2D);
+
+				ctx.strokeStyle = '';
+				ctx.lineWidth = 0;
 			},
 		);
 
@@ -355,9 +377,11 @@ export class PoeCanvasPassiveBase extends CustomElement {
 				path2D.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
 			},
 			(ctx, path2D) => {
-				ctx.strokeStyle = !node.data ? 'white' : '';
-				ctx.lineWidth = 2;
-				ctx.stroke(path2D);
+				if (!node.data) {
+					ctx.strokeStyle = !node.data ? 'white' : '';
+					ctx.lineWidth = 2;
+					ctx.stroke(path2D);
+				}
 
 				if (this.selectedNode === node) {
 					ctx.fillStyle = 'rgb(255 255 255 / 20%)';
@@ -445,8 +469,8 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	protected drawMainCanvas = new ImmediateOrDebounced(this.drawMain.bind(this));
 
 
-	protected beforeCloseTooltip(node: GraphNode) {}
-	protected beforeOpenTooltip(node: GraphNode) {}
+	protected beforeCloseTooltip(_node: GraphNode) {}
+	protected beforeOpenTooltip(_node: GraphNode) {}
 
 	protected renderTooltip(node: GraphNode): unknown {
 		if (!node.data)
@@ -454,10 +478,10 @@ export class PoeCanvasPassiveBase extends CustomElement {
 
 		return html`
 		<div style="white-space:nowrap;">
-			name: ${ node.data.id }
+			${ node.data.id }
 		</div>
 		<div>
-			description: ${ node.data.description }
+			${ node.data.description }
 		</div>
 		`;
 	}
@@ -471,7 +495,8 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			@mousewheel=${ this.onMousewheel }
 		></canvas>
 
-		${ when(this.hoveredNode, node => {
+		${ when(this.hoveredNode && (this.mainView.visiblePercentage < 5), () => {
+			const node = this.hoveredNode!;
 			const rect = this.getBoundingClientRect();
 			const scale = this.mainView.scale;
 			const x = (node.x * scale) + (this.mainView.position.x + rect.left) + (node.radius * scale);
@@ -500,6 +525,12 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		canvas {
 			grid-row: 1/2;
 			grid-column: 1/2;
+		}
+		canvas#background {
+			/*visibility: hidden;*/
+		}
+		canvas#main {
+			/*visibility: hidden;*/
 		}
 		article.tooltip:popover-open {
 			${ unsetPopover }

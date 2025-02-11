@@ -1,3 +1,4 @@
+import { resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
 import { loadImage } from '../../app/canvas/load-image.ts';
 
 
@@ -19,5 +20,25 @@ export const getBackgroundChunk = (() => {
 			throw new Error('Invalid chunk');
 
 		return await loadImage(imgData.default);
+	};
+})();
+
+
+export const getLinePattern = (() => {
+	let promise: ResolvablePromise<HTMLImageElement> | undefined = undefined;
+
+	return () => {
+		if (promise?.done)
+			return promise.value;
+
+		if (!promise) {
+			promise = resolvablePromise();
+			console.log('loading image');
+			import('../../assets/LineConnectorNormal.png?inline').then(({ default: src }) => {
+				loadImage(src).then(promise!.resolve);
+			});
+		}
+
+		return undefined;
 	};
 })();

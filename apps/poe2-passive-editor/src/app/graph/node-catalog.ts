@@ -64,6 +64,24 @@ export const nodeDataCatalog: NodeDataCatalog = {
 			description: '+5 to any attribute',
 			properties:  new Map(),
 		},
+		{
+			id:          'armour',
+			name:        'armour',
+			description: '+20 to armour',
+			properties:  new Map(),
+		},
+		{
+			id:          'melee_damage_10',
+			name:        'melee_damage_10',
+			description: '10% increased melee damage',
+			properties:  new Map(),
+		},
+		{
+			id:          'melee_damage_8',
+			name:        'melee_damage_8',
+			description: '8% increased melee damage',
+			properties:  new Map(),
+		},
 	],
 	notable: [
 		{
