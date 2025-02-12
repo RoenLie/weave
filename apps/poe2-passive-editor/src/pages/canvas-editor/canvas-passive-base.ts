@@ -323,7 +323,8 @@ export class PoeCanvasPassiveBase extends CustomElement {
 				);
 			},
 			(ctx, path2D) => {
-				ctx.strokeStyle = 'rgb(33, 29, 16)';
+				//ctx.strokeStyle = 'rgb(33, 29, 16)';
+				ctx.strokeStyle = 'darkslateblue';
 				ctx.lineWidth = 3;
 				ctx.stroke(path2D);
 
@@ -344,7 +345,8 @@ export class PoeCanvasPassiveBase extends CustomElement {
 				drawParallelBezierCurve(path2D, bezier, -2);
 			},
 			(ctx, path2D) => {
-				ctx.strokeStyle = 'rgb(67, 63, 54)';
+				//ctx.strokeStyle = 'rgb(67, 63, 54)';
+				ctx.strokeStyle = 'goldenrod';
 				ctx.lineWidth = 2;
 				ctx.stroke(path2D);
 
@@ -378,7 +380,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			},
 			(ctx, path2D) => {
 				if (!node.data) {
-					ctx.strokeStyle = !node.data ? 'white' : '';
+					ctx.strokeStyle = 'white';
 					ctx.lineWidth = 2;
 					ctx.stroke(path2D);
 				}
@@ -527,9 +529,12 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			grid-column: 1/2;
 		}
 		canvas#background {
+			opacity: 0.5;
+			z-index: 0;
 			/*visibility: hidden;*/
 		}
 		canvas#main {
+			z-index: 1;
 			/*visibility: hidden;*/
 		}
 		article.tooltip:popover-open {
