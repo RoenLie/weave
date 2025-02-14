@@ -4,7 +4,7 @@ import type { Vec2 } from '@roenlie/core/types';
 import { Connection, GraphNode, type StorableConnection, type StorableGraphNode, type StringVec2 } from '../../app/graph/graph.ts';
 import { isOutsideViewport } from '../../app/canvas/is-outside-viewport.ts';
 import { Canvas2DObject } from './canvas-object.ts';
-import { getPathReduction, isRectInsideAnother } from '../../app/canvas/path-helpers.ts';
+import { doRectsOverlap, getPathReduction } from '../../app/canvas/path-helpers.ts';
 import { maybe } from '@roenlie/core/async';
 import { range } from '@roenlie/core/array';
 import { getBackgroundChunk } from './image-assets.ts';
@@ -176,7 +176,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 
 		const { x1, x2, y1, y2 } = this.bgView.viewport;
 
-		return isRectInsideAnother([ dx1, dy1, dx2, dy2 ], [ x1, y1, x2, y2 ]);
+		return doRectsOverlap([ dx1, dy1, dx2, dy2 ], [ x1, y1, x2, y2 ]);
 	}
 
 	protected getGraphNode(vec: Vec2): GraphNode | undefined {
@@ -470,7 +470,6 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	protected drawBackgroundCanvas = new ImmediateOrDebounced(this.drawBackground.bind(this));
 	protected drawMainCanvas = new ImmediateOrDebounced(this.drawMain.bind(this));
 
-
 	protected beforeCloseTooltip(_node: GraphNode) {}
 	protected beforeOpenTooltip(_node: GraphNode) {}
 
@@ -529,12 +528,12 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			grid-column: 1/2;
 		}
 		canvas#background {
-			opacity: 0.5;
-			z-index: 0;
+			/*opacity: 0.5;*/
+			/*z-index: 0;*/
 			/*visibility: hidden;*/
 		}
 		canvas#main {
-			z-index: 1;
+			/*z-index: 1;*/
 			/*visibility: hidden;*/
 		}
 		article.tooltip:popover-open {

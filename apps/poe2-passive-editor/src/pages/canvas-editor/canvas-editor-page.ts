@@ -20,7 +20,9 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		DetailsPanel;
 	}
 
-	@signal public accessor showNodeDetails: boolean = false;
+	@signal protected accessor selectedNodeMenu: keyof NodeDataCatalog | undefined = undefined;
+	@signal protected accessor showNodeSelectorMenu: boolean = false;
+	protected nodeSelectorMenus = [ 'minor', 'notable', 'keystone' ] as const;
 
 	protected updated?:      number;
 	protected saveOngoing:   boolean = false;
@@ -169,9 +171,6 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 					this.selectedNode = nodeOrVec;
 					nodeOrVec.path = this.createNodePath2D(nodeOrVec);
-
-					if (downEv.detail === 2)
-						this.showNodeDetails = true;
 				}
 
 				this.drawMainCanvas.debounced();
@@ -406,11 +405,6 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 			this.mapConnectionHandle2Ds();
 	}
 
-
-	@signal protected accessor selectedNodeMenu: keyof NodeDataCatalog | undefined = undefined;
-	@signal protected accessor showNodeSelectorMenu: boolean = false;
-	protected nodeSelectorMenus = [ 'minor', 'notable', 'keystone' ] as const;
-
 	protected override beforeCloseTooltip(): void {
 		this.selectedNodeMenu = undefined;
 	}
@@ -420,6 +414,15 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		this.updated = Date.now();
 		node.path = this.createNodePath2D(node);
 		this.drawMainCanvas.debounced();
+	}
+
+	protected onClickSave() {
+		console.log('Save');
+
+		console.log(
+			this.connections,
+			this.nodes,
+		);
 	}
 
 	protected override renderTooltip(node: GraphNode): unknown {
@@ -476,7 +479,29 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		`;
 	}
 
+	protected override render(): unknown {
+		return [
+			super.render(),
+			when(this.updated || true, () => html`
+			<s-state-panel>
+				<button @click=${ this.onClickSave }>
+					Save
+				</button>
+			</s-state-panel>
+			`),
+		];
+	}
+
 	public static override styles: CSSStyle = css`
+		s-state-panel {
+			position: absolute;
+			inset: 0;
+			margin: auto;
+			margin-top: 12px;
+			width: fit-content;
+			height: fit-content;
+		}
+
 		s-node-editor-tooltip {
 			display: grid;
 			background: rgb(241 194 50);
