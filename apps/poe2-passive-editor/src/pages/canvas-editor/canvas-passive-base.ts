@@ -296,10 +296,10 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	}
 
 	protected createConnectionPath2D(nodes: Map<string, GraphNode>, con: Connection) {
-		const startVec = structuredClone(con.start);
-		const stopVec = structuredClone(con.stop);
-		const mid1Vec = structuredClone(con.m1);
-		const mid2Vec = structuredClone(con.m2);
+		const startVec = { ...con.start };
+		const stopVec  = { ...con.stop };
+		const mid1Vec  = { ...con.m1 };
+		const mid2Vec  = { ...con.m2 };
 
 		const startRadius = nodes.get(con.start.id)!.radius;
 		const [ startXReduce, startYReduce ] = getPathReduction(startRadius, startVec, mid1Vec);
@@ -509,7 +509,9 @@ export class PoeCanvasPassiveBase extends CustomElement {
 				class="tooltip"
 				popover="manual"
 			>
-				<s-tooltip>${ this.renderTooltip(node) }</s-tooltip>
+				<s-tooltip>
+					${ this.renderTooltip(node) }
+				</s-tooltip>
 			</article>
 			`;
 		}) }

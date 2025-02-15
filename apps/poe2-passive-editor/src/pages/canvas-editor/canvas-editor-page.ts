@@ -51,6 +51,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 	}
 
 	protected async save() {
+		//return;
 		// Only save if the graph has been updated and a save is not already ongoing.
 		if (!this.updated || this.saveOngoing)
 			return;
@@ -110,7 +111,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		if (nodeBHasNodeA)
 			return;
 
-		const connection = new Connection(this.nodes, { start: nodeA, stop: nodeB });
+		const connection = new Connection(this.nodes, { start: nodeA.id, stop: nodeB.id });
 
 		this.connections.set(connection.id, connection);
 		nodeA.connections.push(connection);
@@ -423,6 +424,8 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 			this.connections,
 			this.nodes,
 		);
+
+		// We
 	}
 
 	protected override renderTooltip(node: GraphNode): unknown {
