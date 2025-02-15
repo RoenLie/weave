@@ -1,38 +1,41 @@
 import { domId } from '@roenlie/core/dom';
 import type { Canvas2DObject } from '../../pages/canvas-editor/canvas-object.ts';
-import type { Optional, Vec2 } from '@roenlie/core/types';
+import type { Vec2 } from '@roenlie/core/types';
 import { getPathReduction } from '../canvas/path-helpers.ts';
 import { allDataNodes, type NodeData } from './node-catalog.ts';
 
 
 export type StringVec2 = `x${ number }y${ number }`;
-export interface ConnectionPoint { id: string, x: number, y: number; }
-export interface StorableConnection {
-	start: string;
-	stop:  string;
-	m1:    Vec2;
-	m2:    Vec2;
-	id?:   string;
+export interface StorableGraphConnection {
+	id:      string;
+	updated: string;
+	start:   string;
+	stop:    string;
+	m1:      Vec2;
+	m2:      Vec2;
 }
 export interface StorableGraphNode {
-	x:            number;
-	y:            number;
-	id?:          string;
-	radius?:      number;
-	connections?: string[];
-	data?:        string;
+	id:          string;
+	updated:     string;
+	x:           number;
+	y:           number;
+	radius:      number;
+	connections: string[];
+	data:        string;
 }
 
 
-export class Connection {
+export class GraphConnection {
 
 	constructor(
 		nodes: Map<string, GraphNode>,
-		storable: Optional<StorableConnection, 'm1' | 'm2'>,
+		storable: Partial<StorableGraphConnection>
+				& Pick<StorableGraphConnection, 'start' | 'stop'>,
 	) {
-		let { start, stop, m1, m2, id } = storable;
+		let { start, stop, m1, m2, id, updated } = storable;
 
 		this.id = id || domId();
+		this.updated = updated || new Date().toISOString();
 
 		const startNode = nodes.get(start)!;
 		const stopNode  = nodes.get(stop)!;
@@ -63,23 +66,25 @@ export class Connection {
 		this.m2 = m2;
 	}
 
-	public id:    string;
-	public start: GraphNode;
-	public stop:  GraphNode;
-	public m1:    Vec2;
-	public m2:    Vec2;
+	public id:      string;
+	public start:   GraphNode;
+	public stop:    GraphNode;
+	public m1:      Vec2;
+	public m2:      Vec2;
+	public updated: string;
 
 	public path:        Canvas2DObject | undefined;
 	public pathHandle1: Canvas2DObject | undefined;
 	public pathHandle2: Canvas2DObject | undefined;
 
-	public toStorable(): StorableConnection {
+	public toStorable(): StorableGraphConnection {
 		return {
-			start: this.start.id,
-			stop:  this.stop.id,
-			m1:    this.m1,
-			m2:    this.m2,
-			id:    this.id,
+			id:      this.id,
+			updated: this.updated,
+			start:   this.start.id,
+			stop:    this.stop.id,
+			m1:      this.m1,
+			m2:      this.m2,
 		};
 	}
 
@@ -92,12 +97,17 @@ export class GraphNode {
 		return obj instanceof GraphNode;
 	}
 
-	constructor(storable: StorableGraphNode) {
-		const { x, y, id, radius } = storable;
+	constructor(
+		storable: Partial<StorableGraphNode>
+			& Pick<StorableGraphNode, 'x' | 'y'>,
+	) {
+		const { x, y, id, radius, updated } = storable;
+
+		this.id = id || domId();
+		this.updated = updated || new Date().toISOString();
 
 		this.x  = x;
 		this.y  = y;
-		this.id = id || domId();
 		this.radius = radius || this.sizes[0]!;
 		this.connectionIds = storable.connections || [];
 
@@ -106,18 +116,19 @@ export class GraphNode {
 	}
 
 	public id:          string;
+	public updated:     string;
 	public x:           number;
 	public y:           number;
 	public radius:      number;
 	public sizes:       number[] = [ 24, 36, 56 ];
 	public path:        Canvas2DObject | undefined;
-	public connections: Connection[] = [];
+	public connections: GraphConnection[] = [];
 	public data?:       NodeData;
 
 	protected connectionIds:         string[];
 	protected haveMappedConnections: boolean = false;
 
-	public mapConnections(connections: Map<string, Connection>) {
+	public mapConnections(connections: Map<string, GraphConnection>) {
 		if (this.haveMappedConnections)
 			return;
 
@@ -134,14 +145,17 @@ export class GraphNode {
 	}
 
 	public toStorable(): StorableGraphNode {
-		return {
+		const node: StorableGraphNode = {
+			id:          this.id,
+			updated:     this.updated,
 			x:           this.x,
 			y:           this.y,
-			id:          this.id,
 			radius:      this.radius,
 			connections: this.connections.map(c => c.id),
-			data:        this.data?.id,
+			data:        this.data?.id ?? '',
 		};
+
+		return node;
 	}
 
 }

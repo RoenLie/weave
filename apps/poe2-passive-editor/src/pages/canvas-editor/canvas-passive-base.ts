@@ -1,18 +1,18 @@
 import { html } from 'lit-html';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import type { Vec2 } from '@roenlie/core/types';
-import { Connection, GraphNode, type StorableConnection, type StorableGraphNode, type StringVec2 } from '../../app/graph/graph.ts';
+import { GraphConnection, GraphNode, type StringVec2 } from '../../app/graph/graph.ts';
 import { isOutsideViewport } from '../../app/canvas/is-outside-viewport.ts';
 import { Canvas2DObject } from './canvas-object.ts';
 import { doRectsOverlap, getPathReduction } from '../../app/canvas/path-helpers.ts';
-import { maybe } from '@roenlie/core/async';
 import { range } from '@roenlie/core/array';
 import { getBackgroundChunk } from './image-assets.ts';
 import { CustomElement } from '../../app/custom-element/custom-element.ts';
-import { ImmediateOrDebounced, View } from '../../app/canvas/canvas-view.ts';
+import { frameLocked, View } from '../../app/canvas/canvas-view.ts';
 import { when } from 'lit-html/directives/when.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
 import { drawParallelBezierCurve, type Bezier } from '../../app/canvas/parallel-bezier-curve.ts';
+import { GraphDataManager } from './data-manager.ts';
 
 
 const unsetPopover = css`
@@ -33,8 +33,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	@signal protected accessor selectedNode: GraphNode | undefined;
 	@signal protected accessor hoveredNode:  GraphNode | undefined;
 
-	protected nodes:         Map<string, GraphNode> = new Map();
-	protected connections:   Map<string, Connection> = new Map();
+	protected dataManager = new GraphDataManager();
 	protected imageSize:     number = 13000;
 	protected chunkSize:     number = 1300;
 	protected imagePromises: Map<StringVec2, Promise<any>> = new Map();
@@ -48,7 +47,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	protected readonly bgView:   View = new View();
 	protected readonly mainView: View = new View();
 	protected readonly resizeObserver = new ResizeObserver(entries => {
-		const entry = entries[0];
+		const [ entry ] = entries;
 		if (!entry)
 			return;
 
@@ -58,56 +57,25 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		this.bgView.setCanvasSize(width, height);
 		this.mainView.setCanvasSize(width, height);
 
-		this.drawBackgroundCanvas.immediate();
-		this.drawMainCanvas.debounced();
+		this.drawBackground();
+		this.drawMain();
 	});
 
 	protected override connectedCallback(): void {
 		super.connectedCallback();
 		this.tabIndex = 0;
+
+		this.dataManager.load().then(async () => {
+			this.requestUpdate();
+			await this.updateComplete;
+
+			this.afterDataLoaded();
+		});
 	}
 
 	protected override disconnectedCallback(): void {
 		super.disconnectedCallback();
 		this.resizeObserver.unobserve(this);
-	}
-
-	protected override async afterConnected(): Promise<void> {
-		super.afterConnected();
-
-		//const { nodes, connections } = await this.loadFromOPFS();
-		const { nodes, connections } = await this.loadFromLocalAsset();
-
-		this.nodes = new Map(nodes.map(node => {
-			const parsed = new GraphNode(node);
-
-			return [ parsed.id, parsed ];
-		}));
-
-		this.connections = new Map(connections.map(con => {
-			const parsed = new Connection(this.nodes, con);
-
-			return [ parsed.id, parsed ];
-		}));
-
-		for (const node of this.nodes.values())
-			node.mapConnections(this.connections);
-
-		const width = this.offsetWidth;
-		const height = this.offsetHeight;
-
-		const bgCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#background')!;
-		this.bgView.setContext(bgCanvas);
-		this.bgView.setCanvasSize(width, height);
-		this.bgView.setTotalArea(this.imageSize, this.imageSize);
-
-		const mainCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#main')!;
-		this.mainView.setContext(mainCanvas);
-		this.mainView.setCanvasSize(width, height);
-		this.mainView.setTotalArea(this.imageSize, this.imageSize);
-
-		this.initializeBackground();
-		this.resizeObserver.observe(this);
 	}
 
 	protected override afterUpdate(changedProps: Set<string>): void {
@@ -122,28 +90,23 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		}
 	}
 
-	protected async loadFromOPFS() {
-		const opfsRoot   = await navigator.storage.getDirectory();
-		const fileHandle = await opfsRoot.getFileHandle('tree-canvas', { create: true });
-		const file       = await fileHandle.getFile();
+	protected afterDataLoaded() {
+		const width = this.offsetWidth;
+		const height = this.offsetHeight;
 
-		return JSON.parse(await file.text()) as {
-			nodes:       StorableGraphNode[];
-			connections: StorableConnection[];
-		};
-	}
+		const bgCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#background')!;
+		this.bgView.setContext(bgCanvas);
+		this.bgView.setCanvasSize(width, height);
+		this.bgView.setTotalArea(this.imageSize, this.imageSize);
 
-	protected async loadFromLocalAsset() {
-		const [ data, err ] = await maybe(import('../../assets/graphs/graph-version-2.json?inline')
-			.then(res => res.default));
+		const mainCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#main')!;
+		this.mainView.setContext(mainCanvas);
+		this.mainView.setCanvasSize(width, height);
+		this.mainView.setTotalArea(this.imageSize, this.imageSize);
 
-		if (err)
-			throw err;
 
-		return data as any as {
-			nodes:       StorableGraphNode[];
-			connections: StorableConnection[];
-		};
+		this.initializeBackground();
+		this.resizeObserver.observe(this);
 	}
 
 	protected initializeBackground() {
@@ -165,8 +128,8 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		this.bgView.moveTo(x, y);
 		this.mainView.moveTo(x, y);
 
-		this.drawBackgroundCanvas.debounced();
-		this.drawMainCanvas.debounced();
+		this.drawBackground();
+		this.drawMain();
 	}
 
 	protected isImgInView(img: { x: number, y: number }) {
@@ -180,8 +143,10 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	}
 
 	protected getGraphNode(vec: Vec2): GraphNode | undefined {
+		const { nodes } = this.dataManager;
+
 		// If found, returns the node at the mouse position.
-		for (const [ , node ] of this.nodes) {
+		for (const [ , node ] of nodes) {
 			if (!node.path)
 				continue;
 
@@ -205,14 +170,14 @@ export class PoeCanvasPassiveBase extends CustomElement {
 				this.hoveredNode = undefined;
 
 				node.path = this.createNodePath2D(node);
-				this.drawMainCanvas.debounced();
+				this.drawMain();
 			}
 
 			// Add the hover effect if a node is hovered
 			if (node && node !== this.hoveredNode) {
 				this.hoveredNode = node;
 				this.hoveredNode.path = this.createNodePath2D(node);
-				this.drawMainCanvas.debounced();
+				this.drawMain();
 			}
 		}
 	}
@@ -232,8 +197,8 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			this.mainView.scaleAt({ x, y }, 1 / 1.1);
 		}
 
-		this.drawBackgroundCanvas.debounced();
-		this.drawMainCanvas.debounced();
+		this.drawBackground();
+		this.drawMain();
 	}
 
 	protected onMousedown(downEv: MouseEvent) {
@@ -268,7 +233,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			this.selectedNode = node;
 			node.path = this.createNodePath2D(node);
 
-			this.drawMainCanvas.debounced();
+			this.drawMain();
 		}
 		// If we didn't find a node or a connection, we want to pan the view
 		// and create a node if alt/cmd is pressed
@@ -282,8 +247,8 @@ export class PoeCanvasPassiveBase extends CustomElement {
 				this.bgView.moveTo(x, y);
 				this.mainView.moveTo(x, y);
 
-				this.drawBackgroundCanvas.debounced();
-				this.drawMainCanvas.debounced();
+				this.drawBackground();
+				this.drawMain();
 			};
 			const mouseup = () => {
 				removeEventListener('mousemove', mousemove);
@@ -295,7 +260,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		}
 	}
 
-	protected createConnectionPath2D(nodes: Map<string, GraphNode>, con: Connection) {
+	protected createConnectionPath2D(nodes: Map<string, GraphNode>, con: GraphConnection) {
 		const startVec = { ...con.start };
 		const stopVec  = { ...con.stop };
 		const mid1Vec  = { ...con.m1 };
@@ -359,7 +324,9 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	}
 
 	protected mapConnectionPath2Ds() {
-		for (const con of this.connections.values()) {
+		const { nodes, connections } = this.dataManager;
+
+		for (const con of connections.values()) {
 			const outsideStart = isOutsideViewport(this.mainView.viewport, con.start);
 			const outsideMid1  = isOutsideViewport(this.mainView.viewport, con.m1);
 			const outsideMid2  = isOutsideViewport(this.mainView.viewport, con.m2);
@@ -367,7 +334,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			if (outsideStart && outsideStop && outsideMid1 && outsideMid2)
 				continue;
 
-			con.path ??= this.createConnectionPath2D(this.nodes, con);
+			con.path ??= this.createConnectionPath2D(nodes, con);
 			con.path.draw(this.mainView.context);
 		}
 	}
@@ -404,7 +371,9 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	}
 
 	protected mapNodePath2Ds() {
-		for (const node of this.nodes.values()) {
+		const { nodes } = this.dataManager;
+
+		for (const node of nodes.values()) {
 			if (isOutsideViewport(this.mainView.viewport, node))
 				continue;
 
@@ -413,7 +382,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		}
 	}
 
-	protected drawBackground() {
+	protected _drawBackground() {
 		const { bgView } = this;
 		bgView.clearContext();
 
@@ -434,7 +403,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 					image.getImage().then(img => {
 						image.image = img;
 						this.imagePromises.delete(imgId);
-						this.drawBackgroundCanvas.debounced();
+						this.drawBackground();
 					}),
 				);
 			}
@@ -443,18 +412,15 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		//const status = this.images.reduce((acc, img, i) => {
 		//	const row = Math.floor(i / 10);
 		//	const col = i % 10;
-
 		//	acc[row] ??= [];
 		//	acc[row][col] = this.isImgInView(img) ? '❤️' : '☠️';
-
 		//	return acc;
 		//}, []);
-
 		//console.clear();
 		//console.table(status);
 	}
 
-	protected drawMain() {
+	protected _drawMain() {
 		this.mainView.clearContext();
 
 		const percentage = this.mainView.visiblePercentage;
@@ -467,8 +433,9 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		this.requestUpdate();
 	}
 
-	protected drawBackgroundCanvas = new ImmediateOrDebounced(this.drawBackground.bind(this));
-	protected drawMainCanvas = new ImmediateOrDebounced(this.drawMain.bind(this));
+	protected drawMain = frameLocked(this._drawMain.bind(this));
+	protected drawBackground = frameLocked(this._drawBackground.bind(this));
+
 
 	protected beforeCloseTooltip(_node: GraphNode) {}
 	protected beforeOpenTooltip(_node: GraphNode) {}
@@ -488,6 +455,9 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	}
 
 	protected override render(): unknown {
+		if (!this.dataManager.ready)
+			return html`<div>Loading...</div>`;
+
 		return html`
 		<canvas id="background"></canvas>
 		<canvas id="main"

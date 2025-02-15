@@ -101,14 +101,10 @@ export class View {
 }
 
 
-export class ImmediateOrDebounced<T extends () => void> {
-
-	constructor(fn: T) {
-		this.immediate = fn;
-		this.debounced = (() => void requestAnimationFrame(fn)) as T;
-	}
-
-	public immediate: T;
-	public debounced: T;
-
-}
+/**
+ * Returns a version of the supplied function that is locked to not run faster
+ * than the consumers frame-rate
+ */
+export const frameLocked = <T extends () => void>(fn: T) => {
+	return () => void requestAnimationFrame(fn);
+};

@@ -19,7 +19,7 @@ export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
 
-export function assignTypes<T extends DocumentData>(): FirestoreDataConverter<T> {
+export function asType<T extends DocumentData>(): FirestoreDataConverter<T> {
 	return {
 		toFirestore(doc: T): DocumentData {
 			return doc as DocumentData;

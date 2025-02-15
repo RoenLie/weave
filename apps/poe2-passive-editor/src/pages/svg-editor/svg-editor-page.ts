@@ -4,8 +4,8 @@ import { query as fbQuery, orderBy, limit, collection, getDocs, updateDoc, doc }
 import { html, render } from 'lit-html';
 import { when } from 'lit-html/directives/when.js';
 import { DetailsPanel } from '../canvas-editor/details-panel.ts';
-import { app, assignTypes, db } from '../../app/firebase.ts';
-import { Connection, GraphNode } from '../../app/graph/graph.ts';
+import { app, asType, db } from '../../app/firebase.ts';
+import { GraphConnection, GraphNode } from '../../app/graph/graph.ts';
 import { Path } from './graph-svg-rendering.ts';
 import { css, signal } from '../../app/custom-element/signal-element.ts';
 import type { Viewport } from '../../app/canvas/is-outside-viewport.ts';
@@ -28,7 +28,7 @@ export class Poe2Tree extends CustomElement {
 	@signal protected accessor tooltip:       string = '';
 	@signal protected accessor viewport:      Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
 	@signal protected accessor nodes:         Map<string, GraphNode> = new Map();
-	@signal protected accessor connections:   Map<string, Connection> = new Map();
+	@signal protected accessor connections:   Map<string, GraphConnection> = new Map();
 	@signal protected accessor currentUser:   User | null = null;
 	@signal protected accessor connectionImg: string = '';
 	@signal protected accessor graphUpdated = Date.now();
@@ -79,14 +79,14 @@ export class Poe2Tree extends CustomElement {
 	protected async loadGraphFromStorage() {
 		const nodeQry = fbQuery(
 			collection(db, 'passive-tree-nodes')
-				.withConverter(assignTypes<{ nodes: GraphNode[] }>()),
+				.withConverter(asType<{ nodes: GraphNode[] }>()),
 			orderBy('created'),
 			limit(1),
 		);
 
 		const conQry = fbQuery(
 			collection(db, 'passive-tree-connections')
-				.withConverter(assignTypes<{ connections: Connection[] }>()),
+				.withConverter(asType<{ connections: GraphConnection[] }>()),
 			orderBy('created'),
 			limit(1),
 		);
@@ -106,7 +106,7 @@ export class Poe2Tree extends CustomElement {
 		const connections = conDoc.data().connections;
 
 		this.connections = new Map(connections.map(con => {
-			const parsed = new Connection(con);
+			const parsed = new GraphConnection(con);
 
 			return [ parsed.id, parsed ];
 		}));
@@ -192,7 +192,7 @@ export class Poe2Tree extends CustomElement {
 
 							const connections = node.connections
 								.map(id => this.connections.get(id))
-								.filter((con): con is Connection => !!con);
+								.filter((con): con is GraphConnection => !!con);
 
 							connections.forEach(con => {
 								const point = con.start.id === node.id
@@ -396,7 +396,7 @@ export class Poe2Tree extends CustomElement {
 		if (nodeBHasNodeA)
 			return;
 
-		const connection = new Connection({ start: nodeA, end: nodeB });
+		const connection = new GraphConnection({ start: nodeA, end: nodeB });
 
 		this.connections.set(connection.id, connection);
 		nodeA.connections.push(connection.id);

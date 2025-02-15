@@ -110,6 +110,9 @@ export class SignalElement extends DisposingEventHost {
 	}
 
 	public performUpdate(): void {
+		if (this.updateComplete.done)
+			return;
+
 		this.beforeUpdate(this.__changedProps);
 
 		render(this.render(), this.shadowRoot!, { host: this });

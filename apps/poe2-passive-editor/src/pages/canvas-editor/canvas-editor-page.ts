@@ -1,24 +1,19 @@
 import type { Repeat, Vec2 } from '@roenlie/core/types';
-import { Connection, GraphNode, type StorableConnection, type StorableGraphNode } from '../../app/graph/graph.ts';
+import { GraphConnection, GraphNode } from '../../app/graph/graph.ts';
 import { isOutsideViewport } from '../../app/canvas/is-outside-viewport.ts';
 import { Canvas2DObject } from './canvas-object.ts';
 import { oneOf } from '@roenlie/core/validation';
-import { maybe } from '@roenlie/core/async';
 import { PoeCanvasPassiveBase } from './canvas-passive-base.ts';
 import { html } from 'lit-html';
 import { when } from 'lit-html/directives/when.js';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
-import { DetailsPanel } from './details-panel.ts';
 import { nodeDataCatalog, type NodeData, type NodeDataCatalog } from '../../app/graph/node-catalog.ts';
 import { map } from 'lit-html/directives/map.js';
 
 
 export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
-	static {
-		this.register('poe-canvas-editor');
-		DetailsPanel;
-	}
+	static { this.register('poe-canvas-editor'); }
 
 	@signal protected accessor selectedNodeMenu: keyof NodeDataCatalog | undefined = undefined;
 	@signal protected accessor showNodeSelectorMenu: boolean = false;
@@ -37,21 +32,22 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		moveConnections: true,
 	};
 
-	protected override async afterConnected(): Promise<void> {
-		await super.afterConnected();
-
-		this.addEventListener('keydown', this.onKeydown);
-		this.saveInterval = setInterval(this.save.bind(this), 5000);
-	}
-
 	protected override disconnectedCallback(): void {
 		super.disconnectedCallback();
 
 		clearInterval(this.saveInterval);
 	}
 
+	protected override async afterDataLoaded(): Promise<void> {
+		super.afterDataLoaded();
+
+		this.addEventListener('keydown', this.onKeydown);
+		this.saveInterval = setInterval(this.save.bind(this), 5000);
+	}
+
 	protected async save() {
-		//return;
+		return;
+
 		// Only save if the graph has been updated and a save is not already ongoing.
 		if (!this.updated || this.saveOngoing)
 			return;
@@ -62,37 +58,10 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		// We set the saveOngoing flag to prevent multiple saves at the same time
 		this.saveOngoing = true;
 
-		const nodes = this.nodes.values().map(node => node.toStorable()).toArray();
-		const connections =  this.connections.values().map(con => con.toStorable()).toArray();
-
 		//await this.saveToOPFS(nodes, connections);
-		await this.saveToLocalFile(nodes, connections);
+		await this.dataManager.saveToLocalFile();
 
 		this.saveOngoing = false;
-	}
-
-	protected async saveToOPFS(nodes: StorableGraphNode[], connections: StorableConnection[]) {
-		// A FileSystemDirectoryHandle whose type is "directory" and whose name is "".
-		const opfsRoot   = await navigator.storage.getDirectory();
-		const fileHandle = await opfsRoot.getFileHandle('tree-canvas', { create: true });
-		const writable   = await fileHandle.createWritable({ keepExistingData: false });
-		await writable.write(JSON.stringify({ nodes, connections }));
-		await writable.close();
-
-		console.log('Saved to OPFS');
-	}
-
-	protected async saveToLocalFile(nodes: StorableGraphNode[], connections: StorableConnection[]) {
-		const [ , err ] = await maybe(fetch('/save-graph-to-file', {
-			method:  'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body:    JSON.stringify({ version: 2, nodes, connections }),
-		}).then(res => res.status));
-
-		if (err)
-			console.error(err);
-		else
-			console.log('Saved to local filesystem');
 	}
 
 	protected connectNodes(nodeA?: GraphNode, nodeB?: GraphNode) {
@@ -111,11 +80,15 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		if (nodeBHasNodeA)
 			return;
 
-		const connection = new Connection(this.nodes, { start: nodeA.id, stop: nodeB.id });
+		const { nodes, connections } = this.dataManager;
 
-		this.connections.set(connection.id, connection);
+		const connection = new GraphConnection(nodes, { start: nodeA.id, stop: nodeB.id });
+		connections.set(connection.id, connection);
 		nodeA.connections.push(connection);
 		nodeB.connections.push(connection);
+
+		nodeA.updated = new Date().toISOString();
+		nodeB.updated = new Date().toISOString();
 
 		this.updated = Date.now();
 	}
@@ -127,6 +100,8 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 		downEv.preventDefault();
 		this.focus();
+
+		const { nodes, connections } = this.dataManager;
 
 		const rect = this.getBoundingClientRect();
 		const deltaY = rect.top;
@@ -160,8 +135,10 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 			// We are clicking on a node
 			if (GraphNode.isGraphNode(nodeOrVec)) {
+				const node = nodeOrVec;
+
 				if (downEv.shiftKey && this.editingFeatures.connectNodes) {
-					this.connectNodes(this.selectedNode, nodeOrVec);
+					this.connectNodes(this.selectedNode, node);
 				}
 				else {
 					if (this.selectedNode?.path) {
@@ -170,43 +147,36 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 						node.path = this.createNodePath2D(node);
 					}
 
-					this.selectedNode = nodeOrVec;
-					nodeOrVec.path = this.createNodePath2D(nodeOrVec);
+					this.selectedNode = node;
+					node.path = this.createNodePath2D(node);
 				}
 
-				this.drawMainCanvas.debounced();
+				this.drawMain();
 
 				this.editingFeatures.moveNode && (mousemove = (ev: MouseEvent) => {
 					const scale = this.mainView.scale;
 
 					const x = ev.offsetX - deltaX - this.mainView.position.x - mouseOffsetX;
 					const y = ev.offsetY - deltaY - this.mainView.position.y - mouseOffsetY;
-					nodeOrVec.x = x / scale;
-					nodeOrVec.y = y / scale;
+					node.x = x / scale;
+					node.y = y / scale;
 
-					nodeOrVec.path = this.createNodePath2D(nodeOrVec);
+					node.path = this.createNodePath2D(node);
+					node.updated = new Date().toISOString();
 
-					for (const con of nodeOrVec.connections) {
-						const point = con.start.id === nodeOrVec.id
-							? con.start
-							: con.stop;
-
-						point.x = nodeOrVec.x;
-						point.y = nodeOrVec.y;
-
-						con.path = this.createConnectionPath2D(this.nodes, con);
+					for (const con of node.connections) {
+						con.path = this.createConnectionPath2D(nodes, con);
 						con.pathHandle1 = this.createConnectionHandle2D(con, 1);
 						con.pathHandle2 = this.createConnectionHandle2D(con, 2);
 					}
 
-					this.drawMainCanvas.debounced();
+					this.drawMain();
 					this.updated = Date.now();
 				});
 			}
 			else {
-				const con = this.connections.values()
-					.find(c => c.m1 === nodeOrVec || c.m2 === nodeOrVec);
-
+				const vec = nodeOrVec;
+				const con = connections.values().find(c => c.m1 === vec || c.m2 === vec);
 				if (!con)
 					return;
 
@@ -215,14 +185,15 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 					const x = ev.offsetX - deltaX - this.mainView.position.x - mouseOffsetX;
 					const y = ev.offsetY - deltaY - this.mainView.position.y - mouseOffsetY;
-					nodeOrVec.x = x / scale;
-					nodeOrVec.y = y / scale;
+					vec.x = x / scale;
+					vec.y = y / scale;
 
-					con.path = this.createConnectionPath2D(this.nodes, con);
+					con.path        = this.createConnectionPath2D(nodes, con);
 					con.pathHandle1 = this.createConnectionHandle2D(con, 1);
 					con.pathHandle2 = this.createConnectionHandle2D(con, 2);
+					con.updated = new Date().toISOString();
 
-					this.drawMainCanvas.debounced();
+					this.drawMain();
 					this.updated = Date.now();
 				});
 			}
@@ -245,9 +216,9 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				}
 
 				this.selectedNode = node;
-				this.nodes.set(node.id, node);
+				nodes.set(node.id, node);
 				this.updated = Date.now();
-				this.drawMainCanvas.debounced();
+				this.drawMain();
 			}
 
 			// We setup the mousemove and mouseup events
@@ -259,8 +230,8 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				this.bgView.moveTo(x, y);
 				this.mainView.moveTo(x, y);
 
-				this.drawBackgroundCanvas.debounced();
-				this.drawMainCanvas.debounced();
+				this.drawBackground();
+				this.drawMain();
 			};
 			const mouseup = () => {
 				removeEventListener('mousemove', mousemove);
@@ -273,6 +244,8 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 	}
 
 	protected onKeydown(ev: KeyboardEvent) {
+		const { nodes, connections } = this.dataManager;
+
 		if (this.selectedNode) {
 			const node = this.selectedNode;
 
@@ -290,8 +263,8 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				this.updated = Date.now();
 			}
 			else if (this.editingFeatures.deleteNodes && ev.code === 'Delete') {
-				node.connections.forEach(con => this.connections.delete(con.id));
-				this.nodes.delete(node.id);
+				node.connections.forEach(con => connections.delete(con.id));
+				nodes.delete(node.id);
 				this.updated = Date.now();
 			}
 			else if (ev.code === 'Escape') {
@@ -299,13 +272,15 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				node.path = this.createNodePath2D(node);
 			}
 
-			this.drawMainCanvas.debounced();
+			this.drawMain();
 		}
 	};
 
 	/** If found, returns the handle vector at the mouse position. */
 	protected getConnectionHandle(vec: Vec2): Vec2 | undefined {
-		for (const [ , con ] of this.connections) {
+		const { connections } = this.dataManager;
+
+		for (const [ , con ] of connections) {
 			if (con.pathHandle1) {
 				const isInPath = con.pathHandle1.isPointInPath(this.mainView.context, vec.x, vec.y);
 				if (isInPath)
@@ -349,7 +324,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		return vertices.map(vertex => this.rotatePoint(vertex, angleInDegrees, origin));
 	}
 
-	protected createConnectionHandle2D(con: Connection, handle: 1 | 2) {
+	protected createConnectionHandle2D(con: GraphConnection, handle: 1 | 2) {
 		const vec2  = handle === 1 ? con.m1 : con.m2;
 		const start = handle === 1 ? con.start : con.m1;
 		const stop  = handle === 1 ? con.m2 : con.stop;
@@ -387,7 +362,9 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 	}
 
 	protected mapConnectionHandle2Ds() {
-		for (const con of this.connections.values()) {
+		const { connections } = this.dataManager;
+
+		for (const con of connections.values()) {
 			if (!isOutsideViewport(this.mainView.viewport, con.m1)) {
 				con.pathHandle1 ??= this.createConnectionHandle2D(con, 1);
 				con.pathHandle1.draw(this.mainView.context);
@@ -399,8 +376,8 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		}
 	}
 
-	protected override drawMain() {
-		super.drawMain();
+	protected override _drawMain() {
+		super._drawMain();
 
 		if (this.mainView.visiblePercentage < 1)
 			this.mapConnectionHandle2Ds();
@@ -412,20 +389,15 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 	protected assignNodeData(node: GraphNode, data: NodeData | undefined) {
 		node.data = data;
+		node.updated = new Date().toISOString();
+
 		this.updated = Date.now();
 		node.path = this.createNodePath2D(node);
-		this.drawMainCanvas.debounced();
+		this.drawMain();
 	}
 
-	protected onClickSave() {
-		console.log('Save');
-
-		console.log(
-			this.connections,
-			this.nodes,
-		);
-
-		// We
+	protected async onClickSave() {
+		await this.dataManager.save();
 	}
 
 	protected override renderTooltip(node: GraphNode): unknown {

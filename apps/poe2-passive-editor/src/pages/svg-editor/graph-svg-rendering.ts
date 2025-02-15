@@ -1,7 +1,7 @@
 import type { Vec2 } from '@roenlie/core/types';
 import { html, svg } from 'lit-html';
 import { map } from 'lit-html/directives/map.js';
-import type { Connection, GraphNode } from '../../app/graph/graph.ts';
+import type { GraphConnection, GraphNode } from '../../app/graph/graph.ts';
 import { css, signal } from '../../app/custom-element/signal-element.ts';
 import { isOutsideViewport, type Viewport } from '../../app/canvas/is-outside-viewport.ts';
 import { CustomElement } from '../../app/custom-element/custom-element.ts';
@@ -14,7 +14,7 @@ export class PassiveTreeSvg extends CustomElement {
 	@signal public accessor updated:      number;
 	@signal public accessor viewport:     Viewport;
 	@signal public accessor nodes:        Map<string, GraphNode>;
-	@signal public accessor connections:  Map<string, Connection>;
+	@signal public accessor connections:  Map<string, GraphConnection>;
 	@signal public accessor selectedNode: { id: string } | undefined;
 	@signal public accessor skipConnections = false;
 	@signal public accessor skipConnectionHandles = false;
@@ -95,7 +95,7 @@ export class Path {
 	public static render(
 		nodes: Map<string, GraphNode>,
 		viewport: Viewport,
-		con: Connection,
+		con: GraphConnection,
 		skip = false,
 		checkViewport = true,
 	) {
@@ -137,7 +137,7 @@ export class Path {
 	}
 
 	public static map(
-		connections: Map<string, Connection>,
+		connections: Map<string, GraphConnection>,
 		nodes: Map<string, GraphNode>,
 		viewport: Viewport,
 		skip = false,
@@ -183,7 +183,7 @@ export class PathHandle {
 		return vertices.map(vertex => this.rotatePoint(vertex, angleInDegrees, origin));
 	}
 
-	public static render(viewport: Viewport, con: Connection, skip = false) {
+	public static render(viewport: Viewport, con: GraphConnection, skip = false) {
 		if (skip || isOutsideViewport(viewport, con.middle))
 			return;
 
@@ -210,7 +210,7 @@ export class PathHandle {
 	}
 
 	public static map(
-		connections: Map<string, Connection>, viewport: Viewport, skipConnectionHandles = false,
+		connections: Map<string, GraphConnection>, viewport: Viewport, skipConnectionHandles = false,
 	) {
 		return map(
 			connections.values(),

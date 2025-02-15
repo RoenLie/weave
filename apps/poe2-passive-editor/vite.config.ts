@@ -2,7 +2,7 @@ import { defineConfig, type Plugin } from 'vite';
 import bodyparser from 'body-parser';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path/posix';
-import type { StorableConnection, StorableGraphNode } from './src/app/graph/graph.ts';
+import type { StorableGraphConnection, StorableGraphNode } from './src/app/graph/graph.ts';
 
 
 export default defineConfig({
@@ -31,7 +31,7 @@ export default defineConfig({
 						const body = req.body as {
 							version:     number;
 							nodes:       StorableGraphNode[];
-							connections: StorableConnection[];
+							connections: StorableGraphConnection[];
 						};
 
 						const filePath = join(dirPath, `graph-version-${ body.version }.json`);
