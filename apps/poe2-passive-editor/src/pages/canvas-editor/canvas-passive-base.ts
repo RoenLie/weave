@@ -12,7 +12,7 @@ import { frameLocked, View } from '../../app/canvas/canvas-view.ts';
 import { when } from 'lit-html/directives/when.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
 import { drawParallelBezierCurve, type Bezier } from '../../app/canvas/parallel-bezier-curve.ts';
-import { GraphDataManager } from './data-manager.ts';
+import { GraphPath2DCreator, GraphDataManager, LocalGraphRepository, OPFSGraphRepository } from './data-manager.ts';
 
 
 const unsetPopover = css`
@@ -33,7 +33,14 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	@signal protected accessor selectedNode: GraphNode | undefined;
 	@signal protected accessor hoveredNode:  GraphNode | undefined;
 
-	protected dataManager = new GraphDataManager();
+	protected dataManager = new GraphDataManager(
+		new LocalGraphRepository(),
+		new GraphPath2DCreator(
+			this.createNodePath2D.bind(this),
+			this.createConnectionPath2D.bind(this),
+		),
+	);
+
 	protected imageSize:     number = 13000;
 	protected chunkSize:     number = 1300;
 	protected imagePromises: Map<StringVec2, Promise<any>> = new Map();

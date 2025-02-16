@@ -9,6 +9,13 @@ export default defineWorkspace([
 			setupFiles: [],
 		},
 	},
+	{
+		test: {
+			name:       'poe2-passive-editor',
+			include:    [ 'apps/poe2-passive-editor/**/*.{spec,test,bench}.ts' ],
+			setupFiles: [],
+		},
+	},
 	//{
 	//	test: {
 	//		name:       'all',

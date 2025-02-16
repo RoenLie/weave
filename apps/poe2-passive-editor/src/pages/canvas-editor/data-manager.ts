@@ -4,6 +4,10 @@ import { getGraphConnectionsQry, getGraphNodes, graphConnectionCollection, graph
 import { domId } from '@roenlie/core/dom';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '../../app/firebase.ts';
+import type { Vec2 } from '@roenlie/core/types';
+import { getPathReduction } from '../../app/canvas/path-helpers.ts';
+import { Canvas2DObject } from './canvas-object.ts';
+import { drawParallelBezierCurve, type Bezier } from '../../app/canvas/parallel-bezier-curve.ts';
 
 
 interface NodeChunkRef { chunkId: string; nodeId: string; }
@@ -20,6 +24,11 @@ interface GraphChangeset {
 
 export class GraphDataManager {
 
+	constructor(
+		protected repository: GraphRepository,
+		protected path2DCreator?: GraphPath2DCreator,
+	) {}
+
 	public ready = false;
 	public loading: ResolvablePromise<void> = resolvablePromise.resolve(void 0);
 
@@ -29,59 +38,8 @@ export class GraphDataManager {
 	protected nodeChunks:       NodeChunk[] = [];
 	protected connectionChunks: ConnectionChunk[] = [];
 	protected loadedVersion:    string = '0.1';
-
-	protected async loadFromOPFS() {
-		return;
-
-		const opfsRoot   = await navigator.storage.getDirectory();
-		const fileHandle = await opfsRoot.getFileHandle('passive-graph', { create: true });
-		const file       = await fileHandle.getFile();
-
-		return JSON.parse(await file.text()) as {
-			nodes:       StorableGraphNode[];
-			connections: StorableGraphConnection[];
-		};
-	}
-
-	protected async loadFromLocalAsset() {
-		interface GraphData {
-			nodeChunks:       NodeChunk[];
-			connectionChunks: ConnectionChunk[];
-		}
-
-		const [ data, err ] = await maybe<GraphData>(
-			import(`../../assets/graphs/graph-version-${ this.loadedVersion }.json?inline`)
-				.then(res => res.default as any),
-		);
-
-		if (err)
-			throw err;
-
-		const { nodeChunks, connectionChunks } = data;
-
-		this.nodeChunks = nodeChunks;
-		this.connectionChunks = connectionChunks;
-
-		const nodes = nodeChunks.flatMap(chunk => chunk.nodes);
-		const connections = connectionChunks.flatMap(chunk => chunk.connections);
-
-		return { nodes, connections };
-	}
-
-	protected async loadFromFirebase() {
-		const [ nodeChunks, connectionChunks ] = await Promise.all([
-			getGraphNodes(this.loadedVersion),
-			getGraphConnectionsQry(this.loadedVersion),
-		]);
-
-		this.nodeChunks = nodeChunks;
-		this.connectionChunks = connectionChunks;
-
-		const nodes = nodeChunks.flatMap(chunk => chunk.nodes);
-		const connections = connectionChunks.flatMap(chunk => chunk.connections);
-
-		return { nodes, connections };
-	}
+	//protected repository:       GraphRepository = new LocalGraphRepository();
+	//protected repository:       GraphRepository = new FirebaseGraphRepository();
 
 	public async load() {
 		if (!this.loading.done)
@@ -90,18 +48,15 @@ export class GraphDataManager {
 		this.ready = false;
 		this.loading = resolvablePromise();
 
-		const { nodeChunks, connectionChunks } = await new LocalGraphRepository(this.loadedVersion).load();
+		const { nodeChunks, connectionChunks } = await this.repository.load(this.loadedVersion);
 
 		this.nodeChunks = nodeChunks;
 		this.connectionChunks = connectionChunks;
+
 		const nodes = nodeChunks.flatMap(chunk => chunk.nodes);
 		const connections = connectionChunks.flatMap(chunk => chunk.connections);
 
-		//const { nodes, connections } = await this.loadFromLocalAsset();
-		//const { nodes, connections } = await this.loadFromFirebase();
-
 		this.processLoadedData(nodes, connections);
-		//console.log(this.nodes, this.connections);
 
 		this.ready = true;
 		this.loading.resolve();
@@ -369,7 +324,11 @@ export class GraphDataManager {
 		this.ready = false;
 		this.loading = resolvablePromise();
 
-		await this.saveToLocalFile();
+		const changes = this.findChanges();
+		this.applyNodeChanges(changes);
+		this.applyConnectionChanges(changes);
+
+		await this.repository.save(this.loadedVersion, this.nodeChunks, this.connectionChunks);
 
 		this.ready = true;
 		this.loading.resolve();
@@ -427,38 +386,202 @@ export class GraphDataManager {
 		console.log(conResult);
 	}
 
-	public async saveToOPFS() {
-		const changes = this.findChanges();
-		this.applyNodeChanges(changes);
-		this.applyConnectionChanges(changes);
+	public addNode(vec: Vec2) {
+		const node = new GraphNode(vec);
+
+		this.nodes.set(node.id, node);
+
+		return node;
+	}
+
+	public connectNodes(nodeA?: GraphNode, nodeB?: GraphNode) {
+		if (!nodeA || !nodeB)
+			return false;
+
+		const nodeHasNode = (a: GraphNode, b: GraphNode) =>
+			a.connections.values().some(con => con.start.id === b.id || con.stop.id === b.id) ||
+			b.connections.values().some(con => con.start.id === a.id || con.stop.id === a.id);
+
+		if (nodeHasNode(nodeA, nodeB))
+			return false;
+
+		const connection = new GraphConnection(this.nodes, { start: nodeA.id, stop: nodeB.id });
+		this.connections.set(connection.id, connection);
+
+		nodeA.connections.add(connection);
+		nodeB.connections.add(connection);
+
+		nodeA.updated = new Date().toISOString();
+		nodeB.updated = new Date().toISOString();
+
+		return true;
+	}
+
+	public deleteNode(node: GraphNode) {
+		node.connections.forEach(con => {
+			this.connections.delete(con.id);
+			con.start.connections.delete(con);
+			con.stop.connections.delete(con);
+		});
+
+		this.nodes.delete(node.id);
+
+		return true;
+	}
+
+	public resizeNode(node: GraphNode, radius: number) {
+		if (node.radius === radius)
+			return false;
+
+		node.radius = radius;
+		node.updated = new Date().toISOString();
+
+		return true;
+	}
+
+	public moveNode(node: GraphNode, vec: Vec2) {
+		if (node.x === vec.x && node.y === vec.y)
+			return false;
+
+		node.x = vec.x;
+		node.y = vec.y;
+		node.updated = new Date().toISOString();
+
+		return true;
+	}
+
+	public moveConnection(con: GraphConnection, controlNode: Vec2, vec: Vec2) {
+		const conVec = con.m1 === controlNode ? con.m1
+			: con.m2 === controlNode ? con.m2
+				: undefined;
+
+		if (!conVec)
+			return false;
+
+		conVec.x = vec.x;
+		conVec.y = vec.y;
+		con.updated = new Date().toISOString();
+
+		con.path = this.path2DCreator?.createConnectionPath2D(this.nodes, con);
+		con.pathHandle1 = this.path2DCreator?.createConnectionHandlePath2D?.(con, 1);
+		con.pathHandle2 = this.path2DCreator?.createConnectionHandlePath2D?.(con, 2);
+
+		return true;
+	}
+
+}
+
+
+export interface GraphRepository {
+
+	load(version: string): Promise<{
+		nodeChunks:       NodeChunk[],
+		connectionChunks: ConnectionChunk[];
+	}>;
+
+	save(
+		version: string,
+		nodeChunks: NodeChunk[],
+		connectionChunks: ConnectionChunk[]
+	): Promise<void>;
+}
+
+
+export class OPFSGraphRepository implements GraphRepository {
+
+	public async load(
+		version: string,
+	): ReturnType<GraphRepository['load']> {
+		const opfsRoot   = await navigator.storage.getDirectory();
+		const fileHandle = await opfsRoot.getFileHandle(
+			'graph-version-' + version + '.json',
+			{ create: true },
+		);
+
+		const file = await fileHandle.getFile();
+		const text = await file.text();
+
+		if (!text) {
+			return {
+				nodeChunks:       [],
+				connectionChunks: [],
+			};
+		}
+
+		return JSON.parse(await file.text()) as {
+			nodeChunks:       NodeChunk[];
+			connectionChunks: ConnectionChunk[];
+		};
+	}
+
+	public async save(
+		...args: Parameters<GraphRepository['save']>
+	): ReturnType<GraphRepository['save']> {
+		const [ version, nodeChunks, connectionChunks ] = args;
 
 		// A FileSystemDirectoryHandle whose type is "directory" and whose name is "".
 		const opfsRoot   = await navigator.storage.getDirectory();
-		const fileHandle = await opfsRoot.getFileHandle('graph-version-' + this.loadedVersion, { create: true });
-		const writable   = await fileHandle.createWritable({ keepExistingData: false });
+		const fileHandle = await opfsRoot.getFileHandle(
+			'graph-version-' + version + '.json',
+			{ create: true },
+		);
+
+		const writable = await fileHandle.createWritable({ keepExistingData: false });
 
 		await writable.write(JSON.stringify({
-			version:          3,
-			nodeChunks:       this.nodeChunks,
-			connectionChunks: this.connectionChunks,
+			version,
+			nodeChunks,
+			connectionChunks,
 		}));
 		await writable.close();
 
 		console.log('Saved to OPFS');
 	}
 
-	public async saveToLocalFile() {
-		const changes = this.findChanges();
-		this.applyNodeChanges(changes);
-		this.applyConnectionChanges(changes);
+}
 
+
+export class LocalGraphRepository implements GraphRepository {
+
+	public async load(version: string) {
+		interface GraphData {
+			nodeChunks:       NodeChunk[];
+			connectionChunks: ConnectionChunk[];
+		}
+
+		const [ data, err ] = await maybe<GraphData>(
+			import(`../../assets/graphs/graph-version-${ version }.json?inline`)
+				.then(res => res.default as any),
+		);
+
+		if (err) {
+			console.error(err);
+
+			return {
+				nodeChunks:       [],
+				connectionChunks: [],
+			} satisfies GraphData;
+		}
+		else {
+			console.log('Loaded from local filesystem');
+		}
+
+		return {
+			nodeChunks:       data.nodeChunks,
+			connectionChunks: data.connectionChunks,
+		};
+	}
+
+	public async save(
+		version: string, nodeChunks: NodeChunk[], connectionChunks: ConnectionChunk[],
+	) {
 		const [ , err ] = await maybe(fetch('/save-graph-to-file', {
 			method:  'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body:    JSON.stringify({
-				version:          this.loadedVersion,
-				nodeChunks:       this.nodeChunks,
-				connectionChunks: this.connectionChunks,
+				version,
+				nodeChunks,
+				connectionChunks,
 			}),
 		}).then(res => res.status));
 
@@ -468,58 +591,38 @@ export class GraphDataManager {
 			console.log('Saved to local filesystem');
 	}
 
-	public async saveToFirebase() {
-		const changes = this.findChanges();
-		const nodeChunkChanges = this.applyNodeChanges(changes);
-		const conChunkChanges = this.applyConnectionChanges(changes);
-		console.log(changes, nodeChunkChanges, conChunkChanges);
-	}
-
 }
 
 
-interface GraphRepository {
+export class FirebaseGraphRepository implements GraphRepository {
 
-	load(): Promise<{
-		nodeChunks:       NodeChunk[],
+	public async load(version: string): Promise<{
+		nodeChunks:       NodeChunk[];
 		connectionChunks: ConnectionChunk[];
-	}>;
+	}> {
+		const [ nodeChunks, connectionChunks ] = await Promise.all([
+			getGraphNodes(version),
+			getGraphConnectionsQry(version),
+		]);
 
-	save(): Promise<void>;
+		return { nodeChunks, connectionChunks };
+	}
+
+	public async save(
+		version: string, nodeChunks: NodeChunk[], connectionChunks: ConnectionChunk[],
+	): Promise<void> {
+
+	}
+
 }
 
-class LocalGraphRepository implements GraphRepository {
 
-	constructor(version: string) {
-		this.loadedVersion = version;
-	}
+export class GraphPath2DCreator implements GraphPath2DCreator {
 
-	protected loadedVersion: string = '0.1';
-
-	public async load() {
-		interface GraphData {
-			nodeChunks:       NodeChunk[];
-			connectionChunks: ConnectionChunk[];
-		}
-
-		const [ data, err ] = await maybe<GraphData>(
-			import(`../../assets/graphs/graph-version-${ this.loadedVersion }.json?inline`)
-				.then(res => res.default as any),
-		);
-
-		if (err)
-			throw err;
-
-		console.log('Load from local');
-
-		return {
-			nodeChunks:       data.nodeChunks,
-			connectionChunks: data.connectionChunks,
-		};
-	}
-
-	public async save() {
-		console.log('Save to local');
-	}
+	constructor(
+		public createNodePath2D: (node: GraphNode) => Canvas2DObject,
+		public createConnectionPath2D: (nodes: Map<string, GraphNode>, con: GraphConnection) => Canvas2DObject,
+		public createConnectionHandlePath2D?: (con: GraphConnection, handle: 1 | 2) => Canvas2DObject,
+	) {}
 
 }

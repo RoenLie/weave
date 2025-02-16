@@ -91,7 +91,7 @@ export class GraphConnection {
 }
 
 
-export class GraphNode {
+export class GraphNode implements Vec2 {
 
 	public static isGraphNode(obj: any): obj is GraphNode {
 		return obj instanceof GraphNode;
@@ -122,10 +122,10 @@ export class GraphNode {
 	public radius:      number;
 	public sizes:       number[] = [ 24, 36, 56 ];
 	public path:        Canvas2DObject | undefined;
-	public connections: GraphConnection[] = [];
+	public connections: Set<GraphConnection> = new Set();
 	public data?:       NodeData;
 
-	protected connectionIds:         string[];
+	protected connectionIds?:        string[];
 	protected haveMappedConnections: boolean = false;
 
 	public mapConnections(connections: Map<string, GraphConnection>) {
@@ -133,15 +133,17 @@ export class GraphNode {
 			return;
 
 		this.haveMappedConnections = true;
-		this.connections.length = 0;
+		this.connections.clear();
 
-		for (const id of this.connectionIds) {
+		for (const id of this.connectionIds ?? []) {
 			const connection = connections.get(id);
 			if (!connection)
 				continue;
 
-			this.connections.push(connection);
+			this.connections.add(connection);
 		}
+
+		delete this.connectionIds;
 	}
 
 	public toStorable(): StorableGraphNode {
@@ -151,7 +153,7 @@ export class GraphNode {
 			x:           this.x,
 			y:           this.y,
 			radius:      this.radius,
-			connections: this.connections.map(c => c.id),
+			connections: this.connections.values().map(c => c.id).toArray(),
 			data:        this.data?.id ?? '',
 		};
 

@@ -9,6 +9,7 @@ import { when } from 'lit-html/directives/when.js';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import { nodeDataCatalog, type NodeData, type NodeDataCatalog } from '../../app/graph/node-catalog.ts';
 import { map } from 'lit-html/directives/map.js';
+import { GraphDataManager, GraphPath2DCreator, LocalGraphRepository } from './data-manager.ts';
 
 
 export class PoeCanvasTree extends PoeCanvasPassiveBase {
@@ -17,6 +18,17 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 	@signal protected accessor selectedNodeMenu: keyof NodeDataCatalog | undefined = undefined;
 	@signal protected accessor showNodeSelectorMenu: boolean = false;
+
+	protected override dataManager = new GraphDataManager(
+		new LocalGraphRepository(),
+		new GraphPath2DCreator(
+			this.createNodePath2D.bind(this),
+			this.createConnectionPath2D.bind(this),
+			this.createConnectionHandle2D.bind(this),
+		),
+	);
+
+
 	protected nodeSelectorMenus = [ 'minor', 'notable', 'keystone' ] as const;
 
 	protected updated?:      number;
@@ -46,8 +58,6 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 	}
 
 	protected async save() {
-		return;
-
 		// Only save if the graph has been updated and a save is not already ongoing.
 		if (!this.updated || this.saveOngoing)
 			return;
@@ -58,39 +68,14 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		// We set the saveOngoing flag to prevent multiple saves at the same time
 		this.saveOngoing = true;
 
-		//await this.saveToOPFS(nodes, connections);
-		await this.dataManager.saveToLocalFile();
+		//await this.dataManager.save();
 
 		this.saveOngoing = false;
 	}
 
 	protected connectNodes(nodeA?: GraphNode, nodeB?: GraphNode) {
-		if (!nodeA || !nodeB)
-			return;
-
-		const nodeHasNode = (a: GraphNode, b: GraphNode) => a.connections.some(
-			connection => connection.start.id === b.id || connection.stop.id === b.id,
-		);
-
-		const nodeAHasNodeB = nodeHasNode(nodeA, nodeB);
-		if (nodeAHasNodeB)
-			return;
-
-		const nodeBHasNodeA = nodeHasNode(nodeB, nodeA);
-		if (nodeBHasNodeA)
-			return;
-
-		const { nodes, connections } = this.dataManager;
-
-		const connection = new GraphConnection(nodes, { start: nodeA.id, stop: nodeB.id });
-		connections.set(connection.id, connection);
-		nodeA.connections.push(connection);
-		nodeB.connections.push(connection);
-
-		nodeA.updated = new Date().toISOString();
-		nodeB.updated = new Date().toISOString();
-
-		this.updated = Date.now();
+		if (this.dataManager.connectNodes(nodeA, nodeB))
+			this.updated = Date.now();
 	}
 
 	protected override onMousedown(downEv: MouseEvent) {
@@ -155,14 +140,11 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 				this.editingFeatures.moveNode && (mousemove = (ev: MouseEvent) => {
 					const scale = this.mainView.scale;
-
 					const x = ev.offsetX - deltaX - this.mainView.position.x - mouseOffsetX;
 					const y = ev.offsetY - deltaY - this.mainView.position.y - mouseOffsetY;
-					node.x = x / scale;
-					node.y = y / scale;
 
+					this.dataManager.moveNode(node, { x: x / scale, y: y / scale });
 					node.path = this.createNodePath2D(node);
-					node.updated = new Date().toISOString();
 
 					for (const con of node.connections) {
 						con.path = this.createConnectionPath2D(nodes, con);
@@ -170,8 +152,8 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 						con.pathHandle2 = this.createConnectionHandle2D(con, 2);
 					}
 
-					this.drawMain();
 					this.updated = Date.now();
+					this.drawMain();
 				});
 			}
 			else {
@@ -185,16 +167,10 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 
 					const x = ev.offsetX - deltaX - this.mainView.position.x - mouseOffsetX;
 					const y = ev.offsetY - deltaY - this.mainView.position.y - mouseOffsetY;
-					vec.x = x / scale;
-					vec.y = y / scale;
 
-					con.path        = this.createConnectionPath2D(nodes, con);
-					con.pathHandle1 = this.createConnectionHandle2D(con, 1);
-					con.pathHandle2 = this.createConnectionHandle2D(con, 2);
-					con.updated = new Date().toISOString();
-
-					this.drawMain();
+					this.dataManager.moveConnection(con, vec, { x: x / scale, y: y / scale });
 					this.updated = Date.now();
+					this.drawMain();
 				});
 			}
 
@@ -207,7 +183,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 			// We are holding alt or double clicking the canvas
 			// so we want to create a new node
 			if (this.editingFeatures.createNode && (downEv.detail === 2 || downEv.altKey || downEv.metaKey)) {
-				const node = new GraphNode({ x: realX, y: realY });
+				const node = this.dataManager.addNode({ x: realX, y: realY });
 
 				if (this.selectedNode?.path) {
 					const node = this.selectedNode;
@@ -216,7 +192,6 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				}
 
 				this.selectedNode = node;
-				nodes.set(node.id, node);
 				this.updated = Date.now();
 				this.drawMain();
 			}
@@ -244,28 +219,27 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 	}
 
 	protected onKeydown(ev: KeyboardEvent) {
-		const { nodes, connections } = this.dataManager;
-
 		if (this.selectedNode) {
 			const node = this.selectedNode;
 
 			if (this.editingFeatures.resizeNodes && oneOf(ev.code, 'Digit1', 'Digit2', 'Digit3')) {
+				let resized = false;
+
 				if (ev.code === 'Digit1')
-					node.radius = node.sizes[0]!;
+					resized = this.dataManager.resizeNode(node, node.sizes[0]!);
+				else if (ev.code === 'Digit2')
+					resized = this.dataManager.resizeNode(node, node.sizes[1]!);
+				else if (ev.code === 'Digit3')
+					resized = this.dataManager.resizeNode(node, node.sizes[2]!);
 
-				if (ev.code === 'Digit2')
-					node.radius = node.sizes[1]!;
-
-				if (ev.code === 'Digit3')
-					node.radius = node.sizes[2]!;
-
-				node.path = this.createNodePath2D(node);
-				this.updated = Date.now();
+				if (resized) {
+					node.path = this.createNodePath2D(node);
+					this.updated = Date.now();
+				}
 			}
 			else if (this.editingFeatures.deleteNodes && ev.code === 'Delete') {
-				node.connections.forEach(con => connections.delete(con.id));
-				nodes.delete(node.id);
-				this.updated = Date.now();
+				if (this.dataManager.deleteNode(node))
+					this.updated = Date.now();
 			}
 			else if (ev.code === 'Escape') {
 				this.selectedNode = undefined;
