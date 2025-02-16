@@ -12,9 +12,9 @@ class TestGraphRepository implements GraphRepository {
 	}
 
 	public async save(
-		...args: Parameters<GraphRepository['save']>
+		//...args: Parameters<GraphRepository['save']>
 	): ReturnType<GraphRepository['save']> {
-		const [ version, nodeChunks, connectionChunks ] = args;
+		//const [ version, nodeChunks, connectionChunks ] = args;
 	}
 
 }

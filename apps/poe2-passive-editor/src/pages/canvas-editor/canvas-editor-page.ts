@@ -9,7 +9,7 @@ import { when } from 'lit-html/directives/when.js';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import { nodeDataCatalog, type NodeData, type NodeDataCatalog } from '../../app/graph/node-catalog.ts';
 import { map } from 'lit-html/directives/map.js';
-import { GraphDataManager, GraphPath2DCreator, LocalGraphRepository } from './data-manager.ts';
+import { FirebaseGraphRepository, GraphDataManager, GraphPath2DCreator } from './data-manager.ts';
 
 
 export class PoeCanvasTree extends PoeCanvasPassiveBase {
@@ -20,7 +20,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 	@signal protected accessor showNodeSelectorMenu: boolean = false;
 
 	protected override dataManager = new GraphDataManager(
-		new LocalGraphRepository(),
+		new FirebaseGraphRepository(),
 		new GraphPath2DCreator(
 			this.createNodePath2D.bind(this),
 			this.createConnectionPath2D.bind(this),
@@ -28,15 +28,14 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		),
 	);
 
-
-	protected nodeSelectorMenus = [ 'minor', 'notable', 'keystone' ] as const;
-
-	protected updated?:      number;
-	protected saveOngoing:   boolean = false;
-	protected saveInterval?: ReturnType<typeof setInterval>;
+	protected nodeSelectorMenus = [
+		'minor',
+		'notable',
+		'keystone',
+	] as const;
 
 	protected editingFeatures = {
-		moveNode:        false,
+		moveNode:        true,
 		createNode:      false,
 		resizeNodes:     false,
 		deleteNodes:     false,
@@ -44,38 +43,10 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		moveConnections: true,
 	};
 
-	protected override disconnectedCallback(): void {
-		super.disconnectedCallback();
-
-		clearInterval(this.saveInterval);
-	}
-
 	protected override async afterDataLoaded(): Promise<void> {
 		super.afterDataLoaded();
 
 		this.addEventListener('keydown', this.onKeydown);
-		this.saveInterval = setInterval(this.save.bind(this), 5000);
-	}
-
-	protected async save() {
-		// Only save if the graph has been updated and a save is not already ongoing.
-		if (!this.updated || this.saveOngoing)
-			return;
-
-		// We clear the updated flag so that a new update can be detected
-		this.updated = undefined;
-
-		// We set the saveOngoing flag to prevent multiple saves at the same time
-		this.saveOngoing = true;
-
-		//await this.dataManager.save();
-
-		this.saveOngoing = false;
-	}
-
-	protected connectNodes(nodeA?: GraphNode, nodeB?: GraphNode) {
-		if (this.dataManager.connectNodes(nodeA, nodeB))
-			this.updated = Date.now();
 	}
 
 	protected override onMousedown(downEv: MouseEvent) {
@@ -86,7 +57,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		downEv.preventDefault();
 		this.focus();
 
-		const { nodes, connections } = this.dataManager;
+		const { connections } = this.dataManager;
 
 		const rect = this.getBoundingClientRect();
 		const deltaY = rect.top;
@@ -123,7 +94,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				const node = nodeOrVec;
 
 				if (downEv.shiftKey && this.editingFeatures.connectNodes) {
-					this.connectNodes(this.selectedNode, node);
+					this.dataManager.connectNodes(this.selectedNode, node);
 				}
 				else {
 					if (this.selectedNode?.path) {
@@ -144,15 +115,6 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 					const y = ev.offsetY - deltaY - this.mainView.position.y - mouseOffsetY;
 
 					this.dataManager.moveNode(node, { x: x / scale, y: y / scale });
-					node.path = this.createNodePath2D(node);
-
-					for (const con of node.connections) {
-						con.path = this.createConnectionPath2D(nodes, con);
-						con.pathHandle1 = this.createConnectionHandle2D(con, 1);
-						con.pathHandle2 = this.createConnectionHandle2D(con, 2);
-					}
-
-					this.updated = Date.now();
 					this.drawMain();
 				});
 			}
@@ -169,7 +131,6 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 					const y = ev.offsetY - deltaY - this.mainView.position.y - mouseOffsetY;
 
 					this.dataManager.moveConnection(con, vec, { x: x / scale, y: y / scale });
-					this.updated = Date.now();
 					this.drawMain();
 				});
 			}
@@ -192,7 +153,6 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				}
 
 				this.selectedNode = node;
-				this.updated = Date.now();
 				this.drawMain();
 			}
 
@@ -223,23 +183,15 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 			const node = this.selectedNode;
 
 			if (this.editingFeatures.resizeNodes && oneOf(ev.code, 'Digit1', 'Digit2', 'Digit3')) {
-				let resized = false;
-
 				if (ev.code === 'Digit1')
-					resized = this.dataManager.resizeNode(node, node.sizes[0]!);
+					this.dataManager.resizeNode(node, node.sizes[0]!);
 				else if (ev.code === 'Digit2')
-					resized = this.dataManager.resizeNode(node, node.sizes[1]!);
+					this.dataManager.resizeNode(node, node.sizes[1]!);
 				else if (ev.code === 'Digit3')
-					resized = this.dataManager.resizeNode(node, node.sizes[2]!);
-
-				if (resized) {
-					node.path = this.createNodePath2D(node);
-					this.updated = Date.now();
-				}
+					this.dataManager.resizeNode(node, node.sizes[2]!);
 			}
 			else if (this.editingFeatures.deleteNodes && ev.code === 'Delete') {
-				if (this.dataManager.deleteNode(node))
-					this.updated = Date.now();
+				this.dataManager.deleteNode(node);
 			}
 			else if (ev.code === 'Escape') {
 				this.selectedNode = undefined;
@@ -365,13 +317,13 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		node.data = data;
 		node.updated = new Date().toISOString();
 
-		this.updated = Date.now();
 		node.path = this.createNodePath2D(node);
 		this.drawMain();
 	}
 
 	protected async onClickSave() {
 		await this.dataManager.save();
+		this.requestUpdate();
 	}
 
 	protected override renderTooltip(node: GraphNode): unknown {
@@ -431,7 +383,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 	protected override render(): unknown {
 		return [
 			super.render(),
-			when(this.updated || true, () => html`
+			when(!this.dataManager.updated, () => html`
 			<s-state-panel>
 				<button @click=${ this.onClickSave }>
 					Save

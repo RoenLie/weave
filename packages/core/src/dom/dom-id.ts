@@ -1,4 +1,4 @@
-import { customAlphabet, nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 
 
 /**
@@ -9,7 +9,7 @@ import { customAlphabet, nanoid } from 'nanoid';
  * By default, the ID will have 21 symbols to have a collision probability similar to UUID v4.
  */
 export const domId = (length = 21, prefix = '') => {
-	const id = prefix + alphabetId(1) + nanoid(length - 1);
+	const id = prefix + alphabetId(length);
 
 	return prefix ? prefix + '-' + id : id;
 };

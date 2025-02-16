@@ -12,20 +12,40 @@ export class RouterCmp extends CustomElement {
 	static { this.register('poe-router'); }
 
 	@signal protected accessor currentUser: User | undefined;
+	@signal protected accessor requiresLogin: boolean = false;
 
 	protected routes = new Router(this, [
 		{
-			path:   '/',
+			path:  '/',
+			enter: async () => {
+				this.requiresLogin = false;
+
+				history.replaceState(undefined, '', '/canvas-viewer');
+				dispatchEvent(new PopStateEvent('popstate'));
+
+				return false;
+			},
 			render: () => html``,
 		},
 		{
 			path:  '/canvas-editor',
 			enter: async () => {
+				this.requiresLogin = true;
 				await import('./canvas-editor/canvas-editor-page.ts');
 
 				return true;
 			},
 			render: () => html`<poe-canvas-editor></poe-canvas-editor>`,
+		},
+		{
+			path:  '/canvas-viewer',
+			enter: async () => {
+				this.requiresLogin = false;
+				await import('./canvas-viewer/canvas-viewer-page.ts');
+
+				return true;
+			},
+			render: () => html`<poe-canvas-viewer></poe-canvas-viewer>`,
 		},
 	]);
 
@@ -65,6 +85,7 @@ export class RouterCmp extends CustomElement {
 			<nav>
 				<a href="/">Home</a>
 				<a href="/canvas-editor">Canvas Editor</a>
+				<a href="/canvas-viewer">Canvas Viewer</a>
 			</nav>
 
 			${ when(this.currentUser, () => html`
@@ -74,7 +95,7 @@ export class RouterCmp extends CustomElement {
 			`) }
 		</header>
 		${ when(
-			!this.currentUser,
+			this.requiresLogin && !this.currentUser,
 			() => html`
 			<article>
 				<login-button @click=${ this.login }>

@@ -1,13 +1,10 @@
 import { maybe, resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
 import { GraphConnection, GraphNode, type StorableGraphConnection, type StorableGraphNode } from '../../app/graph/graph.ts';
 import { getGraphConnectionsQry, getGraphNodes, graphConnectionCollection, graphNodeCollection, type ConnectionChunk, type NodeChunk } from './firebase-queries.ts';
-import { domId } from '@roenlie/core/dom';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../app/firebase.ts';
 import type { Vec2 } from '@roenlie/core/types';
-import { getPathReduction } from '../../app/canvas/path-helpers.ts';
 import { Canvas2DObject } from './canvas-object.ts';
-import { drawParallelBezierCurve, type Bezier } from '../../app/canvas/parallel-bezier-curve.ts';
 
 
 interface NodeChunkRef { chunkId: string; nodeId: string; }
@@ -20,6 +17,11 @@ interface GraphChangeset {
 	updatedNodes:       NodeChunkRef[];
 	updatedConnections: ConChunkRef[];
 }
+interface GraphChunkChangeLog {
+	update: Set<string>;
+	add:    Set<string>;
+	delete: Set<string>;
+}
 
 
 export class GraphDataManager {
@@ -29,8 +31,9 @@ export class GraphDataManager {
 		protected path2DCreator?: GraphPath2DCreator,
 	) {}
 
-	public ready = false;
-	public loading: ResolvablePromise<void> = resolvablePromise.resolve(void 0);
+	public ready:    boolean = false;
+	public loading:  ResolvablePromise<void> = resolvablePromise.resolve(void 0);
+	public updated?: number = Infinity;
 
 	public nodes:       Map<string, GraphNode>;
 	public connections: Map<string, GraphConnection>;
@@ -38,8 +41,7 @@ export class GraphDataManager {
 	protected nodeChunks:       NodeChunk[] = [];
 	protected connectionChunks: ConnectionChunk[] = [];
 	protected loadedVersion:    string = '0.1';
-	//protected repository:       GraphRepository = new LocalGraphRepository();
-	//protected repository:       GraphRepository = new FirebaseGraphRepository();
+	protected chunkSize = 500;
 
 	public async load() {
 		if (!this.loading.done)
@@ -58,6 +60,7 @@ export class GraphDataManager {
 
 		this.processLoadedData(nodes, connections);
 
+		this.updated = Date.now();
 		this.ready = true;
 		this.loading.resolve();
 	}
@@ -157,7 +160,7 @@ export class GraphDataManager {
 		};
 	}
 
-	protected applyNodeChanges(changes: GraphChangeset) {
+	protected applyNodeChanges(changes: GraphChangeset): GraphChunkChangeLog {
 		const chunksToUpdate: Set<string> = new Set();
 		const chunksToAdd:    Set<string> = new Set();
 		const chunksToDelete: Set<string> = new Set();
@@ -173,6 +176,8 @@ export class GraphDataManager {
 				continue;
 
 			chunk.nodes.splice(nodeIndex, 1);
+			chunk.updated = new Date().toISOString();
+
 			chunksToUpdate.add(chunkId);
 		}
 
@@ -182,10 +187,10 @@ export class GraphDataManager {
 			if (!node)
 				continue;
 
-			const chunk = this.nodeChunks.find(chunk => chunk.nodes.length < 500);
+			const chunk = this.nodeChunks.find(chunk => chunk.nodes.length < this.chunkSize);
 			if (!chunk) {
 				const newChunk = {
-					id:      domId(),
+					id:      crypto.randomUUID(),
 					version: this.loadedVersion,
 					index:   this.nodeChunks.length,
 					updated: new Date().toISOString(),
@@ -198,6 +203,8 @@ export class GraphDataManager {
 			}
 			else {
 				chunk.nodes.push(node.toStorable());
+				chunk.updated = new Date().toISOString();
+
 				chunksToUpdate.add(chunk.id);
 			}
 		}
@@ -217,6 +224,8 @@ export class GraphDataManager {
 				continue;
 
 			chunk.nodes[nodeIndex] = node.toStorable();
+			chunk.updated = new Date().toISOString();
+
 			chunksToUpdate.add(chunkId);
 		}
 
@@ -237,7 +246,7 @@ export class GraphDataManager {
 		};
 	}
 
-	protected applyConnectionChanges(changes: GraphChangeset) {
+	protected applyConnectionChanges(changes: GraphChangeset): GraphChunkChangeLog {
 		const chunksToUpdate: Set<string> = new Set();
 		const chunksToAdd:    Set<string> = new Set();
 		const chunksToDelete: Set<string> = new Set();
@@ -253,6 +262,8 @@ export class GraphDataManager {
 				continue;
 
 			chunk.connections.splice(conIndex, 1);
+			chunk.updated = new Date().toISOString();
+
 			chunksToUpdate.add(chunkId);
 		}
 
@@ -262,10 +273,12 @@ export class GraphDataManager {
 			if (!con)
 				continue;
 
-			const chunk = this.connectionChunks.find(chunk => chunk.connections.length < 500);
+			const chunk = this.connectionChunks
+				.find(chunk => chunk.connections.length < this.chunkSize);
+
 			if (!chunk) {
 				const newChunk = {
-					id:          domId(),
+					id:          crypto.randomUUID(),
 					version:     this.loadedVersion,
 					index:       this.connectionChunks.length,
 					updated:     new Date().toISOString(),
@@ -278,6 +291,8 @@ export class GraphDataManager {
 			}
 			else {
 				chunk.connections.push(con.toStorable());
+				chunk.updated = new Date().toISOString();
+
 				chunksToUpdate.add(chunk.id);
 			}
 		}
@@ -297,6 +312,8 @@ export class GraphDataManager {
 				continue;
 
 			chunk.connections[conIndex] = con.toStorable();
+			chunk.updated = new Date().toISOString();
+
 			chunksToUpdate.add(chunkId);
 		}
 
@@ -325,63 +342,73 @@ export class GraphDataManager {
 		this.loading = resolvablePromise();
 
 		const changes = this.findChanges();
-		this.applyNodeChanges(changes);
-		this.applyConnectionChanges(changes);
+		const nodeChunkChanges = this.applyNodeChanges(changes);
+		const conChunkChanges = this.applyConnectionChanges(changes);
 
-		await this.repository.save(this.loadedVersion, this.nodeChunks, this.connectionChunks);
+		//console.log({
+		//	changes,
+		//	nodeChunks:       this.nodeChunks,
+		//	connectionChunks: this.connectionChunks,
+		//	nodeChunkChanges,
+		//	conChunkChanges,
+		//});
 
+		await this.repository.save(
+			this.loadedVersion,
+			this.nodeChunks,
+			this.connectionChunks,
+			nodeChunkChanges,
+			conChunkChanges,
+		);
+
+		this.updated = Date.now();
 		this.ready = true;
 		this.loading.resolve();
 	}
 
 	protected async addNodesFromScratch() {
 		console.log('Save');
-		//console.log(this.connections, this.nodes);
-
-		const chunkSize = 500;
 
 		// Create node chunks.
 		const nodeChunks: NodeChunk[] = [];
-		for (let i = 0; i < this.nodes.size; i += chunkSize) {
+		for (let i = 0; i < this.nodes.size; i += this.chunkSize) {
 			nodeChunks.push({
-				id:      domId(),
+				id:      crypto.randomUUID(),
 				version: '0.1',
-				index:   i / chunkSize,
 				updated: new Date().toISOString(),
 				created: new Date().toISOString(),
 				nodes:   this.nodes.values()
 					.drop(i)
-					.take(chunkSize)
+					.take(this.chunkSize)
 					.map(node => node.toStorable())
 					.toArray(),
 			});
 		}
 
 		console.log(nodeChunks);
-		const nodeResult = await Promise.all(nodeChunks.map(chunk => addDoc(
-			collection(db, graphNodeCollection), chunk,
+		const nodeResult = await Promise.all(nodeChunks.map(chunk => setDoc(
+			doc(db, graphNodeCollection, chunk.id), chunk,
 		)));
 		console.log(nodeResult);
 
 		// Create connection chunks.
 		const connectionChunks: ConnectionChunk[] = [];
-		for (let i = 0; i < this.connections.size; i += chunkSize) {
+		for (let i = 0; i < this.connections.size; i += this.chunkSize) {
 			connectionChunks.push({
-				id:          domId(),
+				id:          crypto.randomUUID(),
 				version:     '0.1',
-				index:       i / chunkSize,
 				updated:     new Date().toISOString(),
 				created:     new Date().toISOString(),
 				connections: this.connections.values()
 					.drop(i)
-					.take(chunkSize)
+					.take(this.chunkSize)
 					.map(node => node.toStorable())
 					.toArray(),
 			});
 		}
 		console.log(connectionChunks);
-		const conResult = await Promise.all(connectionChunks.map(chunk => addDoc(
-			collection(db, graphConnectionCollection), chunk,
+		const conResult = await Promise.all(connectionChunks.map(chunk => setDoc(
+			doc(db, graphConnectionCollection, chunk.id), chunk,
 		)));
 		console.log(conResult);
 	}
@@ -390,6 +417,8 @@ export class GraphDataManager {
 		const node = new GraphNode(vec);
 
 		this.nodes.set(node.id, node);
+
+		this.updated = undefined;
 
 		return node;
 	}
@@ -414,6 +443,8 @@ export class GraphDataManager {
 		nodeA.updated = new Date().toISOString();
 		nodeB.updated = new Date().toISOString();
 
+		this.updated = undefined;
+
 		return true;
 	}
 
@@ -426,6 +457,8 @@ export class GraphDataManager {
 
 		this.nodes.delete(node.id);
 
+		this.updated = undefined;
+
 		return true;
 	}
 
@@ -435,6 +468,10 @@ export class GraphDataManager {
 
 		node.radius = radius;
 		node.updated = new Date().toISOString();
+
+		node.path = this.path2DCreator?.createNodePath2D(node);
+
+		this.updated = undefined;
 
 		return true;
 	}
@@ -446,6 +483,17 @@ export class GraphDataManager {
 		node.x = vec.x;
 		node.y = vec.y;
 		node.updated = new Date().toISOString();
+
+		const { path2DCreator } = this;
+		node.path = path2DCreator?.createNodePath2D(node);
+
+		for (const con of node.connections) {
+			con.path = path2DCreator?.createConnectionPath2D?.(this.nodes, con);
+			con.pathHandle1 = path2DCreator?.createConnectionHandlePath2D?.(con, 1);
+			con.pathHandle2 = path2DCreator?.createConnectionHandlePath2D?.(con, 2);
+		}
+
+		this.updated = undefined;
 
 		return true;
 	}
@@ -466,6 +514,8 @@ export class GraphDataManager {
 		con.pathHandle1 = this.path2DCreator?.createConnectionHandlePath2D?.(con, 1);
 		con.pathHandle2 = this.path2DCreator?.createConnectionHandlePath2D?.(con, 2);
 
+		this.updated = undefined;
+
 		return true;
 	}
 
@@ -482,7 +532,9 @@ export interface GraphRepository {
 	save(
 		version: string,
 		nodeChunks: NodeChunk[],
-		connectionChunks: ConnectionChunk[]
+		connectionChunks: ConnectionChunk[],
+		nodeChangelog: GraphChunkChangeLog,
+		conChangelog: GraphChunkChangeLog,
 	): Promise<void>;
 }
 
@@ -573,8 +625,10 @@ export class LocalGraphRepository implements GraphRepository {
 	}
 
 	public async save(
-		version: string, nodeChunks: NodeChunk[], connectionChunks: ConnectionChunk[],
-	) {
+		...args: Parameters<GraphRepository['save']>
+	): ReturnType<GraphRepository['save']> {
+		const [ version, nodeChunks, connectionChunks ] = args;
+
 		const [ , err ] = await maybe(fetch('/save-graph-to-file', {
 			method:  'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -609,9 +663,59 @@ export class FirebaseGraphRepository implements GraphRepository {
 	}
 
 	public async save(
-		version: string, nodeChunks: NodeChunk[], connectionChunks: ConnectionChunk[],
-	): Promise<void> {
+		...args: Parameters<GraphRepository['save']>
+	): ReturnType<GraphRepository['save']> {
+		const [ , nodeChunks, connectionChunks, nodeChangelog, conChangelog ] = args;
 
+		// In the firebase implementation, we actually care about the changelog.
+		// We can use this to only update/add/delete on the chunks that have changed.
+
+		const operations: Promise<any>[] = [];
+
+		// Delete node chunks.
+		for (const id of nodeChangelog.delete) {
+			const op = deleteDoc(doc(db, graphNodeCollection, id));
+			operations.push(op);
+		}
+
+		// Add node chunks.
+		for (const id of nodeChangelog.add) {
+			const chunk = nodeChunks.find(c => c.id === id)!;
+			const op = addDoc(collection(db, graphNodeCollection, id), chunk);
+			operations.push(op);
+		}
+
+		// Update node chunks.
+		for (const id of nodeChangelog.update) {
+			const chunk = { ...nodeChunks.find(c => c.id === id)! };
+			const op = updateDoc(doc(db, graphNodeCollection, id), chunk);
+			operations.push(op);
+		}
+
+		// Delete connection chunks.
+		for (const id of conChangelog.delete) {
+			const op = deleteDoc(doc(db, graphConnectionCollection, id));
+			operations.push(op);
+		}
+
+		// Add connection chunks.
+		for (const id of conChangelog.add) {
+			const chunk = connectionChunks.find(c => c.id === id)!;
+			const op = addDoc(collection(db, graphConnectionCollection, id), chunk);
+			operations.push(op);
+		}
+
+		// Update connection chunks.
+		for (const id of conChangelog.update) {
+			const chunk = { ...connectionChunks.find(c => c.id === id)! };
+			const op = updateDoc(doc(db, graphConnectionCollection, id), chunk);
+			operations.push(op);
+		}
+
+		const result = await Promise.allSettled(operations);
+		console.log(result);
+
+		console.log('Saved to Firebase');
 	}
 
 }

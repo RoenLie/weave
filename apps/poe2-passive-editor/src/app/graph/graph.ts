@@ -1,4 +1,3 @@
-import { domId } from '@roenlie/core/dom';
 import type { Canvas2DObject } from '../../pages/canvas-editor/canvas-object.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { getPathReduction } from '../canvas/path-helpers.ts';
@@ -34,7 +33,7 @@ export class GraphConnection {
 	) {
 		let { start, stop, m1, m2, id, updated } = storable;
 
-		this.id = id || domId();
+		this.id = id || crypto.randomUUID();
 		this.updated = updated || new Date().toISOString();
 
 		const startNode = nodes.get(start)!;
@@ -103,7 +102,7 @@ export class GraphNode implements Vec2 {
 	) {
 		const { x, y, id, radius, updated } = storable;
 
-		this.id = id || domId();
+		this.id = id || crypto.randomUUID();
 		this.updated = updated || new Date().toISOString();
 
 		this.x  = x;

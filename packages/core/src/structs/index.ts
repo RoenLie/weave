@@ -15,3 +15,4 @@ export { deepMerge } from './deep-merge.js';
 export { writePath } from './write-path.js';
 export { readPath } from './read-path.js';
 export { clone } from './clone.js';
+export { mapFind } from './map.js';

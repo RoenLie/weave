@@ -12,7 +12,7 @@ import { frameLocked, View } from '../../app/canvas/canvas-view.ts';
 import { when } from 'lit-html/directives/when.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
 import { drawParallelBezierCurve, type Bezier } from '../../app/canvas/parallel-bezier-curve.ts';
-import { GraphPath2DCreator, GraphDataManager, LocalGraphRepository, OPFSGraphRepository } from './data-manager.ts';
+import { GraphPath2DCreator, GraphDataManager, FirebaseGraphRepository } from './data-manager.ts';
 
 
 const unsetPopover = css`
@@ -34,7 +34,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	@signal protected accessor hoveredNode:  GraphNode | undefined;
 
 	protected dataManager = new GraphDataManager(
-		new LocalGraphRepository(),
+		new FirebaseGraphRepository(),
 		new GraphPath2DCreator(
 			this.createNodePath2D.bind(this),
 			this.createConnectionPath2D.bind(this),
@@ -110,7 +110,6 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		this.mainView.setContext(mainCanvas);
 		this.mainView.setCanvasSize(width, height);
 		this.mainView.setTotalArea(this.imageSize, this.imageSize);
-
 
 		this.initializeBackground();
 		this.resizeObserver.observe(this);
@@ -442,7 +441,6 @@ export class PoeCanvasPassiveBase extends CustomElement {
 
 	protected drawMain = frameLocked(this._drawMain.bind(this));
 	protected drawBackground = frameLocked(this._drawBackground.bind(this));
-
 
 	protected beforeCloseTooltip(_node: GraphNode) {}
 	protected beforeOpenTooltip(_node: GraphNode) {}
