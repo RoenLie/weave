@@ -526,7 +526,7 @@ export class GraphDataManager {
 
 		node.path = this.path2DCreator?.createNodePath2D(node);
 
-		this.updated = Date.now();
+		this.updated = undefined;
 	}
 
 }
