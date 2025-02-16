@@ -35,7 +35,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 	] as const;
 
 	protected editingFeatures = {
-		moveNode:        true,
+		moveNode:        false,
 		createNode:      false,
 		resizeNodes:     false,
 		deleteNodes:     false,
@@ -314,10 +314,7 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 	}
 
 	protected assignNodeData(node: GraphNode, data: NodeData | undefined) {
-		node.data = data;
-		node.updated = new Date().toISOString();
-
-		node.path = this.createNodePath2D(node);
+		this.dataManager.updateNodeData(node, data);
 		this.drawMain();
 	}
 

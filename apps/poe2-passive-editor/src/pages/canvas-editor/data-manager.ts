@@ -5,6 +5,7 @@ import { addDoc, collection, deleteDoc, doc, setDoc, updateDoc } from 'firebase/
 import { db } from '../../app/firebase.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { Canvas2DObject } from './canvas-object.ts';
+import type { NodeData } from '../../app/graph/node-catalog.ts';
 
 
 interface NodeChunkRef { chunkId: string; nodeId: string; }
@@ -517,6 +518,15 @@ export class GraphDataManager {
 		this.updated = undefined;
 
 		return true;
+	}
+
+	public updateNodeData(node: GraphNode, data: NodeData | undefined) {
+		node.data = data;
+		node.updated = new Date().toISOString();
+
+		node.path = this.path2DCreator?.createNodePath2D(node);
+
+		this.updated = Date.now();
 	}
 
 }
