@@ -1,5 +1,8 @@
 import type { Vec2 } from '@roenlie/core/types';
 import type { Viewport } from './is-outside-viewport.ts';
+import CanvasWorker from './canvas-worker.ts?worker';
+import type { GraphConnection, GraphNode } from '../graph/graph.ts';
+import type { CanvasWorkerMessages } from './canvas-worker.ts';
 
 
 export class View {
@@ -101,10 +104,72 @@ export class View {
 }
 
 
-/**
- * Returns a version of the supplied function that is locked to not run faster
- * than the consumers frame-rate
- */
-export const frameLocked = <T extends () => void>(fn: T) => {
-	return () => void requestAnimationFrame(fn);
-};
+export class WorkerView {
+
+	public worker: Worker = new CanvasWorker();
+
+	public init(bgCanvas: HTMLCanvasElement, mainCanvas: HTMLCanvasElement) {
+		const bgOffscreen = bgCanvas.transferControlToOffscreen();
+		const mainOffscreen = mainCanvas.transferControlToOffscreen();
+
+		this.worker.postMessage(
+			{ type: 'init', bg: bgOffscreen, main: mainOffscreen },
+			[ bgOffscreen, mainOffscreen ],
+		);
+	};
+
+	public setSize(width: number, height: number) {
+		const msg: CanvasWorkerMessages['setSize'] = { type: 'setSize', width, height };
+		this.worker.postMessage(msg);
+	}
+
+	public setArea(width: number, height: number) {
+		this.worker.postMessage({ type: 'setArea', width, height });
+	}
+
+	public initBackground() {
+		this.worker.postMessage({ type: 'initBackground' });
+	}
+
+	public transferNodes(nodes: Map<string, GraphNode>) {
+		this.worker.postMessage({ type: 'transferNodes', nodes });
+	}
+
+	public transferConnections(connections: Map<string, GraphConnection>) {
+		this.worker.postMessage({ type: 'transferConnections', connections });
+	}
+
+	public scaleAt(vec: Vec2, factor: number) {
+		this.worker.postMessage({ type: 'scaleAt', vec, factor });
+	};
+
+	public moveTo(x: number, y: number) {
+		this.worker.postMessage({ type: 'moveTo', x, y });
+	};
+
+	public async getPosition() {
+		return new Promise<Vec2>(resolve => {
+			this.worker.addEventListener('message', (ev) => {
+				const { data } = ev;
+				if (data.id === id)
+					resolve(data.position);
+			});
+
+			const id = crypto.randomUUID();
+			this.worker.postMessage({ type: 'getPosition', id });
+		});
+	}
+
+	public selectNode(id: string) {
+		this.worker.postMessage({ type: 'setSelectedNode', id });
+	}
+
+	public mousedown(args: CanvasWorkerMessages['mousedown']) {
+		this.worker.postMessage(args);
+	}
+
+	public mousemove(args: CanvasWorkerMessages['mousemove']) {
+		this.worker.postMessage(args);
+	}
+
+}

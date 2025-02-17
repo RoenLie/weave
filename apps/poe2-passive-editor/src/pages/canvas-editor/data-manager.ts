@@ -346,14 +346,6 @@ export class GraphDataManager {
 		const nodeChunkChanges = this.applyNodeChanges(changes);
 		const conChunkChanges = this.applyConnectionChanges(changes);
 
-		//console.log({
-		//	changes,
-		//	nodeChunks:       this.nodeChunks,
-		//	connectionChunks: this.connectionChunks,
-		//	nodeChunkChanges,
-		//	conChunkChanges,
-		//});
-
 		await this.repository.save(
 			this.loadedVersion,
 			this.nodeChunks,

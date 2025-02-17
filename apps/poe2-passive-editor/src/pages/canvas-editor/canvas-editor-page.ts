@@ -9,7 +9,8 @@ import { when } from 'lit-html/directives/when.js';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import { nodeDataCatalog, type NodeData, type NodeDataCatalog } from '../../app/graph/node-catalog.ts';
 import { map } from 'lit-html/directives/map.js';
-import { FirebaseGraphRepository, GraphDataManager, GraphPath2DCreator } from './data-manager.ts';
+import { FirebaseGraphRepository, GraphDataManager } from './data-manager.ts';
+import { View } from '../../app/canvas/canvas-view.ts';
 
 
 export class PoeCanvasTree extends PoeCanvasPassiveBase {
@@ -19,13 +20,11 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 	@signal protected accessor selectedNodeMenu: keyof NodeDataCatalog | undefined = undefined;
 	@signal protected accessor showNodeSelectorMenu: boolean = false;
 
+	protected readonly bgView:   View = new View();
+	protected readonly mainView: View = new View();
+
 	protected override dataManager = new GraphDataManager(
 		new FirebaseGraphRepository(),
-		new GraphPath2DCreator(
-			this.createNodePath2D.bind(this),
-			this.createConnectionPath2D.bind(this),
-			this.createConnectionHandle2D.bind(this),
-		),
 	);
 
 	protected nodeSelectorMenus = [
@@ -47,6 +46,20 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 		super.afterDataLoaded();
 
 		this.addEventListener('keydown', this.onKeydown);
+	}
+
+	protected getGraphNode(vec: Vec2): GraphNode | undefined {
+		const { nodes } = this.dataManager;
+
+		// If found, returns the node at the mouse position.
+		for (const [ , node ] of nodes) {
+			if (!node.path)
+				continue;
+
+			const isInPath = node.path.isPointInPath(this.mainView.context, vec.x, vec.y);
+			if (isInPath)
+				return node;
+		}
 	}
 
 	protected override onMousedown(downEv: MouseEvent) {
@@ -300,6 +313,37 @@ export class PoeCanvasTree extends PoeCanvasPassiveBase {
 				con.pathHandle2.draw(this.mainView.context);
 			}
 		}
+	}
+
+	protected createNodePath2D(node: GraphNode) {
+		const path = new Canvas2DObject();
+		path.layer(
+			(path2D) => {
+				path2D.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+			},
+			(ctx, path2D) => {
+				if (!node.data) {
+					ctx.strokeStyle = 'white';
+					ctx.lineWidth = 2;
+					ctx.stroke(path2D);
+				}
+
+				if (this.selectedNode === node) {
+					ctx.fillStyle = 'rgb(255 255 255 / 20%)';
+					ctx.fill(path2D);
+				}
+				else if (this.hoveredNode === node) {
+					ctx.fillStyle = 'rgb(241 194 50 / 50%)';
+					ctx.fill(path2D);
+				}
+
+				ctx.lineWidth = 0;
+				ctx.strokeStyle = '';
+				ctx.fillStyle = '';
+			},
+		);
+
+		return path;
 	}
 
 	protected override _drawMain() {

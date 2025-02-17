@@ -11,6 +11,9 @@ export default defineConfig({
 			'top-level-await': true,
 		},
 	},
+	worker: {
+		format: 'es',
+	},
 	plugins: [
 		(() => {
 			const sourceDir = join('src', 'assets', 'graphs');
