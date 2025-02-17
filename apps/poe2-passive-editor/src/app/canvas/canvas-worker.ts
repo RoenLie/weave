@@ -84,6 +84,7 @@ class WorkerView {
 		this._scale *= factor;
 		this._position.x = vec.x - (vec.x - this._position.x) * factor;
 		this._position.y = vec.y - (vec.y - this._position.y) * factor;
+
 		this.updateMatrix();
 	};
 
@@ -109,7 +110,7 @@ class WorkerView {
 
 
 export interface CanvasWorkerMessages {
-	init:                {
+	init: {
 		type: 'init',
 		main: OffscreenCanvas,
 		bg:   OffscreenCanvas
@@ -119,15 +120,15 @@ export interface CanvasWorkerMessages {
 		width:  number,
 		height: number
 	};
-	setArea:             {
+	setArea: {
 		type:   'setArea',
 		width:  number,
 		height: number
 	};
-	initBackground:      {
+	initBackground: {
 		type: 'initBackground'
 	};
-	transferNodes:       {
+	transferNodes: {
 		type:  'transferNodes',
 		nodes: Map<string, GraphNode>
 	};
@@ -135,17 +136,17 @@ export interface CanvasWorkerMessages {
 		type:        'transferConnections',
 		connections: Map<string, GraphConnection>
 	};
-	moveTo:              {
+	moveTo: {
 		type: 'moveTo',
 		x:    number,
 		y:    number
 	};
-	scaleAt:             {
+	scaleAt: {
 		type:   'scaleAt',
 		vec:    Vec2,
 		factor: number
 	};
-	getPosition:         {
+	getPosition: {
 		type: 'getPosition',
 		id:   number
 	};
@@ -159,7 +160,7 @@ export interface CanvasWorkerMessages {
 		metaKey:  boolean;
 		shiftKey: boolean;
 	}
-	mousemove:           {
+	mousemove: {
 		type:     'mousemove';
 		offsetX:  number;
 		offsetY:  number;
@@ -168,7 +169,9 @@ export interface CanvasWorkerMessages {
 		metaKey:  boolean;
 		shiftKey: boolean;
 	};
-	draw: { type: 'draw' };
+	draw: {
+		type: 'draw'
+	};
 }
 
 
@@ -561,5 +564,9 @@ class Host {
 
 }
 
+
 const host = new Host();
 onmessage = host.onmessage.bind(host);
+
+
+export const HELLODOME = 'HELLODOME';

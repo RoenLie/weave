@@ -1,16 +1,13 @@
 import { html } from 'lit-html';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import type { Vec2 } from '@roenlie/core/types';
-import { GraphConnection, GraphNode, type StringVec2 } from '../../app/graph/graph.ts';
-import { isOutsideViewport, type Viewport } from '../../app/canvas/is-outside-viewport.ts';
-import { Canvas2DObject } from './canvas-object.ts';
-import { doRectsOverlap, getPathReduction } from '../../app/canvas/path-helpers.ts';
+import { GraphNode } from '../../app/graph/graph.ts';
+import { type Viewport } from '../../app/canvas/is-outside-viewport.ts';
 import { CustomElement } from '../../app/custom-element/custom-element.ts';
-import { View, WorkerView } from '../../app/canvas/canvas-view.ts';
+import { WorkerView } from '../../app/canvas/canvas-view.ts';
 import { when } from 'lit-html/directives/when.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
-import { drawParallelBezierCurve, type Bezier } from '../../app/canvas/parallel-bezier-curve.ts';
-import { GraphPath2DCreator, GraphDataManager, FirebaseGraphRepository } from './data-manager.ts';
+import { GraphDataManager, FirebaseGraphRepository } from './data-manager.ts';
 
 
 const unsetPopover = css`

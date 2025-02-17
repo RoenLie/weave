@@ -112,6 +112,18 @@ export class WorkerView {
 		const bgOffscreen = bgCanvas.transferControlToOffscreen();
 		const mainOffscreen = mainCanvas.transferControlToOffscreen();
 
+		// Maybe a proxied worker can let us more easily work with the message api?
+		const workerProxy = new Proxy(this.worker, {
+			get(target: any, p, receiver) {
+				if (typeof target[p] === 'function')
+					return target[p].bind(target);
+
+				return Reflect.get(target, p, receiver);
+			},
+		});
+		console.log(workerProxy);
+
+
 		this.worker.postMessage(
 			{ type: 'init', bg: bgOffscreen, main: mainOffscreen },
 			[ bgOffscreen, mainOffscreen ],
