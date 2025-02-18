@@ -1,19 +1,19 @@
 import type { Repeat, Vec2 } from '@roenlie/core/types';
 import { GraphConnection, GraphNode } from '../../app/graph/graph.ts';
 import { isOutsideViewport } from '../../app/canvas/is-outside-viewport.ts';
-import { Canvas2DObject } from './canvas-object.ts';
+import { Canvas2DObject } from './utils/canvas-object.ts';
 import { oneOf } from '@roenlie/core/validation';
-import { PoeCanvasPassiveBase } from './canvas-passive-base.ts';
+import { PoeCanvasBase } from './canvas-base.ts';
 import { html } from 'lit-html';
 import { when } from 'lit-html/directives/when.js';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import { nodeDataCatalog, type NodeData, type NodeDataCatalog } from '../../app/graph/node-catalog.ts';
 import { map } from 'lit-html/directives/map.js';
-import { FirebaseGraphRepository, GraphDataManager } from './data-manager.ts';
+import { FirebaseGraphRepository, GraphDataManager } from './utils/data-manager.ts';
 import { View } from '../../app/canvas/canvas-view.ts';
 
 
-export class PoeCanvasTree extends PoeCanvasPassiveBase {
+export class PoeCanvasTree extends PoeCanvasBase {
 
 	static { this.register('poe-canvas-editor'); }
 

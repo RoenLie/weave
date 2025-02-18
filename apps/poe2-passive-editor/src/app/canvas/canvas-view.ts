@@ -1,8 +1,6 @@
 import type { Vec2 } from '@roenlie/core/types';
 import type { Viewport } from './is-outside-viewport.ts';
-import CanvasWorker from './canvas-worker.ts?worker';
-import type { GraphConnection, GraphNode } from '../graph/graph.ts';
-import type { CanvasWorkerMessages } from './canvas-worker.ts';
+import type { CanvasWorkerApiIn } from './canvas-worker-base.ts';
 
 
 export class View {
@@ -104,84 +102,43 @@ export class View {
 }
 
 
-export class WorkerView {
-
-	public worker: Worker = new CanvasWorker();
-
-	public init(bgCanvas: HTMLCanvasElement, mainCanvas: HTMLCanvasElement) {
-		const bgOffscreen = bgCanvas.transferControlToOffscreen();
-		const mainOffscreen = mainCanvas.transferControlToOffscreen();
-
-		// Maybe a proxied worker can let us more easily work with the message api?
-		const workerProxy = new Proxy(this.worker, {
-			get(target: any, p, receiver) {
-				if (typeof target[p] === 'function')
-					return target[p].bind(target);
-
-				return Reflect.get(target, p, receiver);
-			},
-		});
-		console.log(workerProxy);
+type WorkerMethods = {
+	[key in keyof CanvasWorkerApiIn]: (args: Omit<CanvasWorkerApiIn[key], 'type'>) => void;
+} & {
+	init: (bg: HTMLCanvasElement, main: HTMLCanvasElement) => void;
+};
 
 
-		this.worker.postMessage(
-			{ type: 'init', bg: bgOffscreen, main: mainOffscreen },
-			[ bgOffscreen, mainOffscreen ],
-		);
-	};
+export const canvasWorker = (ctor: new() => Worker): Worker & WorkerMethods => {
+	const proxy = new Proxy(new ctor(), {
+		get(target: Worker & Record<keyof any, any>, p, receiver) {
+			if (typeof target[p] === 'function')
+				return target[p].bind(target);
 
-	public setSize(width: number, height: number) {
-		const msg: CanvasWorkerMessages['setSize'] = { type: 'setSize', width, height };
-		this.worker.postMessage(msg);
-	}
+			if (p === 'init') {
+				return (bgCanvas: HTMLCanvasElement, mainCanvas: HTMLCanvasElement) => {
+					const bgOffscreen = bgCanvas.transferControlToOffscreen();
+					const mainOffscreen = mainCanvas.transferControlToOffscreen();
 
-	public setArea(width: number, height: number) {
-		this.worker.postMessage({ type: 'setArea', width, height });
-	}
+					target.postMessage(
+						{ type: 'init', bg: bgOffscreen, main: mainOffscreen },
+						[ bgOffscreen, mainOffscreen ],
+					);
+				};
+			}
 
-	public initBackground() {
-		this.worker.postMessage({ type: 'initBackground' });
-	}
+			if (!Reflect.has(target, p)) {
+				return (args: any) => {
+					target.postMessage({
+						type: p,
+						...args,
+					});
+				};
+			}
 
-	public transferNodes(nodes: Map<string, GraphNode>) {
-		this.worker.postMessage({ type: 'transferNodes', nodes });
-	}
+			return Reflect.get(target, p, receiver);
+		},
+	});
 
-	public transferConnections(connections: Map<string, GraphConnection>) {
-		this.worker.postMessage({ type: 'transferConnections', connections });
-	}
-
-	public scaleAt(vec: Vec2, factor: number) {
-		this.worker.postMessage({ type: 'scaleAt', vec, factor });
-	};
-
-	public moveTo(x: number, y: number) {
-		this.worker.postMessage({ type: 'moveTo', x, y });
-	};
-
-	public async getPosition() {
-		return new Promise<Vec2>(resolve => {
-			this.worker.addEventListener('message', (ev) => {
-				const { data } = ev;
-				if (data.id === id)
-					resolve(data.position);
-			});
-
-			const id = crypto.randomUUID();
-			this.worker.postMessage({ type: 'getPosition', id });
-		});
-	}
-
-	public selectNode(id: string) {
-		this.worker.postMessage({ type: 'setSelectedNode', id });
-	}
-
-	public mousedown(args: CanvasWorkerMessages['mousedown']) {
-		this.worker.postMessage(args);
-	}
-
-	public mousemove(args: CanvasWorkerMessages['mousemove']) {
-		this.worker.postMessage(args);
-	}
-
-}
+	return proxy as Worker & WorkerMethods;
+};

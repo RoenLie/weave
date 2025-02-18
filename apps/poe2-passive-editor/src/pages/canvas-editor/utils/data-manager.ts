@@ -1,11 +1,11 @@
 import { maybe, resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
-import { GraphConnection, GraphNode, type StorableGraphConnection, type StorableGraphNode } from '../../app/graph/graph.ts';
+import { GraphConnection, GraphNode, type StorableGraphConnection, type StorableGraphNode } from '../../../app/graph/graph.ts';
 import { getGraphConnectionsQry, getGraphNodes, graphConnectionCollection, graphNodeCollection, type ConnectionChunk, type NodeChunk } from './firebase-queries.ts';
 import { addDoc, collection, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../app/firebase.ts';
+import { db } from '../../../app/firebase.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { Canvas2DObject } from './canvas-object.ts';
-import type { NodeData } from '../../app/graph/node-catalog.ts';
+import type { NodeData } from '../../../app/graph/node-catalog.ts';
 
 
 interface NodeChunkRef { chunkId: string; nodeId: string; }

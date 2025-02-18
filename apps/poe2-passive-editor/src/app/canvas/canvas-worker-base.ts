@@ -2,9 +2,9 @@ import type { Vec2 } from '@roenlie/core/types';
 import { isOutsideViewport, type Viewport } from './is-outside-viewport.ts';
 import type { GraphConnection, GraphNode, StringVec2 } from '../graph/graph.ts';
 import { range } from '@roenlie/core/array';
-import { getWorkerBackgroundChunk } from '../../pages/canvas-editor/image-assets.ts';
+import { getWorkerBackgroundChunk } from '../../pages/canvas-editor/utils/image-assets.ts';
 import { doRectsOverlap, getPathReduction } from './path-helpers.ts';
-import { Canvas2DObject } from '../../pages/canvas-editor/canvas-object.ts';
+import { Canvas2DObject } from '../../pages/canvas-editor/utils/canvas-object.ts';
 import { drawParallelBezierCurve, type Bezier } from './parallel-bezier-curve.ts';
 
 
@@ -109,12 +109,8 @@ class WorkerView {
 }
 
 
-export interface CanvasWorkerMessages {
-	init: {
-		type: 'init',
-		main: OffscreenCanvas,
-		bg:   OffscreenCanvas
-	};
+/** Functions available from the main thread to the worker. */
+export interface CanvasWorkerApiIn {
 	setSize: {
 		type:   'setSize',
 		width:  number,
@@ -174,8 +170,11 @@ export interface CanvasWorkerMessages {
 	};
 }
 
+/** Functions available from the worker to the main thread. */
+export interface CanvasWorkerApiOut {}
 
-class Host {
+
+export class CanvasWorkerReader {
 
 	protected bgView:        WorkerView;
 	protected mainView:      WorkerView;
@@ -194,96 +193,116 @@ class Host {
 	protected selectedNode: GraphNode | undefined;
 	protected hoveredNode:  GraphNode | undefined;
 
-	public onmessage(ev: MessageEvent<CanvasWorkerMessages[keyof CanvasWorkerMessages]>) {
-		//console.log(ev);
+	public onmessage(ev: MessageEvent<CanvasWorkerApiIn[keyof CanvasWorkerApiIn]>) {
+		const fn = (this as any)[ev.data.type];
+		if (typeof fn !== 'function')
+			return console.error(`Unknown message type: ${ ev.data.type }`);
 
-		switch (ev.data.type) {
-		case 'init': {
-			this.bgView = new WorkerView(ev.data.bg);
-			this.mainView = new WorkerView(ev.data.main);
-			break;
-		}
-		case 'setSize': {
-			this.bgView.setCanvasSize(ev.data.width, ev.data.height);
-			this.mainView.setCanvasSize(ev.data.width, ev.data.height);
-
-			this.drawBackground();
-			this.drawMain();
-			break;
-		}
-		case 'setArea': {
-			this.bgView.setTotalArea(ev.data.width, ev.data.height);
-			this.mainView.setTotalArea(ev.data.width, ev.data.height);
-			break;
-		}
-		case 'transferNodes': {
-			this.nodes = ev.data.nodes;
-			break;
-		}
-		case 'transferConnections': {
-			this.connections = ev.data.connections;
-			break;
-		}
-		case 'initBackground': {
-			this.initBackground();
-			break;
-		}
-		case 'moveTo': {
-			this.bgView.moveTo(ev.data.x, ev.data.y);
-			this.mainView.moveTo(ev.data.x, ev.data.y);
-
-			postMessage({
-				type:     'update-position',
-				position: this.bgView.position,
-				viewport: this.bgView.viewport,
-				scale:    this.bgView.scale,
-			});
-
-			this.drawBackground();
-			this.drawMain();
-			break;
-		}
-		case 'scaleAt': {
-			this.bgView.scaleAt(ev.data.vec, ev.data.factor);
-			this.mainView.scaleAt(ev.data.vec, ev.data.factor);
-
-			postMessage({
-				type:     'update-position',
-				position: this.bgView.position,
-				viewport: this.bgView.viewport,
-				scale:    this.bgView.scale,
-			});
-
-			this.drawBackground();
-			this.drawMain();
-			break;
-		}
-		case 'getPosition': {
-			postMessage({ id: ev.data.id, position: this.bgView.position });
-			break;
-		}
-		case 'mousedown': {
-			this.onMousedown(ev.data);
-			break;
-		}
-		case 'mousemove': {
-			this.onMousemove(ev.data);
-			break;
-		}
-		case 'draw': {
-			this.bgView.applyTransform();
-			break;
-		}
-		}
+		(this as any)[ev.data.type]?.(ev.data);
 	}
 
-	protected onMousedown(args: CanvasWorkerMessages['mousedown']) {
+	//#region Message Handlers
+	protected init(data: {
+		type: 'init',
+		main: OffscreenCanvas,
+		bg:   OffscreenCanvas
+	}) {
+		this.bgView = new WorkerView(data.bg);
+		this.mainView = new WorkerView(data.main);
+	}
+
+	protected setSize(data: CanvasWorkerApiIn['setSize']) {
+		this.bgView.setCanvasSize(data.width, data.height);
+		this.mainView.setCanvasSize(data.width, data.height);
+
+		this.drawBackground();
+		this.drawMain();
+	}
+
+	protected setArea(data: CanvasWorkerApiIn['setArea']) {
+		this.bgView.setTotalArea(data.width, data.height);
+		this.mainView.setTotalArea(data.width, data.height);
+	}
+
+	protected transferNodes(data: CanvasWorkerApiIn['transferNodes']) {
+		this.nodes = data.nodes;
+	}
+
+	protected transferConnections(data: CanvasWorkerApiIn['transferConnections']) {
+		this.connections = data.connections;
+	}
+
+	protected initBackground(_data: CanvasWorkerApiIn['initBackground']) {
+		this.images = range(0, 100).map(i => {
+			return {
+				x:        (i % 10) * this.chunkSize,
+				y:        Math.floor(i / 10) * this.chunkSize,
+				image:    undefined,
+				getImage: () => getWorkerBackgroundChunk(i),
+			};
+		});
+
+		const imageSize = this.imageSize;
+		const parentWidth = this.bgView.canvas.width;
+		const parentHeight = this.bgView.canvas.height;
+		const y = parentHeight / 2 - imageSize / 2;
+		const x = parentWidth  / 2 - imageSize  / 2;
+
+		this.bgView.moveTo(x, y);
+		this.mainView.moveTo(x, y);
+
+		postMessage({
+			type:     'update-position',
+			position: this.bgView.position,
+			viewport: this.bgView.viewport,
+			scale:    this.bgView.scale,
+		});
+
+		this.drawBackground();
+		this.drawMain();
+	}
+
+	protected moveTo(data: CanvasWorkerApiIn['moveTo']) {
+		this.bgView.moveTo(data.x, data.y);
+		this.mainView.moveTo(data.x, data.y);
+
+		postMessage({
+			type:     'update-position',
+			position: this.bgView.position,
+			viewport: this.bgView.viewport,
+			scale:    this.bgView.scale,
+		});
+
+		this.drawBackground();
+		this.drawMain();
+	}
+
+	protected scaleAt(data: CanvasWorkerApiIn['scaleAt']) {
+		this.bgView.scaleAt(data.vec, data.factor);
+		this.mainView.scaleAt(data.vec, data.factor);
+
+		postMessage({
+			type:     'update-position',
+			position: this.bgView.position,
+			viewport: this.bgView.viewport,
+			scale:    this.bgView.scale,
+		});
+
+		this.drawBackground();
+		this.drawMain();
+	}
+
+	protected getPosition(data: CanvasWorkerApiIn['getPosition']) {
+		postMessage({ id: data.id, position: this.bgView.position });
+	}
+
+	protected mousedown(data: CanvasWorkerApiIn['mousedown']) {
 		// Get the offset from the corner of the current view to the mouse position
 		const position = this.bgView.position;
-		const viewOffsetX = args.offsetX - position.x;
-		const viewOffsetY = args.offsetY - position.y;
+		const viewOffsetX = data.offsetX - position.x;
+		const viewOffsetY = data.offsetY - position.y;
 
-		const vec = { x: args.offsetX, y: args.offsetY };
+		const vec = { x: data.offsetX, y: data.offsetY };
 		// Try to find a node at the mouse position
 		const node = this.getGraphNode(vec);
 
@@ -314,11 +333,11 @@ class Host {
 		}
 	}
 
-	protected onMousemove(args: CanvasWorkerMessages['mousemove']) {
-		const vec = { x: args.offsetX, y: args.offsetY };
+	protected mousemove(data: CanvasWorkerApiIn['mousemove']) {
+		const vec = { x: data.offsetX, y: data.offsetY };
 		const node = this.getGraphNode(vec);
 
-		if (args.altKey || args.metaKey)
+		if (data.altKey || data.metaKey)
 			return;
 
 		// Remove the hover effect if no node, or a new node is hovered
@@ -343,6 +362,11 @@ class Host {
 		}
 	}
 
+	protected draw(_data: CanvasWorkerApiIn['draw']) {
+		this.bgView.applyTransform();
+	}
+	//#endregion
+
 	protected getGraphNode(vec: Vec2): GraphNode | undefined {
 		const nodes = this.nodes;
 
@@ -365,36 +389,6 @@ class Host {
 		const { x1, x2, y1, y2 } = this.bgView.viewport;
 
 		return doRectsOverlap([ dx1, dy1, dx2, dy2 ], [ x1, y1, x2, y2 ]);
-	}
-
-	protected initBackground() {
-		this.images = range(0, 100).map(i => {
-			return {
-				x:        (i % 10) * this.chunkSize,
-				y:        Math.floor(i / 10) * this.chunkSize,
-				image:    undefined,
-				getImage: () => getWorkerBackgroundChunk(i),
-			};
-		});
-
-		const imageSize = this.imageSize;
-		const parentWidth = this.bgView.canvas.width;
-		const parentHeight = this.bgView.canvas.height;
-		const y = parentHeight / 2 - imageSize / 2;
-		const x = parentWidth  / 2 - imageSize  / 2;
-
-		this.bgView.moveTo(x, y);
-		this.mainView.moveTo(x, y);
-
-		postMessage({
-			type:     'update-position',
-			position: this.bgView.position,
-			viewport: this.bgView.viewport,
-			scale:    this.bgView.scale,
-		});
-
-		this.drawBackground();
-		this.drawMain();
 	}
 
 	protected drawBackground() {
@@ -564,9 +558,6 @@ class Host {
 
 }
 
+export class CanvasWorkerEditor extends CanvasWorkerReader {
 
-const host = new Host();
-onmessage = host.onmessage.bind(host);
-
-
-export const HELLODOME = 'HELLODOME';
+}

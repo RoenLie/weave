@@ -4,10 +4,11 @@ import type { Vec2 } from '@roenlie/core/types';
 import { GraphNode } from '../../app/graph/graph.ts';
 import { type Viewport } from '../../app/canvas/is-outside-viewport.ts';
 import { CustomElement } from '../../app/custom-element/custom-element.ts';
-import { WorkerView } from '../../app/canvas/canvas-view.ts';
+import { canvasWorker } from '../../app/canvas/canvas-view.ts';
+import CanvasWorkerReader from '../../app/canvas/canvas-worker-reader.ts?worker';
 import { when } from 'lit-html/directives/when.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
-import { GraphDataManager, FirebaseGraphRepository } from './data-manager.ts';
+import { GraphDataManager, FirebaseGraphRepository } from './utils/data-manager.ts';
 
 
 const unsetPopover = css`
@@ -23,7 +24,7 @@ color:    unset;
 `;
 
 
-export class PoeCanvasPassiveBase extends CustomElement {
+export class PoeCanvasBase extends CustomElement {
 
 	@signal protected accessor selectedNode: GraphNode | undefined;
 	@signal protected accessor hoveredNode:  GraphNode | undefined;
@@ -32,14 +33,14 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	protected viewport: Viewport | undefined;
 	protected scale:    number | undefined;
 
-	protected readonly imageSize:  number = 13000;
-	protected readonly workerView: WorkerView = new WorkerView();
+	protected readonly imageSize: number = 13000;
+	protected readonly worker = canvasWorker(CanvasWorkerReader);
 	protected readonly dataManager = new GraphDataManager(new FirebaseGraphRepository());
 	protected readonly resizeObserver = new ResizeObserver(([ entry ]) => {
 		if (!entry)
 			return;
 
-		this.workerView.setSize(entry.contentRect.width, entry.contentRect.height);
+		this.worker.setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
 	});
 
 	protected override connectedCallback(): void {
@@ -57,7 +58,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	protected override disconnectedCallback(): void {
 		super.disconnectedCallback();
 
-		this.workerView.worker.removeEventListener('message', this.onStartViewMove);
+		this.worker.removeEventListener('message', this.onStartViewMove);
 		this.resizeObserver.unobserve(this);
 	}
 
@@ -77,18 +78,18 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		const bgCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#background')!;
 		const mainCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#main')!;
 
-		this.workerView.worker.addEventListener('message', this.onUpdatePosition);
-		this.workerView.worker.addEventListener('message', this.onStartViewMove);
-		this.workerView.worker.addEventListener('message', this.onOpenTooltip);
-		this.workerView.worker.addEventListener('message', this.onCloseTooltip);
+		this.worker.addEventListener('message', this.onUpdatePosition);
+		this.worker.addEventListener('message', this.onStartViewMove);
+		this.worker.addEventListener('message', this.onOpenTooltip);
+		this.worker.addEventListener('message', this.onCloseTooltip);
 
-		this.workerView.transferNodes(this.dataManager.nodes);
-		this.workerView.transferConnections(this.dataManager.connections);
+		this.worker.transferNodes({ nodes: this.dataManager.nodes });
+		this.worker.transferConnections({ connections: this.dataManager.connections });
 
-		this.workerView.init(bgCanvas, mainCanvas);
-		this.workerView.setSize(this.offsetWidth, this.offsetHeight);
-		this.workerView.setArea(this.imageSize, this.imageSize);
-		this.workerView.initBackground();
+		this.worker.init(bgCanvas, mainCanvas);
+		this.worker.setSize({ width: this.offsetWidth, height: this.offsetHeight });
+		this.worker.setArea({ width: this.imageSize, height: this.imageSize });
+		this.worker.initBackground({});
 
 		this.resizeObserver.observe(this);
 	}
@@ -121,7 +122,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 			const x = moveEv.offsetX - deltaX - viewOffsetX;
 			const y = moveEv.offsetY - deltaY - viewOffsetY;
 
-			this.workerView.moveTo(x, y);
+			this.worker.moveTo({ x, y });
 		};
 		const mouseup = () => {
 			removeEventListener('mousemove', mousemove);
@@ -147,8 +148,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 	};
 
 	protected onMousemove(ev: MouseEvent) {
-		this.workerView.mousemove({
-			type:     'mousemove',
+		this.worker.mousemove({
 			offsetX:  ev.offsetX,
 			offsetY:  ev.offsetY,
 			altKey:   ev.altKey,
@@ -164,9 +164,9 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		const vec = { x: ev.offsetX, y: ev.offsetY };
 
 		if (-ev.deltaY > 0)
-			this.workerView.scaleAt(vec, 1.1);
+			this.worker.scaleAt({ vec, factor: 1.1 });
 		else
-			this.workerView.scaleAt(vec, 1 / 1.1);
+			this.worker.scaleAt({ vec, factor: 1 / 1.1 });
 	}
 
 	protected onMousedown(downEv: MouseEvent) {
@@ -176,8 +176,7 @@ export class PoeCanvasPassiveBase extends CustomElement {
 		downEv.preventDefault();
 		this.focus();
 
-		this.workerView.mousedown({
-			type:     'mousedown',
+		this.worker.mousedown({
 			buttons:  downEv.buttons,
 			offsetX:  downEv.offsetX,
 			offsetY:  downEv.offsetY,

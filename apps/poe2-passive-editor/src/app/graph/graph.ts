@@ -1,4 +1,4 @@
-import type { Canvas2DObject } from '../../pages/canvas-editor/canvas-object.ts';
+import type { Canvas2DObject } from '../../pages/canvas-editor/utils/canvas-object.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { getPathReduction } from '../canvas/path-helpers.ts';
 import { allDataNodes, type NodeData } from './node-catalog.ts';
