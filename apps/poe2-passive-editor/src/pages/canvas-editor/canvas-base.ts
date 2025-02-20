@@ -60,7 +60,8 @@ export class PoeCanvasBase extends CustomElement {
 	protected override disconnectedCallback(): void {
 		super.disconnectedCallback();
 
-		this.worker.removeEventListener('message', this.onStartViewMove);
+		this.worker.removeEventListener('message', this.boundWorkerMessage);
+
 		this.resizeObserver.unobserve(this);
 	}
 
@@ -80,7 +81,7 @@ export class PoeCanvasBase extends CustomElement {
 		const bgCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#background')!;
 		const mainCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#main')!;
 
-		this.worker.addEventListener('message', this.onWorkerMessage.bind(this));
+		this.worker.addEventListener('message', this.boundWorkerMessage);
 
 		this.worker.transferChunks({
 			nodeChunks:       this.dataManager.nodeChunks,
@@ -94,6 +95,8 @@ export class PoeCanvasBase extends CustomElement {
 
 		this.resizeObserver.observe(this);
 	}
+
+	protected boundWorkerMessage = (ev: MessageEvent) => this.onWorkerMessage(ev);
 
 	/**
 	 * Called on message from the worker.\
