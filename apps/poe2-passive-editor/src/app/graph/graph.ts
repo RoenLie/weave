@@ -1,4 +1,4 @@
-import type { Canvas2DObject } from '../../pages/canvas-editor/utils/canvas-object.ts';
+import type { Canvas2DObject } from '../canvas/canvas-object.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { getPathReduction } from '../canvas/path-helpers.ts';
 import { allDataNodes, type NodeData } from './node-catalog.ts';
@@ -92,26 +92,55 @@ export class GraphConnection {
 
 export class GraphNode implements Vec2 {
 
+	public static sizes: number[] = [ 24, 36, 56 ];
+
 	public static isGraphNode(obj: any): obj is GraphNode {
 		return obj instanceof GraphNode;
 	}
 
-	constructor(
-		storable: Partial<StorableGraphNode>
-			& Pick<StorableGraphNode, 'x' | 'y'>,
-	) {
+	public static toStorable(node: GraphNode): StorableGraphNode {
+		return {
+			id:          node.id,
+			updated:     node.updated,
+			x:           node.x,
+			y:           node.y,
+			radius:      node.radius,
+			connections: node.connections.values().map(c => c.id).toArray(),
+			data:        node.data?.id ?? '',
+		};
+	}
+
+	public static fromVec2(vec: Vec2): GraphNode {
+		const { x, y } = vec;
+		const node = new GraphNode();
+		node.x = x;
+		node.y = y;
+
+		node.id = crypto.randomUUID();
+		node.updated = new Date().toISOString();
+
+		node.radius = this.sizes[0]!;
+		node.connectionIds = [];
+
+		return node;
+	}
+
+	public static fromStorable(storable: StorableGraphNode) {
 		const { x, y, id, radius, updated } = storable;
+		const node = new GraphNode();
 
-		this.id = id || crypto.randomUUID();
-		this.updated = updated || new Date().toISOString();
+		node.id = id || crypto.randomUUID();
+		node.updated = updated || new Date().toISOString();
 
-		this.x  = x;
-		this.y  = y;
-		this.radius = radius || this.sizes[0]!;
-		this.connectionIds = storable.connections || [];
+		node.x  = x;
+		node.y  = y;
+		node.radius = radius || this.sizes[0]!;
+		node.connectionIds = storable.connections || [];
 
 		if (storable.data)
-			this.data = allDataNodes.get(storable.data);
+			node.data = allDataNodes.get(storable.data);
+
+		return node;
 	}
 
 	public id:          string;

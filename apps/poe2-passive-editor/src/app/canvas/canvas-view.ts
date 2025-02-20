@@ -1,6 +1,5 @@
 import type { Vec2 } from '@roenlie/core/types';
 import type { Viewport } from './is-outside-viewport.ts';
-import type { CanvasWorkerApiIn } from './canvas-worker-base.ts';
 
 
 export class View {
@@ -100,45 +99,3 @@ export class View {
 	};
 
 }
-
-
-type WorkerMethods = {
-	[key in keyof CanvasWorkerApiIn]: (args: Omit<CanvasWorkerApiIn[key], 'type'>) => void;
-} & {
-	init: (bg: HTMLCanvasElement, main: HTMLCanvasElement) => void;
-};
-
-
-export const canvasWorker = (ctor: new() => Worker): Worker & WorkerMethods => {
-	const proxy = new Proxy(new ctor(), {
-		get(target: Worker & Record<keyof any, any>, p, receiver) {
-			if (typeof target[p] === 'function')
-				return target[p].bind(target);
-
-			if (p === 'init') {
-				return (bgCanvas: HTMLCanvasElement, mainCanvas: HTMLCanvasElement) => {
-					const bgOffscreen = bgCanvas.transferControlToOffscreen();
-					const mainOffscreen = mainCanvas.transferControlToOffscreen();
-
-					target.postMessage(
-						{ type: 'init', bg: bgOffscreen, main: mainOffscreen },
-						[ bgOffscreen, mainOffscreen ],
-					);
-				};
-			}
-
-			if (!Reflect.has(target, p)) {
-				return (args: any) => {
-					target.postMessage({
-						type: p,
-						...args,
-					});
-				};
-			}
-
-			return Reflect.get(target, p, receiver);
-		},
-	});
-
-	return proxy as Worker & WorkerMethods;
-};

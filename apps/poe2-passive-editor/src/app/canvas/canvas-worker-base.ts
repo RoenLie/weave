@@ -1,11 +1,12 @@
-import type { Vec2 } from '@roenlie/core/types';
+import type { Repeat, Vec2 } from '@roenlie/core/types';
 import { isOutsideViewport, type Viewport } from './is-outside-viewport.ts';
-import type { GraphConnection, GraphNode, StringVec2 } from '../graph/graph.ts';
+import { GraphConnection, GraphNode, type StorableGraphNode, type StringVec2 } from '../graph/graph.ts';
 import { range } from '@roenlie/core/array';
-import { getWorkerBackgroundChunk } from '../../pages/canvas-editor/utils/image-assets.ts';
+import { getWorkerImageChunk } from './image-assets.ts';
 import { doRectsOverlap, getPathReduction } from './path-helpers.ts';
-import { Canvas2DObject } from '../../pages/canvas-editor/utils/canvas-object.ts';
+import { Canvas2DObject } from './canvas-object.ts';
 import { drawParallelBezierCurve, type Bezier } from './parallel-bezier-curve.ts';
+import type { ConnectionChunk, NodeChunk } from '../../pages/canvas-editor/utils/firebase-queries.ts';
 
 
 class WorkerView {
@@ -109,8 +110,27 @@ class WorkerView {
 }
 
 
+type MakeObjectTransferable<T extends object> = {
+	-readonly [Key in keyof T as T[Key] extends (string | number | boolean) ? Key : never]: T[Key];
+};
+
+export type TransferableMouseEvent = MakeObjectTransferable<MouseEvent>;
+
+export const makeObjectTransferable = <T extends object>(obj: T): MakeObjectTransferable<T> => {
+	const cloned = {} as MakeObjectTransferable<T>;
+	for (const key in obj) {
+		const value = obj[key as keyof typeof obj]!;
+		const type = typeof value;
+		if (type === 'string' || type === 'number' || type === 'boolean')
+			(cloned as any)[key] = value;
+	}
+
+	return cloned;
+};
+
+
 /** Functions available from the main thread to the worker. */
-export interface CanvasWorkerApiIn {
+export interface CanvasReaderWorkerApiIn {
 	setSize: {
 		type:   'setSize',
 		width:  number,
@@ -124,13 +144,10 @@ export interface CanvasWorkerApiIn {
 	initBackground: {
 		type: 'initBackground'
 	};
-	transferNodes: {
-		type:  'transferNodes',
-		nodes: Map<string, GraphNode>
-	};
-	transferConnections: {
-		type:        'transferConnections',
-		connections: Map<string, GraphConnection>
+	transferChunks: {
+		type:             'transferChunks';
+		nodeChunks:       NodeChunk[];
+		connectionChunks: ConnectionChunk[];
 	};
 	moveTo: {
 		type: 'moveTo',
@@ -147,23 +164,12 @@ export interface CanvasWorkerApiIn {
 		id:   number
 	};
 	mousedown: {
-		type:     'mousedown';
-		buttons:  number;
-		offsetX:  number;
-		offsetY:  number;
-		altKey:   boolean;
-		ctrlKey:  boolean;
-		metaKey:  boolean;
-		shiftKey: boolean;
+		type:  'mousedown';
+		event: TransferableMouseEvent;
 	}
 	mousemove: {
-		type:     'mousemove';
-		offsetX:  number;
-		offsetY:  number;
-		altKey:   boolean;
-		ctrlKey:  boolean;
-		metaKey:  boolean;
-		shiftKey: boolean;
+		type:  'mousemove';
+		event: TransferableMouseEvent;
 	};
 	draw: {
 		type: 'draw'
@@ -171,10 +177,42 @@ export interface CanvasWorkerApiIn {
 }
 
 /** Functions available from the worker to the main thread. */
-export interface CanvasWorkerApiOut {}
+export interface CanvasReaderWorkerApiOut {
+	updatePosition: {
+		type:     'updatePosition',
+		position: Vec2,
+		viewport: Viewport,
+		scale:    number,
+	}
+	startViewMove: {
+		type:          'startViewMove',
+		initialMouseX: number,
+		initialMouseY: number,
+		offsetX:       number,
+		offsetY:       number,
+	}
+	selectNode: {
+		type:   'selectNode',
+		nodeId: string,
+	}
+	openTooltip: {
+		type:   'openTooltip',
+		nodeId: string,
+		node:   StorableGraphNode;
+	}
+	closeTooltip: {
+		type:   'closeTooltip',
+		nodeId: string,
+	}
+}
 
 
-export class CanvasWorkerReader {
+type WorkerReaderMethods = {
+	[key in keyof CanvasReaderWorkerApiIn]: (args: CanvasReaderWorkerApiIn[key]) => void;
+};
+
+
+export class CanvasWorkerReader implements WorkerReaderMethods {
 
 	protected bgView:        WorkerView;
 	protected mainView:      WorkerView;
@@ -193,7 +231,8 @@ export class CanvasWorkerReader {
 	protected selectedNode: GraphNode | undefined;
 	protected hoveredNode:  GraphNode | undefined;
 
-	public onmessage(ev: MessageEvent<CanvasWorkerApiIn[keyof CanvasWorkerApiIn]>) {
+	//#region Message Handlers
+	public onmessage(ev: MessageEvent<CanvasReaderWorkerApiIn[keyof CanvasReaderWorkerApiIn]>) {
 		const fn = (this as any)[ev.data.type];
 		if (typeof fn !== 'function')
 			return console.error(`Unknown message type: ${ ev.data.type }`);
@@ -201,8 +240,7 @@ export class CanvasWorkerReader {
 		(this as any)[ev.data.type]?.(ev.data);
 	}
 
-	//#region Message Handlers
-	protected init(data: {
+	public init(data: {
 		type: 'init',
 		main: OffscreenCanvas,
 		bg:   OffscreenCanvas
@@ -211,7 +249,7 @@ export class CanvasWorkerReader {
 		this.mainView = new WorkerView(data.main);
 	}
 
-	protected setSize(data: CanvasWorkerApiIn['setSize']) {
+	public setSize(data: CanvasReaderWorkerApiIn['setSize']) {
 		this.bgView.setCanvasSize(data.width, data.height);
 		this.mainView.setCanvasSize(data.width, data.height);
 
@@ -219,26 +257,29 @@ export class CanvasWorkerReader {
 		this.drawMain();
 	}
 
-	protected setArea(data: CanvasWorkerApiIn['setArea']) {
+	public setArea(data: CanvasReaderWorkerApiIn['setArea']) {
 		this.bgView.setTotalArea(data.width, data.height);
 		this.mainView.setTotalArea(data.width, data.height);
 	}
 
-	protected transferNodes(data: CanvasWorkerApiIn['transferNodes']) {
-		this.nodes = data.nodes;
+	public transferChunks(data: CanvasReaderWorkerApiIn['transferChunks']) {
+		const nodes = data.nodeChunks.flatMap(chunk => chunk.nodes);
+		const connections = data.connectionChunks.flatMap(chunk => chunk.connections);
+
+		this.nodes = new Map(nodes.map(node => [ node.id, GraphNode.fromStorable(node) ]));
+		this.connections = new Map(connections.map(con => [ con.id, new GraphConnection(this.nodes, con) ]));
+
+		for (const node of this.nodes.values())
+			node.mapConnections(this.connections);
 	}
 
-	protected transferConnections(data: CanvasWorkerApiIn['transferConnections']) {
-		this.connections = data.connections;
-	}
-
-	protected initBackground(_data: CanvasWorkerApiIn['initBackground']) {
+	public initBackground(_data: CanvasReaderWorkerApiIn['initBackground']) {
 		this.images = range(0, 100).map(i => {
 			return {
 				x:        (i % 10) * this.chunkSize,
 				y:        Math.floor(i / 10) * this.chunkSize,
 				image:    undefined,
-				getImage: () => getWorkerBackgroundChunk(i),
+				getImage: () => getWorkerImageChunk(i),
 			};
 		});
 
@@ -252,92 +293,89 @@ export class CanvasWorkerReader {
 		this.mainView.moveTo(x, y);
 
 		postMessage({
-			type:     'update-position',
+			type:     'updatePosition',
 			position: this.bgView.position,
 			viewport: this.bgView.viewport,
 			scale:    this.bgView.scale,
-		});
+		} satisfies CanvasReaderWorkerApiOut['updatePosition']);
 
 		this.drawBackground();
 		this.drawMain();
 	}
 
-	protected moveTo(data: CanvasWorkerApiIn['moveTo']) {
+	public moveTo(data: CanvasReaderWorkerApiIn['moveTo']) {
 		this.bgView.moveTo(data.x, data.y);
 		this.mainView.moveTo(data.x, data.y);
 
 		postMessage({
-			type:     'update-position',
+			type:     'updatePosition',
 			position: this.bgView.position,
 			viewport: this.bgView.viewport,
 			scale:    this.bgView.scale,
-		});
+		} satisfies CanvasReaderWorkerApiOut['updatePosition']);
 
 		this.drawBackground();
 		this.drawMain();
 	}
 
-	protected scaleAt(data: CanvasWorkerApiIn['scaleAt']) {
+	public scaleAt(data: CanvasReaderWorkerApiIn['scaleAt']) {
 		this.bgView.scaleAt(data.vec, data.factor);
 		this.mainView.scaleAt(data.vec, data.factor);
 
 		postMessage({
-			type:     'update-position',
+			type:     'updatePosition',
 			position: this.bgView.position,
 			viewport: this.bgView.viewport,
 			scale:    this.bgView.scale,
-		});
+		} satisfies CanvasReaderWorkerApiOut['updatePosition']);
 
 		this.drawBackground();
 		this.drawMain();
 	}
 
-	protected getPosition(data: CanvasWorkerApiIn['getPosition']) {
+	public getPosition(data: CanvasReaderWorkerApiIn['getPosition']) {
 		postMessage({ id: data.id, position: this.bgView.position });
 	}
 
-	protected mousedown(data: CanvasWorkerApiIn['mousedown']) {
+	public mousedown(data: CanvasReaderWorkerApiIn['mousedown']) {
+		const event = data.event;
+
 		// Get the offset from the corner of the current view to the mouse position
 		const position = this.bgView.position;
-		const viewOffsetX = data.offsetX - position.x;
-		const viewOffsetY = data.offsetY - position.y;
+		const viewOffsetX = event.offsetX - position.x;
+		const viewOffsetY = event.offsetY - position.y;
 
-		const vec = { x: data.offsetX, y: data.offsetY };
+		const vec = { x: event.offsetX, y: event.offsetY };
 		// Try to find a node at the mouse position
 		const node = this.getGraphNode(vec);
 
 		// If we found a node, we want to move it
 		if (node) {
-			// We are clicking on a node
-			if (this.selectedNode?.path) {
-				const node = this.selectedNode;
-				this.selectedNode = undefined;
-				node.path = this.createNodePath2D(node);
-			}
-
-			this.selectedNode = node;
-			node.path = this.createNodePath2D(node);
-
-			this.drawMain();
+			postMessage({
+				type:   'selectNode',
+				nodeId: node.id,
+			} satisfies CanvasReaderWorkerApiOut['selectNode']);
 		}
 		// If we didn't find a node or a connection, we want to pan the view
-		// and create a node if alt/cmd is pressed
 		else {
 			// We setup the mousemove and mouseup events
 			// For panning the view
 			postMessage({
-				type:    'start-view-move',
-				offsetX: viewOffsetX,
-				offsetY: viewOffsetY,
-			});
+				type:          'startViewMove',
+				initialMouseX: event.offsetX,
+				initialMouseY: event.offsetY,
+				offsetX:       viewOffsetX,
+				offsetY:       viewOffsetY,
+			} satisfies CanvasReaderWorkerApiOut['startViewMove']);
 		}
 	}
 
-	protected mousemove(data: CanvasWorkerApiIn['mousemove']) {
-		const vec = { x: data.offsetX, y: data.offsetY };
+	public mousemove(data: CanvasReaderWorkerApiIn['mousemove']) {
+		const event = data.event;
+		const vec = { x: event.offsetX, y: event.offsetY };
 		const node = this.getGraphNode(vec);
 
-		if (data.altKey || data.metaKey)
+		if (event.altKey || event.metaKey)
 			return;
 
 		// Remove the hover effect if no node, or a new node is hovered
@@ -349,7 +387,10 @@ export class CanvasWorkerReader {
 			node.path = this.createNodePath2D(node);
 			this.drawMain();
 
-			postMessage({ type: 'close-tooltip', nodeId: node.id });
+			postMessage({
+				type:   'closeTooltip',
+				nodeId: node.id,
+			} satisfies CanvasReaderWorkerApiOut['closeTooltip']);
 		}
 
 		// Add the hover effect if a node is hovered
@@ -358,11 +399,15 @@ export class CanvasWorkerReader {
 			this.hoveredNode.path = this.createNodePath2D(node);
 			this.drawMain();
 
-			postMessage({ type: 'open-tooltip', nodeId: node.id });
+			postMessage({
+				type:   'openTooltip',
+				nodeId: node.id,
+				node:   GraphNode.toStorable(node),
+			} satisfies CanvasReaderWorkerApiOut['openTooltip']);
 		}
 	}
 
-	protected draw(_data: CanvasWorkerApiIn['draw']) {
+	public draw(_data: CanvasReaderWorkerApiIn['draw']) {
 		this.bgView.applyTransform();
 	}
 	//#endregion
@@ -558,6 +603,282 @@ export class CanvasWorkerReader {
 
 }
 
-export class CanvasWorkerEditor extends CanvasWorkerReader {
+
+export interface CanvasEditorWorkerApiIn extends CanvasReaderWorkerApiIn {
+	selectNode: {
+		type:   'selectNode';
+		nodeId: string;
+	}
+	moveNode: {
+		type:          'moveNode';
+		nodeId:        string;
+		nodeX:         number;
+		nodeY:         number;
+		mouseX:        number;
+		mouseY:        number;
+		initialMouseX: number;
+		initialMouseY: number;
+		boundingX:     number;
+		boundingY:     number;
+		viewPositionX: number;
+		viewPositionY: number;
+		scale:         number;
+	}
+}
+
+export interface CanvasEditorWorkerApiOut extends CanvasReaderWorkerApiOut {
+	updateNode: {
+		type: 'updateNode';
+		node: StorableGraphNode;
+	}
+	startNodeMove: {
+		type:          'startNodeMove',
+		nodeId:        string,
+		nodeX:         number,
+		nodeY:         number,
+		initialMouseX: number,
+		initialMouseY: number,
+		viewPositionX: number,
+		viewPositionY: number,
+		scale:         number,
+	}
+}
+
+
+type WorkerEditorMethods = {
+	[key in keyof CanvasEditorWorkerApiIn]: (args: CanvasEditorWorkerApiIn[key]) => void;
+};
+
+
+export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEditorMethods {
+
+	//#region Message Handlers
+	public override mousedown(data: CanvasReaderWorkerApiIn['mousedown']) {
+		const { event } = data;
+
+		// Get the offset from the corner of the current view to the mouse position
+		const position = this.bgView.position;
+		const viewOffsetX = event.offsetX - position.x;
+		const viewOffsetY = event.offsetY - position.y;
+
+		const vec = { x: event.offsetX, y: event.offsetY };
+		// Try to find a node at the mouse position
+		const node = this.getGraphNode(vec);
+
+		// If we found a node, we want to move it
+		if (node) {
+			postMessage({
+				type:   'selectNode',
+				nodeId: node.id,
+			} satisfies CanvasEditorWorkerApiOut['selectNode']);
+
+			postMessage({
+				type:          'startNodeMove',
+				nodeId:        node.id,
+				nodeX:         node.x,
+				nodeY:         node.y,
+				initialMouseX: event.offsetX,
+				initialMouseY: event.offsetY,
+				viewPositionX: this.bgView.position.x,
+				viewPositionY: this.bgView.position.y,
+				scale:         this.bgView.scale,
+			} satisfies CanvasEditorWorkerApiOut['startNodeMove']);
+		}
+		// If we didn't find a node or a connection, we want to pan the view
+		// and create a node if alt/cmd is pressed
+		else {
+			// We setup the mousemove and mouseup events
+			// For panning the view
+			postMessage({
+				type:          'startViewMove',
+				initialMouseX: event.offsetX,
+				initialMouseY: event.offsetY,
+				offsetX:       viewOffsetX,
+				offsetY:       viewOffsetY,
+			} satisfies CanvasReaderWorkerApiOut['startViewMove']);
+		}
+	}
+
+	public selectNode(data: CanvasEditorWorkerApiIn['selectNode']) {
+		const node = this.nodes.get(data.nodeId);
+		if (!node)
+			return;
+
+		// We are clicking on a node
+		if (this.selectedNode?.path) {
+			const node = this.selectedNode;
+			this.selectedNode = undefined;
+			node.path = this.createNodePath2D(node);
+		}
+
+		this.selectedNode = node;
+		node.path = this.createNodePath2D(node);
+
+		this.drawMain();
+	}
+
+	public moveNode(data: CanvasEditorWorkerApiIn['moveNode']) {
+		const node = this.nodes.get(data.nodeId);
+		if (!node)
+			return;
+
+		const {
+			nodeX,
+			nodeY,
+			initialMouseX,
+			initialMouseY,
+			mouseX,
+			mouseY,
+			boundingX,
+			boundingY,
+			viewPositionX,
+			viewPositionY,
+			scale,
+		} = data;
+
+		const viewOffsetX = initialMouseX - viewPositionX;
+		const viewOffsetY = initialMouseY - viewPositionY;
+
+		//const scale = this.mainView.scale;
+		const realX = viewOffsetX / scale;
+		const realY = viewOffsetY / scale;
+
+		const mouseOffsetX = (realX - nodeX) * scale;
+		const mouseOffsetY = (realY - nodeY) * scale;
+
+		const x = (mouseX - boundingX - viewPositionX - mouseOffsetX) / scale;
+		const y = (mouseY - boundingY - viewPositionY - mouseOffsetY) / scale;
+
+		node.x = x;
+		node.y = y;
+
+		node.path = this.createNodePath2D(node);
+		for (const con of node.connections) {
+			con.path = this.createConnectionPath2D(this.nodes, con);
+			con.pathHandle1 = this.createConnectionHandle2D(con, 1);
+			con.pathHandle2 = this.createConnectionHandle2D(con, 2);
+		}
+
+		postMessage({
+			type: 'update-node',
+			node: GraphNode.toStorable(node),
+		});
+
+		this.drawMain();
+	}
+	//#endregion
+
+
+	/** If found, returns the handle vector at the mouse position. */
+	protected getConnectionHandle(vec: Vec2): Vec2 | undefined {
+		for (const [ , con ] of this.connections) {
+			if (con.pathHandle1) {
+				const isInPath = con.pathHandle1.isPointInPath(this.mainView.context, vec.x, vec.y);
+				if (isInPath)
+					return con.m1;
+			}
+			if (con.pathHandle2) {
+				const isInPath = con.pathHandle2.isPointInPath(this.mainView.context, vec.x, vec.y);
+				if (isInPath)
+					return con.m2;
+			}
+		}
+	}
+
+	protected calculateConnectionAngle(start: Vec2, stop: Vec2) {
+		const deltaX = stop.x - start.x;
+		const deltaY = stop.y - start.y;
+		const angleInRadians = Math.atan2(deltaY, deltaX);
+		const angleInDegrees = angleInRadians * (180 / Math.PI);
+
+		return angleInDegrees;
+	};
+
+	protected rotatePoint(point: Vec2, angleInDegrees: number, origin = { x: 0, y: 0 }) {
+		const angleInRadians = angleInDegrees * (Math.PI / 180);
+		const cosAngle = Math.cos(angleInRadians);
+		const sinAngle = Math.sin(angleInRadians);
+
+		const translatedX = point.x - origin.x;
+		const translatedY = point.y - origin.y;
+
+		const rotatedX = translatedX * cosAngle - translatedY * sinAngle;
+		const rotatedY = translatedX * sinAngle + translatedY * cosAngle;
+
+		return {
+			x: rotatedX + origin.x,
+			y: rotatedY + origin.y,
+		};
+	};
+
+	protected rotateVertices(vertices: Vec2[], angleInDegrees: number, origin = { x: 0, y: 0 }) {
+		return vertices.map(vertex => this.rotatePoint(vertex, angleInDegrees, origin));
+	}
+
+	protected createConnectionHandle2D(con: GraphConnection, handle: 1 | 2) {
+		const vec2  = handle === 1 ? con.m1 : con.m2;
+		const start = handle === 1 ? con.start : con.m1;
+		const stop  = handle === 1 ? con.m2 : con.stop;
+
+		const len = 6;
+		const rawPoints = [
+			{ x: vec2.x - len, y: vec2.y       },
+			{ x: vec2.x,       y: vec2.y - len },
+			{ x: vec2.x + len, y: vec2.y       },
+			{ x: vec2.x,       y: vec2.y + len },
+		];
+
+		const points = this.rotateVertices(
+			rawPoints, this.calculateConnectionAngle(start, stop), vec2,
+		) as Repeat<4, Vec2>;
+
+		const path = new Canvas2DObject();
+		path.layer(
+			(path2D) => {
+				path2D.moveTo(points[0].x, points[0].y);
+				path2D.lineTo(points[1].x, points[1].y);
+				path2D.lineTo(points[2].x, points[2].y);
+				path2D.lineTo(points[3].x, points[3].y);
+				path2D.closePath();
+			},
+			(ctx, path2D) => {
+				ctx.fillStyle = 'rgb(240 240 240 / 50%)';
+				ctx.fill(path2D);
+
+				ctx.fillStyle = '';
+			},
+		);
+
+		return path;
+	}
+
+	protected mapConnectionHandle2Ds() {
+		for (const con of this.connections.values()) {
+			if (!isOutsideViewport(this.mainView.viewport, con.m1)) {
+				con.pathHandle1 ??= this.createConnectionHandle2D(con, 1);
+				con.pathHandle1.draw(this.mainView.context);
+			}
+			if (!isOutsideViewport(this.mainView.viewport, con.m2)) {
+				con.pathHandle2 ??= this.createConnectionHandle2D(con, 2);
+				con.pathHandle2.draw(this.mainView.context);
+			}
+		}
+	}
+
+	protected override drawMain() {
+		this.mainView.clearContext();
+
+		const percentage = this.mainView.visiblePercentage;
+		if (percentage < 50)
+			this.mapConnectionPath2Ds();
+
+		if (percentage < 50)
+			this.mapNodePath2Ds();
+
+		if (this.mainView.visiblePercentage < 1)
+			this.mapConnectionHandle2Ds();
+
+		postMessage({ type: 'drawMain' });
+	}
 
 }

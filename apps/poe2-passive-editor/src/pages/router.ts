@@ -20,7 +20,7 @@ export class RouterCmp extends CustomElement {
 			enter: async () => {
 				this.requiresLogin = false;
 
-				history.replaceState(undefined, '', '/canvas-viewer');
+				history.replaceState(undefined, '', '/canvas-reader');
 				dispatchEvent(new PopStateEvent('popstate'));
 
 				return false;
@@ -38,14 +38,14 @@ export class RouterCmp extends CustomElement {
 			render: () => html`<poe-canvas-editor></poe-canvas-editor>`,
 		},
 		{
-			path:  '/canvas-viewer',
+			path:  '/canvas-reader',
 			enter: async () => {
 				this.requiresLogin = false;
-				await import('./canvas-viewer/canvas-viewer-page.ts');
+				await import('./canvas-editor/canvas-reader-page.ts');
 
 				return true;
 			},
-			render: () => html`<poe-canvas-viewer></poe-canvas-viewer>`,
+			render: () => html`<poe-canvas-reader></poe-canvas-reader>`,
 		},
 	]);
 
@@ -85,7 +85,7 @@ export class RouterCmp extends CustomElement {
 			<nav>
 				<a href="/">Home</a>
 				<a href="/canvas-editor">Canvas Editor</a>
-				<a href="/canvas-viewer">Canvas Viewer</a>
+				<a href="/canvas-reader">Canvas Reader</a>
 			</nav>
 
 			${ when(this.currentUser, () => html`

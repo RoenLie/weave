@@ -4,7 +4,7 @@ import { getGraphConnectionsQry, getGraphNodes, graphConnectionCollection, graph
 import { addDoc, collection, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../app/firebase.ts';
 import type { Vec2 } from '@roenlie/core/types';
-import { Canvas2DObject } from './canvas-object.ts';
+import { Canvas2DObject } from '../../../app/canvas/canvas-object.ts';
 import type { NodeData } from '../../../app/graph/node-catalog.ts';
 
 
@@ -36,12 +36,12 @@ export class GraphDataManager {
 	public loading:  ResolvablePromise<void> = resolvablePromise.resolve(void 0);
 	public updated?: number = Infinity;
 
-	public nodes:       Map<string, GraphNode>;
-	public connections: Map<string, GraphConnection>;
+	public nodes:            Map<string, GraphNode>;
+	public connections:      Map<string, GraphConnection>;
+	public nodeChunks:       NodeChunk[] = [];
+	public connectionChunks: ConnectionChunk[] = [];
 
-	protected nodeChunks:       NodeChunk[] = [];
-	protected connectionChunks: ConnectionChunk[] = [];
-	protected loadedVersion:    string = '0.1';
+	protected loadedVersion: string = '0.1';
 	protected chunkSize = 500;
 
 	public async load() {
@@ -58,7 +58,6 @@ export class GraphDataManager {
 
 		const nodes = nodeChunks.flatMap(chunk => chunk.nodes);
 		const connections = connectionChunks.flatMap(chunk => chunk.connections);
-
 		this.processLoadedData(nodes, connections);
 
 		this.updated = Date.now();
@@ -67,7 +66,7 @@ export class GraphDataManager {
 	}
 
 	protected processLoadedData(nodes: StorableGraphNode[], connections: StorableGraphConnection[]) {
-		this.nodes = new Map(nodes.map(node => [ node.id, new GraphNode(node) ]));
+		this.nodes = new Map(nodes.map(node => [ node.id, GraphNode.fromStorable(node) ]));
 		this.connections = new Map(connections.map(con => [ con.id, new GraphConnection(this.nodes, con) ]));
 
 		for (const node of this.nodes.values())
@@ -407,10 +406,9 @@ export class GraphDataManager {
 	}
 
 	public addNode(vec: Vec2) {
-		const node = new GraphNode(vec);
+		const node = GraphNode.fromVec2(vec);
 
 		this.nodes.set(node.id, node);
-
 		this.updated = undefined;
 
 		return node;
@@ -470,21 +468,12 @@ export class GraphDataManager {
 	}
 
 	public moveNode(node: GraphNode, vec: Vec2) {
-		if (node.x === vec.x && node.y === vec.y)
-			return false;
+		//if (node.x === vec.x && node.y === vec.y)
+		//	return false;
 
 		node.x = vec.x;
 		node.y = vec.y;
 		node.updated = new Date().toISOString();
-
-		const { path2DCreator } = this;
-		node.path = path2DCreator?.createNodePath2D(node);
-
-		for (const con of node.connections) {
-			con.path = path2DCreator?.createConnectionPath2D?.(this.nodes, con);
-			con.pathHandle1 = path2DCreator?.createConnectionHandlePath2D?.(con, 1);
-			con.pathHandle2 = path2DCreator?.createConnectionHandlePath2D?.(con, 2);
-		}
 
 		this.updated = undefined;
 
