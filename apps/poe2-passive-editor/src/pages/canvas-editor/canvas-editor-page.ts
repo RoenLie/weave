@@ -21,37 +21,18 @@ export class PoeCanvasTree extends PoeCanvasBase {
 	protected override readonly worker = createCanvasEditorWorker(CanvasWorkerEditor);
 	protected readonly nodeSelectorMenus = [ 'minor', 'notable', 'keystone' ] as const;
 
-	protected editingFeatures = {
-		moveNode:        false,
-		createNode:      false,
-		resizeNodes:     false,
-		deleteNodes:     false,
-		connectNodes:    true,
-		moveConnections: true,
-	};
-
 	protected override afterConnected(): void {
 		super.afterConnected();
 
 		this.addEventListener('keydown', this.onKeydown);
 	}
 
+	//#region from canvas worker
 	protected override onWorkerMessage(ev: MessageEvent) {
 		super.onWorkerMessage(ev);
 
 		this.onStartNodeMove(ev);
 		this.onStartHandleMove(ev);
-	}
-
-	protected override onMousedown(downEv: MouseEvent) {
-		if (downEv.buttons !== 1)
-			return;
-
-		downEv.preventDefault();
-		this.focus();
-
-		const event = makeObjectTransferable(downEv);
-		this.worker.mousedown({ event });
 	}
 
 	protected onStartNodeMove(ev: MessageEvent<CanvasEditorWorkerApiOut['startNodeMove']>) {
@@ -111,30 +92,25 @@ export class PoeCanvasTree extends PoeCanvasBase {
 		addEventListener('mousemove', mousemove);
 		addEventListener('mouseup', mouseup);
 	}
+	//#endregion
 
-	protected onKeydown(_ev: KeyboardEvent) {
-		//if (this.selectedNode) {
-		//	const node = this.selectedNode;
+	//#region to canvas worker
+	protected override onMousedown(ev: MouseEvent) {
+		if (ev.buttons !== 1)
+			return;
 
-		//	if (this.editingFeatures.resizeNodes && oneOf(ev.code, 'Digit1', 'Digit2', 'Digit3')) {
-		//		if (ev.code === 'Digit1')
-		//			this.dataManager.resizeNode(node, node.sizes[0]!);
-		//		else if (ev.code === 'Digit2')
-		//			this.dataManager.resizeNode(node, node.sizes[1]!);
-		//		else if (ev.code === 'Digit3')
-		//			this.dataManager.resizeNode(node, node.sizes[2]!);
-		//	}
-		//	else if (this.editingFeatures.deleteNodes && ev.code === 'Delete') {
-		//		this.dataManager.deleteNode(node);
-		//	}
-		//	else if (ev.code === 'Escape') {
-		//		this.selectedNode = undefined;
-		//		node.path = this.createNodePath2D(node);
-		//	}
+		ev.preventDefault();
+		this.focus();
 
-		//	this.drawMain();
-		//}
+		const event = makeObjectTransferable(ev);
+		this.worker.mousedown({ event });
+	}
+
+	protected onKeydown(ev: KeyboardEvent) {
+		const event = makeObjectTransferable(ev);
+		this.worker.keydown({ event });
 	};
+	//#endregion
 
 	protected override beforeCloseTooltip(): void {
 		this.selectedNodeMenu = undefined;

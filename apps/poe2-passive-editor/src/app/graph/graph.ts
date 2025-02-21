@@ -90,7 +90,7 @@ export class GraphConnection {
 
 export class GraphNode implements Vec2 {
 
-	public static sizes: number[] = [ 24, 36, 56 ];
+	public static sizes = [ 24, 36, 56 ] as const;
 
 	public static isGraphNode(obj: any): obj is GraphNode {
 		return obj instanceof GraphNode;

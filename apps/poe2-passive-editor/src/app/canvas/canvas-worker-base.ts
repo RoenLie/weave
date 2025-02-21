@@ -7,6 +7,7 @@ import { doRectsOverlap, getPathReduction } from './path-helpers.ts';
 import { Canvas2DObject } from './canvas-object.ts';
 import { drawParallelBezierCurve, type Bezier } from './parallel-bezier-curve.ts';
 import { FirebaseGraphRepository, GraphDataManager } from '../../pages/canvas-editor/utils/data-manager.ts';
+import { oneOf } from '@roenlie/core/validation';
 
 
 class WorkerView {
@@ -115,6 +116,7 @@ type MakeObjectTransferable<T extends object> = {
 };
 
 export type TransferableMouseEvent = MakeObjectTransferable<MouseEvent>;
+export type TransferableKeyboardEvent = MakeObjectTransferable<KeyboardEvent>;
 
 export const makeObjectTransferable = <T extends object>(obj: T): MakeObjectTransferable<T> => {
 	const cloned = {} as MakeObjectTransferable<T>;
@@ -579,6 +581,10 @@ export class CanvasWorkerReader implements WorkerReaderMethods {
 
 
 export interface CanvasEditorWorkerApiIn extends CanvasReaderWorkerApiIn {
+	keydown: {
+		type:  'keydown';
+		event: TransferableKeyboardEvent;
+	}
 	moveNode: {
 		type:          'moveNode';
 		nodeId:        string;
@@ -642,6 +648,15 @@ type WorkerEditorMethods = {
 
 export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEditorMethods {
 
+	protected editingFeatures = {
+		moveNode:        false,
+		createNode:      false,
+		resizeNodes:     false,
+		deleteNodes:     false,
+		connectNodes:    true,
+		moveConnections: true,
+	};
+
 	//#region Message Handlers
 	public override mousedown(data: CanvasReaderWorkerApiIn['mousedown']) {
 		const { event } = data;
@@ -703,6 +718,48 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 			} satisfies CanvasReaderWorkerApiOut['startViewMove']);
 		}
 	}
+
+	public keydown(data: CanvasEditorWorkerApiIn['keydown']) {
+		const event = data.event;
+		const code = event.code;
+
+		//if (event.key === 'Escape' && this.selectedNode) {
+		//	const node = this.selectedNode;
+		//	this.selectedNode = undefined;
+		//	node.path = this.createNodePath2D(node);
+		//	this.drawMain();
+		//}
+
+		if (this.selectedNode) {
+			const node = this.selectedNode;
+
+			if (oneOf(code, 'Digit1', 'Digit2', 'Digit3')) {
+				if (code === 'Digit1')
+					this.data.resizeNode(node, GraphNode.sizes[0]);
+				else if (code === 'Digit2')
+					this.data.resizeNode(node, GraphNode.sizes[1]);
+				else if (code === 'Digit3')
+					this.data.resizeNode(node, GraphNode.sizes[2]);
+
+				node.path = this.createNodePath2D(node);
+				node.connections.forEach(con => {
+					con.path = this.createConnectionPath2D(this.data.nodes, con);
+					con.pathHandle1 = this.createConnectionHandle2D(con, 1);
+					con.pathHandle2 = this.createConnectionHandle2D(con, 2);
+				});
+			}
+			else if (code === 'Delete') {
+				this.data.deleteNode(node);
+			}
+			else if (code === 'Escape') {
+				this.selectedNode = undefined;
+				node.path = this.createNodePath2D(node);
+			}
+
+			this.drawMain();
+		}
+	}
+
 
 	public moveNode(data: CanvasEditorWorkerApiIn['moveNode']) {
 		const node = this.data.nodes.get(data.nodeId);
