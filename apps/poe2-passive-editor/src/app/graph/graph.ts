@@ -22,6 +22,7 @@ export interface StorableGraphNode {
 	connections: string[];
 	data:        string;
 }
+export type GraphConnectionVec2 = Vec2 & { index: 1 | 2, connection: GraphConnection };
 
 
 export class GraphConnection {
@@ -56,20 +57,17 @@ export class GraphConnection {
 			m1.y += y1;
 			m2.x -= x2;
 			m2.y -= y2;
-
-			this.m1 = m1;
-			this.m2 = m2;
 		}
 
-		this.m1 = m1;
-		this.m2 = m2;
+		this.m1 = { index: 1, x: m1.x, y: m1.y, connection: this };
+		this.m2 = { index: 2, x: m2.x, y: m2.y, connection: this };
 	}
 
 	public id:      string;
 	public start:   GraphNode;
 	public stop:    GraphNode;
-	public m1:      Vec2;
-	public m2:      Vec2;
+	public m1:      GraphConnectionVec2;
+	public m2:      GraphConnectionVec2;
 	public updated: string;
 
 	public path:        Canvas2DObject | undefined;
@@ -82,8 +80,8 @@ export class GraphConnection {
 			updated: this.updated,
 			start:   this.start.id,
 			stop:    this.stop.id,
-			m1:      this.m1,
-			m2:      this.m2,
+			m1:      { x: this.m1.x, y: this.m1.y },
+			m2:      { x: this.m2.x, y: this.m2.y },
 		};
 	}
 
@@ -148,7 +146,6 @@ export class GraphNode implements Vec2 {
 	public x:           number;
 	public y:           number;
 	public radius:      number;
-	public sizes:       number[] = [ 24, 36, 56 ];
 	public path:        Canvas2DObject | undefined;
 	public connections: Set<GraphConnection> = new Set();
 	public data?:       NodeData;

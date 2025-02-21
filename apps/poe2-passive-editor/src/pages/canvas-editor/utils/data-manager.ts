@@ -4,7 +4,6 @@ import { getGraphConnectionsQry, getGraphNodes, graphConnectionCollection, graph
 import { addDoc, collection, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../app/firebase.ts';
 import type { Vec2 } from '@roenlie/core/types';
-import { Canvas2DObject } from '../../../app/canvas/canvas-object.ts';
 import type { NodeData } from '../../../app/graph/node-catalog.ts';
 
 
@@ -27,17 +26,14 @@ interface GraphChunkChangeLog {
 
 export class GraphDataManager {
 
-	constructor(
-		protected repository: GraphRepository,
-		protected path2DCreator?: GraphPath2DCreator,
-	) {}
+	constructor(protected repository: GraphRepository) {}
 
-	public ready:    boolean = false;
-	public loading:  ResolvablePromise<void> = resolvablePromise.resolve(void 0);
-	public updated?: number = Infinity;
+	public ready:      boolean = false;
+	public loading:    ResolvablePromise<void> = resolvablePromise.resolve(void 0);
+	public updatedAt?: number = Infinity;
 
-	public nodes:            Map<string, GraphNode>;
-	public connections:      Map<string, GraphConnection>;
+	public nodes:            Map<string, GraphNode> = new Map();
+	public connections:      Map<string, GraphConnection> = new Map();
 	public nodeChunks:       NodeChunk[] = [];
 	public connectionChunks: ConnectionChunk[] = [];
 
@@ -60,7 +56,7 @@ export class GraphDataManager {
 		const connections = connectionChunks.flatMap(chunk => chunk.connections);
 		this.processLoadedData(nodes, connections);
 
-		this.updated = Date.now();
+		this.updatedAt = Date.now();
 		this.ready = true;
 		this.loading.resolve();
 	}
@@ -353,7 +349,7 @@ export class GraphDataManager {
 			conChunkChanges,
 		);
 
-		this.updated = Date.now();
+		this.updatedAt = Date.now();
 		this.ready = true;
 		this.loading.resolve();
 	}
@@ -409,19 +405,20 @@ export class GraphDataManager {
 		const node = GraphNode.fromVec2(vec);
 
 		this.nodes.set(node.id, node);
-		this.updated = undefined;
+		this.updatedAt = undefined;
 
 		return node;
 	}
 
 	public connectNodes(nodeA?: GraphNode, nodeB?: GraphNode) {
-		if (!nodeA || !nodeB)
-			return false;
-
 		const nodeHasNode = (a: GraphNode, b: GraphNode) =>
 			a.connections.values().some(con => con.start.id === b.id || con.stop.id === b.id) ||
 			b.connections.values().some(con => con.start.id === a.id || con.stop.id === a.id);
 
+		if (!nodeA || !nodeB)
+			return false;
+		if (nodeA === nodeB)
+			return false;
 		if (nodeHasNode(nodeA, nodeB))
 			return false;
 
@@ -434,7 +431,7 @@ export class GraphDataManager {
 		nodeA.updated = new Date().toISOString();
 		nodeB.updated = new Date().toISOString();
 
-		this.updated = undefined;
+		this.updatedAt = undefined;
 
 		return true;
 	}
@@ -448,7 +445,7 @@ export class GraphDataManager {
 
 		this.nodes.delete(node.id);
 
-		this.updated = undefined;
+		this.updatedAt = undefined;
 
 		return true;
 	}
@@ -460,43 +457,35 @@ export class GraphDataManager {
 		node.radius = radius;
 		node.updated = new Date().toISOString();
 
-		node.path = this.path2DCreator?.createNodePath2D(node);
+		//node.path = this.path2DCreator?.createNodePath2D(node);
 
-		this.updated = undefined;
+		this.updatedAt = undefined;
 
 		return true;
 	}
 
 	public moveNode(node: GraphNode, vec: Vec2) {
-		//if (node.x === vec.x && node.y === vec.y)
-		//	return false;
+		if (node.x === vec.x && node.y === vec.y)
+			return false;
 
 		node.x = vec.x;
 		node.y = vec.y;
 		node.updated = new Date().toISOString();
 
-		this.updated = undefined;
+		this.updatedAt = undefined;
 
 		return true;
 	}
 
-	public moveConnection(con: GraphConnection, controlNode: Vec2, vec: Vec2) {
-		const conVec = con.m1 === controlNode ? con.m1
-			: con.m2 === controlNode ? con.m2
-				: undefined;
-
-		if (!conVec)
+	public moveConnection(con: GraphConnection, handle: Vec2, vec: Vec2) {
+		if (handle.x === vec.x && handle.y === vec.y)
 			return false;
 
-		conVec.x = vec.x;
-		conVec.y = vec.y;
+		handle.x = vec.x;
+		handle.y = vec.y;
 		con.updated = new Date().toISOString();
 
-		con.path = this.path2DCreator?.createConnectionPath2D(this.nodes, con);
-		con.pathHandle1 = this.path2DCreator?.createConnectionHandlePath2D?.(con, 1);
-		con.pathHandle2 = this.path2DCreator?.createConnectionHandlePath2D?.(con, 2);
-
-		this.updated = undefined;
+		this.updatedAt = undefined;
 
 		return true;
 	}
@@ -505,9 +494,9 @@ export class GraphDataManager {
 		node.data = data;
 		node.updated = new Date().toISOString();
 
-		node.path = this.path2DCreator?.createNodePath2D(node);
+		//node.path = this.path2DCreator?.createNodePath2D(node);
 
-		this.updated = undefined;
+		this.updatedAt = undefined;
 	}
 
 }
@@ -708,16 +697,5 @@ export class FirebaseGraphRepository implements GraphRepository {
 
 		console.log('Saved to Firebase');
 	}
-
-}
-
-
-export class GraphPath2DCreator implements GraphPath2DCreator {
-
-	constructor(
-		public createNodePath2D: (node: GraphNode) => Canvas2DObject,
-		public createConnectionPath2D: (nodes: Map<string, GraphNode>, con: GraphConnection) => Canvas2DObject,
-		public createConnectionHandlePath2D?: (con: GraphConnection, handle: 1 | 2) => Canvas2DObject,
-	) {}
 
 }

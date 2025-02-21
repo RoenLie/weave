@@ -1,3 +1,4 @@
+export {};
 
 // We only care about left clicks
 if (downEv.buttons !== 1)

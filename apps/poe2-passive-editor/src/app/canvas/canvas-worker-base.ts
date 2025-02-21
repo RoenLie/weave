@@ -1,12 +1,12 @@
 import type { Repeat, Vec2 } from '@roenlie/core/types';
 import { isOutsideViewport, type Viewport } from './is-outside-viewport.ts';
-import { GraphConnection, GraphNode, type StorableGraphNode, type StringVec2 } from '../graph/graph.ts';
+import { GraphConnection, GraphNode, type GraphConnectionVec2, type StorableGraphNode, type StringVec2 } from '../graph/graph.ts';
 import { range } from '@roenlie/core/array';
 import { getWorkerImageChunk } from './image-assets.ts';
 import { doRectsOverlap, getPathReduction } from './path-helpers.ts';
 import { Canvas2DObject } from './canvas-object.ts';
 import { drawParallelBezierCurve, type Bezier } from './parallel-bezier-curve.ts';
-import type { ConnectionChunk, NodeChunk } from '../../pages/canvas-editor/utils/firebase-queries.ts';
+import { FirebaseGraphRepository, GraphDataManager } from '../../pages/canvas-editor/utils/data-manager.ts';
 
 
 class WorkerView {
@@ -144,11 +144,6 @@ export interface CanvasReaderWorkerApiIn {
 	initBackground: {
 		type: 'initBackground'
 	};
-	transferChunks: {
-		type:             'transferChunks';
-		nodeChunks:       NodeChunk[];
-		connectionChunks: ConnectionChunk[];
-	};
 	moveTo: {
 		type: 'moveTo',
 		x:    number,
@@ -159,10 +154,6 @@ export interface CanvasReaderWorkerApiIn {
 		vec:    Vec2,
 		factor: number
 	};
-	getPosition: {
-		type: 'getPosition',
-		id:   number
-	};
 	mousedown: {
 		type:  'mousedown';
 		event: TransferableMouseEvent;
@@ -170,9 +161,6 @@ export interface CanvasReaderWorkerApiIn {
 	mousemove: {
 		type:  'mousemove';
 		event: TransferableMouseEvent;
-	};
-	draw: {
-		type: 'draw'
 	};
 }
 
@@ -214,10 +202,10 @@ type WorkerReaderMethods = {
 
 export class CanvasWorkerReader implements WorkerReaderMethods {
 
+	protected readonly data = new GraphDataManager(new FirebaseGraphRepository());
+
 	protected bgView:        WorkerView;
 	protected mainView:      WorkerView;
-	protected nodes:         Map<string, GraphNode>;
-	protected connections:   Map<string, GraphConnection>;
 	protected imageSize:     number = 13000;
 	protected chunkSize:     number = 1300;
 	protected imagePromises: Map<StringVec2, Promise<any>> = new Map();
@@ -240,13 +228,17 @@ export class CanvasWorkerReader implements WorkerReaderMethods {
 		(this as any)[ev.data.type]?.(ev.data);
 	}
 
-	public init(data: {
+	public async init(data: {
 		type: 'init',
 		main: OffscreenCanvas,
 		bg:   OffscreenCanvas
 	}) {
 		this.bgView = new WorkerView(data.bg);
 		this.mainView = new WorkerView(data.main);
+
+		await this.data.load();
+		this.drawBackground();
+		this.drawMain();
 	}
 
 	public setSize(data: CanvasReaderWorkerApiIn['setSize']) {
@@ -260,17 +252,9 @@ export class CanvasWorkerReader implements WorkerReaderMethods {
 	public setArea(data: CanvasReaderWorkerApiIn['setArea']) {
 		this.bgView.setTotalArea(data.width, data.height);
 		this.mainView.setTotalArea(data.width, data.height);
-	}
 
-	public transferChunks(data: CanvasReaderWorkerApiIn['transferChunks']) {
-		const nodes = data.nodeChunks.flatMap(chunk => chunk.nodes);
-		const connections = data.connectionChunks.flatMap(chunk => chunk.connections);
-
-		this.nodes = new Map(nodes.map(node => [ node.id, GraphNode.fromStorable(node) ]));
-		this.connections = new Map(connections.map(con => [ con.id, new GraphConnection(this.nodes, con) ]));
-
-		for (const node of this.nodes.values())
-			node.mapConnections(this.connections);
+		this.drawBackground();
+		this.drawMain();
 	}
 
 	public initBackground(_data: CanvasReaderWorkerApiIn['initBackground']) {
@@ -331,10 +315,6 @@ export class CanvasWorkerReader implements WorkerReaderMethods {
 
 		this.drawBackground();
 		this.drawMain();
-	}
-
-	public getPosition(data: CanvasReaderWorkerApiIn['getPosition']) {
-		postMessage({ id: data.id, position: this.bgView.position });
 	}
 
 	public mousedown(data: CanvasReaderWorkerApiIn['mousedown']) {
@@ -406,14 +386,10 @@ export class CanvasWorkerReader implements WorkerReaderMethods {
 			} satisfies CanvasReaderWorkerApiOut['openTooltip']);
 		}
 	}
-
-	public draw(_data: CanvasReaderWorkerApiIn['draw']) {
-		this.bgView.applyTransform();
-	}
 	//#endregion
 
 	protected getGraphNode(vec: Vec2): GraphNode | undefined {
-		const nodes = this.nodes;
+		const nodes = this.data.nodes;
 
 		// If found, returns the node at the mouse position.
 		for (const [ , node ] of nodes) {
@@ -529,8 +505,8 @@ export class CanvasWorkerReader implements WorkerReaderMethods {
 	}
 
 	protected mapConnectionPath2Ds() {
-		const nodes = this.nodes;
-		const connections = this.connections;
+		const nodes = this.data.nodes;
+		const connections = this.data.connections;
 
 		for (const con of connections.values()) {
 			const outsideStart = isOutsideViewport(this.mainView.viewport, con.start);
@@ -577,7 +553,7 @@ export class CanvasWorkerReader implements WorkerReaderMethods {
 	}
 
 	protected mapNodePath2Ds() {
-		const nodes = this.nodes;
+		const nodes = this.data.nodes;
 
 		for (const node of nodes.values()) {
 			if (isOutsideViewport(this.mainView.viewport, node))
@@ -597,18 +573,12 @@ export class CanvasWorkerReader implements WorkerReaderMethods {
 
 		if (percentage < 50)
 			this.mapNodePath2Ds();
-
-		postMessage({ type: 'drawMain' });
 	}
 
 }
 
 
 export interface CanvasEditorWorkerApiIn extends CanvasReaderWorkerApiIn {
-	selectNode: {
-		type:   'selectNode';
-		nodeId: string;
-	}
 	moveNode: {
 		type:          'moveNode';
 		nodeId:        string;
@@ -624,18 +594,38 @@ export interface CanvasEditorWorkerApiIn extends CanvasReaderWorkerApiIn {
 		viewPositionY: number;
 		scale:         number;
 	}
+	moveHandle: {
+		type:          'moveHandle';
+		conId:         string;
+		handle:        Omit<GraphConnectionVec2, 'connection'>;
+		mouseX:        number;
+		mouseY:        number;
+		initialMouseX: number;
+		initialMouseY: number;
+		boundingX:     number;
+		boundingY:     number;
+		viewPositionX: number;
+		viewPositionY: number;
+		scale:         number;
+	}
 }
 
 export interface CanvasEditorWorkerApiOut extends CanvasReaderWorkerApiOut {
-	updateNode: {
-		type: 'updateNode';
-		node: StorableGraphNode;
-	}
 	startNodeMove: {
 		type:          'startNodeMove',
 		nodeId:        string,
 		nodeX:         number,
 		nodeY:         number,
+		initialMouseX: number,
+		initialMouseY: number,
+		viewPositionX: number,
+		viewPositionY: number,
+		scale:         number,
+	}
+	startHandleMove: {
+		type:          'startHandleMove',
+		conId:         string,
+		handle:        Omit<GraphConnectionVec2, 'connection'>;
 		initialMouseX: number,
 		initialMouseY: number,
 		viewPositionX: number,
@@ -664,13 +654,14 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 		const vec = { x: event.offsetX, y: event.offsetY };
 		// Try to find a node at the mouse position
 		const node = this.getGraphNode(vec);
+		const conHandle = !node ? this.getConnectionHandle(vec) : undefined;
 
 		// If we found a node, we want to move it
 		if (node) {
-			postMessage({
-				type:   'selectNode',
-				nodeId: node.id,
-			} satisfies CanvasEditorWorkerApiOut['selectNode']);
+			if (event.shiftKey)
+				this.connectNodes(node);
+			else
+				this.selectNode(node.id);
 
 			postMessage({
 				type:          'startNodeMove',
@@ -684,11 +675,25 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 				scale:         this.bgView.scale,
 			} satisfies CanvasEditorWorkerApiOut['startNodeMove']);
 		}
+		else if (conHandle) {
+			postMessage({
+				type:          'startHandleMove',
+				conId:         conHandle.connection.id,
+				handle:        { index: conHandle.index, x: conHandle.x, y: conHandle.y },
+				initialMouseX: event.offsetX,
+				initialMouseY: event.offsetY,
+				viewPositionX: this.bgView.position.x,
+				viewPositionY: this.bgView.position.y,
+				scale:         this.bgView.scale,
+			} satisfies CanvasEditorWorkerApiOut['startHandleMove']);
+		}
 		// If we didn't find a node or a connection, we want to pan the view
 		// and create a node if alt/cmd is pressed
 		else {
-			// We setup the mousemove and mouseup events
-			// For panning the view
+			if (event.detail === 2 || event.altKey || event.metaKey)
+				this.createNode(event);
+
+			// We setup the mousemove and mouseup events for panning the view
 			postMessage({
 				type:          'startViewMove',
 				initialMouseX: event.offsetX,
@@ -699,12 +704,94 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 		}
 	}
 
-	public selectNode(data: CanvasEditorWorkerApiIn['selectNode']) {
-		const node = this.nodes.get(data.nodeId);
+	public moveNode(data: CanvasEditorWorkerApiIn['moveNode']) {
+		const node = this.data.nodes.get(data.nodeId);
+		if (!node)
+			return console.error('Node not found');
+
+		const {
+			initialMouseX, initialMouseY,
+			mouseX,        mouseY,
+			boundingX,     boundingY,
+			viewPositionX, viewPositionY,
+			nodeX,         nodeY,
+			scale,
+		} = data;
+
+		const viewOffsetX = initialMouseX - viewPositionX;
+		const viewOffsetY = initialMouseY - viewPositionY;
+
+		const realX = viewOffsetX / scale;
+		const realY = viewOffsetY / scale;
+
+		const mouseOffsetX = (realX - nodeX) * scale;
+		const mouseOffsetY = (realY - nodeY) * scale;
+
+		const x = (mouseX - boundingX - viewPositionX - mouseOffsetX) / scale;
+		const y = (mouseY - boundingY - viewPositionY - mouseOffsetY) / scale;
+
+		if (!this.data.moveNode(node, { x, y }))
+			return;
+
+		node.path = this.createNodePath2D(node);
+		for (const con of node.connections) {
+			con.path = this.createConnectionPath2D(this.data.nodes, con);
+			con.pathHandle1 = this.createConnectionHandle2D(con, 1);
+			con.pathHandle2 = this.createConnectionHandle2D(con, 2);
+		}
+
+		this.drawMain();
+	}
+
+	public moveHandle(data: CanvasEditorWorkerApiIn['moveHandle']) {
+		const con = this.data.connections.get(data.conId);
+		if (!con)
+			return console.error('Connection not found');
+
+		const conHandle = data.handle.index === 1
+			? con.m1 : data.handle.index === 2
+				? con.m2 : undefined;
+
+		if (!conHandle)
+			return console.error('Handle not found');
+
+		const {
+			initialMouseX, initialMouseY,
+			mouseX,        mouseY,
+			boundingX,     boundingY,
+			viewPositionX, viewPositionY,
+			handle,
+			scale,
+		} = data;
+
+		const viewOffsetX = initialMouseX - viewPositionX;
+		const viewOffsetY = initialMouseY - viewPositionY;
+
+		const realX = viewOffsetX / scale;
+		const realY = viewOffsetY / scale;
+
+		const mouseOffsetX = (realX - handle.x) * scale;
+		const mouseOffsetY = (realY - handle.y) * scale;
+
+		const x = (mouseX - boundingX - viewPositionX - mouseOffsetX) / scale;
+		const y = (mouseY - boundingY - viewPositionY - mouseOffsetY) / scale;
+
+		if (!this.data.moveConnection(con, conHandle, { x, y }))
+			return;
+
+		con.path = this.createConnectionPath2D(this.data.nodes, con);
+		con.pathHandle1 = this.createConnectionHandle2D(con, 1);
+		con.pathHandle2 = this.createConnectionHandle2D(con, 2);
+
+		this.drawMain();
+	}
+	//#endregion
+
+	public selectNode(nodeId: string) {
+		const node = this.data.nodes.get(nodeId);
 		if (!node)
 			return;
 
-		// We are clicking on a node
 		if (this.selectedNode?.path) {
 			const node = this.selectedNode;
 			this.selectedNode = undefined;
@@ -717,61 +804,35 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 		this.drawMain();
 	}
 
-	public moveNode(data: CanvasEditorWorkerApiIn['moveNode']) {
-		const node = this.nodes.get(data.nodeId);
-		if (!node)
-			return;
+	protected createNode(event: TransferableMouseEvent) {
+		const viewOffsetX = event.offsetX - this.bgView.position.x;
+		const viewOffsetY = event.offsetY - this.bgView.position.y;
 
-		const {
-			nodeX,
-			nodeY,
-			initialMouseX,
-			initialMouseY,
-			mouseX,
-			mouseY,
-			boundingX,
-			boundingY,
-			viewPositionX,
-			viewPositionY,
-			scale,
-		} = data;
-
-		const viewOffsetX = initialMouseX - viewPositionX;
-		const viewOffsetY = initialMouseY - viewPositionY;
-
-		//const scale = this.mainView.scale;
+		const scale = this.bgView.scale;
 		const realX = viewOffsetX / scale;
 		const realY = viewOffsetY / scale;
 
-		const mouseOffsetX = (realX - nodeX) * scale;
-		const mouseOffsetY = (realY - nodeY) * scale;
+		const node = this.data.addNode({ x: realX, y: realY });
 
-		const x = (mouseX - boundingX - viewPositionX - mouseOffsetX) / scale;
-		const y = (mouseY - boundingY - viewPositionY - mouseOffsetY) / scale;
-
-		node.x = x;
-		node.y = y;
-
-		node.path = this.createNodePath2D(node);
-		for (const con of node.connections) {
-			con.path = this.createConnectionPath2D(this.nodes, con);
-			con.pathHandle1 = this.createConnectionHandle2D(con, 1);
-			con.pathHandle2 = this.createConnectionHandle2D(con, 2);
+		if (this.selectedNode?.path) {
+			const node = this.selectedNode;
+			this.selectedNode = undefined;
+			node.path = this.createNodePath2D(node);
 		}
 
-		postMessage({
-			type: 'update-node',
-			node: GraphNode.toStorable(node),
-		});
+		this.selectedNode = node;
+		this.drawMain();
+	}
+
+	protected connectNodes(node: GraphNode) {
+		this.data.connectNodes(this.selectedNode, node);
 
 		this.drawMain();
 	}
-	//#endregion
-
 
 	/** If found, returns the handle vector at the mouse position. */
-	protected getConnectionHandle(vec: Vec2): Vec2 | undefined {
-		for (const [ , con ] of this.connections) {
+	protected getConnectionHandle(vec: Vec2): GraphConnectionVec2 | undefined {
+		for (const [ , con ] of this.data.connections) {
 			if (con.pathHandle1) {
 				const isInPath = con.pathHandle1.isPointInPath(this.mainView.context, vec.x, vec.y);
 				if (isInPath)
@@ -853,7 +914,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 	}
 
 	protected mapConnectionHandle2Ds() {
-		for (const con of this.connections.values()) {
+		for (const con of this.data.connections.values()) {
 			if (!isOutsideViewport(this.mainView.viewport, con.m1)) {
 				con.pathHandle1 ??= this.createConnectionHandle2D(con, 1);
 				con.pathHandle1.draw(this.mainView.context);

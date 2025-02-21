@@ -7,10 +7,9 @@ import { CustomElement } from '../../app/custom-element/custom-element.ts';
 import CanvasWorkerReader from '../../app/canvas/canvas-worker-reader.ts?worker';
 import { when } from 'lit-html/directives/when.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
-import { GraphDataManager, FirebaseGraphRepository } from './utils/data-manager.ts';
 import { createCanvasReaderWorker } from '../../app/canvas/canvas-worker-interface.ts';
 import { makeObjectTransferable, type CanvasReaderWorkerApiOut } from '../../app/canvas/canvas-worker-base.ts';
-import { allDataNodes, nodeDataCatalog } from '../../app/graph/node-catalog.ts';
+import { allDataNodes } from '../../app/graph/node-catalog.ts';
 
 
 const unsetPopover = css`
@@ -30,6 +29,7 @@ export class PoeCanvasBase extends CustomElement {
 
 	@signal protected accessor selectedNode: GraphNode | undefined;
 	@signal protected accessor hoveredNode:  StorableGraphNode | undefined;
+	@signal protected accessor ready: boolean = false;
 
 	protected position: Vec2 | undefined;
 	protected viewport: Viewport | undefined;
@@ -37,7 +37,6 @@ export class PoeCanvasBase extends CustomElement {
 
 	protected readonly imageSize: number = 13000;
 	protected readonly worker = createCanvasReaderWorker(CanvasWorkerReader);
-	protected readonly dataManager = new GraphDataManager(new FirebaseGraphRepository());
 	protected readonly resizeObserver = new ResizeObserver(([ entry ]) => {
 		if (!entry)
 			return;
@@ -48,13 +47,6 @@ export class PoeCanvasBase extends CustomElement {
 	protected override connectedCallback(): void {
 		super.connectedCallback();
 		this.tabIndex = 0;
-
-		this.dataManager.load().then(async () => {
-			this.requestUpdate();
-			await this.updateComplete;
-
-			this.afterDataLoaded();
-		});
 	}
 
 	protected override disconnectedCallback(): void {
@@ -77,16 +69,11 @@ export class PoeCanvasBase extends CustomElement {
 		}
 	}
 
-	protected afterDataLoaded() {
+	protected override afterConnected() {
 		const bgCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#background')!;
 		const mainCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#main')!;
 
 		this.worker.addEventListener('message', this.boundWorkerMessage);
-
-		this.worker.transferChunks({
-			nodeChunks:       this.dataManager.nodeChunks,
-			connectionChunks: this.dataManager.connectionChunks,
-		});
 
 		this.worker.init(bgCanvas, mainCanvas);
 		this.worker.setSize({ width: this.offsetWidth, height: this.offsetHeight });
@@ -132,19 +119,24 @@ export class PoeCanvasBase extends CustomElement {
 		const deltaY = rect.top;
 		const deltaX = rect.left;
 
-		// We setup the mousemove and mouseup events
-		// For panning the view
-		const mousemove = (moveEv: MouseEvent) => {
-			const x = moveEv.offsetX - deltaX - viewOffsetX;
-			const y = moveEv.offsetY - deltaY - viewOffsetY;
+		// We setup the mousemove and mouseup events for panning the view
+		const mousemove = (() => {
+			let moveEv: MouseEvent = undefined as any;
+			const fn = () => {
+				const x = moveEv.offsetX - deltaX - viewOffsetX;
+				const y = moveEv.offsetY - deltaY - viewOffsetY;
 
-			this.worker.moveTo({ x, y });
-		};
+				this.worker.moveTo({ x, y });
+			};
+
+			return (ev: MouseEvent) => {
+				moveEv = ev; requestAnimationFrame(fn);
+			};
+		})();
 		const mouseup = () => {
 			removeEventListener('mousemove', mousemove);
 			removeEventListener('mouseup', mouseup);
 		};
-
 		addEventListener('mousemove', mousemove);
 		addEventListener('mouseup', mouseup);
 	};
@@ -160,27 +152,25 @@ export class PoeCanvasBase extends CustomElement {
 		if (ev.data.type !== 'openTooltip')
 			return;
 
-		//this.hoveredNode = this.dataManager.nodes.get(ev.data.nodeId);
 		this.hoveredNode = ev.data.node;
 	};
 
 	protected onMousemove(ev: MouseEvent) {
-		const transferableEv = makeObjectTransferable(ev);
-
-		this.worker.mousemove({
-			event: transferableEv,
-		});
+		const event = makeObjectTransferable(ev);
+		requestAnimationFrame(() => this.worker.mousemove({ event }));
 	}
 
 	protected onMousewheel(ev: WheelEvent) {
 		ev.preventDefault();
 
 		const vec = { x: ev.offsetX, y: ev.offsetY };
-
-		if (-ev.deltaY > 0)
-			this.worker.scaleAt({ vec, factor: 1.1 });
-		else
-			this.worker.scaleAt({ vec, factor: 1 / 1.1 });
+		const deltaY = ev.deltaY;
+		requestAnimationFrame(() => {
+			if (-deltaY > 0)
+				this.worker.scaleAt({ vec, factor: 1.1 });
+			else
+				this.worker.scaleAt({ vec, factor: 1 / 1.1 });
+		});
 	}
 
 	protected onMousedown(downEv: MouseEvent) {
@@ -190,11 +180,8 @@ export class PoeCanvasBase extends CustomElement {
 		downEv.preventDefault();
 		this.focus();
 
-		const transferableEv = makeObjectTransferable(downEv);
-
-		this.worker.mousedown({
-			event: transferableEv,
-		});
+		const event = makeObjectTransferable(downEv);
+		this.worker.mousedown({ event });
 	}
 
 	protected beforeCloseTooltip(_node: GraphNode) {}
@@ -217,9 +204,6 @@ export class PoeCanvasBase extends CustomElement {
 	}
 
 	protected override render(): unknown {
-		if (!this.dataManager.ready)
-			return html`<div>Loading...</div>`;
-
 		return html`
 		<canvas id="background"></canvas>
 		<canvas id="main"
@@ -237,9 +221,6 @@ export class PoeCanvasBase extends CustomElement {
 			const scale = this.scale;
 			const x = (node.x * scale) + (this.position.x + rect.left) + (node.radius * scale);
 			const y = (node.y * scale) + (this.position.y + rect.top)  - (node.radius * scale);
-
-			console.log('show it :8');
-
 
 			return html`
 			<article

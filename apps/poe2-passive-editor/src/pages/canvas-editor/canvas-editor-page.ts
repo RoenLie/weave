@@ -16,6 +16,7 @@ export class PoeCanvasTree extends PoeCanvasBase {
 
 	@signal protected accessor selectedNodeMenu: keyof NodeDataCatalog | undefined = undefined;
 	@signal protected accessor showNodeSelectorMenu: boolean = false;
+	@signal protected accessor updated: boolean = false;
 
 	protected override readonly worker = createCanvasEditorWorker(CanvasWorkerEditor);
 	protected readonly nodeSelectorMenus = [ 'minor', 'notable', 'keystone' ] as const;
@@ -29,8 +30,8 @@ export class PoeCanvasTree extends PoeCanvasBase {
 		moveConnections: true,
 	};
 
-	protected override async afterDataLoaded(): Promise<void> {
-		super.afterDataLoaded();
+	protected override afterConnected(): void {
+		super.afterConnected();
 
 		this.addEventListener('keydown', this.onKeydown);
 	}
@@ -38,38 +39,19 @@ export class PoeCanvasTree extends PoeCanvasBase {
 	protected override onWorkerMessage(ev: MessageEvent) {
 		super.onWorkerMessage(ev);
 
-		this.onSelectNode(ev);
 		this.onStartNodeMove(ev);
-		this.onUpdateNode(ev);
-	}
-
-	protected onUpdateNode(ev: MessageEvent<CanvasEditorWorkerApiOut['updateNode']>) {
-		if (ev.data.type !== 'updateNode')
-			return;
-
-		const node = GraphNode.fromStorable(ev.data.node);
-		this.dataManager.moveNode(node, node);
-	}
-
-	protected onSelectNode(ev: MessageEvent<CanvasEditorWorkerApiOut['selectNode']>) {
-		if (ev.data.type !== 'selectNode')
-			return;
-
-		this.worker.selectNode(ev.data);
+		this.onStartHandleMove(ev);
 	}
 
 	protected override onMousedown(downEv: MouseEvent) {
-		if (downEv.buttons !== 1) // We only care about left clicks
+		if (downEv.buttons !== 1)
 			return;
 
 		downEv.preventDefault();
 		this.focus();
 
-		const transferableEv = makeObjectTransferable(downEv);
-
-		this.worker.mousedown({
-			event: transferableEv,
-		});
+		const event = makeObjectTransferable(downEv);
+		this.worker.mousedown({ event });
 	}
 
 	protected onStartNodeMove(ev: MessageEvent<CanvasEditorWorkerApiOut['startNodeMove']>) {
@@ -78,21 +60,54 @@ export class PoeCanvasTree extends PoeCanvasBase {
 
 		const rect = this.getBoundingClientRect();
 
-		const mousemove = (moveEv: MouseEvent) => {
-			this.worker.moveNode({
-				...ev.data,
-				mouseX:    moveEv.offsetX,
-				mouseY:    moveEv.offsetY,
-				boundingX: rect.left,
-				boundingY: rect.top,
-			});
-		};
+		const mousemove = (() => {
+			let moveEv: MouseEvent = undefined as any;
+			const fn = () => {
+				this.worker.moveNode({
+					...ev.data,
+					mouseX:    moveEv.offsetX,
+					mouseY:    moveEv.offsetY,
+					boundingX: rect.left,
+					boundingY: rect.top,
+				});
+			};
+
+			return (ev: MouseEvent) => { moveEv = ev; requestAnimationFrame(fn); };
+		})();
 
 		const mouseup = () => {
 			removeEventListener('mousemove', mousemove);
 			removeEventListener('mouseup', mouseup);
 		};
 
+		addEventListener('mousemove', mousemove);
+		addEventListener('mouseup', mouseup);
+	}
+
+	protected onStartHandleMove(ev: MessageEvent<CanvasEditorWorkerApiOut['startHandleMove']>) {
+		if (ev.data.type !== 'startHandleMove')
+			return;
+
+		const rect = this.getBoundingClientRect();
+
+		const mousemove = (() => {
+			let moveEv: MouseEvent = undefined as any;
+			const fn = () => {
+				this.worker.moveHandle({
+					...ev.data,
+					mouseX:    moveEv.offsetX,
+					mouseY:    moveEv.offsetY,
+					boundingX: rect.left,
+					boundingY: rect.top,
+				});
+			};
+
+			return (ev: MouseEvent) => { moveEv = ev; requestAnimationFrame(fn); };
+		})();
+		const mouseup = () => {
+			removeEventListener('mousemove', mousemove);
+			removeEventListener('mouseup', mouseup);
+		};
 		addEventListener('mousemove', mousemove);
 		addEventListener('mouseup', mouseup);
 	}
@@ -126,11 +141,11 @@ export class PoeCanvasTree extends PoeCanvasBase {
 	}
 
 	protected assignNodeData(node: GraphNode, data: NodeData | undefined) {
-		this.dataManager.updateNodeData(node, data);
+		//this.dataManager.updateNodeData(node, data);
 	}
 
 	protected async onClickSave() {
-		await this.dataManager.save();
+		//await this.dataManager.save();
 		this.requestUpdate();
 	}
 
@@ -193,7 +208,7 @@ export class PoeCanvasTree extends PoeCanvasBase {
 	protected override render(): unknown {
 		return [
 			super.render(),
-			when(!this.dataManager.updated, () => html`
+			when(this.updated, () => html`
 			<s-state-panel>
 				<button @click=${ this.onClickSave }>
 					Save
