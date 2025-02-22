@@ -1,14 +1,16 @@
 import { maybe, resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
-import { GraphConnection, GraphNode, type StorableGraphConnection, type StorableGraphNode } from '../../../app/graph/graph.ts';
-import { getGraphConnectionsQry, getGraphNodes, graphConnectionCollection, graphNodeCollection, type ConnectionChunk, type NodeChunk } from './firebase-queries.ts';
+import { GraphConnection, GraphNode, type StorableGraphConnection, type StorableGraphNode } from '../../app/graph/graph.ts';
+import { getGraphConnections, getGraphNodes, graphConnectionCollection, graphNodeCollection, type ConnectionChunk, type NodeChunk } from './firebase-queries.ts';
 import { addDoc, collection, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../app/firebase.ts';
+import { db } from '../../app/firebase.ts';
 import type { Vec2 } from '@roenlie/core/types';
-import type { NodeData } from '../../../app/graph/node-catalog.ts';
+import type { NodeData } from '../../app/graph/node-catalog.ts';
 
 
 interface NodeChunkRef { chunkId: string; nodeId: string; }
+
 interface ConChunkRef { chunkId: string; conId: string; }
+
 interface GraphChangeset {
 	deletedNodes:       NodeChunkRef[];
 	deletedConnections: ConChunkRef[];
@@ -17,6 +19,7 @@ interface GraphChangeset {
 	updatedNodes:       NodeChunkRef[];
 	updatedConnections: ConChunkRef[];
 }
+
 interface GraphChunkChangeLog {
 	update: Set<string>;
 	add:    Set<string>;
@@ -28,10 +31,9 @@ export class GraphDataManager {
 
 	constructor(protected repository: GraphRepository) {}
 
-	public ready:      boolean = false;
-	public loading:    ResolvablePromise<void> = resolvablePromise.resolve(void 0);
-	public updatedAt?: number = Infinity;
-
+	public ready:            boolean = false;
+	public loading:          ResolvablePromise<void> = resolvablePromise.resolve(void 0);
+	public updatedAt?:       number = Infinity;
 	public nodes:            Map<string, GraphNode> = new Map();
 	public connections:      Map<string, GraphConnection> = new Map();
 	public nodeChunks:       NodeChunk[] = [];
@@ -332,7 +334,7 @@ export class GraphDataManager {
 
 	public async save() {
 		if (!this.loading.done)
-			return;
+			return false;
 
 		this.ready = false;
 		this.loading = resolvablePromise();
@@ -352,6 +354,8 @@ export class GraphDataManager {
 		this.updatedAt = Date.now();
 		this.ready = true;
 		this.loading.resolve();
+
+		return true;
 	}
 
 	protected async addNodesFromScratch() {
@@ -457,8 +461,6 @@ export class GraphDataManager {
 		node.radius = radius;
 		node.updated = new Date().toISOString();
 
-		//node.path = this.path2DCreator?.createNodePath2D(node);
-
 		this.updatedAt = undefined;
 
 		return true;
@@ -493,8 +495,6 @@ export class GraphDataManager {
 	public updateNodeData(node: GraphNode, data: NodeData | undefined) {
 		node.data = data;
 		node.updated = new Date().toISOString();
-
-		//node.path = this.path2DCreator?.createNodePath2D(node);
 
 		this.updatedAt = undefined;
 	}
@@ -636,7 +636,7 @@ export class FirebaseGraphRepository implements GraphRepository {
 	}> {
 		const [ nodeChunks, connectionChunks ] = await Promise.all([
 			getGraphNodes(version),
-			getGraphConnectionsQry(version),
+			getGraphConnections(version),
 		]);
 
 		return { nodeChunks, connectionChunks };
@@ -693,8 +693,7 @@ export class FirebaseGraphRepository implements GraphRepository {
 		}
 
 		const result = await Promise.allSettled(operations);
-		console.log(result);
-
+		console.log(result.map(res => res.status));
 		console.log('Saved to Firebase');
 	}
 

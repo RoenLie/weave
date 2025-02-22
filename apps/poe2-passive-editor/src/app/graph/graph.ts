@@ -4,7 +4,10 @@ import { getPathReduction } from '../canvas/path-helpers.ts';
 import { allDataNodes, type NodeData } from './node-catalog.ts';
 
 
-export type StringVec2 = `x${ number }y${ number }`;
+export type GraphConnectionVec2 = Vec2 & {
+	index: 1 | 2, connection: GraphConnection;
+};
+
 export interface StorableGraphConnection {
 	id:      string;
 	updated: string;
@@ -13,17 +16,6 @@ export interface StorableGraphConnection {
 	m1:      Vec2;
 	m2:      Vec2;
 }
-export interface StorableGraphNode {
-	id:          string;
-	updated:     string;
-	x:           number;
-	y:           number;
-	radius:      number;
-	connections: string[];
-	data:        string;
-}
-export type GraphConnectionVec2 = Vec2 & { index: 1 | 2, connection: GraphConnection };
-
 
 export class GraphConnection {
 
@@ -87,6 +79,16 @@ export class GraphConnection {
 
 }
 
+
+export interface StorableGraphNode {
+	id:          string;
+	updated:     string;
+	x:           number;
+	y:           number;
+	radius:      number;
+	connections: string[];
+	data:        string;
+}
 
 export class GraphNode implements Vec2 {
 

@@ -1,6 +1,6 @@
 import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
-import type { StorableGraphConnection, StorableGraphNode } from '../../../app/graph/graph.ts';
-import { asType, db } from '../../../app/firebase.ts';
+import type { StorableGraphConnection, StorableGraphNode } from '../../app/graph/graph.ts';
+import { asType, db } from '../../app/firebase.ts';
 
 
 export interface NodeChunk {
@@ -38,7 +38,7 @@ export const getGraphNodes = async (version: string) =>  {
 };
 
 
-export const getGraphConnectionsQry = async (version: string) => {
+export const getGraphConnections = async (version: string) => {
 	const qry = query(
 		collection(db, graphConnectionCollection).withConverter(asType<ConnectionChunk>()),
 		where('version', '==', version),

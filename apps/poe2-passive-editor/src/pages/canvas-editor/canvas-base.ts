@@ -1,16 +1,16 @@
-import { html, render } from 'lit-html';
+import { html } from 'lit-html';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { GraphNode, type StorableGraphNode } from '../../app/graph/graph.ts';
 import { type Viewport } from '../../app/canvas/is-outside-viewport.ts';
 import { CustomElement } from '../../app/custom-element/custom-element.ts';
-import CanvasWorkerReader from '../../app/canvas/canvas-worker-reader.ts?worker';
+import CanvasWorkerReader from '../../app/canvas/workers/canvas-reader.ts?worker';
 import { when } from 'lit-html/directives/when.js';
-import { createCanvasReaderWorker } from '../../app/canvas/canvas-worker-interface.ts';
-import { makeObjectTransferable, type CanvasReaderWorkerApiOut } from '../../app/canvas/canvas-worker-base.ts';
+import { createCanvasWorker, makeObjectTransferable, type CanvasReaderWorkerMethods } from '../../app/canvas/workers/canvas-worker-interface.ts';
 import { allDataNodes } from '../../app/graph/node-catalog.ts';
 import { uppercaseFirstLetter } from '@roenlie/core/string';
 import { ref, type RefOrCallback } from 'lit-html/directives/ref.js';
+import type { CanvasReaderWorkerApiOut } from '../../app/canvas/workers/reader-implementation.ts';
 
 
 const unsetPopover = css`
@@ -29,16 +29,15 @@ color:    unset;
 export class PoeCanvasBase extends CustomElement {
 
 	@signal protected accessor selectedNode: GraphNode | undefined;
-	@signal protected accessor hoveredNode:  StorableGraphNode | undefined;
-	@signal protected accessor viewMoving:  boolean = false;
-	@signal protected accessor ready: boolean = false;
+	@signal protected accessor hoveredNode: StorableGraphNode | undefined;
+	@signal protected accessor viewMoving: boolean = false;
 
 	protected position: Vec2 | undefined;
 	protected viewport: Viewport | undefined;
 	protected scale:    number | undefined;
+	protected worker:   Worker & CanvasReaderWorkerMethods;
 
 	protected readonly imageSize: number = 13000;
-	protected readonly worker = createCanvasReaderWorker(CanvasWorkerReader);
 	protected readonly resizeObserver = new ResizeObserver(([ entry ]) => {
 		if (!entry)
 			return;
@@ -48,18 +47,30 @@ export class PoeCanvasBase extends CustomElement {
 
 	protected override connectedCallback(): void {
 		super.connectedCallback();
+
 		this.tabIndex = 0;
+		this.resizeObserver.observe(this);
 	}
 
 	protected override disconnectedCallback(): void {
 		super.disconnectedCallback();
 
 		this.worker.removeEventListener('message', this.boundWorkerMessage);
-
+		this.worker.terminate();
 		this.resizeObserver.unobserve(this);
 	}
 
 	protected override afterConnected() {
+		this.initializeWorker();
+	}
+
+	protected createWorker() {
+		return createCanvasWorker<CanvasReaderWorkerMethods>(CanvasWorkerReader);
+	}
+
+	protected initializeWorker() {
+		this.worker = this.createWorker();
+
 		const bgCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#background')!;
 		const mainCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#main')!;
 
@@ -69,16 +80,11 @@ export class PoeCanvasBase extends CustomElement {
 		this.worker.setSize({ width: this.offsetWidth, height: this.offsetHeight });
 		this.worker.setArea({ width: this.imageSize, height: this.imageSize });
 		this.worker.initBackground({});
-
-		this.resizeObserver.observe(this);
 	}
 
 	protected boundWorkerMessage = (ev: MessageEvent) => this.onWorkerMessage(ev);
 
-	/**
-	 * `ev.data.type` is the type of message.\
-	 * Calls the method `on${type}` if it exists.
-	 */
+	//#region from canvas worker
 	protected onWorkerMessage(ev: MessageEvent<CanvasReaderWorkerApiOut[keyof CanvasReaderWorkerApiOut]>) {
 		const fn = (this as any)['onWorker' + uppercaseFirstLetter(ev.data.type)];
 		if (typeof fn === 'function')
@@ -136,7 +142,9 @@ export class PoeCanvasBase extends CustomElement {
 	protected onWorkerLeaveNode(_ev: MessageEvent<CanvasReaderWorkerApiOut['leaveNode']>) {
 		this.hoveredNode = undefined;
 	}
+	//#endregion
 
+	//#region to canvas worker
 	protected onMousemove(ev: MouseEvent) {
 		const event = makeObjectTransferable(ev);
 		requestAnimationFrame(() => this.worker.mousemove({ event }));
@@ -165,9 +173,7 @@ export class PoeCanvasBase extends CustomElement {
 		const event = makeObjectTransferable(downEv);
 		this.worker.mousedown({ event });
 	}
-
-	protected beforeCloseTooltip(_node: GraphNode) {}
-	protected beforeOpenTooltip(_node: GraphNode) {}
+	//#endregion
 
 	protected renderTooltip(node: StorableGraphNode): unknown {
 		if (!node.data)

@@ -1,4 +1,4 @@
-import { CanvasWorkerReader } from './canvas-worker-base.ts';
+import { CanvasWorkerReader } from './reader-implementation.ts';
 
 
 const host = new CanvasWorkerReader();

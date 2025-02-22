@@ -1,5 +1,5 @@
 export const getWorkerImageChunk = (() => {
-	const rawGlob = import.meta.glob('../../assets/background/v2/*.webp', { query: 'inline' });
+	const rawGlob = import.meta.glob('../../../assets/background/v2/*.webp', { query: 'inline' });
 	const files = Object.entries(rawGlob).sort((a, b) => {
 		const aMatch = a[0].match(/(\d+)\.webp/)?.[1];
 		const bMatch = b[0].match(/(\d+)\.webp/)?.[1];

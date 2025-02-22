@@ -5,9 +5,9 @@ import { when } from 'lit-html/directives/when.js';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import { allDataNodes, nodeDataCatalog, type NodeDataCatalog } from '../../app/graph/node-catalog.ts';
 import { map } from 'lit-html/directives/map.js';
-import CanvasWorkerEditor from '../../app/canvas/canvas-worker-editor.ts?worker';
-import { createCanvasEditorWorker } from '../../app/canvas/canvas-worker-interface.ts';
-import { makeObjectTransferable, type CanvasEditorWorkerApiOut } from '../../app/canvas/canvas-worker-base.ts';
+import CanvasWorkerEditor from '../../app/canvas/workers/canvas-editor.ts?worker';
+import { createCanvasWorker, makeObjectTransferable, type CanvasEditorWorkerMethods } from '../../app/canvas/workers/canvas-worker-interface.ts';
+import type { CanvasEditorWorkerApiOut } from '../../app/canvas/workers/editor-implementation.ts';
 
 
 export class PoeCanvasTree extends PoeCanvasBase {
@@ -18,7 +18,7 @@ export class PoeCanvasTree extends PoeCanvasBase {
 	@signal protected accessor showNodeSelectorMenu: boolean = false;
 	@signal protected accessor updated: boolean = false;
 
-	protected override readonly worker = createCanvasEditorWorker(CanvasWorkerEditor);
+	protected override worker: Worker & CanvasEditorWorkerMethods;
 	protected readonly nodeSelectorMenus = [ 'minor', 'notable', 'keystone' ] as const;
 
 	protected override afterConnected(): void {
@@ -27,21 +27,13 @@ export class PoeCanvasTree extends PoeCanvasBase {
 		this.addEventListener('keydown', this.onKeydown);
 	}
 
+	protected override createWorker() {
+		return createCanvasWorker<CanvasEditorWorkerMethods>(CanvasWorkerEditor);
+	}
+
 	//#region from canvas worker
-	protected onWorkerDataUpdated(ev: MessageEvent<CanvasEditorWorkerApiOut['dataUpdated']>) {
+	protected onWorkerDataUpdated(_ev: MessageEvent<CanvasEditorWorkerApiOut['dataUpdated']>) {
 		this.updated = true;
-	}
-
-	protected override onWorkerOpenTooltip(ev: MessageEvent<CanvasEditorWorkerApiOut['openTooltip']>): void {
-		super.onWorkerOpenTooltip(ev);
-
-		console.log('openTooltip', ev.data);
-	}
-
-	protected override onWorkerCloseTooltip(ev: MessageEvent<CanvasEditorWorkerApiOut['closeTooltip']>): void {
-		super.onWorkerCloseTooltip(ev);
-
-		this.selectedNodeMenu = undefined;
 	}
 
 	protected onWorkerStartNodeMove(ev: MessageEvent<CanvasEditorWorkerApiOut['startNodeMove']>) {
@@ -52,10 +44,9 @@ export class PoeCanvasTree extends PoeCanvasBase {
 			const fn = () => {
 				this.worker.moveNode({
 					...ev.data,
-					mouseX:    moveEv.offsetX,
-					mouseY:    moveEv.offsetY,
-					boundingX: rect.left,
-					boundingY: rect.top,
+					mouseX: moveEv.offsetX,
+					mouseY: moveEv.offsetY,
+					rect,
 				});
 			};
 
@@ -84,10 +75,9 @@ export class PoeCanvasTree extends PoeCanvasBase {
 			const fn = () => {
 				this.worker.moveHandle({
 					...ev.data,
-					mouseX:    moveEv.offsetX,
-					mouseY:    moveEv.offsetY,
-					boundingX: rect.left,
-					boundingY: rect.top,
+					mouseX: moveEv.offsetX,
+					mouseY: moveEv.offsetY,
+					rect,
 				});
 			};
 
@@ -108,6 +98,10 @@ export class PoeCanvasTree extends PoeCanvasBase {
 
 	protected onWorkerAssignDataToNode(_ev: MessageEvent<CanvasEditorWorkerApiOut['assignDataToNode']>) {
 		this.hoveredNode = undefined;
+	}
+
+	protected onWorkerDataSaved(_ev: MessageEvent<CanvasEditorWorkerApiOut['dataSaved']>) {
+		this.updated = false;
 	}
 
 	protected onWorkerDraw(_ev: MessageEvent<CanvasEditorWorkerApiOut['draw']>) {
@@ -131,20 +125,15 @@ export class PoeCanvasTree extends PoeCanvasBase {
 		const event = makeObjectTransferable(ev);
 		this.worker.keydown({ event });
 	};
-	//#endregion
-
-	protected override beforeCloseTooltip(): void {
-		this.selectedNodeMenu = undefined;
-	}
 
 	protected assignNodeData(nodeId: string, dataId: string | undefined) {
 		this.worker.assignDataToNode({ nodeId, dataId });
 	}
 
 	protected async onClickSave() {
-		//await this.dataManager.save();
-		this.requestUpdate();
+		this.worker.saveData({});
 	}
+	//#endregion
 
 	protected override renderTooltip(node: StorableGraphNode): unknown {
 		const data = allDataNodes.get(node.data)!;
@@ -164,22 +153,22 @@ export class PoeCanvasTree extends PoeCanvasBase {
 				</button>
 				`) }
 				<ul>
-					${ when(
-						this.selectedNodeMenu,
-						menu => html`
-						<li @click=${ () => this.assignNodeData(node.id, undefined) }>
-							~ clear ~
-						</li>
-						${ map(nodeDataCatalog[menu], data => html`
-						<li @click=${ () => this.assignNodeData(node.id, data.id) }>
-							${ data.id.replaceAll('_', ' ') }
-						</li>
-						`) }
-						`,
-						() => map(this.nodeSelectorMenus, (menu) => html`
-						<li @click=${ () => this.selectedNodeMenu = menu }>${ menu }</li>
-						`),
-					) }
+				${ when(
+					this.selectedNodeMenu,
+					menu => html`
+					<li @click=${ () => this.assignNodeData(node.id, undefined) }>
+						~ clear ~
+					</li>
+					${ map(nodeDataCatalog[menu], data => html`
+					<li @click=${ () => this.assignNodeData(node.id, data.id) }>
+						${ data.id.replaceAll('_', ' ') }
+					</li>
+					`) }
+					`,
+					() => map(this.nodeSelectorMenus, (menu) => html`
+					<li @click=${ () => this.selectedNodeMenu = menu }>${ menu }</li>
+					`),
+				) }
 				</ul>
 			</s-node-selector>
 			`;

@@ -69,9 +69,9 @@ export class RouterCmp extends CustomElement {
 		await setPersistence(auth, browserLocalPersistence);
 
 		const provider = new GoogleAuthProvider();
-		const result = await signInWithPopup(auth, provider);
+		await signInWithPopup(auth, provider);
 
-		this.currentUser = result.user;
+		location.reload();
 	}
 
 	protected async logout() {

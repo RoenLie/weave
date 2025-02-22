@@ -1,4 +1,4 @@
-import { CanvasWorkerEditor } from './canvas-worker-base.ts';
+import { CanvasWorkerEditor } from './editor-implementation.ts';
 
 
 const host = new CanvasWorkerEditor();
