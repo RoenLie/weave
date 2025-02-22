@@ -1,9 +1,9 @@
-import { GraphNode, type StorableGraphNode } from '../../app/graph/graph.ts';
+import { type StorableGraphNode } from '../../app/graph/graph.ts';
 import { PoeCanvasBase } from './canvas-base.ts';
 import { html } from 'lit-html';
 import { when } from 'lit-html/directives/when.js';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
-import { allDataNodes, nodeDataCatalog, type NodeData, type NodeDataCatalog } from '../../app/graph/node-catalog.ts';
+import { allDataNodes, nodeDataCatalog, type NodeDataCatalog } from '../../app/graph/node-catalog.ts';
 import { map } from 'lit-html/directives/map.js';
 import CanvasWorkerEditor from '../../app/canvas/canvas-worker-editor.ts?worker';
 import { createCanvasEditorWorker } from '../../app/canvas/canvas-worker-interface.ts';
@@ -28,17 +28,23 @@ export class PoeCanvasTree extends PoeCanvasBase {
 	}
 
 	//#region from canvas worker
-	protected override onWorkerMessage(ev: MessageEvent) {
-		super.onWorkerMessage(ev);
-
-		this.onStartNodeMove(ev);
-		this.onStartHandleMove(ev);
+	protected onWorkerDataUpdated(ev: MessageEvent<CanvasEditorWorkerApiOut['dataUpdated']>) {
+		this.updated = true;
 	}
 
-	protected onStartNodeMove(ev: MessageEvent<CanvasEditorWorkerApiOut['startNodeMove']>) {
-		if (ev.data.type !== 'startNodeMove')
-			return;
+	protected override onWorkerOpenTooltip(ev: MessageEvent<CanvasEditorWorkerApiOut['openTooltip']>): void {
+		super.onWorkerOpenTooltip(ev);
 
+		console.log('openTooltip', ev.data);
+	}
+
+	protected override onWorkerCloseTooltip(ev: MessageEvent<CanvasEditorWorkerApiOut['closeTooltip']>): void {
+		super.onWorkerCloseTooltip(ev);
+
+		this.selectedNodeMenu = undefined;
+	}
+
+	protected onWorkerStartNodeMove(ev: MessageEvent<CanvasEditorWorkerApiOut['startNodeMove']>) {
 		const rect = this.getBoundingClientRect();
 
 		const mousemove = (() => {
@@ -59,16 +65,18 @@ export class PoeCanvasTree extends PoeCanvasBase {
 		const mouseup = () => {
 			removeEventListener('mousemove', mousemove);
 			removeEventListener('mouseup', mouseup);
+
+			this.viewMoving = false;
 		};
 
 		addEventListener('mousemove', mousemove);
 		addEventListener('mouseup', mouseup);
+
+		this.viewMoving = true;
+		this.hoveredNode = undefined;
 	}
 
-	protected onStartHandleMove(ev: MessageEvent<CanvasEditorWorkerApiOut['startHandleMove']>) {
-		if (ev.data.type !== 'startHandleMove')
-			return;
-
+	protected onWorkerStartHandleMove(ev: MessageEvent<CanvasEditorWorkerApiOut['startHandleMove']>) {
 		const rect = this.getBoundingClientRect();
 
 		const mousemove = (() => {
@@ -88,9 +96,22 @@ export class PoeCanvasTree extends PoeCanvasBase {
 		const mouseup = () => {
 			removeEventListener('mousemove', mousemove);
 			removeEventListener('mouseup', mouseup);
+
+			this.viewMoving = false;
 		};
 		addEventListener('mousemove', mousemove);
 		addEventListener('mouseup', mouseup);
+
+		this.viewMoving = true;
+		this.hoveredNode = undefined;
+	}
+
+	protected onWorkerAssignDataToNode(_ev: MessageEvent<CanvasEditorWorkerApiOut['assignDataToNode']>) {
+		this.hoveredNode = undefined;
+	}
+
+	protected onWorkerDraw(_ev: MessageEvent<CanvasEditorWorkerApiOut['draw']>) {
+		this.requestUpdate();
 	}
 	//#endregion
 
@@ -116,8 +137,8 @@ export class PoeCanvasTree extends PoeCanvasBase {
 		this.selectedNodeMenu = undefined;
 	}
 
-	protected assignNodeData(node: GraphNode, data: NodeData | undefined) {
-		//this.dataManager.updateNodeData(node, data);
+	protected assignNodeData(nodeId: string, dataId: string | undefined) {
+		this.worker.assignDataToNode({ nodeId, dataId });
 	}
 
 	protected async onClickSave() {
@@ -146,11 +167,11 @@ export class PoeCanvasTree extends PoeCanvasBase {
 					${ when(
 						this.selectedNodeMenu,
 						menu => html`
-						<li @click=${ () => this.assignNodeData(node, undefined) }>
+						<li @click=${ () => this.assignNodeData(node.id, undefined) }>
 							~ clear ~
 						</li>
 						${ map(nodeDataCatalog[menu], data => html`
-						<li @click=${ () => this.assignNodeData(node, data) }>
+						<li @click=${ () => this.assignNodeData(node.id, data.id) }>
 							${ data.id.replaceAll('_', ' ') }
 						</li>
 						`) }
@@ -166,7 +187,7 @@ export class PoeCanvasTree extends PoeCanvasBase {
 
 		return html`
 		<s-node-editor-tooltip>
-			<button @click=${ () => { this.assignNodeData(node, undefined); } }>
+			<button @click=${ () => { this.assignNodeData(node.id, undefined); } }>
 				<svg width="22px" height="22px" fill="currentColor">
 					<use xlink:href="bootstrap-icons.svg#x"/>
 				</svg>

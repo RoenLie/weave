@@ -1,4 +1,4 @@
-import { html } from 'lit-html';
+import { html, render } from 'lit-html';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { GraphNode, type StorableGraphNode } from '../../app/graph/graph.ts';
@@ -6,10 +6,11 @@ import { type Viewport } from '../../app/canvas/is-outside-viewport.ts';
 import { CustomElement } from '../../app/custom-element/custom-element.ts';
 import CanvasWorkerReader from '../../app/canvas/canvas-worker-reader.ts?worker';
 import { when } from 'lit-html/directives/when.js';
-import { styleMap } from 'lit-html/directives/style-map.js';
 import { createCanvasReaderWorker } from '../../app/canvas/canvas-worker-interface.ts';
 import { makeObjectTransferable, type CanvasReaderWorkerApiOut } from '../../app/canvas/canvas-worker-base.ts';
 import { allDataNodes } from '../../app/graph/node-catalog.ts';
+import { uppercaseFirstLetter } from '@roenlie/core/string';
+import { ref, type RefOrCallback } from 'lit-html/directives/ref.js';
 
 
 const unsetPopover = css`
@@ -29,6 +30,7 @@ export class PoeCanvasBase extends CustomElement {
 
 	@signal protected accessor selectedNode: GraphNode | undefined;
 	@signal protected accessor hoveredNode:  StorableGraphNode | undefined;
+	@signal protected accessor viewMoving:  boolean = false;
 	@signal protected accessor ready: boolean = false;
 
 	protected position: Vec2 | undefined;
@@ -57,18 +59,6 @@ export class PoeCanvasBase extends CustomElement {
 		this.resizeObserver.unobserve(this);
 	}
 
-	protected override afterUpdate(changedProps: Set<string>): void {
-		super.afterUpdate(changedProps);
-
-		if (changedProps.has('hoveredNode')) {
-			if (this.hoveredNode) {
-				const tooltip = this.shadowRoot?.querySelector<HTMLElement>('article[popover="manual"]');
-				if (tooltip)
-					tooltip.showPopover();
-			}
-		}
-	}
-
 	protected override afterConnected() {
 		const bgCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#background')!;
 		const mainCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#main')!;
@@ -86,21 +76,18 @@ export class PoeCanvasBase extends CustomElement {
 	protected boundWorkerMessage = (ev: MessageEvent) => this.onWorkerMessage(ev);
 
 	/**
-	 * Called on message from the worker.\
 	 * `ev.data.type` is the type of message.\
-	 * Can be used decide if the message should be handled.
+	 * Calls the method `on${type}` if it exists.
 	 */
-	protected onWorkerMessage(ev: MessageEvent) {
-		this.onUpdatePosition(ev);
-		this.onStartViewMove(ev);
-		this.onOpenTooltip(ev);
-		this.onCloseTooltip(ev);
+	protected onWorkerMessage(ev: MessageEvent<CanvasReaderWorkerApiOut[keyof CanvasReaderWorkerApiOut]>) {
+		const fn = (this as any)['onWorker' + uppercaseFirstLetter(ev.data.type)];
+		if (typeof fn === 'function')
+			fn.call(this, ev);
+		else
+			console.warn(`Unknown worker message type: ${ ev.data.type }`);
 	}
 
-	protected onUpdatePosition = (ev: MessageEvent) => {
-		if (ev.data.type !== 'updatePosition')
-			return;
-
+	protected onWorkerUpdatePosition(ev: MessageEvent<CanvasReaderWorkerApiOut['updatePosition']>) {
 		this.position = ev.data.position;
 		this.viewport = ev.data.viewport;
 		this.scale    = ev.data.scale;
@@ -108,10 +95,7 @@ export class PoeCanvasBase extends CustomElement {
 		this.requestUpdate();
 	};
 
-	protected onStartViewMove = (ev: MessageEvent) => {
-		if (ev.data.type !== 'startViewMove')
-			return;
-
+	protected onWorkerStartViewMove(ev: MessageEvent<CanvasReaderWorkerApiOut['startViewMove']>) {
 		const viewOffsetX = ev.data.offsetX;
 		const viewOffsetY = ev.data.offsetY;
 
@@ -136,24 +120,22 @@ export class PoeCanvasBase extends CustomElement {
 		const mouseup = () => {
 			removeEventListener('mousemove', mousemove);
 			removeEventListener('mouseup', mouseup);
+
+			this.viewMoving = false;
 		};
 		addEventListener('mousemove', mousemove);
 		addEventListener('mouseup', mouseup);
+
+		this.viewMoving = true;
 	};
 
-	protected onCloseTooltip = (ev: MessageEvent<CanvasReaderWorkerApiOut['closeTooltip']>) => {
-		if (ev.data.type !== 'closeTooltip')
-			return;
-
-		this.hoveredNode = undefined;
-	};
-
-	protected onOpenTooltip = (ev: MessageEvent<CanvasReaderWorkerApiOut['openTooltip']>) => {
-		if (ev.data.type !== 'openTooltip')
-			return;
-
+	protected onWorkerEnterNode(ev: MessageEvent<CanvasReaderWorkerApiOut['enterNode']>) {
 		this.hoveredNode = ev.data.node;
-	};
+	}
+
+	protected onWorkerLeaveNode(_ev: MessageEvent<CanvasReaderWorkerApiOut['leaveNode']>) {
+		this.hoveredNode = undefined;
+	}
 
 	protected onMousemove(ev: MouseEvent) {
 		const event = makeObjectTransferable(ev);
@@ -203,6 +185,29 @@ export class PoeCanvasBase extends CustomElement {
 		`;
 	}
 
+	protected onRefCallback: RefOrCallback = async (el) => {
+		if (!(el instanceof HTMLElement))
+			return;
+
+		await this.updateComplete;
+		if (!el.isConnected)
+			return;
+
+		if (!this.viewport || !this.position || !this.scale)
+			return;
+
+		const node = this.hoveredNode!;
+		const rect = this.getBoundingClientRect();
+		const scale = this.scale;
+		const x = (node.x * scale) + (this.position.x + rect.left) + (node.radius * scale);
+		const y = (node.y * scale) + (this.position.y + rect.top)  - (node.radius * scale);
+
+		el.style.top = y + 'px';
+		el.style.left = x + 'px';
+
+		el.showPopover();
+	};
+
 	protected override render(): unknown {
 		return html`
 		<canvas id="background"></canvas>
@@ -212,19 +217,10 @@ export class PoeCanvasBase extends CustomElement {
 			@mousewheel=${ this.onMousewheel }
 		></canvas>
 
-		${ when(this.hoveredNode, () => {
-			if (!this.viewport || !this.position || !this.scale)
-				return;
-
-			const node = this.hoveredNode!;
-			const rect = this.getBoundingClientRect();
-			const scale = this.scale;
-			const x = (node.x * scale) + (this.position.x + rect.left) + (node.radius * scale);
-			const y = (node.y * scale) + (this.position.y + rect.top)  - (node.radius * scale);
-
+		${ when(!this.viewMoving && this.hoveredNode, node => {
 			return html`
 			<article
-				style=${ styleMap({ top: y + 'px', left: x + 'px' }) }
+				${ ref(this.onRefCallback) }
 				class="tooltip"
 				popover="manual"
 			>

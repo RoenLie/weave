@@ -8,6 +8,7 @@ import { Canvas2DObject } from './canvas-object.ts';
 import { drawParallelBezierCurve, type Bezier } from './parallel-bezier-curve.ts';
 import { FirebaseGraphRepository, GraphDataManager } from '../../pages/canvas-editor/utils/data-manager.ts';
 import { oneOf } from '@roenlie/core/validation';
+import { allDataNodes } from '../graph/node-catalog.ts';
 
 
 class WorkerView {
@@ -185,6 +186,14 @@ export interface CanvasReaderWorkerApiOut {
 		type:   'selectNode',
 		nodeId: string,
 	}
+	enterNode: {
+		type: 'enterNode',
+		node: StorableGraphNode;
+	}
+	leaveNode: {
+		type: 'leaveNode';
+		node: StorableGraphNode;
+	}
 	openTooltip: {
 		type:   'openTooltip',
 		nodeId: string,
@@ -197,6 +206,21 @@ export interface CanvasReaderWorkerApiOut {
 }
 
 
+type PostMessageApi<T> = {
+	[key in keyof T]: (args: Omit<T[key], 'type'>) => void;
+};
+
+
+const createPostMessage = <T extends object>() => {
+	const proxy = new Proxy({} as any, {
+		get: (_, prop: Extract<keyof T, string>) =>
+			(args: T[keyof T]) => postMessage({ ...args, type: prop }),
+	});
+
+	return proxy as PostMessageApi<T>;
+};
+
+
 type WorkerReaderMethods = {
 	[key in keyof CanvasReaderWorkerApiIn]: (args: CanvasReaderWorkerApiIn[key]) => void;
 };
@@ -205,6 +229,7 @@ type WorkerReaderMethods = {
 export class CanvasWorkerReader implements WorkerReaderMethods {
 
 	protected readonly data = new GraphDataManager(new FirebaseGraphRepository());
+	protected readonly post = createPostMessage<CanvasReaderWorkerApiOut>();
 
 	protected bgView:        WorkerView;
 	protected mainView:      WorkerView;
@@ -227,7 +252,7 @@ export class CanvasWorkerReader implements WorkerReaderMethods {
 		if (typeof fn !== 'function')
 			return console.error(`Unknown message type: ${ ev.data.type }`);
 
-		(this as any)[ev.data.type]?.(ev.data);
+		fn.call(this, ev.data);
 	}
 
 	public async init(data: {
@@ -367,25 +392,24 @@ export class CanvasWorkerReader implements WorkerReaderMethods {
 			this.hoveredNode = undefined;
 
 			node.path = this.createNodePath2D(node);
-			this.drawMain();
 
-			postMessage({
-				type:   'closeTooltip',
-				nodeId: node.id,
-			} satisfies CanvasReaderWorkerApiOut['closeTooltip']);
+			this.post.leaveNode({
+				node: GraphNode.toStorable(node),
+			});
+
+			this.drawMain();
 		}
 
 		// Add the hover effect if a node is hovered
 		if (node && node !== this.hoveredNode) {
 			this.hoveredNode = node;
 			this.hoveredNode.path = this.createNodePath2D(node);
-			this.drawMain();
 
-			postMessage({
-				type:   'openTooltip',
-				nodeId: node.id,
-				node:   GraphNode.toStorable(node),
-			} satisfies CanvasReaderWorkerApiOut['openTooltip']);
+			this.post.enterNode({
+				node: GraphNode.toStorable(node),
+			});
+
+			this.drawMain();
 		}
 	}
 	//#endregion
@@ -614,6 +638,11 @@ export interface CanvasEditorWorkerApiIn extends CanvasReaderWorkerApiIn {
 		viewPositionY: number;
 		scale:         number;
 	}
+	assignDataToNode: {
+		type:   'assignDataToNode';
+		nodeId: string;
+		dataId: string | undefined;
+	}
 }
 
 export interface CanvasEditorWorkerApiOut extends CanvasReaderWorkerApiOut {
@@ -638,6 +667,17 @@ export interface CanvasEditorWorkerApiOut extends CanvasReaderWorkerApiOut {
 		viewPositionY: number,
 		scale:         number,
 	}
+	draw: {
+		type: 'draw'
+	},
+	assignDataToNode: {
+		type:   'assignDataToNode';
+		nodeId: string;
+		dataId: string | undefined;
+	}
+	dataUpdated: {
+		type: 'dataUpdated'
+	}
 }
 
 
@@ -647,6 +687,8 @@ type WorkerEditorMethods = {
 
 
 export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEditorMethods {
+
+	protected override readonly post = createPostMessage<CanvasEditorWorkerApiOut>();
 
 	protected editingFeatures = {
 		moveNode:        false,
@@ -722,13 +764,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 	public keydown(data: CanvasEditorWorkerApiIn['keydown']) {
 		const event = data.event;
 		const code = event.code;
-
-		//if (event.key === 'Escape' && this.selectedNode) {
-		//	const node = this.selectedNode;
-		//	this.selectedNode = undefined;
-		//	node.path = this.createNodePath2D(node);
-		//	this.drawMain();
-		//}
+		let updated = false;
 
 		if (this.selectedNode) {
 			const node = this.selectedNode;
@@ -747,19 +783,27 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 					con.pathHandle1 = this.createConnectionHandle2D(con, 1);
 					con.pathHandle2 = this.createConnectionHandle2D(con, 2);
 				});
+
+				updated = true;
 			}
 			else if (code === 'Delete') {
 				this.data.deleteNode(node);
+				updated = true;
 			}
 			else if (code === 'Escape') {
 				this.selectedNode = undefined;
 				node.path = this.createNodePath2D(node);
+				updated = true;
 			}
+		}
 
+		if (updated) {
+			postMessage({
+				type: 'dataUpdated',
+			} satisfies CanvasEditorWorkerApiOut['dataUpdated']);
 			this.drawMain();
 		}
 	}
-
 
 	public moveNode(data: CanvasEditorWorkerApiIn['moveNode']) {
 		const node = this.data.nodes.get(data.nodeId);
@@ -796,6 +840,10 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 			con.pathHandle1 = this.createConnectionHandle2D(con, 1);
 			con.pathHandle2 = this.createConnectionHandle2D(con, 2);
 		}
+
+		postMessage({
+			type: 'dataUpdated',
+		} satisfies CanvasEditorWorkerApiOut['dataUpdated']);
 
 		this.drawMain();
 	}
@@ -840,8 +888,41 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 		con.pathHandle1 = this.createConnectionHandle2D(con, 1);
 		con.pathHandle2 = this.createConnectionHandle2D(con, 2);
 
+		postMessage({
+			type: 'dataUpdated',
+		} satisfies CanvasEditorWorkerApiOut['dataUpdated']);
+
 		this.drawMain();
 	}
+
+	public assignDataToNode(data: CanvasEditorWorkerApiIn['assignDataToNode']) {
+		const node = this.data.nodes.get(data.nodeId);
+		if (!node)
+			return;
+
+		if (!data.dataId) {
+			this.data.updateNodeData(node, undefined);
+		}
+		else {
+			const nodeData = allDataNodes.get(data.dataId);
+			if (!nodeData)
+				return;
+
+			this.data.updateNodeData(node, nodeData);
+		}
+
+		postMessage({
+			type:   'assignDataToNode',
+			nodeId: node.id,
+			dataId: data.dataId,
+		} satisfies CanvasEditorWorkerApiOut['assignDataToNode']);
+
+		postMessage({
+			type: 'dataUpdated',
+		} satisfies CanvasEditorWorkerApiOut['dataUpdated']);
+
+		this.drawMain();
+	};
 	//#endregion
 
 	public selectNode(nodeId: string) {
@@ -878,11 +959,21 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 		}
 
 		this.selectedNode = node;
+
+		postMessage({
+			type: 'dataUpdated',
+		} satisfies CanvasEditorWorkerApiOut['dataUpdated']);
+
 		this.drawMain();
 	}
 
 	protected connectNodes(node: GraphNode) {
-		this.data.connectNodes(this.selectedNode, node);
+		if (this.data.connectNodes(this.selectedNode, node))
+			return;
+
+		postMessage({
+			type: 'dataUpdated',
+		} satisfies CanvasEditorWorkerApiOut['dataUpdated']);
 
 		this.drawMain();
 	}
@@ -996,7 +1087,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerEdit
 		if (this.mainView.visiblePercentage < 1)
 			this.mapConnectionHandle2Ds();
 
-		postMessage({ type: 'drawMain' });
+		postMessage({ type: 'draw' } satisfies CanvasEditorWorkerApiOut['draw']);
 	}
 
 }
