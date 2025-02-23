@@ -6,7 +6,7 @@ import { type Viewport } from '../../app/canvas/is-outside-viewport.ts';
 import { CustomElement } from '../../app/custom-element/custom-element.ts';
 import CanvasWorkerReader from '../../app/canvas/workers/canvas-reader.ts?worker';
 import { when } from 'lit-html/directives/when.js';
-import { createCanvasWorker, makeObjectTransferable, type CanvasReaderWorkerMethods } from '../../app/canvas/workers/canvas-worker-interface.ts';
+import { createCanvasWorker, makeObjectTransferable, type CanvasReaderWorkerMethods, type TransferableMouseEvent, type TransferableWheelEvent } from '../../app/canvas/workers/canvas-worker-interface.ts';
 import { allDataNodes } from '../../app/graph/node-catalog.ts';
 import { uppercaseFirstLetter } from '@roenlie/core/string';
 import { ref, type RefOrCallback } from 'lit-html/directives/ref.js';
@@ -27,6 +27,8 @@ color:    unset;
 
 
 export class PoeCanvasBase extends CustomElement {
+
+	public static fps = 100;
 
 	@signal protected accessor selectedNode: GraphNode | undefined;
 	@signal protected accessor hoveredNode: StorableGraphNode | undefined;
@@ -76,51 +78,45 @@ export class PoeCanvasBase extends CustomElement {
 
 		this.worker.addEventListener('message', this.boundWorkerMessage);
 
-		this.worker.init(bgCanvas, mainCanvas);
+		this.worker.init(bgCanvas, mainCanvas, document.createElement('canvas'));
 		this.worker.setSize({ width: this.offsetWidth, height: this.offsetHeight });
 		this.worker.setArea({ width: this.imageSize, height: this.imageSize });
 		this.worker.initBackground({});
 	}
 
-	protected boundWorkerMessage = (ev: MessageEvent) => this.onWorkerMessage(ev);
+	protected boundWorkerMessage = (ev: MessageEvent) => this.onWorkerMessage(ev.data);
 
 	//#region from canvas worker
-	protected onWorkerMessage(ev: MessageEvent<CanvasReaderWorkerApiOut[keyof CanvasReaderWorkerApiOut]>) {
-		const fn = (this as any)['onWorker' + uppercaseFirstLetter(ev.data.type)];
+	protected onWorkerMessage(data: CanvasReaderWorkerApiOut[keyof CanvasReaderWorkerApiOut]) {
+		const fn = (this as any)['onWorker' + uppercaseFirstLetter(data.type)];
 		if (typeof fn === 'function')
-			fn.call(this, ev);
+			fn.call(this, data);
 		else
-			console.warn(`Unknown worker message type: ${ ev.data.type }`);
+			console.warn(`Unknown worker message type: ${ data.type }`);
 	}
 
-	protected onWorkerUpdatePosition(ev: MessageEvent<CanvasReaderWorkerApiOut['updatePosition']>) {
-		this.position = ev.data.position;
-		this.viewport = ev.data.viewport;
-		this.scale    = ev.data.scale;
-
-		this.requestUpdate();
-	};
-
-	protected onWorkerStartViewMove(ev: MessageEvent<CanvasReaderWorkerApiOut['startViewMove']>) {
-		const viewOffsetX = ev.data.offsetX;
-		const viewOffsetY = ev.data.offsetY;
-
+	protected onWorkerStartViewMove(data: CanvasReaderWorkerApiOut['startViewMove']) {
 		const rect = this.getBoundingClientRect();
-		const deltaY = rect.top;
-		const deltaX = rect.left;
 
 		// We setup the mousemove and mouseup events for panning the view
 		const mousemove = (() => {
-			let moveEv: MouseEvent = undefined as any;
-			const fn = () => {
-				const x = moveEv.offsetX - deltaX - viewOffsetX;
-				const y = moveEv.offsetY - deltaY - viewOffsetY;
+			let ev: MouseEvent = undefined as any;
+			let lastFrameTime: number = performance.now();
+
+			const fn = (currentTime: number) => {
+				const deltaTime = currentTime - lastFrameTime;
+				if (deltaTime < 1000 / PoeCanvasBase.fps)
+					return;
+
+				lastFrameTime = currentTime;
+				const x = ev.offsetX - rect.x - data.offsetX;
+				const y = ev.offsetY - rect.y - data.offsetY;
 
 				this.worker.moveTo({ x, y });
 			};
 
-			return (ev: MouseEvent) => {
-				moveEv = ev; requestAnimationFrame(fn);
+			return (event: MouseEvent) => {
+				ev = event; requestAnimationFrame(fn);
 			};
 		})();
 		const mouseup = () => {
@@ -135,36 +131,101 @@ export class PoeCanvasBase extends CustomElement {
 		this.viewMoving = true;
 	};
 
-	protected onWorkerEnterNode(ev: MessageEvent<CanvasReaderWorkerApiOut['enterNode']>) {
-		this.hoveredNode = ev.data.node;
+	protected onWorkerStartViewTouchMove(data: CanvasReaderWorkerApiOut['startViewTouchMove']) {
+		const rect = this.getBoundingClientRect();
+
+		const getDistance = (touch1: Touch, touch2: Touch) => {
+			const dx = touch2.clientX - touch1.clientX;
+			const dy = touch2.clientY - touch1.clientY;
+
+			return Math.sqrt(dx * dx + dy * dy);
+		};
+
+		let initialDistance: number | undefined;
+
+		// We setup the mousemove and mouseup events for panning the view
+		const touchmove = (() => {
+			let ev: TouchEvent = undefined as any;
+			let lastFrameTime: number = performance.now();
+
+			const fn = (currentTime: number) => {
+				const deltaTime = currentTime - lastFrameTime;
+				if (deltaTime < 1000 / PoeCanvasBase.fps)
+					return;
+
+				lastFrameTime = currentTime;
+
+				const touch1 = ev.touches[0];
+				if (!touch1)
+					return touchend(ev);
+
+				// For touch we also need to find out if we are zooming or moving
+				if (ev.touches.length === 2) {
+					const touch2 = ev.touches[1]!;
+
+					if (initialDistance === undefined)
+						initialDistance = getDistance(touch1, touch2);
+
+					const currentDistance = getDistance(touch1, touch2);
+					const factor = currentDistance / initialDistance;
+
+					initialDistance = currentDistance;
+
+					const touch1OffsetX = touch1.pageX - rect.x;
+					const touch1OffsetY = touch1.pageY - rect.y;
+					const touch2OffsetX = touch2.pageX - rect.x;
+					const touch2OffsetY = touch2.pageY - rect.y;
+
+					const x = (touch1OffsetX + touch2OffsetX) / 2;
+					const y = (touch1OffsetY + touch2OffsetY) / 2;
+
+					this.worker.scaleAt({ vec: { x, y }, factor });
+				}
+				else {
+					const x = touch1.clientX - rect.x - data.offsetX;
+					const y = touch1.clientY - rect.y - data.offsetY;
+
+					this.worker.moveTo({ x, y });
+				}
+			};
+
+			return (event: TouchEvent) => {
+				ev = event; requestAnimationFrame(fn);
+			};
+		})();
+		const touchend = (_event: TouchEvent) => {
+			removeEventListener('touchmove', touchmove);
+			removeEventListener('touchstart', touchend);
+			removeEventListener('touchend', touchend);
+
+			this.viewMoving = false;
+		};
+
+		addEventListener('touchmove', touchmove);
+		addEventListener('touchstart', touchend);
+		addEventListener('touchend', touchend);
+
+		this.viewMoving = true;
 	}
 
-	protected onWorkerLeaveNode(_ev: MessageEvent<CanvasReaderWorkerApiOut['leaveNode']>) {
+	protected onWorkerEnterNode(data: CanvasReaderWorkerApiOut['enterNode']) {
+		this.hoveredNode = data.node;
+		this.position = data.position;
+		this.viewport = data.viewport;
+		this.scale    = data.scale;
+	}
+
+	protected onWorkerLeaveNode(data: CanvasReaderWorkerApiOut['leaveNode']) {
 		this.hoveredNode = undefined;
+		this.position = data.position;
+		this.viewport = data.viewport;
+		this.scale    = data.scale;
 	}
 	//#endregion
 
 	//#region to canvas worker
-	protected onMousemove(ev: MouseEvent) {
-		const event = makeObjectTransferable(ev);
-		requestAnimationFrame(() => this.worker.mousemove({ event }));
-	}
-
-	protected onMousewheel(ev: WheelEvent) {
-		ev.preventDefault();
-
-		const vec = { x: ev.offsetX, y: ev.offsetY };
-		const deltaY = ev.deltaY;
-		requestAnimationFrame(() => {
-			if (-deltaY > 0)
-				this.worker.scaleAt({ vec, factor: 1.1 });
-			else
-				this.worker.scaleAt({ vec, factor: 1 / 1.1 });
-		});
-	}
-
 	protected onMousedown(downEv: MouseEvent) {
-		if (downEv.buttons !== 1) // We only care about left clicks
+		if (downEv.buttons !== 1)
 			return;
 
 		downEv.preventDefault();
@@ -172,6 +233,58 @@ export class PoeCanvasBase extends CustomElement {
 
 		const event = makeObjectTransferable(downEv);
 		this.worker.mousedown({ event });
+	}
+
+	protected onMousemove = (() => {
+		let lastFrameTime: number = performance.now();
+		let event: TransferableMouseEvent = undefined as any;
+		const fn = (currentTime: number) => {
+			const deltaTime = currentTime - lastFrameTime;
+			if (deltaTime < 1000 / PoeCanvasBase.fps)
+				return;
+
+			lastFrameTime = currentTime;
+			this.worker.mousemove({ event });
+		};
+
+		return (ev: MouseEvent) => {
+			event = makeObjectTransferable(ev);
+			requestAnimationFrame(fn);
+		};
+	})();
+
+	protected onMousewheel = (() => {
+		let lastFrameTime: number = performance.now();
+		let event: TransferableWheelEvent = undefined as any;
+
+		const fn = (currentTime: number) => {
+			const deltaTime = currentTime - lastFrameTime;
+			if (deltaTime < 1000 / PoeCanvasBase.fps)
+				return;
+
+			lastFrameTime = currentTime;
+			const vec = { x: event.offsetX, y: event.offsetY };
+			const deltaY = event.deltaY;
+			const factor = -deltaY > 0 ? 1.1 : 1 / 1.1;
+			this.worker.scaleAt({ vec, factor });
+		};
+
+		return (ev: WheelEvent) => {
+			this.hoveredNode = undefined;
+			event = makeObjectTransferable(ev);
+			requestAnimationFrame(fn);
+		};
+	})();
+
+	protected onTouchstart(downEv: TouchEvent) {
+		downEv.preventDefault();
+		this.focus();
+
+		const event = makeObjectTransferable(downEv);
+		const touches = [ ...downEv.touches ].map(touch => makeObjectTransferable(touch));
+		const rect = this.getBoundingClientRect();
+
+		this.worker.touchstart({ event, touches, rect });
 	}
 	//#endregion
 
@@ -221,7 +334,12 @@ export class PoeCanvasBase extends CustomElement {
 			@mousemove=${ this.onMousemove }
 			@mousedown =${ this.onMousedown }
 			@mousewheel=${ this.onMousewheel }
+
+			@touchstart=${ this.onTouchstart }
 		></canvas>
+
+		<!--<s-debug>
+		</s-debug>-->
 
 		${ when(!this.viewMoving && this.hoveredNode, node => {
 			return html`
@@ -246,6 +364,17 @@ export class PoeCanvasBase extends CustomElement {
 			outline: none;
 			background-color: rgb(8, 12, 18);
 		}
+		/*s-debug {
+			position: fixed;
+			right: 0;
+			bottom: 0;
+			display: grid;
+			background-color: white;
+			color: black;
+			width: 30vw;
+			height: 5vh;
+			font-size: 16px;
+		}*/
 		canvas {
 			grid-row: 1/2;
 			grid-column: 1/2;

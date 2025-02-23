@@ -1,4 +1,4 @@
-import type { Canvas2DObject } from '../canvas/canvas-object.ts';
+import { Canvas2DObject } from '../canvas/canvas-object.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { getPathReduction } from '../canvas/path-helpers.ts';
 import { allDataNodes, type NodeData } from './node-catalog.ts';
@@ -62,9 +62,9 @@ export class GraphConnection {
 	public m2:      GraphConnectionVec2;
 	public updated: string;
 
-	public path:        Canvas2DObject | undefined;
-	public pathHandle1: Canvas2DObject | undefined;
-	public pathHandle2: Canvas2DObject | undefined;
+	public path:        Canvas2DObject = new Canvas2DObject();
+	public pathHandle1: Canvas2DObject = new Canvas2DObject();
+	public pathHandle2: Canvas2DObject = new Canvas2DObject();
 
 	public toStorable(): StorableGraphConnection {
 		return {
@@ -148,7 +148,7 @@ export class GraphNode implements Vec2 {
 	public x:           number;
 	public y:           number;
 	public radius:      number;
-	public path:        Canvas2DObject | undefined;
+	public path:        Canvas2DObject = new Canvas2DObject();
 	public connections: Set<GraphConnection> = new Set();
 	public data?:       NodeData;
 

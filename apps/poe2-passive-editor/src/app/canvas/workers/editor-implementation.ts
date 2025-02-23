@@ -127,10 +127,8 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 				nodeY:         node.y,
 				initialMouseX: event.offsetX,
 				initialMouseY: event.offsetY,
-				//viewPositionX: this.bgView.position.x,
-				//viewPositionY: this.bgView.position.y,
 				position:      this.bgView.position,
-				scale:         this.bgView.scale,
+				scale:         this.bgView.scaleFactor,
 			});
 		}
 		else if (conHandle) {
@@ -139,10 +137,8 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 				handle:        { index: conHandle.index, x: conHandle.x, y: conHandle.y },
 				initialMouseX: event.offsetX,
 				initialMouseY: event.offsetY,
-				//viewPositionX: this.bgView.position.x,
-				//viewPositionY: this.bgView.position.y,
 				position:      this.bgView.position,
-				scale:         this.bgView.scale,
+				scale:         this.bgView.scaleFactor,
 			});
 		}
 		// If we didn't find a node or a connection, we want to pan the view
@@ -177,11 +173,11 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 				else if (code === 'Digit3')
 					this.data.resizeNode(node, GraphNode.sizes[2]);
 
-				node.path = this.createNodePath2D(node);
+				node.path.clear();
 				node.connections.forEach(con => {
-					con.path = this.createConnectionPath2D(this.data.nodes, con);
-					con.pathHandle1 = this.createConnectionHandle2D(con, 1);
-					con.pathHandle2 = this.createConnectionHandle2D(con, 2);
+					con.path.clear();
+					con.pathHandle1.clear();
+					con.pathHandle2.clear();
 				});
 
 				updated = true;
@@ -192,7 +188,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 			}
 			else if (code === 'Escape') {
 				this.selectedNode = undefined;
-				node.path = this.createNodePath2D(node);
+				node.path.clear();
 			}
 		}
 
@@ -232,11 +228,11 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		if (!this.data.moveNode(node, { x, y }))
 			return;
 
-		node.path = this.createNodePath2D(node);
+		node.path.clear();
 		for (const con of node.connections) {
-			con.path = this.createConnectionPath2D(this.data.nodes, con);
-			con.pathHandle1 = this.createConnectionHandle2D(con, 1);
-			con.pathHandle2 = this.createConnectionHandle2D(con, 2);
+			con.path.clear();
+			con.pathHandle1.clear();
+			con.pathHandle2.clear();
 		}
 
 		this.post.dataUpdated({});
@@ -282,9 +278,9 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		if (!this.data.moveConnection(con, conHandle, { x, y }))
 			return;
 
-		con.path = this.createConnectionPath2D(this.data.nodes, con);
-		con.pathHandle1 = this.createConnectionHandle2D(con, 1);
-		con.pathHandle2 = this.createConnectionHandle2D(con, 2);
+		con.path.clear();
+		con.pathHandle1.clear();
+		con.pathHandle2.clear();
 
 		this.post.dataUpdated({});
 
@@ -334,11 +330,11 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		if (this.selectedNode?.path) {
 			const node = this.selectedNode;
 			this.selectedNode = undefined;
-			node.path = this.createNodePath2D(node);
+			node.path.clear();
 		}
 
 		this.selectedNode = node;
-		node.path = this.createNodePath2D(node);
+		node.path.clear();
 
 		this.drawMain();
 	}
@@ -347,7 +343,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		const viewOffsetX = event.offsetX - this.bgView.position.x;
 		const viewOffsetY = event.offsetY - this.bgView.position.y;
 
-		const scale = this.bgView.scale;
+		const scale = this.bgView.scaleFactor;
 		const realX = viewOffsetX / scale;
 		const realY = viewOffsetY / scale;
 
@@ -356,7 +352,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		if (this.selectedNode?.path) {
 			const node = this.selectedNode;
 			this.selectedNode = undefined;
-			node.path = this.createNodePath2D(node);
+			node.path.clear();
 		}
 
 		this.selectedNode = node;
@@ -420,7 +416,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		return vertices.map(vertex => this.rotatePoint(vertex, angleInDegrees, origin));
 	}
 
-	protected createConnectionHandle2D(con: GraphConnection, handle: 1 | 2) {
+	protected createConnectionHandle2D(con: GraphConnection, handle: 1 | 2, path: Canvas2DObject) {
 		const vec2  = handle === 1 ? con.m1 : con.m2;
 		const start = handle === 1 ? con.start : con.m1;
 		const stop  = handle === 1 ? con.m2 : con.stop;
@@ -437,7 +433,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 			rawPoints, this.calculateConnectionAngle(start, stop), vec2,
 		) as Repeat<4, Vec2>;
 
-		const path = new Canvas2DObject();
+		path ??= new Canvas2DObject();
 		path.layer(
 			(path2D) => {
 				path2D.moveTo(points[0].x, points[0].y);
@@ -460,11 +456,15 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 	protected mapConnectionHandle2Ds() {
 		for (const con of this.data.connections.values()) {
 			if (!isOutsideViewport(this.mainView.viewport, con.m1)) {
-				con.pathHandle1 ??= this.createConnectionHandle2D(con, 1);
+				if (con.pathHandle1.empty)
+					this.createConnectionHandle2D(con, 1, con.pathHandle1);
+
 				con.pathHandle1.draw(this.mainView.context);
 			}
 			if (!isOutsideViewport(this.mainView.viewport, con.m2)) {
-				con.pathHandle2 ??= this.createConnectionHandle2D(con, 2);
+				if (con.pathHandle2.empty)
+					this.createConnectionHandle2D(con, 2, con.pathHandle2);
+
 				con.pathHandle2.draw(this.mainView.context);
 			}
 		}

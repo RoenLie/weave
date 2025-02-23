@@ -7,7 +7,7 @@ import { getWorkerImageChunk } from './worker-image-assets.ts';
 import { isOutsideViewport, type Viewport } from '../is-outside-viewport.ts';
 import { drawParallelBezierCurve, type Bezier } from '../parallel-bezier-curve.ts';
 import { doRectsOverlap, getPathReduction } from '../path-helpers.ts';
-import { type TransferableMouseEvent, type WorkerImplement, createPostMessage } from './canvas-worker-interface.ts';
+import { type TransferableMouseEvent, type TransferableTouchEvent, type TransferableTouches, type WorkerImplement, createPostMessage } from './canvas-worker-interface.ts';
 import { WorkerView } from './worker-view.ts';
 import { getAuth } from 'firebase/auth';
 import { app } from '../../firebase.ts';
@@ -46,16 +46,16 @@ export interface CanvasReaderWorkerApiIn {
 		type:  'mousemove';
 		event: TransferableMouseEvent;
 	};
+	touchstart: {
+		type:    'touchstart';
+		event:   TransferableTouchEvent;
+		touches: TransferableTouches[];
+		rect:	   DOMRect;
+	}
 }
 
 /** Functions available from the worker to the main thread. */
 export interface CanvasReaderWorkerApiOut {
-	updatePosition: {
-		type:     'updatePosition',
-		position: Vec2,
-		viewport: Viewport,
-		scale:    number,
-	}
 	startViewMove: {
 		type:          'startViewMove',
 		initialMouseX: number,
@@ -63,17 +63,31 @@ export interface CanvasReaderWorkerApiOut {
 		offsetX:       number,
 		offsetY:       number,
 	}
+	startViewTouchMove: {
+		type:          'startViewTouchMove',
+		initialMouseX: number,
+		initialMouseY: number,
+		offsetX:       number,
+		offsetY:       number,
+		scale:         number,
+	}
 	selectNode: {
 		type:   'selectNode',
 		nodeId: string,
 	}
 	enterNode: {
-		type: 'enterNode',
-		node: StorableGraphNode;
+		type:     'enterNode',
+		node:     StorableGraphNode;
+		position: Vec2;
+		viewport: Viewport;
+		scale:    number;
 	}
 	leaveNode: {
-		type: 'leaveNode';
-		node: StorableGraphNode;
+		type:     'leaveNode';
+		node:     StorableGraphNode;
+		position: Vec2;
+		viewport: Viewport;
+		scale:    number;
 	}
 }
 
@@ -87,8 +101,9 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 	protected readonly data = new GraphDataManager(new FirebaseGraphRepository());
 	protected readonly post = createPostMessage<CanvasReaderWorkerApiOut>();
 
-	protected bgView:        WorkerView;
-	protected mainView:      WorkerView;
+	protected bgView:   WorkerView;
+	protected mainView: WorkerView;
+
 	protected imageSize:     number = 13000;
 	protected chunkSize:     number = 1300;
 	protected imagePromises: Map<`x${ number }y${ number }`, Promise<any>> = new Map();
@@ -114,7 +129,7 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 	public async init(data: {
 		type: 'init',
 		main: OffscreenCanvas,
-		bg:   OffscreenCanvas
+		bg:   OffscreenCanvas,
 	}) {
 		this.bgView = new WorkerView(data.bg);
 		this.mainView = new WorkerView(data.main);
@@ -159,12 +174,6 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		this.bgView.moveTo(x, y);
 		this.mainView.moveTo(x, y);
 
-		this.post.updatePosition({
-			position: this.bgView.position,
-			viewport: this.bgView.viewport,
-			scale:    this.bgView.scale,
-		});
-
 		this.drawBackground();
 		this.drawMain();
 	}
@@ -173,12 +182,6 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		this.bgView.moveTo(data.x, data.y);
 		this.mainView.moveTo(data.x, data.y);
 
-		this.post.updatePosition({
-			position: this.bgView.position,
-			viewport: this.bgView.viewport,
-			scale:    this.bgView.scale,
-		});
-
 		this.drawBackground();
 		this.drawMain();
 	}
@@ -186,12 +189,6 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 	public scaleAt(data: CanvasReaderWorkerApiIn['scaleAt']) {
 		this.bgView.scaleAt(data.vec, data.factor);
 		this.mainView.scaleAt(data.vec, data.factor);
-
-		this.post.updatePosition({
-			position: this.bgView.position,
-			viewport: this.bgView.viewport,
-			scale:    this.bgView.scale,
-		});
 
 		this.drawBackground();
 		this.drawMain();
@@ -240,11 +237,13 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 			const node = this.hoveredNode;
 
 			this.hoveredNode = undefined;
-
-			node.path = this.createNodePath2D(node);
+			node.path.clear();
 
 			this.post.leaveNode({
-				node: GraphNode.toStorable(node),
+				node:     GraphNode.toStorable(node),
+				position: this.bgView.position,
+				viewport: this.bgView.viewport,
+				scale:    this.bgView.scaleFactor,
 			});
 
 			this.drawMain();
@@ -253,13 +252,48 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		// Add the hover effect if a node is hovered
 		if (node && node !== this.hoveredNode) {
 			this.hoveredNode = node;
-			this.hoveredNode.path = this.createNodePath2D(node);
+			node.path.clear();
 
 			this.post.enterNode({
-				node: GraphNode.toStorable(node),
+				node:     GraphNode.toStorable(node),
+				position: this.bgView.position,
+				viewport: this.bgView.viewport,
+				scale:    this.bgView.scaleFactor,
 			});
 
 			this.drawMain();
+		}
+	}
+
+	public touchstart(data: CanvasReaderWorkerApiIn['touchstart']) {
+		const offsetX = data.touches[0]!.pageX - data.rect.left;
+		const offsetY = data.touches[0]!.pageY - data.rect.top;
+
+		// Get the offset from the corner of the current view to the mouse position
+		const position = this.bgView.position;
+		const viewOffsetX = offsetX - position.x;
+		const viewOffsetY = offsetY - position.y;
+
+		const vec = { x: offsetX, y: offsetY };
+		// Try to find a node at the mouse position
+		const node = this.getGraphNode(vec);
+
+		// If we found a node, we want to select it
+		if (node) {
+			this.post.selectNode({
+				nodeId: node.id,
+			});
+		}
+		// If we didn't find a node or a connection, we want to pan the view
+		else {
+			// We setup the mousemove and mouseup events for panning the view
+			this.post.startViewTouchMove({
+				initialMouseX: offsetX,
+				initialMouseY: offsetY,
+				offsetX:       viewOffsetX,
+				offsetY:       viewOffsetY,
+				scale:         this.bgView.scaleFactor,
+			});
 		}
 	}
 	//#endregion
@@ -317,7 +351,7 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		}
 	}
 
-	protected createConnectionPath2D(nodes: Map<string, GraphNode>, con: GraphConnection) {
+	protected createConnectionPath2D(nodes: Map<string, GraphNode>, con: GraphConnection, path: Canvas2DObject) {
 		const startVec = { ...con.start };
 		const stopVec  = { ...con.stop };
 		const mid1Vec  = { ...con.m1 };
@@ -333,7 +367,6 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		stopVec.x -= stopXReduce;
 		stopVec.y -= stopYReduce;
 
-		const path = new Canvas2DObject();
 		path.layer(
 			// Middle bezier curve
 			(path2D) => {
@@ -392,13 +425,14 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 			if (outsideStart && outsideStop && outsideMid1 && outsideMid2)
 				continue;
 
-			con.path ??= this.createConnectionPath2D(nodes, con);
+			if (con.path.empty)
+				this.createConnectionPath2D(nodes, con, con.path);
+
 			con.path.draw(this.mainView.context);
 		}
 	}
 
-	protected createNodePath2D(node: GraphNode) {
-		const path = new Canvas2DObject();
+	protected createNodePath2D(node: GraphNode, path: Canvas2DObject) {
 		path.layer(
 			(path2D) => {
 				path2D.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
@@ -435,7 +469,9 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 			if (isOutsideViewport(this.mainView.viewport, node))
 				continue;
 
-			node.path ??= this.createNodePath2D(node);
+			if (node.path.empty)
+				this.createNodePath2D(node, node.path);
+
 			node.path.draw(this.mainView.context);
 		}
 	}

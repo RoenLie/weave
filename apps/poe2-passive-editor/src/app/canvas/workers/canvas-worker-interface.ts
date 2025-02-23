@@ -5,11 +5,11 @@ import type { CanvasReaderWorkerApiIn } from './reader-implementation.ts';
 type WorkerApi<T> = { [key in keyof T]: (data: Omit<T[key], 'type'>) => void; };
 
 export type CanvasReaderWorkerMethods = WorkerApi<CanvasReaderWorkerApiIn> & {
-	init: (bg: HTMLCanvasElement, main: HTMLCanvasElement) => void;
+	init: (bg: HTMLCanvasElement, main: HTMLCanvasElement, bitmap: HTMLCanvasElement) => void;
 };
 
 export type CanvasEditorWorkerMethods = WorkerApi<CanvasEditorWorkerApiIn> & {
-	init: (bg: HTMLCanvasElement, main: HTMLCanvasElement) => void;
+	init: (bg: HTMLCanvasElement, main: HTMLCanvasElement, bitmap: HTMLCanvasElement) => void;
 };
 
 export const createCanvasWorker = <T extends object>(ctor: new() => Worker): Worker & T => {
@@ -19,13 +19,14 @@ export const createCanvasWorker = <T extends object>(ctor: new() => Worker): Wor
 				return target[p].bind(target);
 
 			if (p === 'init') {
-				return (bgCanvas: HTMLCanvasElement, mainCanvas: HTMLCanvasElement) => {
+				return (bgCanvas: HTMLCanvasElement, mainCanvas: HTMLCanvasElement, bitmap: HTMLCanvasElement) => {
 					const bgOffscreen = bgCanvas.transferControlToOffscreen();
 					const mainOffscreen = mainCanvas.transferControlToOffscreen();
+					const bitmapOffscreen = bitmap.transferControlToOffscreen();
 
 					target.postMessage(
-						{ type: 'init', bg: bgOffscreen, main: mainOffscreen },
-						[ bgOffscreen, mainOffscreen ],
+						{ type: 'init', bg: bgOffscreen, main: mainOffscreen, bitmap: bitmapOffscreen },
+						[ bgOffscreen, mainOffscreen, bitmapOffscreen ],
 					);
 				};
 			}
@@ -60,11 +61,15 @@ export type WorkerImplement<T extends object> = {
 };
 
 
-type MakeObjectTransferable<T extends object> = {
+export type MakeObjectTransferable<T extends object> = {
 	-readonly [Key in keyof T as T[Key] extends (string | number | boolean) ? Key : never]: T[Key];
 };
 
+
+export type TransferableWheelEvent = MakeObjectTransferable<WheelEvent>;
 export type TransferableMouseEvent = MakeObjectTransferable<MouseEvent>;
+export type TransferableTouchEvent = MakeObjectTransferable<TouchEvent>;
+export type TransferableTouches = MakeObjectTransferable<TouchEvent['touches'][number]>;
 export type TransferableKeyboardEvent = MakeObjectTransferable<KeyboardEvent>;
 
 export const makeObjectTransferable = <T extends object>(obj: T): MakeObjectTransferable<T> => {

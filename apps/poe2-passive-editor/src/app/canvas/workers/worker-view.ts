@@ -22,8 +22,8 @@ export class WorkerView {
 	public get position(): Vec2 { return this._position; }
 	protected _position: Vec2 = { x: 0, y: 0 };
 
-	public get scale(): number { return this._scale; }
-	protected _scale: number = 1;
+	public get scaleFactor(): number { return this._scaleFactor; }
+	protected _scaleFactor: number = 1;
 
 	/** Sets canvas width and height. */
 	public setCanvasSize(width: number, height: number) {
@@ -60,10 +60,10 @@ export class WorkerView {
 		const { x, y } = this._position;
 		const { width, height } = this.canvas;
 
-		const x1 = -x / this._scale;
-		const y1 = -y / this._scale;
-		const x2 = x1 + (width / this._scale);
-		const y2 = y1 + (height / this._scale);
+		const x1 = -x / this._scaleFactor;
+		const y1 = -y / this._scaleFactor;
+		const x2 = x1 + (width / this._scaleFactor);
+		const y2 = y1 + (height / this._scaleFactor);
 
 		this.viewport = { x1, x2, y1, y2 };
 
@@ -75,7 +75,13 @@ export class WorkerView {
 
 	/** Scales the context in the direction of the vector. */
 	public scaleAt(vec: Vec2, factor: number) {
-		this._scale *= factor;
+		const newScale = this._scaleFactor * factor;
+		if (newScale < 0.1)
+			return;
+		if (newScale > 7)
+			return;
+
+		this._scaleFactor = newScale;
 		this._position.x = vec.x - (vec.x - this._position.x) * factor;
 		this._position.y = vec.y - (vec.y - this._position.y) * factor;
 
@@ -92,9 +98,9 @@ export class WorkerView {
 
 	/** Applies the pending changes to the matrix. */
 	public updateMatrix() {
-		const { matrix: m, _scale, _position } = this;
+		const { matrix: m, _scaleFactor, _position } = this;
 
-		m.d = m.a = _scale;
+		m.d = m.a = _scaleFactor;
 		m.c = m.b = 0;
 		m.e = _position.x;
 		m.f = _position.y;

@@ -1,5 +1,9 @@
 export class Canvas2DObject {
 
+	public get empty() {
+		return this.layers.length === 0;
+	}
+
 	public readonly layers: [
 		path2D: Path2D,
 		(ctx: OffscreenCanvasRenderingContext2D, path2D: Path2D) => void
@@ -24,6 +28,10 @@ export class Canvas2DObject {
 	public draw(ctx: OffscreenCanvasRenderingContext2D) {
 		for (const [ path2D, paint ] of this.layers)
 			paint(ctx, path2D);
+	}
+
+	public clear() {
+		this.layers.length = 0;
 	}
 
 }
