@@ -1,5 +1,5 @@
 {
-	"name": "@roenlie/poe2-passive-editor",
+	"name": "@roenlie/poe2builder",
 	"description": "description",
 	"authors": "author",
 	"version": "1.0.0",
@@ -15,6 +15,7 @@
 		"@codemirror/view": "^6.36.2",
 		"@roenlie/core": "workspace:^",
 		"@sanguinejs/router": "^0.0.1",
+		"@supabase/supabase-js": "^2.48.1",
 		"cm6-theme-basic-dark": "^0.2.0",
 		"codemirror": "^6.0.1",
 		"firebase": "^11.2.0",
