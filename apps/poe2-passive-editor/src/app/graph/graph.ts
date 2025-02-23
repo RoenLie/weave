@@ -1,7 +1,7 @@
 import { Canvas2DObject } from '../canvas/canvas-object.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import { getPathReduction } from '../canvas/path-helpers.ts';
-import { allDataNodes, type NodeData } from './node-catalog.ts';
+import { dataNodes, type NodeData } from './node-catalog.ts';
 
 
 export type GraphConnectionVec2 = Vec2 & {
@@ -138,7 +138,7 @@ export class GraphNode implements Vec2 {
 		node.connectionIds = storable.connections || [];
 
 		if (storable.data)
-			node.data = allDataNodes.get(storable.data);
+			node.data = dataNodes.get(storable.data);
 
 		return node;
 	}

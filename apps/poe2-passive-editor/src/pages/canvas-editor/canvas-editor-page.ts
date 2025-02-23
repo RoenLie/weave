@@ -3,7 +3,7 @@ import { PoeCanvasBase } from './canvas-base.ts';
 import { html } from 'lit-html';
 import { when } from 'lit-html/directives/when.js';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
-import { allDataNodes, nodeDataCatalog, type NodeDataCatalog } from '../../app/graph/node-catalog.ts';
+import { dataNodes, type NodeData } from '../../app/graph/node-catalog.ts';
 import { map } from 'lit-html/directives/map.js';
 import CanvasWorkerEditor from '../../app/canvas/workers/canvas-editor.ts?worker';
 import { createCanvasWorker, makeObjectTransferable, type CanvasEditorWorkerMethods } from '../../app/canvas/workers/canvas-worker-interface.ts';
@@ -14,7 +14,7 @@ export class PoeCanvasTree extends PoeCanvasBase {
 
 	static { this.register('poe-canvas-editor'); }
 
-	@signal protected accessor selectedNodeMenu: keyof NodeDataCatalog | undefined = undefined;
+	@signal protected accessor selectedNodeMenu: NodeData['type'] | undefined = undefined;
 	@signal protected accessor showNodeSelectorMenu: boolean = false;
 	@signal protected accessor updated: boolean = false;
 
@@ -136,7 +136,7 @@ export class PoeCanvasTree extends PoeCanvasBase {
 	//#endregion
 
 	protected override renderTooltip(node: StorableGraphNode): unknown {
-		const data = allDataNodes.get(node.data)!;
+		const data = dataNodes.get(node.data)!;
 
 		if (!data || this.showNodeSelectorMenu) {
 			return html`
@@ -159,7 +159,8 @@ export class PoeCanvasTree extends PoeCanvasBase {
 					<li @click=${ () => this.assignNodeData(node.id, undefined) }>
 						~ clear ~
 					</li>
-					${ map(nodeDataCatalog[menu], data => html`
+					${ map(dataNodes.values().filter(node => node.type === menu),
+					data => html`
 					<li @click=${ () => this.assignNodeData(node.id, data.id) }>
 						${ data.id.replaceAll('_', ' ') }
 					</li>

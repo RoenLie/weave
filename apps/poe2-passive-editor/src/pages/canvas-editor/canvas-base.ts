@@ -7,7 +7,7 @@ import { CustomElement } from '../../app/custom-element/custom-element.ts';
 import CanvasWorkerReader from '../../app/canvas/workers/canvas-reader.ts?worker';
 import { when } from 'lit-html/directives/when.js';
 import { createCanvasWorker, makeObjectTransferable, type CanvasReaderWorkerMethods, type TransferableMouseEvent, type TransferableWheelEvent } from '../../app/canvas/workers/canvas-worker-interface.ts';
-import { allDataNodes } from '../../app/graph/node-catalog.ts';
+import { dataNodes } from '../../app/graph/node-catalog.ts';
 import { uppercaseFirstLetter } from '@roenlie/core/string';
 import { ref, type RefOrCallback } from 'lit-html/directives/ref.js';
 import type { CanvasReaderWorkerApiOut } from '../../app/canvas/workers/reader-implementation.ts';
@@ -292,7 +292,7 @@ export class PoeCanvasBase extends CustomElement {
 		if (!node.data)
 			return 'MISSING DATA';
 
-		const data = allDataNodes.get(node.data)!;
+		const data = dataNodes.get(node.data)!;
 
 		return html`
 		<div style="white-space:nowrap;">

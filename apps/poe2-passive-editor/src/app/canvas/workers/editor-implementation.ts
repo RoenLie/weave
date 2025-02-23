@@ -1,7 +1,7 @@
 import type { Vec2, Repeat } from '@roenlie/core/types';
 import { oneOf } from '@roenlie/core/validation';
 import { type GraphConnectionVec2, GraphNode, type GraphConnection } from '../../graph/graph.ts';
-import { allDataNodes } from '../../graph/node-catalog.ts';
+import { dataNodes } from '../../graph/node-catalog.ts';
 import { Canvas2DObject } from '../canvas-object.ts';
 import { isOutsideViewport } from '../is-outside-viewport.ts';
 import { type TransferableKeyboardEvent, type WorkerImplement, createPostMessage, type TransferableMouseEvent } from './canvas-worker-interface.ts';
@@ -296,7 +296,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 			this.data.updateNodeData(node, undefined);
 		}
 		else {
-			const nodeData = allDataNodes.get(data.dataId);
+			const nodeData = dataNodes.get(data.dataId);
 			if (!nodeData)
 				return;
 

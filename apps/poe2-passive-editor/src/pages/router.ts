@@ -1,7 +1,7 @@
 import { html } from 'lit-html';
 import { css, signal, type CSSStyle } from '../app/custom-element/signal-element.ts';
 import { Router } from '@sanguinejs/router';
-import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
+import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, signInWithRedirect, type User } from 'firebase/auth';
 import { when } from 'lit-html/directives/when.js';
 import { app } from '../app/firebase.ts';
 import { CustomElement } from '../app/custom-element/custom-element.ts';
@@ -28,6 +28,16 @@ export class RouterCmp extends CustomElement {
 			render: () => html``,
 		},
 		{
+			path:  '/canvas-reader',
+			enter: async () => {
+				this.requiresLogin = false;
+				await import('./canvas-editor/canvas-reader-page.ts');
+
+				return true;
+			},
+			render: () => html`<poe-canvas-reader></poe-canvas-reader>`,
+		},
+		{
 			path:  '/canvas-editor',
 			enter: async () => {
 				this.requiresLogin = true;
@@ -38,14 +48,14 @@ export class RouterCmp extends CustomElement {
 			render: () => html`<poe-canvas-editor></poe-canvas-editor>`,
 		},
 		{
-			path:  '/canvas-reader',
+			path:  '/node-catalog',
 			enter: async () => {
-				this.requiresLogin = false;
-				await import('./canvas-editor/canvas-reader-page.ts');
+				this.requiresLogin = true;
+				await import('./node-catalog/node-catalog-page.ts');
 
 				return true;
 			},
-			render: () => html`<poe-canvas-reader></poe-canvas-reader>`,
+			render: () => html`<poe-node-catalog></poe-node-catalog>`,
 		},
 	]);
 
@@ -84,8 +94,9 @@ export class RouterCmp extends CustomElement {
 		<header>
 			<nav>
 				<a href="/">Home</a>
-				<a href="/canvas-editor">Canvas Editor</a>
 				<a href="/canvas-reader">Canvas Reader</a>
+				<a href="/canvas-editor">Canvas Editor</a>
+				<a href="/node-catalog">Node Catalog</a>
 			</nav>
 
 			${ when(this.currentUser, () => html`
@@ -98,7 +109,7 @@ export class RouterCmp extends CustomElement {
 			this.requiresLogin && !this.currentUser,
 			() => html`
 			<article>
-				<login-button @click=${ this.login }>
+				<login-button .useBase=${ true } @click=${ this.login }>
 					Login
 				</login-button>
 			</article>
@@ -143,13 +154,23 @@ export class LoginBtnCmp extends CustomElement {
 
 	static { this.register('login-button'); }
 
+	@signal public accessor useBase: boolean = false;
+
 	protected override render(): unknown {
+		if (this.useBase) {
+			return html`
+			<s-base>
+				<button>
+					<slot></slot>
+				</button>
+			</s-base>
+			`;
+		}
+
 		return html`
-		<!--<s-base>-->
-			<button>
-				<slot></slot>
-			</button>
-		<!--</s-base>-->
+		<button>
+			<slot></slot>
+		</button>
 		`;
 	}
 
