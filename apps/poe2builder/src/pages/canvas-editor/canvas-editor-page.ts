@@ -32,18 +32,18 @@ export class PoeCanvasTree extends PoeCanvasBase {
 	}
 
 	//#region from canvas worker
-	protected onWorkerDataUpdated(_ev: MessageEvent<CanvasEditorWorkerApiOut['dataUpdated']>) {
+	protected onWorkerDataUpdated(_data: CanvasEditorWorkerApiOut['dataUpdated']) {
 		this.updated = true;
 	}
 
-	protected onWorkerStartNodeMove(ev: MessageEvent<CanvasEditorWorkerApiOut['startNodeMove']>) {
+	protected onWorkerStartNodeMove(data: CanvasEditorWorkerApiOut['startNodeMove']) {
 		const rect = this.getBoundingClientRect();
 
 		const mousemove = (() => {
 			let moveEv: MouseEvent = undefined as any;
 			const fn = () => {
 				this.worker.moveNode({
-					...ev.data,
+					...data,
 					mouseX: moveEv.offsetX,
 					mouseY: moveEv.offsetY,
 					rect,
@@ -67,14 +67,14 @@ export class PoeCanvasTree extends PoeCanvasBase {
 		this.hoveredNode = undefined;
 	}
 
-	protected onWorkerStartHandleMove(ev: MessageEvent<CanvasEditorWorkerApiOut['startHandleMove']>) {
+	protected onWorkerStartHandleMove(data: CanvasEditorWorkerApiOut['startHandleMove']) {
 		const rect = this.getBoundingClientRect();
 
 		const mousemove = (() => {
 			let moveEv: MouseEvent = undefined as any;
 			const fn = () => {
 				this.worker.moveHandle({
-					...ev.data,
+					...data,
 					mouseX: moveEv.offsetX,
 					mouseY: moveEv.offsetY,
 					rect,
@@ -96,15 +96,15 @@ export class PoeCanvasTree extends PoeCanvasBase {
 		this.hoveredNode = undefined;
 	}
 
-	protected onWorkerAssignDataToNode(_ev: MessageEvent<CanvasEditorWorkerApiOut['assignDataToNode']>) {
+	protected onWorkerAssignDataToNode(_data: CanvasEditorWorkerApiOut['assignDataToNode']) {
 		this.hoveredNode = undefined;
 	}
 
-	protected onWorkerDataSaved(_ev: MessageEvent<CanvasEditorWorkerApiOut['dataSaved']>) {
+	protected onWorkerDataSaved(_data: CanvasEditorWorkerApiOut['dataSaved']) {
 		this.updated = false;
 	}
 
-	protected onWorkerDraw(_ev: MessageEvent<CanvasEditorWorkerApiOut['draw']>) {
+	protected onWorkerDraw(_data: CanvasEditorWorkerApiOut['draw']) {
 		this.requestUpdate();
 	}
 	//#endregion
@@ -177,7 +177,7 @@ export class PoeCanvasTree extends PoeCanvasBase {
 
 		return html`
 		<s-node-editor-tooltip>
-			<button @click=${ () => { this.assignNodeData(node.id, undefined); } }>
+			<button @click=${ () => this.assignNodeData(node.id, undefined) }>
 				<svg width="22px" height="22px" fill="currentColor">
 					<use xlink:href="bootstrap-icons.svg#x"/>
 				</svg>

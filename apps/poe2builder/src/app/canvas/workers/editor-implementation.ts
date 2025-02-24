@@ -1,6 +1,6 @@
 import type { Vec2, Repeat } from '@roenlie/core/types';
 import { oneOf } from '@roenlie/core/validation';
-import { type GraphConnectionVec2, GraphNode, type GraphConnection } from '../../graph/graph.ts';
+import { type GraphConnectionVec2, GraphNode, type GraphConnection, type StorableGraphNode } from '../../graph/graph.ts';
 import { dataNodes } from '../../graph/node-catalog.ts';
 import { Canvas2DObject } from '../canvas-object.ts';
 import { isOutsideViewport } from '../is-outside-viewport.ts';
@@ -166,12 +166,14 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 			const node = this.selectedNode;
 
 			if (oneOf(code, 'Digit1', 'Digit2', 'Digit3')) {
+				const types = Object.keys(GraphNode.sizes) as StorableGraphNode['type'][];
+
 				if (code === 'Digit1')
-					this.data.resizeNode(node, GraphNode.sizes[0]);
+					this.data.setNodeType(node, types[0]!);
 				else if (code === 'Digit2')
-					this.data.resizeNode(node, GraphNode.sizes[1]);
+					this.data.setNodeType(node, types[1]!);
 				else if (code === 'Digit3')
-					this.data.resizeNode(node, GraphNode.sizes[2]);
+					this.data.setNodeType(node, types[2]!);
 
 				node.path.clear();
 				node.connections.forEach(con => {

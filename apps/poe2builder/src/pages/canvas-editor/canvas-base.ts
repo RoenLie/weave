@@ -318,8 +318,8 @@ export class PoeCanvasBase extends CustomElement {
 		const node = this.hoveredNode!;
 		const rect = this.getBoundingClientRect();
 		const scale = this.scale;
-		const x = (node.x * scale) + (this.position.x + rect.left) + (node.radius * scale);
-		const y = (node.y * scale) + (this.position.y + rect.top)  - (node.radius * scale);
+		const x = (node.x * scale) + (this.position.x + rect.left) + (GraphNode.sizes[node.type] * scale);
+		const y = (node.y * scale) + (this.position.y + rect.top)  - (GraphNode.sizes[node.type] * scale);
 
 		el.style.top = y + 'px';
 		el.style.left = x + 'px';

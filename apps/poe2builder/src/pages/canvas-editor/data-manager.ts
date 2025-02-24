@@ -343,13 +343,22 @@ export class GraphDataManager {
 		const nodeChunkChanges = this.applyNodeChanges(changes);
 		const conChunkChanges = this.applyConnectionChanges(changes);
 
-		await this.repository.save(
+		const repo = new LocalGraphRepository();
+		await repo.save(
 			this.loadedVersion,
 			this.nodeChunks,
 			this.connectionChunks,
 			nodeChunkChanges,
 			conChunkChanges,
 		);
+
+		//await this.repository.save(
+		//	this.loadedVersion,
+		//	this.nodeChunks,
+		//	this.connectionChunks,
+		//	nodeChunkChanges,
+		//	conChunkChanges,
+		//);
 
 		this.updatedAt = Date.now();
 		this.ready = true;
@@ -454,11 +463,11 @@ export class GraphDataManager {
 		return true;
 	}
 
-	public resizeNode(node: GraphNode, radius: number) {
-		if (node.radius === radius)
+	public setNodeType(node: GraphNode, type: StorableGraphNode['type']) {
+		if (node.type === type)
 			return false;
 
-		node.radius = radius;
+		node.type = type;
 		node.updated = new Date().toISOString();
 
 		this.updatedAt = undefined;

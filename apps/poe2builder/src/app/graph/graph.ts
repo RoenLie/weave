@@ -85,14 +85,19 @@ export interface StorableGraphNode {
 	updated:     string;
 	x:           number;
 	y:           number;
-	radius:      number;
+	radius?:     number;
+	type:        'minor' | 'notable' | 'keystone';
 	connections: string[];
 	data:        string;
 }
 
 export class GraphNode implements Vec2 {
 
-	public static sizes = [ 24, 36, 56 ] as const;
+	public static sizes: Record<StorableGraphNode['type'], number> = {
+		minor:    24,
+		notable:  36,
+		keystone: 56,
+	};
 
 	public static isGraphNode(obj: any): obj is GraphNode {
 		return obj instanceof GraphNode;
@@ -104,7 +109,7 @@ export class GraphNode implements Vec2 {
 			updated:     node.updated,
 			x:           node.x,
 			y:           node.y,
-			radius:      node.radius,
+			type:        node.type,
 			connections: node.connections.values().map(c => c.id).toArray(),
 			data:        node.data?.id ?? '',
 		};
@@ -119,7 +124,7 @@ export class GraphNode implements Vec2 {
 		node.id = crypto.randomUUID();
 		node.updated = new Date().toISOString();
 
-		node.radius = this.sizes[0]!;
+		node.type = 'minor';
 		node.connectionIds = [];
 
 		return node;
@@ -134,7 +139,12 @@ export class GraphNode implements Vec2 {
 
 		node.x  = x;
 		node.y  = y;
-		node.radius = radius || this.sizes[0]!;
+
+		if (radius)
+			node.type = radius === 24 ? 'minor' : radius === 36 ? 'notable' : 'keystone';
+		else
+			node.type = storable.type ?? 'minor';
+
 		node.connectionIds = storable.connections || [];
 
 		if (storable.data)
@@ -147,10 +157,14 @@ export class GraphNode implements Vec2 {
 	public updated:     string;
 	public x:           number;
 	public y:           number;
-	public radius:      number;
+	public type:        StorableGraphNode['type'];
 	public path:        Canvas2DObject = new Canvas2DObject();
 	public connections: Set<GraphConnection> = new Set();
 	public data?:       NodeData;
+
+	public get radius() {
+		return GraphNode.sizes[this.type];
+	}
 
 	protected connectionIds?:        string[];
 	protected haveMappedConnections: boolean = false;
@@ -179,7 +193,7 @@ export class GraphNode implements Vec2 {
 			updated:     this.updated,
 			x:           this.x,
 			y:           this.y,
-			radius:      this.radius,
+			type:        this.type,
 			connections: this.connections.values().map(c => c.id).toArray(),
 			data:        this.data?.id ?? '',
 		};
