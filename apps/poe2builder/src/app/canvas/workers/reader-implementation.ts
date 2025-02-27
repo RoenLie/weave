@@ -15,6 +15,10 @@ import { app } from '../../firebase.ts';
 
 /** Functions available from the main thread to the worker. */
 export interface CanvasReaderWorkerApiIn {
+	init: {
+		type: 'init',
+		main: OffscreenCanvas,
+	};
 	setSize: {
 		type:   'setSize',
 		width:  number,
@@ -101,7 +105,6 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 	protected readonly data = new GraphDataManager(new FirebaseGraphRepository());
 	protected readonly post = createPostMessage<CanvasReaderWorkerApiOut>();
 
-	protected bgView:   WorkerView;
 	protected mainView: WorkerView;
 
 	protected imageSize:     number = 13000;
@@ -129,30 +132,25 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 	public async init(data: {
 		type: 'init',
 		main: OffscreenCanvas,
-		bg:   OffscreenCanvas,
 	}) {
-		this.bgView = new WorkerView(data.bg);
 		this.mainView = new WorkerView(data.main);
 
 		await this.data.load();
-		this.drawBackground();
-		this.drawMain();
+		this.draw();
 	}
 
 	public setSize(data: CanvasReaderWorkerApiIn['setSize']) {
-		this.bgView.setCanvasSize(data.width, data.height);
+		this.mainView.setCanvasSize(data.width, data.height);
 		this.mainView.setCanvasSize(data.width, data.height);
 
-		this.drawBackground();
-		this.drawMain();
+		this.draw();
 	}
 
 	public setArea(data: CanvasReaderWorkerApiIn['setArea']) {
-		this.bgView.setTotalArea(data.width, data.height);
+		this.mainView.setTotalArea(data.width, data.height);
 		this.mainView.setTotalArea(data.width, data.height);
 
-		this.drawBackground();
-		this.drawMain();
+		this.draw();
 	}
 
 	public initBackground(_data: CanvasReaderWorkerApiIn['initBackground']) {
@@ -166,39 +164,36 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		});
 
 		const imageSize = this.imageSize;
-		const parentWidth = this.bgView.canvas.width;
-		const parentHeight = this.bgView.canvas.height;
+		const parentWidth = this.mainView.canvas.width;
+		const parentHeight = this.mainView.canvas.height;
 		const y = parentHeight / 2 - imageSize / 2;
 		const x = parentWidth  / 2 - imageSize  / 2;
 
-		this.bgView.moveTo(x, y);
+		this.mainView.moveTo(x, y);
 		this.mainView.moveTo(x, y);
 
-		this.drawBackground();
-		this.drawMain();
+		this.draw();
 	}
 
 	public moveTo(data: CanvasReaderWorkerApiIn['moveTo']) {
-		this.bgView.moveTo(data.x, data.y);
+		this.mainView.moveTo(data.x, data.y);
 		this.mainView.moveTo(data.x, data.y);
 
-		this.drawBackground();
-		this.drawMain();
+		this.draw();
 	}
 
 	public scaleAt(data: CanvasReaderWorkerApiIn['scaleAt']) {
-		this.bgView.scaleAt(data.vec, data.factor);
+		this.mainView.scaleAt(data.vec, data.factor);
 		this.mainView.scaleAt(data.vec, data.factor);
 
-		this.drawBackground();
-		this.drawMain();
+		this.draw();
 	}
 
 	public mousedown(data: CanvasReaderWorkerApiIn['mousedown']) {
 		const event = data.event;
 
 		// Get the offset from the corner of the current view to the mouse position
-		const position = this.bgView.position;
+		const position = this.mainView.position;
 		const viewOffsetX = event.offsetX - position.x;
 		const viewOffsetY = event.offsetY - position.y;
 
@@ -241,12 +236,12 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 
 			this.post.leaveNode({
 				node:     GraphNode.toStorable(node),
-				position: this.bgView.position,
-				viewport: this.bgView.viewport,
-				scale:    this.bgView.scaleFactor,
+				position: this.mainView.position,
+				viewport: this.mainView.viewport,
+				scale:    this.mainView.scaleFactor,
 			});
 
-			this.drawMain();
+			this.draw();
 		}
 
 		// Add the hover effect if a node is hovered
@@ -256,12 +251,12 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 
 			this.post.enterNode({
 				node:     GraphNode.toStorable(node),
-				position: this.bgView.position,
-				viewport: this.bgView.viewport,
-				scale:    this.bgView.scaleFactor,
+				position: this.mainView.position,
+				viewport: this.mainView.viewport,
+				scale:    this.mainView.scaleFactor,
 			});
 
-			this.drawMain();
+			this.draw();
 		}
 	}
 
@@ -270,7 +265,7 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		const offsetY = data.touches[0]!.pageY - data.rect.top;
 
 		// Get the offset from the corner of the current view to the mouse position
-		const position = this.bgView.position;
+		const position = this.mainView.position;
 		const viewOffsetX = offsetX - position.x;
 		const viewOffsetY = offsetY - position.y;
 
@@ -292,7 +287,7 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 				initialMouseY: offsetY,
 				offsetX:       viewOffsetX,
 				offsetY:       viewOffsetY,
-				scale:         this.bgView.scaleFactor,
+				scale:         this.mainView.scaleFactor,
 			});
 		}
 	}
@@ -317,38 +312,9 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		const dx2 = dx1 + this.chunkSize;
 		const dy2 = dy1 + this.chunkSize;
 
-		const { x1, x2, y1, y2 } = this.bgView.viewport;
+		const { x1, x2, y1, y2 } = this.mainView.viewport;
 
 		return doRectsOverlap([ dx1, dy1, dx2, dy2 ], [ x1, y1, x2, y2 ]);
-	}
-
-	protected drawBackground() {
-		this.bgView.clearContext();
-
-		for (const image of this.images) {
-			if (!this.isImgInView(image))
-				continue;
-
-			const imgId = `x${ image.x }y${ image.y }` as `x${ number }y${ number }`;
-			const x = image.x;
-			const y = image.y;
-
-			if (image.image) {
-				this.bgView.context.drawImage(image.image, x, y);
-				continue;
-			}
-
-			if (!this.imagePromises.has(imgId)) {
-				this.imagePromises.set(
-					imgId,
-					image.getImage().then(img => {
-						image.image = img;
-						this.imagePromises.delete(imgId);
-						this.drawBackground();
-					}),
-				);
-			}
-		}
 	}
 
 	protected createConnectionPath2D(nodes: Map<string, GraphNode>, con: GraphConnection, path: Canvas2DObject) {
@@ -476,8 +442,33 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		}
 	}
 
-	protected drawMain() {
+	protected draw() {
 		this.mainView.clearContext();
+
+		for (const image of this.images) {
+			if (!this.isImgInView(image))
+				continue;
+
+			const imgId = `x${ image.x }y${ image.y }` as `x${ number }y${ number }`;
+			const x = image.x;
+			const y = image.y;
+
+			if (image.image) {
+				this.mainView.context.drawImage(image.image, x, y);
+				continue;
+			}
+
+			if (!this.imagePromises.has(imgId)) {
+				this.imagePromises.set(
+					imgId,
+					image.getImage().then(img => {
+						image.image = img;
+						this.imagePromises.delete(imgId);
+						this.draw();
+					}),
+				);
+			}
+		}
 
 		const percentage = this.mainView.visiblePercentage;
 		if (percentage < 50)

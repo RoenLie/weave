@@ -105,7 +105,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		const { event } = data;
 
 		// Get the offset from the corner of the current view to the mouse position
-		const position = this.bgView.position;
+		const position = this.mainView.position;
 		const viewOffsetX = event.offsetX - position.x;
 		const viewOffsetY = event.offsetY - position.y;
 
@@ -127,8 +127,8 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 				nodeY:         node.y,
 				initialMouseX: event.offsetX,
 				initialMouseY: event.offsetY,
-				position:      this.bgView.position,
-				scale:         this.bgView.scaleFactor,
+				position:      this.mainView.position,
+				scale:         this.mainView.scaleFactor,
 			});
 		}
 		else if (conHandle) {
@@ -137,8 +137,8 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 				handle:        { index: conHandle.index, x: conHandle.x, y: conHandle.y },
 				initialMouseX: event.offsetX,
 				initialMouseY: event.offsetY,
-				position:      this.bgView.position,
-				scale:         this.bgView.scaleFactor,
+				position:      this.mainView.position,
+				scale:         this.mainView.scaleFactor,
 			});
 		}
 		// If we didn't find a node or a connection, we want to pan the view
@@ -197,7 +197,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		if (updated)
 			this.post.dataUpdated({});
 
-		this.drawMain();
+		this.draw();
 	}
 
 	public moveNode(data: CanvasEditorWorkerApiIn['moveNode']) {
@@ -239,7 +239,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 
 		this.post.dataUpdated({});
 
-		this.drawMain();
+		this.draw();
 	}
 
 	public moveHandle(data: CanvasEditorWorkerApiIn['moveHandle']) {
@@ -286,7 +286,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 
 		this.post.dataUpdated({});
 
-		this.drawMain();
+		this.draw();
 	}
 
 	public assignDataToNode(data: CanvasEditorWorkerApiIn['assignDataToNode']) {
@@ -312,7 +312,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 
 		this.post.dataUpdated({});
 
-		this.drawMain();
+		this.draw();
 	};
 
 	public async saveData() {
@@ -338,14 +338,14 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		this.selectedNode = node;
 		node.path.clear();
 
-		this.drawMain();
+		this.draw();
 	}
 
 	protected createNode(event: TransferableMouseEvent) {
-		const viewOffsetX = event.offsetX - this.bgView.position.x;
-		const viewOffsetY = event.offsetY - this.bgView.position.y;
+		const viewOffsetX = event.offsetX - this.mainView.position.x;
+		const viewOffsetY = event.offsetY - this.mainView.position.y;
 
-		const scale = this.bgView.scaleFactor;
+		const scale = this.mainView.scaleFactor;
 		const realX = viewOffsetX / scale;
 		const realY = viewOffsetY / scale;
 
@@ -361,7 +361,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 
 		this.post.dataUpdated({});
 
-		this.drawMain();
+		this.draw();
 	}
 
 	protected connectNodes(node: GraphNode) {
@@ -370,7 +370,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 
 		this.post.dataUpdated({});
 
-		this.drawMain();
+		this.draw();
 	}
 
 	protected getConnectionHandle(vec: Vec2): GraphConnectionVec2 | undefined {
@@ -472,8 +472,33 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		}
 	}
 
-	protected override drawMain() {
+	protected override draw() {
 		this.mainView.clearContext();
+
+		for (const image of this.images) {
+			if (!this.isImgInView(image))
+				continue;
+
+			const imgId = `x${ image.x }y${ image.y }` as `x${ number }y${ number }`;
+			const x = image.x;
+			const y = image.y;
+
+			if (image.image) {
+				this.mainView.context.drawImage(image.image, x, y);
+				continue;
+			}
+
+			if (!this.imagePromises.has(imgId)) {
+				this.imagePromises.set(
+					imgId,
+					image.getImage().then(img => {
+						image.image = img;
+						this.imagePromises.delete(imgId);
+						this.draw();
+					}),
+				);
+			}
+		}
 
 		const percentage = this.mainView.visiblePercentage;
 		if (percentage < 50)

@@ -4,13 +4,8 @@ import type { CanvasReaderWorkerApiIn } from './reader-implementation.ts';
 
 type WorkerApi<T> = { [key in keyof T]: (data: Omit<T[key], 'type'>) => void; };
 
-export type CanvasReaderWorkerMethods = WorkerApi<CanvasReaderWorkerApiIn> & {
-	init: (bg: HTMLCanvasElement, main: HTMLCanvasElement, bitmap: HTMLCanvasElement) => void;
-};
-
-export type CanvasEditorWorkerMethods = WorkerApi<CanvasEditorWorkerApiIn> & {
-	init: (bg: HTMLCanvasElement, main: HTMLCanvasElement, bitmap: HTMLCanvasElement) => void;
-};
+export type CanvasReaderWorkerMethods = WorkerApi<CanvasReaderWorkerApiIn>;
+export type CanvasEditorWorkerMethods = WorkerApi<CanvasEditorWorkerApiIn>;
 
 export const createCanvasWorker = <T extends object>(ctor: new() => Worker): Worker & T => {
 	const proxy = new Proxy(new ctor(), {
@@ -19,14 +14,10 @@ export const createCanvasWorker = <T extends object>(ctor: new() => Worker): Wor
 				return target[p].bind(target);
 
 			if (p === 'init') {
-				return (bgCanvas: HTMLCanvasElement, mainCanvas: HTMLCanvasElement, bitmap: HTMLCanvasElement) => {
-					const bgOffscreen = bgCanvas.transferControlToOffscreen();
-					const mainOffscreen = mainCanvas.transferControlToOffscreen();
-					const bitmapOffscreen = bitmap.transferControlToOffscreen();
-
+				return (data: { main: OffscreenCanvas; }) => {
 					target.postMessage(
-						{ type: 'init', bg: bgOffscreen, main: mainOffscreen, bitmap: bitmapOffscreen },
-						[ bgOffscreen, mainOffscreen, bitmapOffscreen ],
+						{ type: 'init', main: data.main },
+						[ data.main ],
 					);
 				};
 			}

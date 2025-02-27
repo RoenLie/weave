@@ -73,12 +73,11 @@ export class PoeCanvasBase extends CustomElement {
 	protected initializeWorker() {
 		this.worker = this.createWorker();
 
-		const bgCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#background')!;
 		const mainCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#main')!;
 
 		this.worker.addEventListener('message', this.boundWorkerMessage);
 
-		this.worker.init(bgCanvas, mainCanvas, document.createElement('canvas'));
+		this.worker.init({ main: mainCanvas.transferControlToOffscreen() });
 		this.worker.setSize({ width: this.offsetWidth, height: this.offsetHeight });
 		this.worker.setArea({ width: this.imageSize, height: this.imageSize });
 		this.worker.initBackground({});
@@ -329,7 +328,6 @@ export class PoeCanvasBase extends CustomElement {
 
 	protected override render(): unknown {
 		return html`
-		<canvas id="background"></canvas>
 		<canvas id="main"
 			@mousemove=${ this.onMousemove }
 			@mousedown =${ this.onMousedown }
@@ -379,7 +377,6 @@ export class PoeCanvasBase extends CustomElement {
 			grid-row: 1/2;
 			grid-column: 1/2;
 		}
-		canvas#background {}
 		canvas#main {}
 		article.tooltip:popover-open {
 			${ unsetPopover }

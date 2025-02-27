@@ -124,7 +124,7 @@ export class GraphNode implements Vec2 {
 		node.id = crypto.randomUUID();
 		node.updated = new Date().toISOString();
 
-		node.type = 'minor';
+		node.type = Object.keys(GraphNode.sizes)[0] as StorableGraphNode['type'];
 		node.connectionIds = [];
 
 		return node;
@@ -143,7 +143,7 @@ export class GraphNode implements Vec2 {
 		if (radius)
 			node.type = radius === 24 ? 'minor' : radius === 36 ? 'notable' : 'keystone';
 		else
-			node.type = storable.type ?? 'minor';
+			node.type = storable.type ?? Object.keys(GraphNode.sizes)[0] as StorableGraphNode['type'];
 
 		node.connectionIds = storable.connections || [];
 
