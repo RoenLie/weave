@@ -20,6 +20,9 @@ export class View {
 	public get scale(): number { return this._scale; }
 	protected _scale: number = 1;
 
+	protected transformCount = 0;
+	protected readonly TRANSFORM_THRESHOLD = 15;
+
 	/** Sets the canvas and transfers control to the internal offscreen canvas. */
 	public setContext(canvas: HTMLCanvasElement) {
 		this.canvas = canvas.transferControlToOffscreen();
@@ -75,10 +78,24 @@ export class View {
 
 	/** Scales the context in the direction of the vector. */
 	public scaleAt(vec: Vec2, factor: number) {
+		const previousScale = this._scale;
+
 		this._scale *= factor;
 		this._position.x = vec.x - (vec.x - this._position.x) * factor;
 		this._position.y = vec.y - (vec.y - this._position.y) * factor;
 		this.updateMatrix();
+
+		// Count transformations and normalize periodically
+		this.transformCount++;
+		if (this.transformCount >= this.TRANSFORM_THRESHOLD) {
+			this.normalizeMatrix();
+			this.transformCount = 0;
+		}
+		// Normalize when returning close to 1.0 scale
+		else if ((previousScale < 0.9 || previousScale > 1.1) &&
+		  Math.abs(this._scale - 1.0) < 0.1) {
+			this.normalizeMatrix();
+		}
 	};
 
 	/** Translates the context. */
@@ -97,5 +114,20 @@ export class View {
 		m.e = _position.x;
 		m.f = _position.y;
 	};
+
+	public normalizeMatrix() {
+		// Store current values
+		const currentScale = this._scale;
+		const currentPosition = { ...this._position };
+
+		// Reset matrix
+		this.matrix = new DOMMatrix([ 1, 0, 0, 1, 0, 0 ]);
+
+		// Reapply with clean values
+		this._scale = currentScale;
+		this._position = currentPosition;
+		this.updateMatrix();
+		this.applyTransform();
+	}
 
 }

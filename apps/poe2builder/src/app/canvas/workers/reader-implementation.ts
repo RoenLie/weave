@@ -1,5 +1,5 @@
 import { range } from '@roenlie/core/array';
-import type { Vec2 } from '@roenlie/core/types';
+import type { Repeat, Vec2 } from '@roenlie/core/types';
 import { GraphDataManager, FirebaseGraphRepository } from '../../../pages/canvas-editor/data-manager.ts';
 import { type StorableGraphNode, GraphNode, type GraphConnection } from '../../graph/graph.ts';
 import { Canvas2DObject } from '../canvas-object.ts';
@@ -109,7 +109,7 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 
 	protected imageSize:     number = 13000;
 	protected chunkSize:     number = 1300;
-	protected imagePromises: Map<`x${ number }y${ number }`, Promise<any>> = new Map();
+	protected imagePromises: Map<string, Promise<any>> = new Map();
 	protected images:        {
 		x:        number,
 		y:        number;
@@ -141,13 +141,11 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 
 	public setSize(data: CanvasReaderWorkerApiIn['setSize']) {
 		this.mainView.setCanvasSize(data.width, data.height);
-		this.mainView.setCanvasSize(data.width, data.height);
 
 		this.draw();
 	}
 
 	public setArea(data: CanvasReaderWorkerApiIn['setArea']) {
-		this.mainView.setTotalArea(data.width, data.height);
 		this.mainView.setTotalArea(data.width, data.height);
 
 		this.draw();
@@ -170,20 +168,17 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		const x = parentWidth  / 2 - imageSize  / 2;
 
 		this.mainView.moveTo(x, y);
-		this.mainView.moveTo(x, y);
 
 		this.draw();
 	}
 
 	public moveTo(data: CanvasReaderWorkerApiIn['moveTo']) {
 		this.mainView.moveTo(data.x, data.y);
-		this.mainView.moveTo(data.x, data.y);
 
 		this.draw();
 	}
 
 	public scaleAt(data: CanvasReaderWorkerApiIn['scaleAt']) {
-		this.mainView.scaleAt(data.vec, data.factor);
 		this.mainView.scaleAt(data.vec, data.factor);
 
 		this.draw();
@@ -317,6 +312,29 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		return doRectsOverlap([ dx1, dy1, dx2, dy2 ], [ x1, y1, x2, y2 ]);
 	}
 
+	protected releaseDistantImages() {
+		const viewport = this.mainView.viewport;
+		// Use a larger buffer than just the visible area
+		const bufferFactor = 3;
+		const expandedVp = {
+			x1: viewport.x1 - bufferFactor * this.chunkSize,
+			y1: viewport.y1 - bufferFactor * this.chunkSize,
+			x2: viewport.x2 + bufferFactor * this.chunkSize,
+			y2: viewport.y2 + bufferFactor * this.chunkSize,
+		};
+
+		for (const img of this.images) {
+			if (img.image) {
+				const imgRect: Repeat<4, number> = [ img.x, img.y, img.x + this.chunkSize, img.y + this.chunkSize ];
+				const vpRect: Repeat<4, number> = [ expandedVp.x1, expandedVp.y1, expandedVp.x2, expandedVp.y2 ];
+
+				// Release this image's memory
+				if (!doRectsOverlap(imgRect, vpRect))
+					img.image = undefined;
+			}
+		}
+	}
+
 	protected createConnectionPath2D(nodes: Map<string, GraphNode>, con: GraphConnection, path: Canvas2DObject) {
 		const startVec = { ...con.start };
 		const stopVec  = { ...con.stop };
@@ -442,23 +460,33 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		}
 	}
 
-	protected draw() {
-		this.mainView.clearContext();
+	protected drawBackground() {
+		// 1. Collect visible images that need loading
+		const visibleImagesToLoad = this.images.filter(
+			img => this.isImgInView(img) && !img.image && !this.imagePromises.has(`x${ img.x }y${ img.y }`),
+		);
 
-		for (const image of this.images) {
-			if (!this.isImgInView(image))
-				continue;
+		// 2. Sort images by distance to viewport center for priority loading
+		if (visibleImagesToLoad.length > 0) {
+			const viewport = this.mainView.viewport;
+			const centerX = (viewport.x1 + viewport.x2) / 2;
+			const centerY = (viewport.y1 + viewport.y2) / 2;
 
-			const imgId = `x${ image.x }y${ image.y }` as `x${ number }y${ number }`;
-			const x = image.x;
-			const y = image.y;
+			visibleImagesToLoad.sort((a, b) => {
+				// Calculate distance from center of viewport
+				const distA = Math.hypot(a.x + this.chunkSize / 2 - centerX, a.y + this.chunkSize / 2 - centerY);
+				const distB = Math.hypot(b.x + this.chunkSize / 2 - centerX, b.y + this.chunkSize / 2 - centerY);
 
-			if (image.image) {
-				this.mainView.context.drawImage(image.image, x, y);
-				continue;
-			}
+				return distA - distB; // Closest first
+			});
 
-			if (!this.imagePromises.has(imgId)) {
+			// 3. Limit batch size to prevent overwhelming the browser
+			const batchSize = 4; // Load max 4 images at once
+			const imagesToLoadNow = visibleImagesToLoad.slice(0, batchSize);
+
+			// 4. Start loading the selected images
+			for (const image of imagesToLoadNow) {
+				const imgId = `x${ image.x }y${ image.y }`;
 				this.imagePromises.set(
 					imgId,
 					image.getImage().then(img => {
@@ -469,6 +497,34 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 				);
 			}
 		}
+
+		// 5. Draw images that are already loaded
+		for (const image of this.images) {
+			if (!this.isImgInView(image) || !image.image)
+				continue;
+
+			const x = image.x;
+			const y = image.y;
+
+			// 6. Use integer coordinates when at base zoom level
+			if (Math.abs(this.mainView.scaleFactor - 1.0) < 0.01)
+				this.mainView.context.drawImage(image.image, Math.round(x), Math.round(y));
+			else
+				this.mainView.context.drawImage(image.image, x, y);
+		}
+
+		// 7. Optionally release images that are far outside viewport
+		// Only do this when we have many loaded images to avoid constant loading/unloading
+		const loadedImageCount = this.images.filter(img => img.image).length;
+		if (loadedImageCount > 50) { // Adjust threshold based on your needs
+			this.releaseDistantImages();
+		}
+	}
+
+	protected draw() {
+		this.mainView.clearContext();
+
+		this.drawBackground();
 
 		const percentage = this.mainView.visiblePercentage;
 		if (percentage < 50)

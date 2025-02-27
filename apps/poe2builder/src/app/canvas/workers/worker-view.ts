@@ -25,6 +25,9 @@ export class WorkerView {
 	public get scaleFactor(): number { return this._scaleFactor; }
 	protected _scaleFactor: number = 1;
 
+	protected transformCount = 0;
+	protected readonly TRANSFORM_THRESHOLD = 50;
+
 	/** Sets canvas width and height. */
 	public setCanvasSize(width: number, height: number) {
 		this.canvas.width = width;
@@ -76,16 +79,37 @@ export class WorkerView {
 	/** Scales the context in the direction of the vector. */
 	public scaleAt(vec: Vec2, factor: number) {
 		const newScale = this._scaleFactor * factor;
-		if (newScale < 0.1)
-			return;
-		if (newScale > 7)
+		if (newScale < 0.1 || 7 < newScale)
 			return;
 
+		const previousScale = this._scaleFactor;
+
+		// Update scale and position
 		this._scaleFactor = newScale;
 		this._position.x = vec.x - (vec.x - this._position.x) * factor;
 		this._position.y = vec.y - (vec.y - this._position.y) * factor;
 
-		this.updateMatrix();
+		// Enable or disable image smoothing based on scale factor
+		const imageSmoothing = this._scaleFactor >= 1 ? true : false;
+		if (this.context.imageSmoothingEnabled !== imageSmoothing)
+			this.context.imageSmoothingEnabled = imageSmoothing;
+
+		// Count transformations and normalize periodically
+		this.transformCount++;
+		if (this.transformCount >= this.TRANSFORM_THRESHOLD) {
+			this.normalizeMatrix();
+			this.transformCount = 0;
+		}
+		// Normalize when returning close to 1.0 scale
+		else if (
+			(previousScale < 0.9 || previousScale > 1.1)
+			&& Math.abs(this._scaleFactor - 1.0) < 0.1
+		) {
+			this.normalizeMatrix();
+		}
+		else {
+			this.updateMatrix();
+		}
 	};
 
 	/** Translates the context. */
@@ -105,5 +129,20 @@ export class WorkerView {
 		m.e = _position.x;
 		m.f = _position.y;
 	};
+
+	public normalizeMatrix() {
+		// Store current values
+		const currentScale = this._scaleFactor;
+		const currentPosition = { ...this._position };
+
+		// Reset matrix
+		this.matrix = new DOMMatrix([ 1, 0, 0, 1, 0, 0 ]);
+
+		// Reapply with clean values
+		this._scaleFactor = currentScale;
+		this._position = currentPosition;
+		this.updateMatrix();
+		this.applyTransform();
+	}
 
 }

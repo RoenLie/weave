@@ -16,7 +16,10 @@ export const getWorkerImageChunk = (() => {
 			throw new Error('Invalid chunk');
 
 		const blob = await (await fetch(imgData.default)).blob();
-		const bitmap = await createImageBitmap(blob);
+		const bitmap = await createImageBitmap(blob, {
+			premultiplyAlpha:     'premultiply',
+			colorSpaceConversion: 'none',
+		});
 
 		return bitmap;
 	};
