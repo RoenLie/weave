@@ -105,7 +105,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		const { event } = data;
 
 		// Get the offset from the corner of the current view to the mouse position
-		const position = this.mainView.position;
+		const position = this.view.position;
 		const viewOffsetX = event.offsetX - position.x;
 		const viewOffsetY = event.offsetY - position.y;
 
@@ -127,8 +127,8 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 				nodeY:         node.y,
 				initialMouseX: event.offsetX,
 				initialMouseY: event.offsetY,
-				position:      this.mainView.position,
-				scale:         this.mainView.scaleFactor,
+				position:      this.view.position,
+				scale:         this.view.scaleFactor,
 			});
 		}
 		else if (conHandle) {
@@ -137,8 +137,8 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 				handle:        { index: conHandle.index, x: conHandle.x, y: conHandle.y },
 				initialMouseX: event.offsetX,
 				initialMouseY: event.offsetY,
-				position:      this.mainView.position,
-				scale:         this.mainView.scaleFactor,
+				position:      this.view.position,
+				scale:         this.view.scaleFactor,
 			});
 		}
 		// If we didn't find a node or a connection, we want to pan the view
@@ -342,10 +342,10 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 	}
 
 	protected createNode(event: TransferableMouseEvent) {
-		const viewOffsetX = event.offsetX - this.mainView.position.x;
-		const viewOffsetY = event.offsetY - this.mainView.position.y;
+		const viewOffsetX = event.offsetX - this.view.position.x;
+		const viewOffsetY = event.offsetY - this.view.position.y;
 
-		const scale = this.mainView.scaleFactor;
+		const scale = this.view.scaleFactor;
 		const realX = viewOffsetX / scale;
 		const realY = viewOffsetY / scale;
 
@@ -376,12 +376,12 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 	protected getConnectionHandle(vec: Vec2): GraphConnectionVec2 | undefined {
 		for (const [ , con ] of this.data.connections) {
 			if (con.pathHandle1) {
-				const isInPath = con.pathHandle1.isPointInPath(this.mainView.context, vec.x, vec.y);
+				const isInPath = con.pathHandle1.isPointInPath(this.view.context, vec.x, vec.y);
 				if (isInPath)
 					return con.m1;
 			}
 			if (con.pathHandle2) {
-				const isInPath = con.pathHandle2.isPointInPath(this.mainView.context, vec.x, vec.y);
+				const isInPath = con.pathHandle2.isPointInPath(this.view.context, vec.x, vec.y);
 				if (isInPath)
 					return con.m2;
 			}
@@ -457,57 +457,34 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 
 	protected mapConnectionHandle2Ds() {
 		for (const con of this.data.connections.values()) {
-			if (!isOutsideViewport(this.mainView.viewport, con.m1)) {
+			if (!isOutsideViewport(this.view.viewport, con.m1)) {
 				if (con.pathHandle1.empty)
 					this.createConnectionHandle2D(con, 1, con.pathHandle1);
 
-				con.pathHandle1.draw(this.mainView.context);
+				con.pathHandle1.draw(this.view.context);
 			}
-			if (!isOutsideViewport(this.mainView.viewport, con.m2)) {
+			if (!isOutsideViewport(this.view.viewport, con.m2)) {
 				if (con.pathHandle2.empty)
 					this.createConnectionHandle2D(con, 2, con.pathHandle2);
 
-				con.pathHandle2.draw(this.mainView.context);
+				con.pathHandle2.draw(this.view.context);
 			}
 		}
 	}
 
 	protected override draw() {
-		this.mainView.clearContext();
+		this.view.clearContext();
 
-		for (const image of this.images) {
-			if (!this.isImgInView(image))
-				continue;
+		this.drawBackground();
 
-			const imgId = `x${ image.x }y${ image.y }` as `x${ number }y${ number }`;
-			const x = image.x;
-			const y = image.y;
-
-			if (image.image) {
-				this.mainView.context.drawImage(image.image, x, y);
-				continue;
-			}
-
-			if (!this.imagePromises.has(imgId)) {
-				this.imagePromises.set(
-					imgId,
-					image.getImage().then(img => {
-						image.image = img;
-						this.imagePromises.delete(imgId);
-						this.draw();
-					}),
-				);
-			}
-		}
-
-		const percentage = this.mainView.visiblePercentage;
+		const percentage = this.view.visiblePercentage;
 		if (percentage < 50)
 			this.mapConnectionPath2Ds();
 
 		if (percentage < 50)
 			this.mapNodePath2Ds();
 
-		if (this.mainView.visiblePercentage < 1)
+		if (this.view.visiblePercentage < 1)
 			this.mapConnectionHandle2Ds();
 
 		this.post.draw({});

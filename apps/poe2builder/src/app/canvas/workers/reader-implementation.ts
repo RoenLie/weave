@@ -105,7 +105,7 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 	protected readonly data = new GraphDataManager(new FirebaseGraphRepository());
 	protected readonly post = createPostMessage<CanvasReaderWorkerApiOut>();
 
-	protected mainView: WorkerView;
+	protected view: WorkerView;
 
 	protected imageSize:     number = 13000;
 	protected chunkSize:     number = 1300;
@@ -133,20 +133,20 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		type: 'init',
 		main: OffscreenCanvas,
 	}) {
-		this.mainView = new WorkerView(data.main);
+		this.view = new WorkerView(data.main);
 
 		await this.data.load();
 		this.draw();
 	}
 
 	public setSize(data: CanvasReaderWorkerApiIn['setSize']) {
-		this.mainView.setCanvasSize(data.width, data.height);
+		this.view.setCanvasSize(data.width, data.height);
 
 		this.draw();
 	}
 
 	public setArea(data: CanvasReaderWorkerApiIn['setArea']) {
-		this.mainView.setTotalArea(data.width, data.height);
+		this.view.setTotalArea(data.width, data.height);
 
 		this.draw();
 	}
@@ -162,24 +162,24 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		});
 
 		const imageSize = this.imageSize;
-		const parentWidth = this.mainView.canvas.width;
-		const parentHeight = this.mainView.canvas.height;
+		const parentWidth = this.view.canvas.width;
+		const parentHeight = this.view.canvas.height;
 		const y = parentHeight / 2 - imageSize / 2;
 		const x = parentWidth  / 2 - imageSize  / 2;
 
-		this.mainView.moveTo(x, y);
+		this.view.moveTo(x, y);
 
 		this.draw();
 	}
 
 	public moveTo(data: CanvasReaderWorkerApiIn['moveTo']) {
-		this.mainView.moveTo(data.x, data.y);
+		this.view.moveTo(data.x, data.y);
 
 		this.draw();
 	}
 
 	public scaleAt(data: CanvasReaderWorkerApiIn['scaleAt']) {
-		this.mainView.scaleAt(data.vec, data.factor);
+		this.view.scaleAt(data.vec, data.factor);
 
 		this.draw();
 	}
@@ -188,7 +188,7 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		const event = data.event;
 
 		// Get the offset from the corner of the current view to the mouse position
-		const position = this.mainView.position;
+		const position = this.view.position;
 		const viewOffsetX = event.offsetX - position.x;
 		const viewOffsetY = event.offsetY - position.y;
 
@@ -231,9 +231,9 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 
 			this.post.leaveNode({
 				node:     GraphNode.toStorable(node),
-				position: this.mainView.position,
-				viewport: this.mainView.viewport,
-				scale:    this.mainView.scaleFactor,
+				position: this.view.position,
+				viewport: this.view.viewport,
+				scale:    this.view.scaleFactor,
 			});
 
 			this.draw();
@@ -246,9 +246,9 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 
 			this.post.enterNode({
 				node:     GraphNode.toStorable(node),
-				position: this.mainView.position,
-				viewport: this.mainView.viewport,
-				scale:    this.mainView.scaleFactor,
+				position: this.view.position,
+				viewport: this.view.viewport,
+				scale:    this.view.scaleFactor,
 			});
 
 			this.draw();
@@ -260,7 +260,7 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		const offsetY = data.touches[0]!.pageY - data.rect.top;
 
 		// Get the offset from the corner of the current view to the mouse position
-		const position = this.mainView.position;
+		const position = this.view.position;
 		const viewOffsetX = offsetX - position.x;
 		const viewOffsetY = offsetY - position.y;
 
@@ -282,7 +282,7 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 				initialMouseY: offsetY,
 				offsetX:       viewOffsetX,
 				offsetY:       viewOffsetY,
-				scale:         this.mainView.scaleFactor,
+				scale:         this.view.scaleFactor,
 			});
 		}
 	}
@@ -296,24 +296,25 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 			if (!node.path)
 				continue;
 
-			const isInPath = node.path.isPointInPath(this.mainView.context, vec.x, vec.y);
+			const isInPath = node.path.isPointInPath(this.view.context, vec.x, vec.y);
 			if (isInPath)
 				return node;
 		}
 	}
 
-	protected isImgInView(img: { x: number, y: number }) {
+	protected isImgInView(img: Vec2) {
 		const { x: dx1, y: dy1 } = img;
 		const dx2 = dx1 + this.chunkSize;
 		const dy2 = dy1 + this.chunkSize;
 
-		const { x1, x2, y1, y2 } = this.mainView.viewport;
+		const { x1, x2, y1, y2 } = this.view.viewport;
 
 		return doRectsOverlap([ dx1, dy1, dx2, dy2 ], [ x1, y1, x2, y2 ]);
 	}
 
 	protected releaseDistantImages() {
-		const viewport = this.mainView.viewport;
+		const viewport = this.view.viewport;
+
 		// Use a larger buffer than just the visible area
 		const bufferFactor = 3;
 		const expandedVp = {
@@ -335,12 +336,13 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		}
 	}
 
-	protected createConnectionPath2D(nodes: Map<string, GraphNode>, con: GraphConnection, path: Canvas2DObject) {
+	protected createConnectionPath2D(con: GraphConnection, path: Canvas2DObject) {
 		const startVec = { ...con.start };
 		const stopVec  = { ...con.stop };
 		const mid1Vec  = { ...con.m1 };
 		const mid2Vec  = { ...con.m2 };
 
+		const nodes = this.data.nodes;
 		const startRadius = nodes.get(con.start.id)!.radius;
 		const [ startXReduce, startYReduce ] = getPathReduction(startRadius, startVec, mid1Vec);
 		startVec.x += startXReduce;
@@ -398,21 +400,20 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 	}
 
 	protected mapConnectionPath2Ds() {
-		const nodes = this.data.nodes;
 		const connections = this.data.connections;
 
 		for (const con of connections.values()) {
-			const outsideStart = isOutsideViewport(this.mainView.viewport, con.start);
-			const outsideMid1  = isOutsideViewport(this.mainView.viewport, con.m1);
-			const outsideMid2  = isOutsideViewport(this.mainView.viewport, con.m2);
-			const outsideStop  = isOutsideViewport(this.mainView.viewport, con.stop);
+			const outsideStart = isOutsideViewport(this.view.viewport, con.start);
+			const outsideMid1  = isOutsideViewport(this.view.viewport, con.m1);
+			const outsideMid2  = isOutsideViewport(this.view.viewport, con.m2);
+			const outsideStop  = isOutsideViewport(this.view.viewport, con.stop);
 			if (outsideStart && outsideStop && outsideMid1 && outsideMid2)
 				continue;
 
 			if (con.path.empty)
-				this.createConnectionPath2D(nodes, con, con.path);
+				this.createConnectionPath2D(con, con.path);
 
-			con.path.draw(this.mainView.context);
+			con.path.draw(this.view.context);
 		}
 	}
 
@@ -450,25 +451,25 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 		const nodes = this.data.nodes;
 
 		for (const node of nodes.values()) {
-			if (isOutsideViewport(this.mainView.viewport, node))
+			if (isOutsideViewport(this.view.viewport, node))
 				continue;
 
 			if (node.path.empty)
 				this.createNodePath2D(node, node.path);
 
-			node.path.draw(this.mainView.context);
+			node.path.draw(this.view.context);
 		}
 	}
 
 	protected drawBackground() {
-		// 1. Collect visible images that need loading
+		// Collect visible images that need loading
 		const visibleImagesToLoad = this.images.filter(
 			img => this.isImgInView(img) && !img.image && !this.imagePromises.has(`x${ img.x }y${ img.y }`),
 		);
 
-		// 2. Sort images by distance to viewport center for priority loading
+		// Sort images by distance to viewport center for priority loading
 		if (visibleImagesToLoad.length > 0) {
-			const viewport = this.mainView.viewport;
+			const viewport = this.view.viewport;
 			const centerX = (viewport.x1 + viewport.x2) / 2;
 			const centerY = (viewport.y1 + viewport.y2) / 2;
 
@@ -477,14 +478,15 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 				const distA = Math.hypot(a.x + this.chunkSize / 2 - centerX, a.y + this.chunkSize / 2 - centerY);
 				const distB = Math.hypot(b.x + this.chunkSize / 2 - centerX, b.y + this.chunkSize / 2 - centerY);
 
-				return distA - distB; // Closest first
+				// Closest first
+				return distA - distB;
 			});
 
-			// 3. Limit batch size to prevent overwhelming the browser
-			const batchSize = 4; // Load max 4 images at once
+			// Limit batch size to prevent overwhelming the browser
+			const batchSize = 4;
 			const imagesToLoadNow = visibleImagesToLoad.slice(0, batchSize);
 
-			// 4. Start loading the selected images
+			// Start loading the selected images
 			for (const image of imagesToLoadNow) {
 				const imgId = `x${ image.x }y${ image.y }`;
 				this.imagePromises.set(
@@ -498,35 +500,29 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 			}
 		}
 
-		// 5. Draw images that are already loaded
+		// Draw images that are already loaded
 		for (const image of this.images) {
 			if (!this.isImgInView(image) || !image.image)
 				continue;
 
-			const x = image.x;
-			const y = image.y;
-
-			// 6. Use integer coordinates when at base zoom level
-			if (Math.abs(this.mainView.scaleFactor - 1.0) < 0.01)
-				this.mainView.context.drawImage(image.image, Math.round(x), Math.round(y));
-			else
-				this.mainView.context.drawImage(image.image, x, y);
+			this.view.context.drawImage(image.image, image.x, image.y);
 		}
 
-		// 7. Optionally release images that are far outside viewport
+		// Optionally release images that are far outside viewport
 		// Only do this when we have many loaded images to avoid constant loading/unloading
 		const loadedImageCount = this.images.filter(img => img.image).length;
-		if (loadedImageCount > 50) { // Adjust threshold based on your needs
+		const loadedImageLimit = 10;
+		const zoomThreshold = 0.5;
+		if (loadedImageCount > loadedImageLimit && this.view.scaleFactor >= zoomThreshold)
 			this.releaseDistantImages();
-		}
 	}
 
 	protected draw() {
-		this.mainView.clearContext();
+		this.view.clearContext();
 
 		this.drawBackground();
 
-		const percentage = this.mainView.visiblePercentage;
+		const percentage = this.view.visiblePercentage;
 		if (percentage < 50)
 			this.mapConnectionPath2Ds();
 
