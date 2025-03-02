@@ -11,6 +11,7 @@ import { dataNodes } from '../../app/graph/node-catalog.ts';
 import { uppercaseFirstLetter } from '@roenlie/core/string';
 import { ref, type RefOrCallback } from 'lit-html/directives/ref.js';
 import type { CanvasReaderWorkerApiOut } from '../../app/canvas/workers/reader-implementation.ts';
+import { supabase } from '../../app/supabase.ts';
 
 
 const unsetPopover = css`
@@ -70,14 +71,19 @@ export class PoeCanvasBase extends CustomElement {
 		return createCanvasWorker<CanvasReaderWorkerMethods>(CanvasWorkerReader);
 	}
 
-	protected initializeWorker() {
+	protected async initializeWorker() {
 		this.worker = this.createWorker();
+
+		await this.worker.ready();
+
+		const { data: { session }, error } = await supabase.auth.getSession();
+		if (!session)
+			return console.error(error);
 
 		const mainCanvas = this.shadowRoot!.querySelector<HTMLCanvasElement>('#main')!;
 
 		this.worker.addEventListener('message', this.boundWorkerMessage);
-
-		this.worker.init({ main: mainCanvas.transferControlToOffscreen() });
+		this.worker.init({ main: mainCanvas.transferControlToOffscreen(), session });
 		this.worker.setSize({ width: this.offsetWidth, height: this.offsetHeight });
 		this.worker.setArea({ width: this.imageSize, height: this.imageSize });
 		this.worker.initBackground({});
@@ -314,11 +320,12 @@ export class PoeCanvasBase extends CustomElement {
 		if (!this.viewport || !this.position || !this.scale)
 			return;
 
-		const node = this.hoveredNode!;
+		const node = GraphNode.fromStorable(this.hoveredNode!);
 		const rect = this.getBoundingClientRect();
 		const scale = this.scale;
-		const x = (node.x * scale) + (this.position.x + rect.left) + (GraphNode.sizes[node.type] * scale);
-		const y = (node.y * scale) + (this.position.y + rect.top)  - (GraphNode.sizes[node.type] * scale);
+
+		const x = (node.x * scale) + (this.position.x + rect.left) + (node.radius * scale);
+		const y = (node.y * scale) + (this.position.y + rect.top)  - (node.radius * scale);
 
 		el.style.top = y + 'px';
 		el.style.left = x + 'px';

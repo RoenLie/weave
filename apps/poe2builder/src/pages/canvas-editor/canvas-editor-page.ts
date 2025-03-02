@@ -8,7 +8,6 @@ import { map } from 'lit-html/directives/map.js';
 import CanvasWorkerEditor from '../../app/canvas/workers/canvas-editor.ts?worker';
 import { createCanvasWorker, makeObjectTransferable, type CanvasEditorWorkerMethods } from '../../app/canvas/workers/canvas-worker-interface.ts';
 import type { CanvasEditorWorkerApiOut } from '../../app/canvas/workers/editor-implementation.ts';
-import { supabase } from '../../app/supabase.ts';
 
 
 export class PoeCanvasTree extends PoeCanvasBase {
@@ -103,14 +102,6 @@ export class PoeCanvasTree extends PoeCanvasBase {
 
 	protected onWorkerDataSaved(_data: CanvasEditorWorkerApiOut['dataSaved']) {
 		this.updated = false;
-	}
-
-	protected async onWorkerRequestAuth(_data: CanvasEditorWorkerApiOut['requestAuth']) {
-		const { data: { session } } = await supabase.auth.getSession();
-		if (!session)
-			return;
-
-		this.worker.receiveAuth({ session });
 	}
 
 	protected onWorkerDraw(_data: CanvasEditorWorkerApiOut['draw']) {

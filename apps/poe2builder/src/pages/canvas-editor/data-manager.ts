@@ -6,6 +6,7 @@ import { db } from '../../app/firebase.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import type { NodeData } from '../../app/graph/node-catalog.ts';
 import { GraphConnection, type StorableGraphConnection } from '../../app/graph/graph-connection.ts';
+import { supabase } from '../../app/supabase.ts';
 
 
 interface NodeChunkRef { chunkId: string; nodeId: string; }
@@ -40,10 +41,12 @@ export class GraphDataManager {
 	public nodeChunks:       NodeChunk[] = [];
 	public connectionChunks: ConnectionChunk[] = [];
 
-	protected loadedVersion: string = '0.1';
+	protected loadedVersion: string = '0.1-1';
 	protected chunkSize = 500;
 
 	public async load() {
+		console.log('Loading graph data');
+
 		if (!this.loading.done)
 			return;
 
@@ -337,7 +340,6 @@ export class GraphDataManager {
 		//const changes = this.findChanges();
 		//const nodeChunkChanges = this.applyNodeChanges(changes);
 		//const conChunkChanges = this.applyConnectionChanges(changes);
-
 
 		await this.repository.save(
 			this.loadedVersion,
@@ -657,6 +659,7 @@ export class LocalGraphRepository implements GraphRepository {
 
 }
 
+
 export class SupabaseGraphRepository implements GraphRepository2 {
 
 	public async load(version: string) {
@@ -665,10 +668,14 @@ export class SupabaseGraphRepository implements GraphRepository2 {
 			connections: StorableGraphConnection[];
 		}
 
+		console.log('Loading from supabase');
+
 		const [ data, err ] = await maybe<GraphData>(
 			import(`../../assets/graphs/graph-version-${ version }.json?inline`)
 				.then(res => res.default as any),
 		);
+
+		console.log(data);
 
 		if (err) {
 			console.error(err);
@@ -682,13 +689,6 @@ export class SupabaseGraphRepository implements GraphRepository2 {
 			console.log('Loaded from local filesystem');
 		}
 
-		data.nodes.forEach(node => {
-			node.version = version;
-		});
-		data.connections.forEach(con => {
-			con.version = version;
-		});
-
 		return {
 			nodes:       data.nodes,
 			connections: data.connections,
@@ -698,52 +698,27 @@ export class SupabaseGraphRepository implements GraphRepository2 {
 	public async save(
 		...args: Parameters<GraphRepository2['save']>
 	): ReturnType<GraphRepository2['save']> {
-		let [ version, nodes, connections ] = args;
+		const [ version, nodes, connections ] = args;
 
-		nodes = nodes.map(node => {
-			const clone: StorableGraphNode = { ...node };
+		//const [ , err ] = await maybe(fetch('/save-graph-to-file', {
+		//	method:  'POST',
+		//	headers: { 'Content-Type': 'application/json' },
+		//	body:    JSON.stringify({
+		//		version,
+		//		nodes,
+		//		connections,
+		//	}),
+		//}).then(res => res.status));
 
-			return {
-				id:         clone.id,
-				created_at: clone.updated_at,
-				updated_at: clone.updated_at,
-				version:    clone.version,
-				x:          clone.x,
-				y:          clone.y,
-			};
-		});
+		const { data: upsertData, error: upsertErr } = await supabase
+			.from('graph_nodes')
+			.insert(nodes)
+			.select();
 
-		connections = connections.map(con => {
-			const clone: StorableGraphConnection = { ...con };
-
-			return {
-				id:         clone.id,
-				created_at: clone.updated_at,
-				updated_at: clone.updated_at,
-				version:    clone.version,
-				start:      clone.start,
-				stop:       clone.stop,
-				m1:         clone.m1,
-				m2:         clone.m2,
-			};
-		});
-
-		console.log(version, nodes, connections);
-
-		const [ , err ] = await maybe(fetch('/save-graph-to-file', {
-			method:  'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body:    JSON.stringify({
-				version,
-				nodes,
-				connections,
-			}),
-		}).then(res => res.status));
-
-		if (err)
-			console.error(err);
+		if (upsertErr)
+			console.error(upsertErr);
 		else
-			console.log('Saved to local filesystem');
+			console.log('Saved to supabase', upsertData);
 	}
 
 }

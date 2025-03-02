@@ -1,6 +1,6 @@
 import { range } from '@roenlie/core/array';
 import type { Repeat, Vec2 } from '@roenlie/core/types';
-import { GraphDataManager, FirebaseGraphRepository, SupabaseGraphRepository } from '../../../pages/canvas-editor/data-manager.ts';
+import { GraphDataManager, SupabaseGraphRepository } from '../../../pages/canvas-editor/data-manager.ts';
 import { type StorableGraphNode, GraphNode } from '../../graph/graph-node.ts';
 import { Canvas2DObject } from '../canvas-object.ts';
 import { getWorkerImageChunk } from './worker-image-assets.ts';
@@ -9,8 +9,6 @@ import { drawParallelBezierCurve, type Bezier } from '../parallel-bezier-curve.t
 import { doRectsOverlap, getPathReduction } from '../path-helpers.ts';
 import { type TransferableMouseEvent, type TransferableTouchEvent, type TransferableTouches, type WorkerImplement, createPostMessage } from './canvas-worker-interface.ts';
 import { WorkerView } from './worker-view.ts';
-import { getAuth } from 'firebase/auth';
-import { app } from '../../firebase.ts';
 import { createClient, type Session } from '@supabase/supabase-js';
 import type { GraphConnection } from '../../graph/graph-connection.ts';
 
@@ -38,9 +36,13 @@ const supabase = createClient(
 
 /** Functions available from the main thread to the worker. */
 export interface CanvasReaderWorkerApiIn {
+	ready: {
+		type: 'ready'
+	}
 	init: {
-		type: 'init',
-		main: OffscreenCanvas,
+		type:    'init',
+		main:    OffscreenCanvas,
+		session: Session
 	};
 	setSize: {
 		type:   'setSize',
@@ -79,10 +81,6 @@ export interface CanvasReaderWorkerApiIn {
 		touches: TransferableTouches[];
 		rect:	   DOMRect;
 	}
-	receiveAuth: {
-		type:    'receiveAuth'
-		session: Session
-	}
 }
 
 /** Functions available from the worker to the main thread. */
@@ -120,20 +118,13 @@ export interface CanvasReaderWorkerApiOut {
 		viewport: Viewport;
 		scale:    number;
 	}
-	requestAuth: {
-		type: 'requestAuth'
-	}
 }
 
 
 export class CanvasWorkerReader
 implements WorkerImplement<CanvasReaderWorkerApiIn> {
 
-	constructor() {
-		getAuth(app);
-
-		this.post.requestAuth({});
-	}
+	constructor() { this.ready(); }
 
 	protected readonly supabase = supabase;
 	protected readonly data = new GraphDataManager(new SupabaseGraphRepository());
@@ -163,19 +154,17 @@ implements WorkerImplement<CanvasReaderWorkerApiIn> {
 	}
 
 	//#region from main thread
-	public async init(data: {
-		type: 'init',
-		main: OffscreenCanvas,
-	}) {
+	public ready() {
+		postMessage({ type: 'ready' });
+	}
+
+	public async init(data: CanvasReaderWorkerApiIn['init']) {
+		workerStorage.set(storageKey, data.session);
+
 		this.view = new WorkerView(data.main);
 
 		await this.data.load();
 		this.draw();
-	}
-
-	public async receiveAuth(data: CanvasReaderWorkerApiIn['receiveAuth']) {
-		const { session } = data;
-		workerStorage.set(storageKey, session);
 	}
 
 	public setSize(data: CanvasReaderWorkerApiIn['setSize']) {

@@ -2,7 +2,11 @@ import type { CanvasEditorWorkerApiIn } from './editor-implementation.ts';
 import type { CanvasReaderWorkerApiIn } from './reader-implementation.ts';
 
 
-type WorkerApi<T> = { [key in keyof T]: (data: Omit<T[key], 'type'>) => void; };
+type WorkerApi<T> = Omit<{
+	[key in keyof T]: (data: Omit<T[key], 'type'>) => void;
+}, 'ready'> & {
+	ready: () => Promise<void>;
+};
 
 export type CanvasReaderWorkerMethods = WorkerApi<CanvasReaderWorkerApiIn>;
 export type CanvasEditorWorkerMethods = WorkerApi<CanvasEditorWorkerApiIn>;
@@ -12,6 +16,22 @@ export const createCanvasWorker = <T extends object>(ctor: new() => Worker): Wor
 		get(target: Worker & Record<keyof any, any>, p, receiver) {
 			if (typeof target[p] === 'function')
 				return target[p].bind(target);
+
+			if (p === 'ready') {
+				return () => {
+					const { promise, resolve } = Promise.withResolvers<T>();
+
+					target.addEventListener(
+						'message',
+						(ev: MessageEvent) => ev.data.type === 'ready' && resolve(target),
+						{ once: true },
+					);
+
+					target.postMessage({ type: 'ready' });
+
+					return promise;
+				};
+			}
 
 			if (p === 'init') {
 				return (data: { main: OffscreenCanvas; }) => {

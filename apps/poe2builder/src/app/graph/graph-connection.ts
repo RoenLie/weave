@@ -11,6 +11,7 @@ export type GraphConnectionVec2 = Vec2 & {
 
 export interface StorableGraphConnection {
 	id:         string;
+	created_at: string;
 	updated_at: string;
 	version:    string;
 	start:      string;
@@ -55,11 +56,13 @@ export class GraphConnection {
 		storable: StorableGraphConnection,
 		nodes: Map<string, GraphNode>,
 	): GraphConnection {
-		const { id, updated_at, start, stop, m1, m2 } = storable;
+		const { id, created_at, updated_at, version, start, stop, m1, m2 } = storable;
 
 		const connection   = new GraphConnection();
 		connection.id      = id;
+		connection.created = created_at;
 		connection.updated = updated_at;
+		connection.version = version;
 		connection.start   = nodes.get(start)!;
 		connection.stop    = nodes.get(stop)!;
 		connection.m1      = { index: 1, x: m1.x, y: m1.y, connection };
@@ -71,6 +74,7 @@ export class GraphConnection {
 	public static toStorable(connection: GraphConnection): StorableGraphConnection {
 		return {
 			id:         connection.id,
+			created_at: connection.created,
 			updated_at: connection.updated,
 			version:    connection.version,
 			start:      connection.start.id,
@@ -81,6 +85,7 @@ export class GraphConnection {
 	}
 
 	public id:      string = crypto.randomUUID();
+	public created: string = new Date().toISOString();
 	public updated: string = new Date().toISOString();
 	public version: string;
 	public start:   GraphNode;

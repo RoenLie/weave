@@ -6,6 +6,7 @@ import type { GraphConnection } from './graph-connection.ts';
 
 export interface StorableGraphNode {
 	id:         string;
+	created_at: string;
 	updated_at: string;
 	version:    string;
 	x:          number;
@@ -28,6 +29,7 @@ export class GraphNode implements Vec2 {
 	public static toStorable(node: GraphNode): StorableGraphNode {
 		return {
 			id:         node.id,
+			created_at: node.created,
 			updated_at: node.updated,
 			version:    node.version,
 			x:          node.x,
@@ -84,6 +86,7 @@ export class GraphNode implements Vec2 {
 	}
 
 	public id:          string = crypto.randomUUID();
+	public created:	    string = new Date().toISOString();
 	public updated:     string = new Date().toISOString();
 	public version:     string;
 	public x:           number;
