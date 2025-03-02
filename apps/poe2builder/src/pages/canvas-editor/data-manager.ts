@@ -7,6 +7,7 @@ import type { Vec2 } from '@roenlie/core/types';
 import type { NodeData } from '../../app/graph/node-catalog.ts';
 import { GraphConnection, type StorableGraphConnection } from '../../app/graph/graph-connection.ts';
 import { supabase } from '../../app/supabase.ts';
+import { range } from '@roenlie/core/array';
 
 
 interface NodeChunkRef { chunkId: string; nodeId: string; }
@@ -41,7 +42,7 @@ export class GraphDataManager {
 	public nodeChunks:       NodeChunk[] = [];
 	public connectionChunks: ConnectionChunk[] = [];
 
-	protected loadedVersion: string = '0.1-1';
+	protected loadedVersion: string = '0.1';
 	protected chunkSize = 500;
 
 	public async load() {
@@ -668,31 +669,66 @@ export class SupabaseGraphRepository implements GraphRepository2 {
 			connections: StorableGraphConnection[];
 		}
 
-		console.log('Loading from supabase');
+		const getAllNodes = async () => {
+			const { count } = await supabase
+				.from('graph_nodes')
+				.select('*', { count: 'exact', head: true })
+				.eq('version', version);
 
-		const [ data, err ] = await maybe<GraphData>(
-			import(`../../assets/graphs/graph-version-${ version }.json?inline`)
-				.then(res => res.default as any),
-		);
+			if (!count)
+				return [];
 
-		console.log(data);
+			const limit  = 1000;
 
-		if (err) {
-			console.error(err);
+			const results = (await Promise.all(range(Math.ceil(count / limit)).map(async i => {
+				const { data: nodes, error: nodeError } = await supabase
+					.from('graph_nodes')
+					.select('*')
+					.eq('version', version)
+					.range(limit * i, limit * i + limit);
 
-			return {
-				nodes:       [],
-				connections: [],
-			} satisfies GraphData;
-		}
-		else {
-			console.log('Loaded from local filesystem');
-		}
+				if (nodeError)
+					throw nodeError;
 
-		return {
-			nodes:       data.nodes,
-			connections: data.connections,
+				return nodes;
+			}))).flat();
+
+			return results as StorableGraphNode[];
 		};
+		const nodes = await getAllNodes();
+
+
+		const getAllConnections = async () => {
+			const { count } = await supabase
+				.from('graph_connections')
+				.select('*', { count: 'exact', head: true })
+				.eq('version', version);
+
+			if (!count)
+				return [];
+
+			const limit  = 1000;
+
+			const results = (await Promise.all(range(Math.ceil(count / limit)).map(async i => {
+				const { data: connections, error: connectionError } = await supabase
+					.from('graph_connections')
+					.select()
+					.eq('version', version)
+					.range(limit * i, limit * i + limit);
+
+				if (connectionError)
+					throw connectionError;
+
+				return connections;
+			}))).flat();
+
+			return results as StorableGraphConnection[];
+		};
+		const connections = await getAllConnections();
+
+		console.log('Loaded from supabase');
+
+		return {	nodes, connections } satisfies GraphData;
 	}
 
 	public async save(
@@ -700,25 +736,20 @@ export class SupabaseGraphRepository implements GraphRepository2 {
 	): ReturnType<GraphRepository2['save']> {
 		const [ version, nodes, connections ] = args;
 
-		//const [ , err ] = await maybe(fetch('/save-graph-to-file', {
-		//	method:  'POST',
-		//	headers: { 'Content-Type': 'application/json' },
-		//	body:    JSON.stringify({
-		//		version,
-		//		nodes,
-		//		connections,
-		//	}),
-		//}).then(res => res.status));
+		//const { data: insertData, error: insertErr } = await supabase
+		//	.from('graph_nodes')
+		//	.insert(nodes)
+		//	.select();
 
-		const { data: upsertData, error: upsertErr } = await supabase
-			.from('graph_nodes')
-			.insert(nodes)
-			.select();
+		//const { data: insertData, error: insertErr } = await supabase
+		//	.from('graph_connections')
+		//	.insert(connections)
+		//	.select();
 
-		if (upsertErr)
-			console.error(upsertErr);
-		else
-			console.log('Saved to supabase', upsertData);
+		//if (insertErr)
+		//	console.error(insertErr);
+		//else
+		//	console.log('Saved to supabase', insertData);
 	}
 
 }

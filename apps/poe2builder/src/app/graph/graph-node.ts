@@ -86,7 +86,7 @@ export class GraphNode implements Vec2 {
 	}
 
 	public id:          string = crypto.randomUUID();
-	public created:	    string = new Date().toISOString();
+	public created:     string = new Date().toISOString();
 	public updated:     string = new Date().toISOString();
 	public version:     string;
 	public x:           number;
