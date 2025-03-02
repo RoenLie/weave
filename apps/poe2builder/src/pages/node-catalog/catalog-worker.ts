@@ -24,7 +24,6 @@ const supabase = createClient(
 onmessage = async (ev: MessageEvent) => {
 	if (ev.data.type === 'login') {
 		workerStorage.set(ev.data.storageKey, JSON.parse(ev.data.session));
-
 		const getSessionResult = await supabase.auth.getUser();
 		console.log({ getSessionResult });
 	}

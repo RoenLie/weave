@@ -1,7 +1,7 @@
 import { range } from '@roenlie/core/array';
 import type { Repeat, Vec2 } from '@roenlie/core/types';
-import { GraphDataManager, FirebaseGraphRepository } from '../../../pages/canvas-editor/data-manager.ts';
-import { type StorableGraphNode, GraphNode, type GraphConnection } from '../../graph/graph.ts';
+import { GraphDataManager, FirebaseGraphRepository, SupabaseGraphRepository } from '../../../pages/canvas-editor/data-manager.ts';
+import { type StorableGraphNode, GraphNode } from '../../graph/graph-node.ts';
 import { Canvas2DObject } from '../canvas-object.ts';
 import { getWorkerImageChunk } from './worker-image-assets.ts';
 import { isOutsideViewport, type Viewport } from '../is-outside-viewport.ts';
@@ -11,6 +11,29 @@ import { type TransferableMouseEvent, type TransferableTouchEvent, type Transfer
 import { WorkerView } from './worker-view.ts';
 import { getAuth } from 'firebase/auth';
 import { app } from '../../firebase.ts';
+import { createClient, type Session } from '@supabase/supabase-js';
+import type { GraphConnection } from '../../graph/graph-connection.ts';
+
+
+// Web workers don't have access to local storage.
+// Therefor we need to provide a storage object to the Supabase client.
+const workerStorage = new Map();
+const storageKey = 'supabase.auth.token';
+const supabase = createClient(
+	import.meta.env.VITE_SUPABASE_URL,
+	import.meta.env.VITE_SUPABASE_ANON_KEY,
+	{
+		auth: {
+			storageKey,
+			detectSessionInUrl: false,
+			storage:            {
+				getItem:	   (key: string) => workerStorage.get(key),
+				setItem:	   (key: string, value: any) => void workerStorage.set(key, value),
+				removeItem: (key: string) => void workerStorage.delete(key),
+			},
+		},
+	},
+);
 
 
 /** Functions available from the main thread to the worker. */
@@ -56,6 +79,10 @@ export interface CanvasReaderWorkerApiIn {
 		touches: TransferableTouches[];
 		rect:	   DOMRect;
 	}
+	receiveAuth: {
+		type:    'receiveAuth'
+		session: Session
+	}
 }
 
 /** Functions available from the worker to the main thread. */
@@ -93,16 +120,23 @@ export interface CanvasReaderWorkerApiOut {
 		viewport: Viewport;
 		scale:    number;
 	}
+	requestAuth: {
+		type: 'requestAuth'
+	}
 }
 
 
-export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApiIn> {
+export class CanvasWorkerReader
+implements WorkerImplement<CanvasReaderWorkerApiIn> {
 
 	constructor() {
 		getAuth(app);
+
+		this.post.requestAuth({});
 	}
 
-	protected readonly data = new GraphDataManager(new FirebaseGraphRepository());
+	protected readonly supabase = supabase;
+	protected readonly data = new GraphDataManager(new SupabaseGraphRepository());
 	protected readonly post = createPostMessage<CanvasReaderWorkerApiOut>();
 
 	protected view: WorkerView;
@@ -137,6 +171,11 @@ export class CanvasWorkerReader implements WorkerImplement<CanvasReaderWorkerApi
 
 		await this.data.load();
 		this.draw();
+	}
+
+	public async receiveAuth(data: CanvasReaderWorkerApiIn['receiveAuth']) {
+		const { session } = data;
+		workerStorage.set(storageKey, session);
 	}
 
 	public setSize(data: CanvasReaderWorkerApiIn['setSize']) {

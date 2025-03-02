@@ -1,7 +1,7 @@
 import { html } from 'lit-html';
 import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import type { Vec2 } from '@roenlie/core/types';
-import { GraphNode, type StorableGraphNode } from '../../app/graph/graph.ts';
+import { GraphNode, type StorableGraphNode } from '../../app/graph/graph-node.ts';
 import { type Viewport } from '../../app/canvas/is-outside-viewport.ts';
 import { CustomElement } from '../../app/custom-element/custom-element.ts';
 import CanvasWorkerReader from '../../app/canvas/workers/canvas-reader.ts?worker';

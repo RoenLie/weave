@@ -1,10 +1,12 @@
 import { html } from 'lit-html';
 import { css, signal, type CSSStyle } from '../app/custom-element/signal-element.ts';
 import { Router } from '@sanguinejs/router';
-import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, signInWithRedirect, type User } from 'firebase/auth';
+import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
 import { when } from 'lit-html/directives/when.js';
 import { app } from '../app/firebase.ts';
 import { CustomElement } from '../app/custom-element/custom-element.ts';
+import { supabase } from '../app/supabase.ts';
+import type { UserResponse } from '@supabase/supabase-js';
 
 
 export class RouterCmp extends CustomElement {
@@ -12,6 +14,7 @@ export class RouterCmp extends CustomElement {
 	static { this.register('poe-router'); }
 
 	@signal protected accessor currentUser: User | undefined;
+	@signal protected accessor currentUser2: UserResponse | undefined;
 	@signal protected accessor requiresLogin: boolean = false;
 
 	protected routes = new Router(this, [
@@ -61,6 +64,12 @@ export class RouterCmp extends CustomElement {
 
 	protected override connectedCallback(): void {
 		super.connectedCallback();
+
+		this.initialize();
+	}
+
+	protected async initialize() {
+		this.currentUser2 = await supabase.auth.getUser();
 
 		const auth = getAuth(app);
 		auth.onAuthStateChanged(user => {

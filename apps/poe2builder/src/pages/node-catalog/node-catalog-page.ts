@@ -40,5 +40,4 @@ export class PoeNodeCatalog extends CustomElement {
 		this.worker.terminate();
 	}
 
-
 }

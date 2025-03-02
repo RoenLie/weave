@@ -1,11 +1,11 @@
 import type { Vec2, Repeat } from '@roenlie/core/types';
-import { oneOf } from '@roenlie/core/validation';
-import { type GraphConnectionVec2, GraphNode, type GraphConnection, type StorableGraphNode } from '../../graph/graph.ts';
+import { GraphNode } from '../../graph/graph-node.ts';
 import { dataNodes } from '../../graph/node-catalog.ts';
 import { Canvas2DObject } from '../canvas-object.ts';
 import { isOutsideViewport } from '../is-outside-viewport.ts';
 import { type TransferableKeyboardEvent, type WorkerImplement, createPostMessage, type TransferableMouseEvent } from './canvas-worker-interface.ts';
 import { type CanvasReaderWorkerApiIn, type CanvasReaderWorkerApiOut, CanvasWorkerReader } from './reader-implementation.ts';
+import type { GraphConnection, GraphConnectionVec2 } from '../../graph/graph-connection.ts';
 
 
 /** Functions available from the main thread to the worker. */
@@ -47,6 +47,9 @@ export interface CanvasEditorWorkerApiIn extends CanvasReaderWorkerApiIn {
 	saveData: {
 		type: 'saveData'
 	}
+	uploadToSupabase: {
+		type: 'uploadToSupabase'
+	}
 }
 
 /** Functions available from the worker to the main thread. */
@@ -87,7 +90,8 @@ export interface CanvasEditorWorkerApiOut extends CanvasReaderWorkerApiOut {
 }
 
 
-export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImplement<CanvasEditorWorkerApiIn> {
+export class CanvasWorkerEditor extends CanvasWorkerReader
+	implements WorkerImplement<CanvasEditorWorkerApiIn> {
 
 	protected override readonly post = createPostMessage<CanvasEditorWorkerApiOut>();
 
@@ -165,26 +169,7 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 		if (this.selectedNode) {
 			const node = this.selectedNode;
 
-			if (oneOf(code, 'Digit1', 'Digit2', 'Digit3')) {
-				const types = Object.keys(GraphNode.sizes) as StorableGraphNode['type'][];
-
-				if (code === 'Digit1')
-					this.data.setNodeType(node, types[0]!);
-				else if (code === 'Digit2')
-					this.data.setNodeType(node, types[1]!);
-				else if (code === 'Digit3')
-					this.data.setNodeType(node, types[2]!);
-
-				node.path.clear();
-				node.connections.forEach(con => {
-					con.path.clear();
-					con.pathHandle1.clear();
-					con.pathHandle2.clear();
-				});
-
-				updated = true;
-			}
-			else if (code === 'Delete') {
+			if (code === 'Delete') {
 				this.data.deleteNode(node);
 				updated = true;
 			}
@@ -316,11 +301,27 @@ export class CanvasWorkerEditor extends CanvasWorkerReader implements WorkerImpl
 	};
 
 	public async saveData() {
-		if (this.data.updatedAt)
-			return;
+		//if (this.data.updatedAt)
+		//	return;
 
 		if (await this.data.save())
 			this.post.dataSaved({});
+	}
+
+	public async uploadToSupabase() {
+		console.log(this.supabase);
+
+		const { data: deleteResponse, error: deleteError } = await this.supabase.from('graph-nodes')
+			.delete()
+			.select();
+
+		const { data: insertResponse, error: insertError } = await this.supabase
+			.from('graph-nodes')
+			.insert([ { version: '0.1', type: 'minor', x: 123.123, y: 234.234, connections: [] } ])
+			.select();
+
+		console.log({ response: deleteResponse, error: deleteError });
+		console.log({ response: insertResponse, error: insertError });
 	}
 	//#endregion
 

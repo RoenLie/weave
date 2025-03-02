@@ -1,4 +1,4 @@
-import { type StorableGraphNode } from '../../app/graph/graph.ts';
+import { type StorableGraphNode } from '../../app/graph/graph-node.ts';
 import { PoeCanvasBase } from './canvas-base.ts';
 import { html } from 'lit-html';
 import { when } from 'lit-html/directives/when.js';
@@ -8,6 +8,7 @@ import { map } from 'lit-html/directives/map.js';
 import CanvasWorkerEditor from '../../app/canvas/workers/canvas-editor.ts?worker';
 import { createCanvasWorker, makeObjectTransferable, type CanvasEditorWorkerMethods } from '../../app/canvas/workers/canvas-worker-interface.ts';
 import type { CanvasEditorWorkerApiOut } from '../../app/canvas/workers/editor-implementation.ts';
+import { supabase } from '../../app/supabase.ts';
 
 
 export class PoeCanvasTree extends PoeCanvasBase {
@@ -104,6 +105,14 @@ export class PoeCanvasTree extends PoeCanvasBase {
 		this.updated = false;
 	}
 
+	protected async onWorkerRequestAuth(_data: CanvasEditorWorkerApiOut['requestAuth']) {
+		const { data: { session } } = await supabase.auth.getSession();
+		if (!session)
+			return;
+
+		this.worker.receiveAuth({ session });
+	}
+
 	protected onWorkerDraw(_data: CanvasEditorWorkerApiOut['draw']) {
 		this.requestUpdate();
 	}
@@ -133,10 +142,14 @@ export class PoeCanvasTree extends PoeCanvasBase {
 	protected async onClickSave() {
 		this.worker.saveData({});
 	}
+
+	protected async onUploadSupabase() {
+		this.worker.uploadToSupabase({});
+	}
 	//#endregion
 
 	protected override renderTooltip(node: StorableGraphNode): unknown {
-		const data = dataNodes.get(node.data)!;
+		const data = dataNodes.get(node.data ?? '');
 
 		if (!data || this.showNodeSelectorMenu) {
 			return html`
@@ -195,10 +208,14 @@ export class PoeCanvasTree extends PoeCanvasBase {
 	protected override render(): unknown {
 		return [
 			super.render(),
-			when(this.updated, () => html`
+			when(this.updated || true, () => html`
 			<s-state-panel>
 				<button @click=${ this.onClickSave }>
 					Save
+				</button>
+
+				<button @click=${ this.onUploadSupabase }>
+					Upload to Supabase
 				</button>
 			</s-state-panel>
 			`),
@@ -214,7 +231,6 @@ export class PoeCanvasTree extends PoeCanvasBase {
 			width: fit-content;
 			height: fit-content;
 		}
-
 		s-node-editor-tooltip {
 			display: grid;
 			background: rgb(241 194 50);
@@ -234,7 +250,6 @@ export class PoeCanvasTree extends PoeCanvasBase {
 				cursor: pointer;
 			}
 		}
-
 		s-node-selector ul { all: unset; }
 		s-node-selector li { all: unset; }
 		s-node-selector {
@@ -267,7 +282,6 @@ export class PoeCanvasTree extends PoeCanvasBase {
 				grid-column: 1 / 3;
 				padding-inline: 8px;
 			}
-
 			button {
 				all: unset;
 				grid-row: 2 / 3;

@@ -1,10 +1,11 @@
 import { maybe, resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
-import { GraphConnection, GraphNode, type StorableGraphConnection, type StorableGraphNode } from '../../app/graph/graph.ts';
+import { GraphNode, type StorableGraphNode } from '../../app/graph/graph-node.ts';
 import { getGraphConnections, getGraphNodes, graphConnectionCollection, graphNodeCollection, type ConnectionChunk, type NodeChunk } from './firebase-queries.ts';
 import { addDoc, collection, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../app/firebase.ts';
 import type { Vec2 } from '@roenlie/core/types';
 import type { NodeData } from '../../app/graph/node-catalog.ts';
+import { GraphConnection, type StorableGraphConnection } from '../../app/graph/graph-connection.ts';
 
 
 interface NodeChunkRef { chunkId: string; nodeId: string; }
@@ -29,7 +30,7 @@ interface GraphChunkChangeLog {
 
 export class GraphDataManager {
 
-	constructor(protected repository: GraphRepository) {}
+	constructor(protected repository: GraphRepository2) {}
 
 	public ready:            boolean = false;
 	public loading:          ResolvablePromise<void> = resolvablePromise.resolve(void 0);
@@ -49,26 +50,20 @@ export class GraphDataManager {
 		this.ready = false;
 		this.loading = resolvablePromise();
 
-		const { nodeChunks, connectionChunks } = await this.repository.load(this.loadedVersion);
+		const { nodes, connections } = await this.repository.load(this.loadedVersion);
 
-		this.nodeChunks = nodeChunks;
-		this.connectionChunks = connectionChunks;
+		this.nodes = new Map(
+			nodes.map(node => [ node.id, GraphNode.fromStorable(node) ]),
+		);
+		this.connections = new Map(
+			connections.map(con => [ con.id, GraphConnection.fromStorable(con, this.nodes) ]),
+		);
 
-		const nodes = nodeChunks.flatMap(chunk => chunk.nodes);
-		const connections = connectionChunks.flatMap(chunk => chunk.connections);
-		this.processLoadedData(nodes, connections);
+		GraphNode.mapConnections(this.nodes, this.connections);
 
 		this.updatedAt = Date.now();
 		this.ready = true;
 		this.loading.resolve();
-	}
-
-	protected processLoadedData(nodes: StorableGraphNode[], connections: StorableGraphConnection[]) {
-		this.nodes = new Map(nodes.map(node => [ node.id, GraphNode.fromStorable(node) ]));
-		this.connections = new Map(connections.map(con => [ con.id, new GraphConnection(this.nodes, con) ]));
-
-		for (const node of this.nodes.values())
-			node.mapConnections(this.connections);
 	}
 
 	protected findChanges(): GraphChangeset {
@@ -126,7 +121,7 @@ export class GraphDataManager {
 			if (!oldNode)
 				continue;
 
-			if (oldNode.updated !== node.updated)
+			if (oldNode.updated_at !== node.updated)
 				updatedNodes.push({ chunkId: chunk.id, nodeId: node.id });
 		}
 
@@ -193,14 +188,14 @@ export class GraphDataManager {
 					index:   this.nodeChunks.length,
 					updated: new Date().toISOString(),
 					created: new Date().toISOString(),
-					nodes:   [ node.toStorable() ],
+					nodes:   [ GraphNode.toStorable(node) ],
 				};
 
 				this.nodeChunks.push(newChunk);
 				chunksToAdd.add(newChunk.id);
 			}
 			else {
-				chunk.nodes.push(node.toStorable());
+				chunk.nodes.push(GraphNode.toStorable(node));
 				chunk.updated = new Date().toISOString();
 
 				chunksToUpdate.add(chunk.id);
@@ -221,7 +216,7 @@ export class GraphDataManager {
 			if (!node)
 				continue;
 
-			chunk.nodes[nodeIndex] = node.toStorable();
+			chunk.nodes[nodeIndex] = GraphNode.toStorable(node);
 			chunk.updated = new Date().toISOString();
 
 			chunksToUpdate.add(chunkId);
@@ -281,14 +276,14 @@ export class GraphDataManager {
 					index:       this.connectionChunks.length,
 					updated:     new Date().toISOString(),
 					created:     new Date().toISOString(),
-					connections: [ con.toStorable() ],
+					connections: [ GraphConnection.toStorable(con) ],
 				};
 
 				this.connectionChunks.push(newChunk);
 				chunksToAdd.add(newChunk.id);
 			}
 			else {
-				chunk.connections.push(con.toStorable());
+				chunk.connections.push(GraphConnection.toStorable(con));
 				chunk.updated = new Date().toISOString();
 
 				chunksToUpdate.add(chunk.id);
@@ -309,7 +304,7 @@ export class GraphDataManager {
 			if (!con)
 				continue;
 
-			chunk.connections[conIndex] = con.toStorable();
+			chunk.connections[conIndex] = GraphConnection.toStorable(con);
 			chunk.updated = new Date().toISOString();
 
 			chunksToUpdate.add(chunkId);
@@ -339,26 +334,16 @@ export class GraphDataManager {
 		this.ready = false;
 		this.loading = resolvablePromise();
 
-		const changes = this.findChanges();
-		const nodeChunkChanges = this.applyNodeChanges(changes);
-		const conChunkChanges = this.applyConnectionChanges(changes);
+		//const changes = this.findChanges();
+		//const nodeChunkChanges = this.applyNodeChanges(changes);
+		//const conChunkChanges = this.applyConnectionChanges(changes);
 
-		const repo = new LocalGraphRepository();
-		await repo.save(
+
+		await this.repository.save(
 			this.loadedVersion,
-			this.nodeChunks,
-			this.connectionChunks,
-			nodeChunkChanges,
-			conChunkChanges,
+			this.nodes.values().map(GraphNode.toStorable).toArray(),
+			this.connections.values().map(GraphConnection.toStorable).toArray(),
 		);
-
-		//await this.repository.save(
-		//	this.loadedVersion,
-		//	this.nodeChunks,
-		//	this.connectionChunks,
-		//	nodeChunkChanges,
-		//	conChunkChanges,
-		//);
 
 		this.updatedAt = Date.now();
 		this.ready = true;
@@ -381,7 +366,7 @@ export class GraphDataManager {
 				nodes:   this.nodes.values()
 					.drop(i)
 					.take(this.chunkSize)
-					.map(node => node.toStorable())
+					.map(GraphNode.toStorable)
 					.toArray(),
 			});
 		}
@@ -403,7 +388,7 @@ export class GraphDataManager {
 				connections: this.connections.values()
 					.drop(i)
 					.take(this.chunkSize)
-					.map(node => node.toStorable())
+					.map(GraphConnection.toStorable)
 					.toArray(),
 			});
 		}
@@ -435,7 +420,8 @@ export class GraphDataManager {
 		if (nodeHasNode(nodeA, nodeB))
 			return false;
 
-		const connection = new GraphConnection(this.nodes, { start: nodeA.id, stop: nodeB.id });
+
+		const connection = GraphConnection.fromConnect(nodeA, nodeB);
 		this.connections.set(connection.id, connection);
 
 		nodeA.connections.add(connection);
@@ -457,18 +443,6 @@ export class GraphDataManager {
 		});
 
 		this.nodes.delete(node.id);
-
-		this.updatedAt = undefined;
-
-		return true;
-	}
-
-	public setNodeType(node: GraphNode, type: StorableGraphNode['type']) {
-		if (node.type === type)
-			return false;
-
-		node.type = type;
-		node.updated = new Date().toISOString();
 
 		this.updatedAt = undefined;
 
@@ -524,6 +498,23 @@ export interface GraphRepository {
 		connectionChunks: ConnectionChunk[],
 		nodeChangelog: GraphChunkChangeLog,
 		conChangelog: GraphChunkChangeLog,
+	): Promise<void>;
+}
+
+
+export interface GraphRepository2 {
+
+	load(version: string): Promise<{
+		nodes:       StorableGraphNode[],
+		connections: StorableGraphConnection[];
+	}>;
+
+	save(
+		version: string,
+		nodes: StorableGraphNode[],
+		connections: StorableGraphConnection[],
+		//nodeChangelog: GraphChunkChangeLog,
+		//conChangelog: GraphChunkChangeLog,
 	): Promise<void>;
 }
 
@@ -618,13 +609,134 @@ export class LocalGraphRepository implements GraphRepository {
 	): ReturnType<GraphRepository['save']> {
 		const [ version, nodeChunks, connectionChunks ] = args;
 
+		const nodes = nodeChunks
+			.flatMap(chunk => chunk.nodes)
+			.map(node => {
+				const clone: any = { ...node };
+
+				return {
+					id:         clone.id,
+					created_at: clone.updated_at,
+					updated_at: clone.updated_at,
+					x:          clone.x,
+					y:          clone.y,
+				};
+			});
+
+		const connections = connectionChunks
+			.flatMap(chunk => chunk.connections)
+			.map(con => {
+				const clone: any = { ...con };
+
+				return {
+					id:         clone.id,
+					created_at: clone.updated_at,
+					updated_at: clone.updated_at,
+					start:      clone.start,
+					stop:       clone.stop,
+					m1:         clone.m1,
+					m2:         clone.m2,
+				};
+			});
+
 		const [ , err ] = await maybe(fetch('/save-graph-to-file', {
 			method:  'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body:    JSON.stringify({
 				version,
-				nodeChunks,
-				connectionChunks,
+				nodes,
+				connections,
+			}),
+		}).then(res => res.status));
+
+		if (err)
+			console.error(err);
+		else
+			console.log('Saved to local filesystem');
+	}
+
+}
+
+export class SupabaseGraphRepository implements GraphRepository2 {
+
+	public async load(version: string) {
+		interface GraphData {
+			nodes:       StorableGraphNode[];
+			connections: StorableGraphConnection[];
+		}
+
+		const [ data, err ] = await maybe<GraphData>(
+			import(`../../assets/graphs/graph-version-${ version }.json?inline`)
+				.then(res => res.default as any),
+		);
+
+		if (err) {
+			console.error(err);
+
+			return {
+				nodes:       [],
+				connections: [],
+			} satisfies GraphData;
+		}
+		else {
+			console.log('Loaded from local filesystem');
+		}
+
+		data.nodes.forEach(node => {
+			node.version = version;
+		});
+		data.connections.forEach(con => {
+			con.version = version;
+		});
+
+		return {
+			nodes:       data.nodes,
+			connections: data.connections,
+		};
+	}
+
+	public async save(
+		...args: Parameters<GraphRepository2['save']>
+	): ReturnType<GraphRepository2['save']> {
+		let [ version, nodes, connections ] = args;
+
+		nodes = nodes.map(node => {
+			const clone: StorableGraphNode = { ...node };
+
+			return {
+				id:         clone.id,
+				created_at: clone.updated_at,
+				updated_at: clone.updated_at,
+				version:    clone.version,
+				x:          clone.x,
+				y:          clone.y,
+			};
+		});
+
+		connections = connections.map(con => {
+			const clone: StorableGraphConnection = { ...con };
+
+			return {
+				id:         clone.id,
+				created_at: clone.updated_at,
+				updated_at: clone.updated_at,
+				version:    clone.version,
+				start:      clone.start,
+				stop:       clone.stop,
+				m1:         clone.m1,
+				m2:         clone.m2,
+			};
+		});
+
+		console.log(version, nodes, connections);
+
+		const [ , err ] = await maybe(fetch('/save-graph-to-file', {
+			method:  'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body:    JSON.stringify({
+				version,
+				nodes,
+				connections,
 			}),
 		}).then(res => res.status));
 

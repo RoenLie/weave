@@ -1,5 +1,5 @@
 import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
-import type { StorableGraphConnection, StorableGraphNode } from '../../app/graph/graph.ts';
+import type { StorableGraphConnection, StorableGraphNode } from '../../app/graph/graph-node.ts';
 import { asType, db } from '../../app/firebase.ts';
 
 
