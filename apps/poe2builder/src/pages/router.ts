@@ -1,12 +1,11 @@
 import { html } from 'lit-html';
-import { css, signal, type CSSStyle } from '../app/custom-element/signal-element.ts';
 import { Router } from '@sanguinejs/router';
 import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
 import { when } from 'lit-html/directives/when.js';
 import { app } from '../app/firebase.ts';
-import { CustomElement } from '../app/custom-element/custom-element.ts';
 import { supabase } from '../app/supabase.ts';
 import type { UserResponse } from '@supabase/supabase-js';
+import { css, CustomElement, signal, type CSSStyle } from '@roenlie/custom-element';
 
 
 export class RouterCmp extends CustomElement {

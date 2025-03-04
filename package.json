@@ -22,7 +22,13 @@
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
-			"@nestjs/core"
+			"@firebase/util",
+			"@nestjs/core",
+			"bcrypt",
+			"better-sqlite3",
+			"esbuild",
+			"protobufjs",
+			"tesseract.js"
 		]
 	}
 }

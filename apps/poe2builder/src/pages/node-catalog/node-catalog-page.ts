@@ -1,4 +1,4 @@
-import { CustomElement } from '../../app/custom-element/custom-element.ts';
+import { CustomElement } from '@roenlie/custom-element';
 import { createClient } from '@supabase/supabase-js';
 
 

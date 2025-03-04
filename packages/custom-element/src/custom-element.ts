@@ -6,3 +6,7 @@ import { ReactiveSignalControllerHost } from './controller-host.ts';
  * and is augmented with lifecycle hooks as well as signal reactivity.
  */
 export class CustomElement extends ReactiveSignalControllerHost {}
+
+
+export { signal, css } from './signal-element.ts';
+export type { CSSStyle } from './signal-element.ts';

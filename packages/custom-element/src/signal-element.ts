@@ -8,9 +8,14 @@ import { DisposingEventHost } from './auto-disposing-event-host.ts';
 export class SignalElement extends DisposingEventHost {
 
 	public static tagName: string;
-	protected static register(tagName: string): void {
-		this.tagName = tagName;
-		queueMicrotask(() => customElements.define(this.tagName, this));
+	public static register(tagName?: string): void {
+		if (tagName)
+			this.tagName = tagName;
+
+		queueMicrotask(() => {
+			if (!customElements.get(this.tagName))
+				customElements.define(this.tagName, this);
+		});
 	}
 
 	protected static elementStyles: CSSStyleSheet[];

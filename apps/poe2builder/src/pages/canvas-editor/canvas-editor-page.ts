@@ -2,12 +2,12 @@ import { type StorableGraphNode } from '../../app/graph/graph-node.ts';
 import { PoeCanvasBase } from './canvas-base.ts';
 import { html } from 'lit-html';
 import { when } from 'lit-html/directives/when.js';
-import { css, signal, type CSSStyle } from '../../app/custom-element/signal-element.ts';
 import { dataNodes, type NodeData } from '../../app/graph/node-catalog.ts';
 import { map } from 'lit-html/directives/map.js';
 import CanvasWorkerEditor from '../../app/canvas/workers/canvas-editor.ts?worker';
 import { createCanvasWorker, makeObjectTransferable, type CanvasEditorWorkerMethods } from '../../app/canvas/workers/canvas-worker-interface.ts';
 import type { CanvasEditorWorkerApiOut } from '../../app/canvas/workers/editor-implementation.ts';
+import { css, signal, type CSSStyle } from '@roenlie/custom-element';
 
 
 export class PoeCanvasTree extends PoeCanvasBase {

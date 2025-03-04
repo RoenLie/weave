@@ -1,0 +1,32 @@
+{
+	"name": "@roenlie/image-viewer",
+	"description": "Image viewer web component based on web-worker canvas image manipulation.",
+	"authors": "Kristoffer Roen-Lie",
+	"version": "1.0.0",
+	"type": "module",
+	"types": "./dist/image-viewer.d.ts",
+	"main": "./dist/image-viewer.js",
+	"sideEffects": false,
+	"files": [
+		"dist",
+		"src"
+	],
+	"exports": {
+		".": {
+			"types": "./dist/image-viewer.d.ts",
+			"default": "./dist/image-viewer.js"
+		}
+	},
+	"scripts": {
+		"dev": "vite --config ./demo/vite.config.ts",
+		"build": "pnpm run --sequential \"/^build::.*/\"",
+		"build::ts": "tsc --project ./src/tsconfig.json",
+		"build::js": "vite build"
+	},
+	"dependencies": {
+		"@roenlie/core": "workspace:^",
+		"@roenlie/custom-element": "workspace:^",
+		"lit-html": "^3.2.1",
+		"tslib": "^2.7.0"
+	}
+}
