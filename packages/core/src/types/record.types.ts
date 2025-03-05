@@ -89,3 +89,15 @@ type _RecursiveKeyof<
  * Recursively gets all the keys of an object.
  */
 export type RecursiveKeyof<T extends Record<string, any>> = Exclude<_RecursiveKeyof<T>, number | symbol>;
+
+
+/**
+ * Removes readonly from a flat `ArrayLike`.
+ */
+export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
+
+
+/**
+ * Removes readonly from a nested `ArrayLike`.
+ */
+export type DeepWriteable<T> = { -readonly [P in keyof T]: DeepWriteable<T[P]> };

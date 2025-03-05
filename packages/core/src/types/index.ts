@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* auto generated */
-export type { RecordOf, ValueOf, ObjectKeyToType, ObjectTypesToUnion, ObjectKeysToUnion, ObjectToTuple, ObjectLength, ObjectHasKeys, ObjectHasLiteralKeys, ObjectOfKeys, RecursiveRecord, RecursiveKeyof } from './record.types.js';
+export type { RecordOf, ValueOf, ObjectKeyToType, ObjectTypesToUnion, ObjectKeysToUnion, ObjectToTuple, ObjectLength, ObjectHasKeys, ObjectHasLiteralKeys, ObjectOfKeys, RecursiveRecord, RecursiveKeyof, Writeable, DeepWriteable } from './record.types.js';
 export type { UnionToIntersection, LastOf, Push, UnionToTuple, LastInUnion, HasLiteralKey, UnionToOverload, PopUnion, IsUnion, UnionToArray } from './union.types.js';
 export type { CompatibilityOf, Timeout, ExtractReturnTypes, Mandatory, Optional, Interface } from './utility-types.js';
 export type { Path, PathValue, PathOf, PathOfLeaf } from './path-types.js';

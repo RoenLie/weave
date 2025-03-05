@@ -165,7 +165,7 @@ class Collection<T extends typeof IndexDBSchema<any>> {
 		});
 
 		return promise !== undefined
-			? new this.schema(promise)
+			? new this.schema(promise) as InstanceType<T>
 			: undefined as any;
 	}
 
@@ -183,7 +183,7 @@ class Collection<T extends typeof IndexDBSchema<any>> {
 		});
 
 		return promise !== undefined
-			? new this.schema(promise)
+			? new this.schema(promise) as InstanceType<T>
 			: undefined as any;
 	}
 

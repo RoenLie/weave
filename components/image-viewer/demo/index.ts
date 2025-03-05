@@ -14,6 +14,7 @@ export class RootPage extends CustomElement {
 	protected override render(): unknown {
 		return html`
 		<iv-image-viewer
+			imagesrc="/spiral.jpg"
 		></iv-image-viewer>
 		`;
 	}
@@ -25,7 +26,7 @@ export class RootPage extends CustomElement {
 	}
 	iv-image-viewer {
 		height: 80dvh;
-		width: clamp(320px, 80vw, 800px);
+		width: clamp(320px, 80vw, 1800px);
 		border: 1px solid darkslateblue;
 	}
 	`;

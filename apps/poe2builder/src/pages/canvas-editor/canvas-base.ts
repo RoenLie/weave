@@ -44,7 +44,8 @@ export class PoeCanvasBase extends CustomElement {
 		if (!entry)
 			return;
 
-		this.worker.setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+		const { width, height } = entry.contentRect;
+		this.worker.setSize({ width, height });
 	});
 
 	protected override connectedCallback(): void {
@@ -338,7 +339,6 @@ export class PoeCanvasBase extends CustomElement {
 			@mousemove=${ this.onMousemove }
 			@mousedown =${ this.onMousedown }
 			@mousewheel=${ this.onMousewheel }
-
 			@touchstart=${ this.onTouchstart }
 		></canvas>
 
