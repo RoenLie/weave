@@ -3,19 +3,38 @@ import { Signal } from 'signal-polyfill';
 import { resolvablePromise as promise, type ResolvablePromise } from '@roenlie/core/async';
 import { effect } from './effect.ts';
 import { DisposingEventHost } from './auto-disposing-event-host.ts';
+import type { RecordOf, Writeable } from '@roenlie/core/types';
+
+
+// Ensure metadata is enabled. TypeScript does not polyfill
+// Symbol.metadata, so we must ensure that it exists.
+(Symbol as { metadata: symbol }).metadata ??= Symbol('metadata');
+
+interface SignalElementMetadata {
+	observedAttributes?: string[];
+	signalProps?:        string[];
+}
 
 
 export class SignalElement extends DisposingEventHost {
 
 	public static tagName: string;
 	public static register(tagName?: string): void {
+		queueMicrotask(() => this.registerImmediately(tagName));
+	}
+
+	public static registerImmediately(tagName?: string): void {
 		if (tagName)
 			this.tagName = tagName;
 
-		queueMicrotask(() => {
-			if (!customElements.get(this.tagName))
-				customElements.define(this.tagName, this);
-		});
+		if (!customElements.get(this.tagName))
+			customElements.define(this.tagName, this);
+	}
+
+	public static get observedAttributes(): string[] {
+		const metadata = this[Symbol.metadata] as SignalElementMetadata;
+
+		return metadata?.observedAttributes ?? [];
 	}
 
 	protected static elementStyles: CSSStyleSheet[];
@@ -60,10 +79,15 @@ export class SignalElement extends DisposingEventHost {
 	public readonly hasConnected:   boolean = false;
 	public readonly hasUpdated:     boolean = false;
 
+	private get __metadata(): SignalElementMetadata | undefined {
+		const metadata = this.constructor[Symbol.metadata] as SignalElementMetadata;
+
+		return metadata;
+	}
+
 	private __unsubEffect?:  () => void;
-	private __signalProps:   string[] = [];
-	private __changedProps:  Set<string> = new Set();
-	private __previousProps: Map<string, any> = new Map();
+	private __changedProps:  Set<string | symbol> = new Set();
+	private __previousProps: Map<string | symbol, any> = new Map();
 
 	protected connectedCallback(): void {
 		const ref = new WeakRef(this);
@@ -94,8 +118,13 @@ export class SignalElement extends DisposingEventHost {
 		this.__previousProps.clear();
 	}
 
+	public attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+		const self = this as Record<PropertyKey, any>;
+		self[name] = newValue ?? undefined;
+	}
+
 	public requestUpdate(): Promise<boolean> {
-		for (const prop of this.__signalProps) {
+		for (const prop of this.__metadata?.signalProps ?? []) {
 			const value = this[prop as keyof typeof this];
 
 			if (this.__previousProps.get(prop) !== value)
@@ -107,7 +136,7 @@ export class SignalElement extends DisposingEventHost {
 		if (!this.updateComplete.done)
 			return this.updateComplete;
 
-		(this.updateComplete as any) = promise();
+		(this as Writeable<this>).updateComplete = promise<boolean>();
 
 		queueMicrotask(() => this.performUpdate());
 
@@ -144,11 +173,11 @@ export class SignalElement extends DisposingEventHost {
 
 	/** Runs immediatly before render is performed. */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	protected beforeUpdate(changedProps: Set<string>): void {}
+	protected beforeUpdate(changedProps: Set<string | symbol>): void {}
 
 	/** Runs after render has completed and dom has painted. */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	protected afterUpdate(changedProps: Set<string>): void {}
+	protected afterUpdate(changedProps: Set<string | symbol>): void {}
 
 	/** Return a value which will be rendered into the componens shadowroot. */
 	protected render(): unknown { return; }
@@ -173,15 +202,53 @@ export const css = (strings: TemplateStringsArray, ...values: any[]): CSSStyle =
 };
 
 
-export const signal = <C extends SignalElement, V>(
+export const signal = () => <C extends SignalElement, V>(
 	target: ClassAccessorDecoratorTarget<C, V>,
 	context: ClassAccessorDecoratorContext<C, V>,
 ): ClassAccessorDecoratorResult<C, V> => {
 	const { get } = target;
 
-	context.addInitializer(function() {
-		(this as any).__signalProps.push(context.name);
-	});
+	const metadata = context.metadata as SignalElementMetadata;
+
+	metadata.signalProps ??= [];
+	const propName = context.name.toString();
+	if (!metadata.signalProps.includes(propName))
+		metadata.signalProps.push(propName);
+
+	return {
+		get() {
+			const signal = (get.call(this) as Signal.State<V>);
+
+			return signal.get();
+		},
+		set(value: V) {
+			const signal = (get.call(this) as Signal.State<V>);
+			signal.set(value);
+		},
+		init(value: any): any {
+			return new Signal.State(value);
+		},
+	};
+};
+
+
+export const property = () => <C extends SignalElement, V>(
+	target: ClassAccessorDecoratorTarget<C, V>,
+	context: ClassAccessorDecoratorContext<C, V>,
+): ClassAccessorDecoratorResult<C, V> => {
+	const { get } = target;
+
+	const metadata = context.metadata as SignalElementMetadata;
+
+	metadata.signalProps ??= [];
+	const propName = context.name.toString();
+	if (!metadata.signalProps.includes(propName))
+		metadata.signalProps.push(propName);
+
+	metadata.observedAttributes ??= [];
+	const attrName = context.name.toString();
+	if (!metadata.observedAttributes.includes(attrName))
+		metadata.observedAttributes.push(attrName);
 
 	return {
 		get() {

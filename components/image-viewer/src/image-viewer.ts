@@ -1,4 +1,4 @@
-import { css, CustomElement, signal, type CSSStyle } from '@roenlie/custom-element';
+import { css, CustomElement, property, type CSSStyle } from '@roenlie/custom-element';
 import { html } from 'lit-html';
 import { createWorkerProxy, makeObjectTransferable, type TransferableWheelEvent, type WorkerApi } from './worker-interface.ts';
 import { workerApiIn, type ImageWorkerApiIn, type ImageWorkerApiOut } from './worker-api.ts';
@@ -8,14 +8,12 @@ import imageWorker from './image-worker.ts?worker';
 export class ImageViewer extends CustomElement {
 
 	static { this.register('iv-image-viewer'); }
+
 	public static fps = 100;
-	public static observedAttributes = [ 'imagesrc' ];
 
-	public attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
-		(this as any)[name] = newValue ?? undefined;
-	}
+	@property() public accessor imagesrc: string | undefined;
 
-	@signal public accessor imagesrc: string | undefined;
+	protected worker: Worker & WorkerApi<ImageWorkerApiIn>;
 
 	protected resizeObserver = new ResizeObserver(([ entry ]) => {
 		if (!entry)
@@ -25,7 +23,6 @@ export class ImageViewer extends CustomElement {
 		this.worker.setSize({ width, height });
 	});
 
-	protected worker: Worker & WorkerApi<ImageWorkerApiIn>;
 
 	protected override connectedCallback(): void {
 		super.connectedCallback();
@@ -234,9 +231,9 @@ export class ImageViewer extends CustomElement {
 	}
 
 	public static override styles: CSSStyle = css`
-	:host {
-		outline: none;
-	}
+		:host {
+			outline: none;
+		}
 	`;
 
 }

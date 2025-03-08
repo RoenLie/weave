@@ -20,8 +20,8 @@
 	"scripts": {
 		"dev": "vite --config ./demo/vite.config.ts",
 		"build": "pnpm run --sequential \"/^build::.*/\"",
-		"build::ts": "tsc --project ./src/tsconfig.json",
-		"build::js": "vite build"
+		"build::js": "vite build",
+		"build::ts": "tsc --project ./src/tsconfig.json"
 	},
 	"dependencies": {
 		"@roenlie/core": "workspace:^",
