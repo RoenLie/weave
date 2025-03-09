@@ -41,6 +41,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy components/image-viewer/dist/demo --project-name=image-viewer-cmp
+          workingDir: components/image-viewer
+          command: pages deploy dist/demo --project-name=image-viewer-cmp
 
 
