@@ -29,7 +29,9 @@
 			"better-sqlite3",
 			"esbuild",
 			"protobufjs",
-			"tesseract.js"
+			"sharp",
+			"tesseract.js",
+			"workerd"
 		]
 	}
 }
