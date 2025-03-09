@@ -4,22 +4,34 @@ import type { Vec2 } from '@roenlie/core/types';
 export interface Viewport { x1: number, x2: number, y1: number, y2: number }
 
 
+/**
+ * Manages view transformations for canvas-based image display.\
+ * Handles scaling, rotation, translation, and viewport calculations
+ * without managing the actual rendering.
+ */
 export class WorkerView {
+
+	protected static readonly TRANSFORM_THRESHOLD = 50;
+	protected static readonly SCALE_MIN = 0.1;
+	protected static readonly SCALE_MAX = 7;
+	protected static readonly SCALE_NORMALIZATION_TOLERANCE = 0.1;
+	protected static readonly NORMAL_SCALE_LOWER_BOUND = 0.9;
+	protected static readonly NORMAL_SCALE_UPPER_BOUND = 1.1;
+	protected static readonly SMOOTHING_SCALE_THRESHOLD = 1.0;
 
 	constructor(canvas: OffscreenCanvas) {
 		this.canvas = canvas;
 		this.context = this.canvas.getContext('2d')!;
 	}
 
-	public canvas:   OffscreenCanvas;
-	public context:  OffscreenCanvasRenderingContext2D;
-	public viewport: Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
-	public visiblePercentage = 0;
+	public readonly canvas:  OffscreenCanvas;
+	public readonly context: OffscreenCanvasRenderingContext2D;
 
-	protected totalArea = 0;
-	protected viewportArea = 0;
-	protected dirty: boolean = true;
-	protected matrix = new DOMMatrix([ 1, 0, 0, 1, 0, 0 ]);
+	public get viewport(): Viewport { return this._viewport; }
+	protected _viewport: Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
+
+	public get visiblePercentage(): number { return this._visiblePercentage; }
+	protected _visiblePercentage: number = 0;
 
 	public get position(): Vec2 { return this._position; }
 	protected _position: Vec2 = { x: 0, y: 0 };
@@ -28,31 +40,48 @@ export class WorkerView {
 	protected _scaleFactor: number = 1;
 
 	public get rotation(): number { return this._rotation; }
-	protected _rotation: number = 0; // Stored in degrees
+	protected _rotation: number = 0;
 
-	protected transformCount = 0;
-	protected readonly TRANSFORM_THRESHOLD = 50;
+	protected totalArea:      number = 0;
+	protected viewportArea:   number = 0;
+	protected dirty:          boolean = true;
+	protected matrix:         DOMMatrix = new DOMMatrix([ 1, 0, 0, 1, 0, 0 ]);
+	protected transformCount: number = 0;
+	protected image?:         ImageBitmap;
 
-	protected image?: ImageBitmap;
-
-	/** Sets canvas width and height. */
+	/**
+	 * Sets the size of the canvas element.
+	 * @param width The new width of the canvas
+	 * @param height The new height of the canvas
+	 */
 	public setCanvasSize(width: number, height: number) {
 		this.canvas.width = width;
 		this.canvas.height = height;
-
-		this.applyTransform();
 	}
 
-	public setImage(image: ImageBitmap) {
+	/**
+	 * Sets the image to be displayed in the view.
+	 * @param image The image to display
+	 */
+	public setImage(image?: ImageBitmap) {
 		this.image = image;
 	}
 
-	/** Sets the total area, used for calculating visible area percentage. */
+	/**
+	 * Sets the total area of the view.
+	 * This is used to calculate the visible percentage.
+	 * @param width The width of the total area
+	 * @param height The height of the total area
+	*/
 	public setTotalArea(width: number, height: number) {
 		this.totalArea = width * height;
 	}
 
-	/** Resets view to original scale, no rotation, and centered position */
+	/**
+	 * Resets the view to its default state.
+	 * This includes resetting the position, scale, and rotation.
+	 * If an image is present, it will be centered.
+	 */
 	public reset(): void {
 		// Reset rotation
 		this._rotation = 0;
@@ -90,10 +119,12 @@ export class WorkerView {
 		this._position = { x, y };
 
 		this.updateMatrix();
-		this.applyTransform();
 	}
 
-	/** Scales and positions the image to fit in the viewport */
+	/**
+	 * Fits the current image to the view,
+	 * centering it and scaling it to fit within the viewport.
+	 */
 	public fitToView(): void {
 		if (!this.image)
 			return;
@@ -126,7 +157,10 @@ export class WorkerView {
 		this.normalizeMatrix();
 	}
 
-	/** Resets the canvas transform, clears the canvas and reapplies the transform. */
+	/**
+	 * Clears the canvas context and resets the transformation matrix.
+	 * This method should be called before drawing new content.
+	 */
 	public clearContext() {
 		const { width, height } = this.canvas;
 		this.context.resetTransform();
@@ -135,36 +169,14 @@ export class WorkerView {
 		this.applyTransform();
 	}
 
-	/** set the 2D context transform to the view */
-	public applyTransform() {
-		const { matrix, context } = this;
-		context.setTransform(matrix);
-
-		this.updateViewport();
-	};
-
-	/** Calculates the current viewport dimensions for the view. */
-	protected updateViewport(): void {
-		const { x, y } = this._position;
-		const { width, height } = this.canvas;
-
-		const x1 = -x / this._scaleFactor;
-		const y1 = -y / this._scaleFactor;
-		const x2 = x1 + (width / this._scaleFactor);
-		const y2 = y1 + (height / this._scaleFactor);
-
-		this.viewport = { x1, x2, y1, y2 };
-
-		this.viewportArea = (this.viewport.x2 - this.viewport.x1)
-				* (this.viewport.y2 - this.viewport.y1);
-
-		this.visiblePercentage = (this.viewportArea / this.totalArea) * 100;
-	}
-
-	/** Scales the context in the direction of the vector. */
+	/**
+	 * Scales the view by a factor from the specified point.
+	 * @param vec The point to scale from
+	 * @param factor The new scale factor (between SCALE_MIN and SCALE_MAX)
+	 */
 	public scaleAt(vec: Vec2, factor: number) {
 		const newScale = this._scaleFactor * factor;
-		if (newScale < 0.1 || 7 < newScale)
+		if (newScale < WorkerView.SCALE_MIN || WorkerView.SCALE_MAX < newScale)
 			return;
 
 		const previousScale = this._scaleFactor;
@@ -175,22 +187,23 @@ export class WorkerView {
 		this._position.y = vec.y - (vec.y - this._position.y) * factor;
 
 		// Enable or disable image smoothing based on scale factor
-		const imageSmoothing = this._scaleFactor >= 1 ? true : false;
-		if (this.context.imageSmoothingEnabled !== imageSmoothing)
-			this.context.imageSmoothingEnabled = imageSmoothing;
+		const useImageSmoothing = this._scaleFactor >= WorkerView.SMOOTHING_SCALE_THRESHOLD;
+		if (this.context.imageSmoothingEnabled !== useImageSmoothing)
+			this.context.imageSmoothingEnabled = useImageSmoothing;
 
 		// Count transformations and normalize periodically
 		this.transformCount++;
-		if (this.transformCount >= this.TRANSFORM_THRESHOLD) {
+
+		const isAboveThreshold = this.transformCount >= WorkerView.TRANSFORM_THRESHOLD;
+		const isReturningToNormal = Math.abs(this._scaleFactor - 1.0) < WorkerView.SCALE_NORMALIZATION_TOLERANCE;
+		const wasOutsideThreshold =
+			   previousScale < WorkerView.NORMAL_SCALE_LOWER_BOUND
+			|| previousScale > WorkerView.NORMAL_SCALE_UPPER_BOUND;
+
+		// Normalize the matrix if we have transformed enough or if we are returning to normal scale
+		if (isAboveThreshold || (isReturningToNormal && wasOutsideThreshold)) {
 			this.normalizeMatrix();
 			this.transformCount = 0;
-		}
-		// Normalize when returning close to 1.0 scale
-		else if (
-			(previousScale < 0.9 || previousScale > 1.1)
-			&& Math.abs(this._scaleFactor - 1.0) < 0.1
-		) {
-			this.normalizeMatrix();
 		}
 		else {
 			this.updateMatrix();
@@ -213,16 +226,23 @@ export class WorkerView {
 		this.scaleAt({ x: centerX, y: centerY }, factor);
 	}
 
-	public setScale(scale: number) {
-		if (scale < 0.1 || scale > 7)
+	/**
+	 * Sets the scale factor of the view.
+	 * @param factor The new scale factor (between SCALE_MIN and SCALE_MAX)
+	 */
+	public setScale(factor: number) {
+		if (factor < WorkerView.SCALE_MIN || factor > WorkerView.SCALE_MAX)
 			return;
 
-		this._scaleFactor = scale;
+		this._scaleFactor = factor;
 		this.updateMatrix();
-		this.applyTransform();
 	}
 
-	/** Translates the context. */
+	/**
+	 * Moves the view to the specified position.
+	 * @param x The new x-coordinate
+	 * @param y The new y-coordinate
+	*/
 	public moveTo(x: number, y: number) {
 		this._position.x = x;
 		this._position.y = y;
@@ -230,7 +250,10 @@ export class WorkerView {
 		this.updateMatrix();
 	};
 
-	/** Rotates the view by the specified angle in degrees */
+	/**
+	 * Rotates the view by the specified angle in degrees
+	 * @param degrees The angle to rotate by in degrees
+	 */
 	public rotate(degrees: number) {
 		// Normalize angle to keep it between 0 and 360
 		this._rotation = (this._rotation + degrees) % 360;
@@ -238,10 +261,12 @@ export class WorkerView {
 			this._rotation += 360;
 
 		this.updateMatrix();
-		this.applyTransform();
 	}
 
-	/** Sets the rotation to a specific angle in degrees */
+	/**
+	 * Sets the rotation of the view to the specified angle in degrees.
+	 * @param degrees The angle to rotate to in degrees
+	 */
 	public setRotation(degrees: number) {
 		// Normalize angle to keep it between 0 and 360
 		this._rotation = degrees % 360;
@@ -249,10 +274,15 @@ export class WorkerView {
 			this._rotation += 360;
 
 		this.updateMatrix();
-		this.applyTransform();
 	}
 
-	/** Applies the pending changes to the matrix. */
+	/**
+	 * Updates the transformation matrix based on the current state.\
+	 * This method should be called after any changes to the view.\
+	 * The matrix is used to apply transformations to the canvas context.\
+	 * The order of transformations is scale, rotate, translate.\
+	 * The rotation is around the center of the canvas.
+	 */
 	public updateMatrix() {
 		const { matrix: m, _scaleFactor, _position, _rotation } = this;
 
@@ -303,7 +333,43 @@ export class WorkerView {
 		}
 	};
 
-	public normalizeMatrix() {
+	/**
+	 * Applies the current transformation matrix to the canvas context.
+	 * This method should only be called in the clearContext method.
+	 */
+	protected applyTransform() {
+		const { matrix, context } = this;
+		context.setTransform(matrix);
+
+		this.updateViewport();
+	};
+
+	/**
+	 * Updates the viewport area and visible percentage based on the current view.\
+	 * This method should only be called after applying the transformation matrix.
+	 */
+	protected updateViewport(): void {
+		const { x, y } = this._position;
+		const { width, height } = this.canvas;
+
+		const x1 = -x / this._scaleFactor;
+		const y1 = -y / this._scaleFactor;
+		const x2 = x1 + (width / this._scaleFactor);
+		const y2 = y1 + (height / this._scaleFactor);
+
+		this._viewport = { x1, x2, y1, y2 };
+
+		this.viewportArea = (this._viewport.x2 - this._viewport.x1)
+					* (this._viewport.y2 - this._viewport.y1);
+
+		this._visiblePercentage = (this.viewportArea / this.totalArea) * 100;
+	}
+
+	/**
+	 * Normalizes the transformation matrix to prevent floating point errors.\
+	 * The matrix is reset to the identity matrix and then reapplied.
+	 */
+	protected normalizeMatrix() {
 		// Reset matrix to identity
 		const m = this.matrix;
 		m.a = 1; m.b = 0;
@@ -312,7 +378,6 @@ export class WorkerView {
 
 		// Apply fresh transformation from current state
 		this.updateMatrix();
-		this.applyTransform();
 	}
 
 }

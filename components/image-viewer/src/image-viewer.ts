@@ -3,6 +3,7 @@ import { html } from 'lit-html';
 import { createWorkerProxy, makeObjectTransferable, type TransferableWheelEvent, type WorkerApi } from './worker-interface.ts';
 import { workerApiIn, type ImageWorkerApiIn, type ImageWorkerApiOut } from './worker-api.ts';
 import imageWorker from './image-worker.ts?worker';
+import { resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
 
 
 export class ImageViewer extends CustomElement {
@@ -11,10 +12,10 @@ export class ImageViewer extends CustomElement {
 
 	public static fps = 100;
 
-	@property() public accessor imagesrc: string | undefined;
 
-	protected worker: Worker & WorkerApi<ImageWorkerApiIn>;
-
+	//#region properties
+	protected worker:      Worker & WorkerApi<ImageWorkerApiIn>;
+	protected workerReady: ResolvablePromise<boolean> = resolvablePromise();
 	protected resizeObserver = new ResizeObserver(([ entry ]) => {
 		if (!entry)
 			return;
@@ -22,7 +23,23 @@ export class ImageViewer extends CustomElement {
 		const { width, height } = entry.contentRect;
 		this.worker.setSize({ width, height });
 	});
+	//#endregion properties
 
+
+	//#region public-api
+	@property(String)  public accessor imageSrc: string = '';
+	@property(Boolean) public accessor resetOnNewImage: boolean = false;
+
+	public api = {
+		reset:     this.reset    .bind(this),
+		fitToView: this.fitToView.bind(this),
+		zoom:      this.zoom     .bind(this),
+		rotate:    this.rotate   .bind(this),
+	};
+	//#endregion public-api
+
+
+	//#region component-lifecycle
 	protected override connectedCallback(): void {
 		super.connectedCallback();
 
@@ -30,25 +47,7 @@ export class ImageViewer extends CustomElement {
 	}
 
 	protected override afterConnected(): void {
-		const canvas = this.shadowRoot!
-			.getElementById('image-viewer') as HTMLCanvasElement | null;
-
-		if (!canvas)
-			throw new Error('Canvas not found in image viewer');
-
-		this.resizeObserver.observe(this);
-
-		this.worker = createWorkerProxy(imageWorker, workerApiIn);
-
-		this.worker.addEventListener('message', (ev) => {
-			if (ev.data.type === 'startViewMove')
-				this.onStartViewMove(ev.data);
-			else if (ev.data.type === 'startViewTouchMove')
-				this.onStartViewTouchMove(ev.data);
-		});
-
-		const offscreen = canvas.transferControlToOffscreen();
-		this.worker.initialize({ canvas: offscreen }, [ offscreen ]);
+		this.initializeWorker();
 	}
 
 	protected override disconnectedCallback(): void {
@@ -60,15 +59,77 @@ export class ImageViewer extends CustomElement {
 	protected override async beforeUpdate(changedProps: Set<string>): Promise<void> {
 		super.beforeUpdate(changedProps);
 
-		if (changedProps.has('imagesrc')) {
-			const imageResponse = await fetch(this.imagesrc!);
-			const imageBlob = await imageResponse.blob();
-			const imageBitmap = await createImageBitmap(imageBlob);
+		if (changedProps.has('imageSrc'))
+			this.imageSrcUpdated();
+	}
+	//#endregion component-lifecycle
 
-			this.worker.setImage({ image: imageBitmap }, [ imageBitmap ]);
-		}
+
+	//#region logic
+	protected async initializeWorker(): Promise<void> {
+		const canvas = this.shadowRoot!
+			.getElementById('image-viewer') as HTMLCanvasElement | null;
+
+		if (!canvas)
+			throw new Error('Canvas not found in image viewer');
+
+		this.worker = createWorkerProxy(imageWorker, workerApiIn);
+
+		// The worker will send a message when it is ready
+		this.worker.addEventListener('message', () => {
+			this.workerReady.resolve(true);
+		}, { once: true });
+
+		// We wait for the worker to be ready before we start sending messages
+		await this.workerReady;
+
+		const offscreen = canvas.transferControlToOffscreen();
+		this.worker.initialize({ canvas: offscreen }, [ offscreen ]);
+
+		this.worker.addEventListener('message', (ev) => {
+			if (ev.data.type === 'startViewMove')
+				this.onStartViewMove(ev.data);
+			else if (ev.data.type === 'startViewTouchMove')
+				this.onStartViewTouchMove(ev.data);
+		});
+
+		// We observe the canvas for size changes\
+		// this is done last to ensure we don't send messages before the worker is ready
+		this.resizeObserver.observe(this);
 	}
 
+	protected async imageSrcUpdated() {
+		await this.workerReady;
+
+		if (!this.imageSrc)
+			return this.worker.clearImage({});
+
+		const imageResponse = await fetch(this.imageSrc!);
+		const imageBlob = await imageResponse.blob();
+		const imageBitmap = await createImageBitmap(imageBlob);
+
+		this.worker.setImage({ image: imageBitmap }, [ imageBitmap ]);
+	}
+
+	protected reset() {
+		this.worker.reset({});
+	}
+
+	protected fitToView() {
+		this.worker.fitToView({});
+	}
+
+	protected zoom(factor: number) {
+		this.worker.zoom({ factor });
+	}
+
+	protected rotate(degrees: number) {
+		this.worker.rotate({ degrees });
+	}
+	//#endregion logic
+
+
+	//#region event-handlers
 	protected onMousedown(downEv: MouseEvent) {
 		if (downEv.buttons !== 1)
 			return;
@@ -217,7 +278,10 @@ export class ImageViewer extends CustomElement {
 		addEventListener('touchstart', touchend);
 		addEventListener('touchend', touchend);
 	}
+	//#endregion event-handlers
 
+
+	//#region template
 	protected override render(): unknown {
 		return html`
 		<canvas
@@ -226,24 +290,6 @@ export class ImageViewer extends CustomElement {
 			@mousedown =${ this.onMousedown }
 			@touchstart=${ this.onTouchstart }
 		></canvas>
-		<button @click=${ () => this.worker.reset({}) }>
-			Reset
-		</button>
-		<button @click=${ () => this.worker.fitToView({}) }>
-			Fit to view
-		</button>
-		<button @click=${ () => this.worker.zoom({ factor: 1.1 }) }>
-			Zoom in
-		</button>
-		<button @click=${ () => this.worker.zoom({ factor: 1 / 1.1 }) }>
-			Zoom out
-		</button>
-		<button @click=${ () => this.worker.rotate({ degrees: 90 }) }>
-			rotate left
-		</button>
-		<button @click=${ () => this.worker.rotate({ degrees: -90 }) }>
-			rotate right
-		</button>
 		`;
 	}
 
@@ -252,5 +298,6 @@ export class ImageViewer extends CustomElement {
 			outline: none;
 		}
 	`;
+	//#endregion template
 
 }

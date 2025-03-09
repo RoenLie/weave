@@ -8,7 +8,7 @@ class ImageWorker {
 	public onmessage = createWorkerOnMessage(this);
 	protected post = createPostMessage<ImageWorkerApiOut>();
 	protected view:   WorkerView;
-	protected bitmap: ImageBitmap;
+	protected bitmap: ImageBitmap | undefined;
 
 
 	//#region API
@@ -18,7 +18,6 @@ class ImageWorker {
 
 	public setSize(data: ImageWorkerApiIn['setSize']['args']) {
 		this.view.setCanvasSize(data.width, data.height);
-
 		this.draw();
 	}
 
@@ -36,7 +35,12 @@ class ImageWorker {
 		this.bitmap = data.image;
 		this.view.setImage(data.image);
 		this.view.centerImage();
+		this.draw();
+	}
 
+	public clearImage(_data: ImageWorkerApiIn['clearImage']['args']) {
+		this.bitmap = undefined;
+		this.view.setImage(undefined);
 		this.draw();
 	}
 
@@ -93,30 +97,15 @@ class ImageWorker {
 			scale:         this.view.scaleFactor,
 		});
 	}
-	//#endregion
+	//#endregion API
 
 
 	protected draw() {
 		if (!this.bitmap)
-			return;
+			return this.view.clearContext();
 
 		this.view.clearContext();
 		this.view.context.drawImage(this.bitmap, 0, 0);
-	}
-
-	protected centerViewOnImage() {
-		if (!this.bitmap)
-			return;
-
-		const imageHeight = this.bitmap.height;
-		const imageWidth = this.bitmap.width;
-
-		const parentWidth = this.view.canvas.width;
-		const parentHeight = this.view.canvas.height;
-		const y = parentHeight / 2 - imageHeight / 2;
-		const x = parentWidth  / 2 - imageWidth  / 2;
-
-		this.view.moveTo(x, y);
 	}
 
 }
@@ -124,3 +113,6 @@ class ImageWorker {
 
 const host = new ImageWorker();
 self.onmessage = host.onmessage;
+
+// Notify the main thread that the worker is ready
+postMessage({ type: 'ready' });

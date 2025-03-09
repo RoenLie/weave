@@ -14,34 +14,36 @@ export const type = <T>(): T => undefined as any;
 export const createWorkerApi = <const T extends WorkerComs>(api: T): T => api;
 
 
-//#region Main thread
+//#region main-thread
 export const createWorkerProxy = <T extends WorkerComs>(
 	ctor: new() => Worker, api: T,
 ): Worker & WorkerApi<T> => {
 	const proxy = new Proxy(new ctor(), {
-		get(target: Worker & Record<keyof any, any>, p, receiver) {
-			if (typeof target[p] === 'function')
-				return target[p].bind(target);
+		get(target: Worker & Record<keyof any, any>, prop, receiver) {
+			if (typeof target[prop] === 'function')
+				return target[prop].bind(target);
 
-			if (p in api) {
+			if (prop in api) {
 				return (args: any, serialize?: Transferable[]) => {
+					const message = { ...args, type: prop };
+
 					if (serialize)
-						target.postMessage({ ...args, type: p }, serialize);
+						target.postMessage(message, serialize);
 					else
-						target.postMessage({ ...args, type: p });
+						target.postMessage(message);
 				};
 			}
 
-			return Reflect.get(target, p, receiver);
+			return Reflect.get(target, prop, receiver);
 		},
 	});
 
-	return proxy as any;
+	return proxy as Worker & WorkerApi<T>;
 };
-//#endregion
+//#endregion main-thread
 
 
-//#region Worker
+//#region worker
 export const createWorkerOnMessage = <T>(cls: T) => {
 	return (ev: MessageEvent) => {
 		const fn = cls[ev.data.type as keyof T];
@@ -56,17 +58,19 @@ export const createPostMessage = <T extends WorkerComs>(): WorkerApi<T> => {
 	const proxy = new Proxy({} as any, {
 		get: (_, prop: Extract<keyof T, string>) => {
 			return (args: T[keyof T], serialize?: Transferable[]) => {
+				const message = { ...args, type: prop };
+
 				if (serialize)
-					postMessage({ ...args, type: prop }, { transfer: serialize });
+					postMessage(message, { transfer: serialize });
 				else
-					postMessage({ ...args, type: prop });
+					postMessage(message);
 			};
 		},
 	});
 
 	return proxy as WorkerApi<T>;
 };
-//#endregion
+//#endregion worker
 
 
 export type MakeObjectTransferable<T extends object> = {

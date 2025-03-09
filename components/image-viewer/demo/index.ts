@@ -11,11 +11,37 @@ export class RootPage extends CustomElement {
 		ImageViewer.register();
 	}
 
+	protected get imageViewer(): ImageViewer | undefined {
+		return this.shadowRoot?.querySelector<ImageViewer>('iv-image-viewer') ?? undefined;
+	}
+
 	protected override render(): unknown {
 		return html`
 		<iv-image-viewer
-			imagesrc="/spiral.jpg"
+			image-src="/spiral.jpg"
+			reset-on-new-image
 		></iv-image-viewer>
+
+		<s-controls>
+			<button @click=${ () => this.imageViewer?.api.reset() }>
+				Reset
+			</button>
+			<button @click=${ () => this.imageViewer?.api.fitToView() }>
+				Fit to view
+			</button>
+			<button @click=${ () => this.imageViewer?.api.zoom(1.1) }>
+				Zoom in
+			</button>
+			<button @click=${ () => this.imageViewer?.api.zoom(1 / 1.1) }>
+				Zoom out
+			</button>
+			<button @click=${ () => this.imageViewer?.api.rotate(90) }>
+				rotate left
+			</button>
+			<button @click=${ () => this.imageViewer?.api.rotate(-90) }>
+				rotate right
+			</button>
+		</s-controls>
 		`;
 	}
 
@@ -28,6 +54,9 @@ export class RootPage extends CustomElement {
 		height: 80dvh;
 		width: clamp(320px, 80vw, 1800px);
 		border: 1px solid darkslateblue;
+	}
+	s-controls {
+		display: flex;
 	}
 	`;
 

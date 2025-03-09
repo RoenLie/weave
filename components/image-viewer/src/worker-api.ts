@@ -34,6 +34,9 @@ export const workerApiIn = createWorkerApi({
 		},
 		serialize: [ type<ImageBitmap>() ],
 	},
+	clearImage: {
+		args: {},
+	},
 	reset: {
 		args: {},
 	},

@@ -12,7 +12,15 @@ import type { Writeable } from '@roenlie/core/types';
 
 interface SignalElementMetadata {
 	observedAttributes?: string[];
-	signalProps?:        string[];
+	propertyMetadata?:   Record<string, {
+		propName: string;
+		type:
+			| StringConstructor
+			| ObjectConstructor
+			| NumberConstructor
+			| BooleanConstructor
+	}>;
+	signalProps?: string[];
 }
 
 
@@ -20,10 +28,10 @@ export class SignalElement extends DisposingEventHost {
 
 	public static tagName: string;
 	public static register(tagName?: string): void {
-		queueMicrotask(() => this.registerImmediately(tagName));
+		queueMicrotask(() => this.registerNow(tagName));
 	}
 
-	public static registerImmediately(tagName?: string): void {
+	public static registerNow(tagName?: string): void {
 		if (tagName)
 			this.tagName = tagName;
 
@@ -119,8 +127,28 @@ export class SignalElement extends DisposingEventHost {
 	}
 
 	public attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+		const metadata = this.__metadata;
+		const propMeta = metadata?.propertyMetadata?.[name];
+		if (!propMeta)
+			return console.warn(`Unknown attribute: ${ name }`);
+
+		const type = propMeta.type;
+		let convertedValue: any;
+
+		if (type === Boolean)
+			convertedValue = newValue === 'true' || newValue === '' || false;
+		else if (type === String)
+			convertedValue = newValue || '';
+		else if (type === Number)
+			convertedValue = Number(newValue);
+		else if (type === Object)
+			convertedValue = JSON.parse(newValue);
+
 		const self = this as Record<PropertyKey, any>;
-		self[name] = newValue ?? undefined;
+		convertedValue = convertedValue ?? undefined;
+
+		if (self[propMeta.propName] !== convertedValue)
+			self[propMeta.propName] = convertedValue;
 	}
 
 	public requestUpdate(): Promise<boolean> {
@@ -232,7 +260,13 @@ export const signal = () => <C extends SignalElement, V>(
 };
 
 
-export const property = () => <C extends SignalElement, V>(
+export const property = (
+	type:
+		| StringConstructor
+		| ObjectConstructor
+		| NumberConstructor
+		| BooleanConstructor = String,
+) => <C extends SignalElement, V>(
 	target: ClassAccessorDecoratorTarget<C, V>,
 	context: ClassAccessorDecoratorContext<C, V>,
 ): ClassAccessorDecoratorResult<C, V> => {
@@ -246,9 +280,15 @@ export const property = () => <C extends SignalElement, V>(
 		metadata.signalProps.push(propName);
 
 	metadata.observedAttributes ??= [];
-	const attrName = context.name.toString();
-	if (!metadata.observedAttributes.includes(attrName))
+	const attrName = propName
+		.replace(/([A-Z])/g, '-$1')
+		.toLowerCase();
+
+	if (!metadata.observedAttributes.includes(attrName)) {
 		metadata.observedAttributes.push(attrName);
+		metadata.propertyMetadata ??= {};
+		metadata.propertyMetadata[attrName] = { propName, type };
+	}
 
 	return {
 		get() {
