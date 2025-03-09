@@ -10,15 +10,12 @@ import type { Writeable } from '@roenlie/core/types';
 // Symbol.metadata, so we must ensure that it exists.
 (Symbol as { metadata: symbol }).metadata ??= Symbol('metadata');
 
+type PropertyType = StringConstructor | ObjectConstructor | NumberConstructor | BooleanConstructor;
 interface SignalElementMetadata {
 	observedAttributes?: string[];
 	propertyMetadata?:   Record<string, {
 		propName: string;
-		type:
-			| StringConstructor
-			| ObjectConstructor
-			| NumberConstructor
-			| BooleanConstructor
+		type:     PropertyType
 	}>;
 	signalProps?: string[];
 }
@@ -261,11 +258,7 @@ export const signal = () => <C extends SignalElement, V>(
 
 
 export const property = (
-	type:
-		| StringConstructor
-		| ObjectConstructor
-		| NumberConstructor
-		| BooleanConstructor = String,
+	type: PropertyType = String,
 ) => <C extends SignalElement, V>(
 	target: ClassAccessorDecoratorTarget<C, V>,
 	context: ClassAccessorDecoratorContext<C, V>,

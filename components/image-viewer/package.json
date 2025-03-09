@@ -21,7 +21,9 @@
 		"dev": "vite --config ./demo/vite.config.ts",
 		"build": "pnpm run --sequential \"/^build::.*/\"",
 		"build::ts": "tsc --project ./src/tsconfig.json",
-		"build::js": "vite build"
+		"build::js": "vite build",
+		"build-demo": "vite build --config ./demo/vite.config.ts",
+		"preview-demo": "vite preview --config ./demo/vite.config.ts"
 	},
 	"dependencies": {
 		"@roenlie/core": "workspace:^",

@@ -3,6 +3,7 @@
 	"compilerOptions": {
 		"emitDecoratorMetadata": false,
 		"experimentalDecorators": false,
+		"outDir": "./dist/lib",
 		"types": [
 			"vite/client",
 		],
