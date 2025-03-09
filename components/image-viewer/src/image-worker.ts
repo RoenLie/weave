@@ -18,6 +18,7 @@ class ImageWorker {
 
 	public setSize(data: ImageWorkerApiIn['setSize']['args']) {
 		this.view.setCanvasSize(data.width, data.height);
+
 		this.draw();
 	}
 
@@ -33,9 +34,29 @@ class ImageWorker {
 
 	public setImage(data: ImageWorkerApiIn['setImage']['args']) {
 		this.bitmap = data.image;
+		this.view.setImage(data.image);
+		this.view.centerImage();
 
-		this.centerViewOnImage();
+		this.draw();
+	}
 
+	public reset(_data: ImageWorkerApiIn['reset']['args']) {
+		this.view.reset();
+		this.draw();
+	}
+
+	public fitToView(_data: ImageWorkerApiIn['fitToView']['args']) {
+		this.view.fitToView();
+		this.draw();
+	}
+
+	public rotate(data: ImageWorkerApiIn['rotate']['args']) {
+		this.view.rotate(data.degrees);
+		this.draw();
+	}
+
+	public zoom(data: ImageWorkerApiIn['zoom']['args']) {
+		this.view.scale(data.factor);
 		this.draw();
 	}
 

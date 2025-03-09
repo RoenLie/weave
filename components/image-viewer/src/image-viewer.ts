@@ -23,7 +23,6 @@ export class ImageViewer extends CustomElement {
 		this.worker.setSize({ width, height });
 	});
 
-
 	protected override connectedCallback(): void {
 		super.connectedCallback();
 
@@ -227,6 +226,24 @@ export class ImageViewer extends CustomElement {
 			@mousedown =${ this.onMousedown }
 			@touchstart=${ this.onTouchstart }
 		></canvas>
+		<button @click=${ () => this.worker.reset({}) }>
+			Reset
+		</button>
+		<button @click=${ () => this.worker.fitToView({}) }>
+			Fit to view
+		</button>
+		<button @click=${ () => this.worker.zoom({ factor: 1.1 }) }>
+			Zoom in
+		</button>
+		<button @click=${ () => this.worker.zoom({ factor: 1 / 1.1 }) }>
+			Zoom out
+		</button>
+		<button @click=${ () => this.worker.rotate({ degrees: 90 }) }>
+			rotate left
+		</button>
+		<button @click=${ () => this.worker.rotate({ degrees: -90 }) }>
+			rotate right
+		</button>
 		`;
 	}
 

@@ -3,7 +3,7 @@ import { Signal } from 'signal-polyfill';
 import { resolvablePromise as promise, type ResolvablePromise } from '@roenlie/core/async';
 import { effect } from './effect.ts';
 import { DisposingEventHost } from './auto-disposing-event-host.ts';
-import type { RecordOf, Writeable } from '@roenlie/core/types';
+import type { Writeable } from '@roenlie/core/types';
 
 
 // Ensure metadata is enabled. TypeScript does not polyfill

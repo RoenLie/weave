@@ -34,6 +34,22 @@ export const workerApiIn = createWorkerApi({
 		},
 		serialize: [ type<ImageBitmap>() ],
 	},
+	reset: {
+		args: {},
+	},
+	fitToView: {
+		args: {},
+	},
+	rotate: {
+		args: {
+			degrees: type<number>(),
+		},
+	},
+	zoom: {
+		args: {
+			factor: type<number>(),
+		},
+	},
 	mousedown: {
 		args: {
 			event: type<TransferableMouseEvent>(),
