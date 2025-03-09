@@ -13,8 +13,8 @@
 	],
 	"exports": {
 		".": {
-			"types": "./dist/image-viewer.d.ts",
-			"default": "./dist/image-viewer.js"
+			"types": "./dist/lib/image-viewer.d.ts",
+			"default": "./dist/lib/image-viewer.js"
 		}
 	},
 	"scripts": {
