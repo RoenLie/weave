@@ -25,12 +25,23 @@ export const createWorkerProxy = <T extends WorkerComs>(
 
 			if (prop in api) {
 				return (args: any, serialize?: Transferable[]) => {
-					const message = { ...args, type: prop };
+					const id = crypto.randomUUID();
+					const message = { ...args, type: prop, msgId: id };
+
+					const { promise, resolve } = Promise.withResolvers<any>();
+					target.addEventListener('message', (ev: MessageEvent) => {
+						if (ev.data.msgId !== id)
+							return;
+
+						resolve(ev.data);
+					});
 
 					if (serialize)
 						target.postMessage(message, serialize);
 					else
 						target.postMessage(message);
+
+					return promise;
 				};
 			}
 
@@ -44,13 +55,21 @@ export const createWorkerProxy = <T extends WorkerComs>(
 
 
 //#region worker
-export const createWorkerOnMessage = <T>(cls: T) => {
+export const createWorkerOnMessage = (
+	cls: Record<keyof any, any>,
+) => {
 	return (ev: MessageEvent) => {
-		const fn = cls[ev.data.type as keyof T];
+		const fn = cls[ev.data.type];
 		if (typeof fn !== 'function')
 			return console.error(`Unknown message type: ${ ev.data.type }`);
 
-		fn.call(cls, ev.data);
+		const msgId = ev.data.msgId;
+
+		const result = fn.call(cls, ev.data);
+		if (result instanceof Promise)
+			result.then(() => postMessage({ msgId }));
+		else
+			postMessage({ msgId });
 	};
 };
 

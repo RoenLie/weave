@@ -227,7 +227,7 @@ export const css = (strings: TemplateStringsArray, ...values: any[]): CSSStyle =
 };
 
 
-export const signal = () => <C extends SignalElement, V>(
+export const state = () => <C extends SignalElement, V>(
 	target: ClassAccessorDecoratorTarget<C, V>,
 	context: ClassAccessorDecoratorContext<C, V>,
 ): ClassAccessorDecoratorResult<C, V> => {

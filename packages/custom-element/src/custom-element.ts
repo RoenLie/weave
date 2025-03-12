@@ -8,5 +8,5 @@ import { ReactiveSignalControllerHost } from './controller-host.ts';
 export class CustomElement extends ReactiveSignalControllerHost {}
 
 
-export { property, signal, css } from './signal-element.ts';
+export { property, state, css } from './signal-element.ts';
 export type { CSSStyle } from './signal-element.ts';

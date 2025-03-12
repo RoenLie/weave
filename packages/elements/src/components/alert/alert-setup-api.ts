@@ -5,15 +5,15 @@ import type { MMAlert } from './alert.cmp.js';
 
 export interface IAlertDefinition {
 	properties: IAlertProps;
-	template: (alert: MMAlert) => TemplateResult<any> | unknown;
-	displayTo: (portal: IAlertPortal) => void;
+	template:   (alert: MMAlert) => TemplateResult<any> | unknown;
+	displayTo:  (portal: IAlertPortal) => void;
 }
 
 
 export interface IAlertProps {
-	variant?: 'primary' | 'success' | 'neutral' | 'warning' | 'error';
+	variant?:   'primary' | 'success' | 'neutral' | 'warning' | 'error';
 	closeable?: boolean;
-	duration?: number;
+	duration?:  number;
 }
 
 

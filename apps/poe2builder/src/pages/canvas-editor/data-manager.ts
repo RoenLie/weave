@@ -143,7 +143,7 @@ export class GraphDataManager {
 			if (!oldCon)
 				continue;
 
-			if (oldCon.updated !== con.updated)
+			if (oldCon.updated_at !== con.updated)
 				updatedConnections.push({ chunkId: chunk.id, conId: con.id });
 		}
 

@@ -7,7 +7,7 @@ export default defineDocConfig(
 		return {
 			base:       '',
 			root:       '/docs',
-			source:     '/docs/pages',
+			source:     '/src/components',
 			siteConfig: {
 				root: {
 					layout: {
@@ -25,6 +25,10 @@ export default defineDocConfig(
 				pages: {
 					scripts: [ { src: '/bootstrap.ts' } ],
 				},
+			},
+			autoImport: {
+				tagPrefixes:   [ 'mm' ],
+				loadWhitelist: [ /\.ts/ ],
 			},
 		};
 	},

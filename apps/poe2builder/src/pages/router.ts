@@ -5,16 +5,16 @@ import { when } from 'lit-html/directives/when.js';
 import { app } from '../app/firebase.ts';
 import { supabase } from '../app/supabase.ts';
 import type { UserResponse } from '@supabase/supabase-js';
-import { css, CustomElement, signal, type CSSStyle } from '@roenlie/custom-element';
+import { css, CustomElement, state, type CSSStyle } from '@roenlie/custom-element';
 
 
 export class RouterCmp extends CustomElement {
 
 	static { this.register('poe-router'); }
 
-	@signal protected accessor currentUser: User | undefined;
-	@signal protected accessor currentUser2: UserResponse | undefined;
-	@signal protected accessor requiresLogin: boolean = false;
+	@state() protected accessor currentUser: User | undefined;
+	@state() protected accessor currentUser2: UserResponse | undefined;
+	@state() protected accessor requiresLogin: boolean = false;
 
 	protected routes = new Router(this, [
 		{
@@ -162,7 +162,7 @@ export class LoginBtnCmp extends CustomElement {
 
 	static { this.register('login-button'); }
 
-	@signal public accessor useBase: boolean = false;
+	@state() public accessor useBase: boolean = false;
 
 	protected override render(): unknown {
 		if (this.useBase) {

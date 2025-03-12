@@ -1,9 +1,9 @@
-import type { ImageWorkerApiIn, ImageWorkerApiOut } from './worker-api.ts';
+import { WorkerView } from '@roenlie/core/canvas';
+import { type ImageWorkerApiInImp, type ImageWorkerApiIn, type ImageWorkerApiOut } from './worker-api.ts';
 import { createPostMessage, createWorkerOnMessage } from './worker-interface.ts';
-import { WorkerView } from './worker-view.ts';
 
 
-class ImageWorker {
+class ImageWorker implements ImageWorkerApiInImp {
 
 	public onmessage = createWorkerOnMessage(this);
 	protected post = createPostMessage<ImageWorkerApiOut>();

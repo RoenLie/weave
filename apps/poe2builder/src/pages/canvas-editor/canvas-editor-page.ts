@@ -7,16 +7,16 @@ import { map } from 'lit-html/directives/map.js';
 import CanvasWorkerEditor from '../../app/canvas/workers/canvas-editor.ts?worker';
 import { createCanvasWorker, makeObjectTransferable, type CanvasEditorWorkerMethods } from '../../app/canvas/workers/canvas-worker-interface.ts';
 import type { CanvasEditorWorkerApiOut } from '../../app/canvas/workers/editor-implementation.ts';
-import { css, signal, type CSSStyle } from '@roenlie/custom-element';
+import { css, state, type CSSStyle } from '@roenlie/custom-element';
 
 
 export class PoeCanvasTree extends PoeCanvasBase {
 
 	static { this.register('poe-canvas-editor'); }
 
-	@signal protected accessor selectedNodeMenu: NodeData['type'] | undefined = undefined;
-	@signal protected accessor showNodeSelectorMenu: boolean = false;
-	@signal protected accessor updated: boolean = false;
+	@state() protected accessor selectedNodeMenu: NodeData['type'] | undefined = undefined;
+	@state() protected accessor showNodeSelectorMenu: boolean = false;
+	@state() protected accessor updated: boolean = false;
 
 	protected override worker: Worker & CanvasEditorWorkerMethods;
 	protected readonly nodeSelectorMenus = [ 'minor', 'notable', 'keystone' ] as const;

@@ -1,20 +1,22 @@
-import { alertPortal, MMAlert, MMAlertPortal } from '@roenlie/elements/alert';
-import { Alerts, type IAlertProps } from '@roenlie/elements/alert';
-import { MMButton } from '@roenlie/elements/button';
-import { MMIcon } from '@roenlie/elements/icon';
+import { alertPortal, MMAlert, MMAlertPortal } from './index.ts';
+import { Alerts, type IAlertProps } from './index.ts';
+import { MMButton } from '../button/button.cmp.ts';
+import { MMIcon } from '../icon/icon-element.ts';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { map } from 'lit/directives/map.js';
 
-MMIcon.register();
-MMButton.register();
-MMAlert.register();
-MMAlertPortal.register();
-
 
 @customElement('mm-alert-demo')
-export class AlertDemo extends LitElement {
+export class DemoAlert extends LitElement {
+
+	static {
+		MMIcon.register();
+		MMButton.register();
+		MMAlert.register();
+		MMAlertPortal.register();
+	}
 
 	//#region properties
 	//#endregion
@@ -30,7 +32,7 @@ export class AlertDemo extends LitElement {
 
 	protected alertDef = Alerts.define({
 		variant:   'primary',
-		duration:  Infinity,
+		duration:  1000,
 		closeable: true,
 	}).template(() => html`
 		<mm-icon
@@ -57,7 +59,6 @@ export class AlertDemo extends LitElement {
 		>
 			Confirm!
 		</mm-button>
-
 
 		<div class="variants">
 			${ map([ 'primary', 'success', 'neutral', 'warning', 'error' ], (variant: IAlertProps['variant']) => html`

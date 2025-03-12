@@ -1,5 +1,4 @@
-import type { Vec2 } from '@roenlie/core/types';
-
+import type { Vec2 } from '../types/data-structure.types.ts';
 
 export interface Viewport { x1: number, x2: number, y1: number, y2: number }
 

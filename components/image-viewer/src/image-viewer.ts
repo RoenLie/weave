@@ -1,12 +1,12 @@
 import { css, CustomElement, property, type CSSStyle } from '@roenlie/custom-element';
 import { html } from 'lit-html';
 import { createWorkerProxy, makeObjectTransferable, type TransferableWheelEvent, type WorkerApi } from './worker-interface.ts';
-import { workerApiIn, type ImageWorkerApiIn, type ImageWorkerApiOut } from './worker-api.ts';
+import { workerApiIn, type ImageWorkerApiIn, type ImageWorkerApiOut, type ImageWorkerApiOutImp } from './worker-api.ts';
 import imageWorker from './image-worker.ts?worker';
 import { resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
 
 
-export class ImageViewer extends CustomElement {
+export class ImageViewer extends CustomElement implements ImageWorkerApiOutImp {
 
 	static { this.register('iv-image-viewer'); }
 
@@ -29,6 +29,7 @@ export class ImageViewer extends CustomElement {
 	//#region public-api
 	@property(String)  public accessor imageSrc: string = '';
 	@property(Boolean) public accessor resetOnNewImage: boolean = false;
+	@property(Boolean) public accessor fitOnNewImage: boolean = false;
 
 	public api = {
 		reset:     this.reset    .bind(this),
@@ -88,9 +89,9 @@ export class ImageViewer extends CustomElement {
 
 		this.worker.addEventListener('message', (ev) => {
 			if (ev.data.type === 'startViewMove')
-				this.onStartViewMove(ev.data);
+				this.startViewMove(ev.data);
 			else if (ev.data.type === 'startViewTouchMove')
-				this.onStartViewTouchMove(ev.data);
+				this.startViewTouchMove(ev.data);
 		});
 
 		// We observe the canvas for size changes\
@@ -174,7 +175,7 @@ export class ImageViewer extends CustomElement {
 		};
 	})();
 
-	protected onStartViewMove(data: ImageWorkerApiOut['startViewMove']['args']) {
+	public startViewMove(data: ImageWorkerApiOut['startViewMove']['args']) {
 		const rect = this.getBoundingClientRect();
 
 		// We setup the mousemove and mouseup events for panning the view
@@ -206,7 +207,7 @@ export class ImageViewer extends CustomElement {
 		addEventListener('mouseup', mouseup);
 	};
 
-	protected onStartViewTouchMove(data: ImageWorkerApiOut['startViewTouchMove']['args']) {
+	public startViewTouchMove(data: ImageWorkerApiOut['startViewTouchMove']['args']) {
 		const rect = this.getBoundingClientRect();
 
 		const getDistance = (touch1: Touch, touch2: Touch) => {

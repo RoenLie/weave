@@ -6,9 +6,11 @@ import { MMAlert } from './alert.cmp.js';
 import { type IAlertDefinition } from './alert-setup-api.js';
 
 
-declare global { interface HTMLElementTagNameMap {
-	'mm-alert-portal': MMAlertPortal;
-} }
+declare global {
+	interface HTMLElementTagNameMap {
+		'mm-alert-portal': MMAlertPortal;
+	}
+}
 
 
 @customElement('mm-alert-portal')

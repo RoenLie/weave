@@ -8,9 +8,9 @@ import { isOutsideViewport, type Viewport } from '../is-outside-viewport.ts';
 import { drawParallelBezierCurve, type Bezier } from '../parallel-bezier-curve.ts';
 import { doRectsOverlap, getPathReduction } from '../path-helpers.ts';
 import { type TransferableMouseEvent, type TransferableTouchEvent, type TransferableTouches, type WorkerImplement, createPostMessage } from './canvas-worker-interface.ts';
-import { WorkerView } from './worker-view.ts';
 import { createClient, type Session } from '@supabase/supabase-js';
 import type { GraphConnection } from '../../graph/graph-connection.ts';
+import { WorkerView } from '@roenlie/core/canvas';
 
 
 // Web workers don't have access to local storage.

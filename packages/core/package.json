@@ -74,6 +74,10 @@
 		"./indexdb": {
 			"types": "./dist/lib/indexdb/index.d.ts",
 			"default": "./dist/lib/indexdb/index.js"
+		},
+		"./canvas": {
+			"types": "./dist/lib/canvas/index.d.ts",
+			"default": "./dist/lib/canvas/index.js"
 		}
 	},
 	"sideEffects": false,

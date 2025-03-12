@@ -10,7 +10,7 @@ import { uppercaseFirstLetter } from '@roenlie/core/string';
 import { ref, type RefOrCallback } from 'lit-html/directives/ref.js';
 import type { CanvasReaderWorkerApiOut } from '../../app/canvas/workers/reader-implementation.ts';
 import { supabase } from '../../app/supabase.ts';
-import { css, CustomElement, signal, type CSSStyle } from '@roenlie/custom-element';
+import { css, CustomElement, state, type CSSStyle } from '@roenlie/custom-element';
 
 
 const unsetPopover = css`
@@ -30,9 +30,9 @@ export class PoeCanvasBase extends CustomElement {
 
 	public static fps = 100;
 
-	@signal protected accessor selectedNode: GraphNode | undefined;
-	@signal protected accessor hoveredNode: StorableGraphNode | undefined;
-	@signal protected accessor viewMoving: boolean = false;
+	@state() protected accessor selectedNode: GraphNode | undefined;
+	@state() protected accessor hoveredNode: StorableGraphNode | undefined;
+	@state() protected accessor viewMoving: boolean = false;
 
 	protected position: Vec2 | undefined;
 	protected viewport: Viewport | undefined;

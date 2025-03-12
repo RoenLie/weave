@@ -26,6 +26,7 @@ export { DialogConfig, MMDialog } from './components/dialog/dialog-element.js';
 export { intersect } from './components/fragment-table/intersect-directive.js';
 export { MMNavRailItem } from './components/nav-rail/nav-rail-item-element.js';
 export { FragmentTable } from './components/fragment-table/fragment-table.js';
+export { FragmentList } from './components/fragment-list/fragment-list.js';
 export { requestIcon, requestInclude } from './components/icon/helpers.js';
 export { MMActionBar } from './components/action-bar/action-bar.cmp.js';
 export { MMHeader } from './components/template-list/header-element.js';

@@ -2,7 +2,6 @@ import type { Vec2 } from '@roenlie/core/types';
 import { createWorkerApi, type, type TransferableMouseEvent, type TransferableTouches, type TransferableTouchEvent } from './worker-interface.ts';
 
 
-export type ImageWorkerApiIn = typeof workerApiIn;
 export const workerApiIn = createWorkerApi({
 	initialize: {
 		args: {
@@ -67,8 +66,12 @@ export const workerApiIn = createWorkerApi({
 	},
 });
 
+export type ImageWorkerApiIn = typeof workerApiIn;
+export type ImageWorkerApiInImp = {
+	[key in keyof ImageWorkerApiIn]: (data: ImageWorkerApiIn[key]['args']) => void;
+};
 
-export type ImageWorkerApiOut = typeof workerApiOut;
+
 export const workerApiOut = createWorkerApi({
 	startViewMove: {
 		args: {
@@ -88,3 +91,8 @@ export const workerApiOut = createWorkerApi({
 		},
 	},
 });
+
+export type ImageWorkerApiOut = typeof workerApiOut;
+export type ImageWorkerApiOutImp = {
+	[key in keyof ImageWorkerApiOut]: (data: ImageWorkerApiOut[key]['args']) => void;
+};

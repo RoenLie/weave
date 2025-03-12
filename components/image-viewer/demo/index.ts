@@ -35,10 +35,10 @@ export class RootPage extends CustomElement {
 			<button @click=${ () => this.imageViewer?.api.zoom(1 / 1.1) }>
 				Zoom out
 			</button>
-			<button @click=${ () => this.imageViewer?.api.rotate(90) }>
+			<button @click=${ () => this.imageViewer?.api.rotate(-90) }>
 				rotate left
 			</button>
-			<button @click=${ () => this.imageViewer?.api.rotate(-90) }>
+			<button @click=${ () => this.imageViewer?.api.rotate(90) }>
 				rotate right
 			</button>
 		</s-controls>
