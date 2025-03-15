@@ -1,17 +1,11 @@
 import type { Config } from 'typescript-eslint';
 
 
-declare const configs: {
-	base: Config,
+export declare const configs: {
+	recommended: Config,
 	node: Config,
-	lit:  Config,
-	all:  Config,
-} = {
-	base,
-	node,
-	lit,
-	all,
-};
+	lit: Config,
+} = { recommended, node, lit };
 
 
 export default configs;

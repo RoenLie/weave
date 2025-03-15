@@ -2,18 +2,16 @@ import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import litConfig from 'eslint-plugin-lit';
 import stylistic from '@stylistic/eslint-plugin';
+import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 
 /** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigArray} */
-const base = tseslint.config({
-	name:    '@roenlie/eslint-config/base',
-	extends: [
-		eslint.configs.recommended,
-		...tseslint.configs.strict,
-		...tseslint.configs.stylistic,
-	],
+const recommended  = tseslint.config({
+	name:    '@roenlie/eslint-config/recommended',
+	extends: [ eslint.configs.recommended ],
 	plugins: {
-		'@stylistic': stylistic,
+		'@stylistic':         stylistic,
+		'simple-import-sort': simpleImportSort,
 	},
 	languageOptions: {
 		parserOptions: {
@@ -29,8 +27,11 @@ const base = tseslint.config({
 		reportUnusedDisableDirectives: 'off',
 	},
 	files:   [ '**/*.{js,jsx,mjs,cjs,ts,tsx}' ],
-	ignores: [ '**/dist/**' ],
+	ignores: [ '**/dist/**', '**/node_modules/**' ],
 	rules:   {
+		'simple-import-sort/imports': 'warn',
+		'simple-import-sort/exports': 'warn',
+
 		'curly': [
 			'warn',
 			'multi-or-nest',
@@ -47,7 +48,6 @@ const base = tseslint.config({
 		'no-prototype-builtins':           'off',
 		'no-unused-private-class-members': 'off',
 
-		// Stylistic things.
 		'@stylistic/nonblock-statement-body-position': [
 			'warn',
 			'below',
@@ -162,13 +162,15 @@ const base = tseslint.config({
 		'@stylistic/max-len': [
 			'warn',
 			{
-				code:                   120,
-				ignoreStrings:          true,
-				ignoreTemplateLiterals: true,
-				ignoreRegExpLiterals:   true,
-				ignoreComments:         true,
+				code:                   130,
+				comments:               150,
+				tabWidth:               3,
+				ignoreStrings:          false,
+				ignoreComments:         false,
+				ignoreTemplateLiterals: false,
 				ignoreUrls:             true,
-				// This allows imports to be longer than 100ch
+				ignoreRegExpLiterals:   true,
+				// This allows imports to be as long as they want
 				ignorePattern:          'import .*?;',
 			},
 		],
@@ -199,17 +201,7 @@ const base = tseslint.config({
 				avoidEscape:           true,
 			},
 		],
-		'@stylistic/comma-dangle': [
-			'warn',
-			{
-				arrays:    'always-multiline',
-				objects:   'always-multiline',
-				imports:   'always-multiline',
-				exports:   'always-multiline',
-				functions: 'always-multiline',
-			},
-		],
-
+		'@stylistic/comma-dangle':    [ 'warn', 'always-multiline' ],
 		'@stylistic/eol-last':        [ 'warn', 'always' ],
 		'@stylistic/no-multi-spaces': 'off',
 		'@stylistic/semi-spacing':    [
@@ -231,6 +223,20 @@ const base = tseslint.config({
 		'@stylistic/semi':            [
 			'warn',
 			'always',
+		],
+		'@stylistic/member-delimiter-style': [
+			'warn',
+			{
+				'multiline': {
+					'delimiter':   'semi',
+					'requireLast': true,
+				},
+				'singleline': {
+					'delimiter':   'semi',
+					'requireLast': true,
+				},
+				'multilineDetection': 'brackets',
+			},
 		],
 		'@stylistic/type-annotation-spacing': [
 			'warn',
@@ -263,11 +269,26 @@ const base = tseslint.config({
 			},
 		],
 
-		// Typescript spesific things.
+		// Turned off for non typescript files.
+		'@typescript-eslint/explicit-module-boundary-types': 'off',
+		'@typescript-eslint/explicit-member-accessibility':  'off',
+	},
+});
+
+/** @type { import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigArray } */
+const recommendedTs = tseslint.config({
+	name:    '@roenlie/eslint-config/recommended-ts',
+	extends: [
+		...tseslint.configs.strict,
+		...tseslint.configs.stylistic,
+	],
+	files:   [ '**/*.{ts,tsx}' ],
+	ignores: [ '**/dist/**', '**/node_modules/**' ],
+	rules:   {
 		'@typescript-eslint/explicit-member-accessibility': [
 			'warn',
 			{
-				accessibility: 'explicit',
+				accessibility: 'no-public',
 				overrides:     {
 					constructors: 'no-public',
 				},
@@ -279,15 +300,17 @@ const base = tseslint.config({
 		'@typescript-eslint/no-empty-interface':    'off',
 		'@typescript-eslint/no-empty-function':     'off',
 		'@typescript-eslint/no-non-null-assertion': 'off',
+		'no-unused-vars':                           'off',
 		'@typescript-eslint/no-unused-vars':        [
 			'warn', {
-				'args':                           'all',
-				'argsIgnorePattern':              '^_',
-				'caughtErrors':                   'all',
-				'caughtErrorsIgnorePattern':      '^_',
-				'destructuredArrayIgnorePattern': '^_',
-				'varsIgnorePattern':              '^_',
-				'ignoreRestSiblings':             true,
+				args:                           'none',
+				argsIgnorePattern:              '^_',
+				caughtErrors:                   'none',
+				caughtErrorsIgnorePattern:      '^_',
+				destructuredArrayIgnorePattern: '^_',
+				vars:                           'all',
+				varsIgnorePattern:              '^_',
+				ignoreRestSiblings:             true,
 			},
 		],
 		'@typescript-eslint/no-namespace':                    'off',
@@ -300,7 +323,12 @@ const base = tseslint.config({
 		'@typescript-eslint/consistent-indexed-object-style': 'off',
 		'@typescript-eslint/no-this-alias':                   'off',
 		'@typescript-eslint/no-inferrable-types':             'off',
-		'@typescript-eslint/consistent-generic-constructors': [ 'warn', 'type-annotation' ],
+		'@typescript-eslint/consistent-generic-constructors': [ 'warn', 'constructor' ],
+		'@typescript-eslint/explicit-module-boundary-types':  [
+			'warn', {
+				allowArgumentsExplicitlyTypedAsAny: true,
+			},
+		],
 	},
 });
 
@@ -321,9 +349,9 @@ const lit = tseslint.config({
 });
 
 
+/** @type { typeof import('./index.d.ts').configs } */
 export default {
-	base,
-	node: [ ...base, ...lit ],
-	lit:  [ ...base, ...lit ],
-	all:  [ ...base, ...node, ...lit ],
+	recommended: [ ...recommended, ...recommendedTs ],
+	node:        [ ...recommended, ...recommendedTs, ...node ],
+	lit:         [ ...recommended, ...recommendedTs, ...lit ],
 };
