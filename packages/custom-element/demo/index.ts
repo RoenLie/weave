@@ -1,24 +1,20 @@
-import '../src/adapter-element.ts';
+import '../src/adapter-element/adapter-element.ts';
 
 import { html, render } from 'lit-html';
 
-import { css, type CSSStyle, CustomElement } from '../src/custom-element.ts';
+import { AdapterElement } from '../src/adapter-element/adapter-element.ts';
+import { property, state } from '../src/adapter-element/decorators.ts';
+import { css, type CSSStyle } from '../src/adapter-element/helpers.ts';
 
 
-export class RootPage extends CustomElement {
+export class RootPage extends AdapterElement {
 
-	static {
-		this.register('iv-root-page');
-	}
+	static override tagName = 'iv-root-page';
 
 	protected override render(): unknown {
 		return html`
-		<iv-image-viewer
-			image-src="/spiral.jpg"
-			reset-on-new-image
-		></iv-image-viewer>
-
 		<s-controls>
+			<test-adapter></test-adapter>
 		</s-controls>
 		`;
 	}
@@ -28,16 +24,40 @@ export class RootPage extends CustomElement {
 		display: grid;
 		place-items: center;
 	}
-	iv-image-viewer {
-		height: 80dvh;
-		width: clamp(320px, 80vw, 1800px);
-		border: 1px solid darkslateblue;
-	}
 	s-controls {
 		display: flex;
 	}
 	`;
 
 }
+RootPage.register();
+
+
+class TestAdapter extends AdapterElement {
+
+	static override tagName = 'test-adapter';
+
+	@property(String, { reflect: true }) accessor label = 'Hello World';
+	@property(Number) accessor labelCount = 0;
+	@state() protected accessor count = 0;
+
+	override connected(): void {
+		super.connected();
+	}
+
+	protected override render() {
+		return html`<h1>${ this.label }</h1>`;
+	}
+
+	static override styles = css`
+		:host {
+			display: block;
+			background-color: red;
+		}
+	`;
+
+}
+TestAdapter.register();
+
 
 render(html`<iv-root-page></iv-root-page>`, document.body);

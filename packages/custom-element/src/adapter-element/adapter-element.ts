@@ -1,20 +1,9 @@
 import type { Writeable } from '@roenlie/core/types';
-import { html, render } from 'lit-html';
-import { Signal } from 'signal-polyfill';
+import { render } from 'lit-html';
 
-import { effect } from './effect.ts';
-import { css, type CSSStyle, getFlatStyles, getPrototypeChain } from './helpers.ts';
-
-
-type PropertyType = StringConstructor | ObjectConstructor | NumberConstructor | BooleanConstructor;
-interface AdapterMetadata {
-	observedAttributes: string[];
-	propertyMetadata:   Record<string, { propName: string; type: PropertyType; reflect: boolean; }>;
-	signalProps:        string[];
-	changedProps:       Set<string | symbol>;
-	previousProps:      Map<string | symbol, any>;
-	styles?:            CSSStyleSheet[];
-}
+import { effect } from '../signal-element/effect.ts';
+import { type CSSStyle, getFlatStyles, getPrototypeChain } from './helpers.ts';
+import type { AdapterMetadata } from './types.ts';
 
 
 // Ensure metadata is enabled. TypeScript does not polyfill
@@ -22,94 +11,10 @@ interface AdapterMetadata {
 (Symbol as { metadata: symbol; }).metadata ??= Symbol('metadata');
 
 
-export const state = () => <C extends AdapterElement, V>(
-	target: ClassAccessorDecoratorTarget<C, V>,
-	context: ClassAccessorDecoratorContext<C, V>,
-): ClassAccessorDecoratorResult<C, V> => {
-	const { get } = target;
-
-	const metadata = context.metadata as any as AdapterMetadata;
-
-	metadata.signalProps ??= [];
-	const propName = context.name.toString();
-	if (!metadata.signalProps.includes(propName))
-		metadata.signalProps.push(propName);
-
-	return {
-		get() {
-			const signal = (get.call(this) as Signal.State<V>);
-
-			return signal.get();
-		},
-		set(value: V) {
-			const signal = (get.call(this) as Signal.State<V>);
-			signal.set(value);
-		},
-		init(value: any): any {
-			return new Signal.State(value);
-		},
-	};
-};
-
-
-export const property = (
-	type: PropertyType = String,
-	options?: { reflect?: boolean; },
-) => <C extends AdapterElement, V>(
-	target: ClassAccessorDecoratorTarget<C, V>,
-	context: ClassAccessorDecoratorContext<C, V>,
-): ClassAccessorDecoratorResult<C, V> => {
-	const { get } = target;
-
-	const metadata = context.metadata as any as AdapterMetadata;
-
-	metadata.signalProps ??= [];
-	const propName = context.name.toString();
-	if (!metadata.signalProps.includes(propName))
-		metadata.signalProps.push(propName);
-
-	metadata.observedAttributes ??= [];
-	const attrName = propName
-		.replace(/([A-Z])/g, '-$1')
-		.toLowerCase();
-
-	if (!metadata.observedAttributes.includes(attrName)) {
-		metadata.observedAttributes.push(attrName);
-		metadata.propertyMetadata ??= {};
-		metadata.propertyMetadata[attrName] = {
-			propName,
-			type,
-			reflect: options?.reflect ?? false,
-		};
-	}
-
-	return {
-		get() {
-			const signal = (get.call(this) as Signal.State<V>);
-
-			return signal.get();
-		},
-		set(value: V) {
-			const signal = (get.call(this) as Signal.State<V>);
-			signal.set(value);
-
-			if (metadata.propertyMetadata[attrName]?.reflect) {
-				(this as any as { __element: WeakRef<AdapterProxy>; })
-					.__element.deref()
-					?.setAttribute(propName, String(value));
-			}
-		},
-		init(value: any): any {
-			return new Signal.State(value);
-		},
-	};
-};
-
-
-class AdapterProxy extends HTMLElement {
+export class AdapterProxy extends HTMLElement {
 
 	protected static adapter: typeof AdapterElement;
-	static override [Symbol.hasInstance](value: object) {
+	static override [Symbol.hasInstance](value: object): boolean {
 		return value instanceof this.adapter;
 	}
 
@@ -128,7 +33,7 @@ class AdapterProxy extends HTMLElement {
 	protected connectedCallback(): void { this.connectAdapter(); }
 	protected disconnectedCallback(): void { this.disconnectAdapter(); }
 
-	protected connectAdapter() {
+	protected connectAdapter(): void {
 		const metadata = this.constructor.adapter.metadata;
 
 		if (!this.adapter) {
@@ -177,7 +82,7 @@ class AdapterProxy extends HTMLElement {
 		this.adapter.connected();
 	}
 
-	protected disconnectAdapter() {
+	protected disconnectAdapter(): void {
 		// First clean up anything that may react to changes.
 		this.attrCtrl.disconnect();
 
@@ -202,7 +107,7 @@ class AdapterProxy extends HTMLElement {
 		});
 	};
 
-	protected attributeChanged(name: string, value: string) {
+	protected attributeChanged(name: string, value: string): void {
 		const metadata = this.constructor.adapter.metadata;
 
 		const propMeta = metadata.propertyMetadata?.[name];
@@ -234,10 +139,10 @@ class AdapterProxy extends HTMLElement {
 }
 
 
-class AdapterElement {
+export class AdapterElement {
 
 	static tagName: string;
-	static register() {
+	static register(): void {
 		if (globalThis.customElements.get(this.tagName))
 			return;
 
@@ -381,30 +286,3 @@ class AdapterElement {
 	static styles: CSSStyle;
 
 }
-
-
-class TestAdapter extends AdapterElement {
-
-	static override tagName = 'test-adapter';
-
-	@property(String, { reflect: true }) accessor label = 'Hello World';
-	@property(Number) accessor labelCount = 0;
-	@state() protected accessor count = 0;
-
-	override connected(): void {
-		super.connected();
-	}
-
-	protected override render() {
-		return html`<h1>${ this.label }</h1>`;
-	}
-
-	static override styles = css`
-		:host {
-			display: block;
-			background-color: red;
-		}
-	`;
-
-}
-TestAdapter.register();

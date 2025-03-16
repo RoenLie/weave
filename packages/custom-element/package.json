@@ -12,9 +12,13 @@
 		"src"
 	],
 	"exports": {
-		".": {
-			"types": "./dist/custom-element.d.ts",
-			"default": "./dist/custom-element.js"
+		"./signal-element": {
+			"types": "./dist/signal-element/custom-element.d.ts",
+			"default": "./dist/signal-element/custom-element.js"
+		},
+		"./adapter-element": {
+			"types": "./dist/adapter-element/adapter-element.d.ts",
+			"default": "./dist/adapter-element/adapter-element.js"
 		}
 	},
 	"scripts": {
