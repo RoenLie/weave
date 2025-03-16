@@ -1,21 +1,22 @@
+import { type ResolvablePromise, resolvablePromise as promise } from '@roenlie/core/async';
+import type { Writeable } from '@roenlie/core/types';
 import { render } from 'lit-html';
 import { Signal } from 'signal-polyfill';
-import { resolvablePromise as promise, type ResolvablePromise } from '@roenlie/core/async';
-import { effect } from './effect.ts';
+
 import { DisposingEventHost } from './auto-disposing-event-host.ts';
-import type { Writeable } from '@roenlie/core/types';
+import { effect } from './effect.ts';
 
 
 // Ensure metadata is enabled. TypeScript does not polyfill
 // Symbol.metadata, so we must ensure that it exists.
-(Symbol as { metadata: symbol }).metadata ??= Symbol('metadata');
+(Symbol as { metadata: symbol; }).metadata ??= Symbol('metadata');
 
 type PropertyType = StringConstructor | ObjectConstructor | NumberConstructor | BooleanConstructor;
 interface SignalElementMetadata {
 	observedAttributes?: string[];
 	propertyMetadata?:   Record<string, {
 		propName: string;
-		type:     PropertyType
+		type:     PropertyType;
 	}>;
 	signalProps?: string[];
 }
@@ -23,12 +24,12 @@ interface SignalElementMetadata {
 
 export class SignalElement extends DisposingEventHost {
 
-	public static tagName: string;
-	public static register(tagName?: string): void {
+	static tagName: string;
+	static register(tagName?: string): void {
 		queueMicrotask(() => this.registerNow(tagName));
 	}
 
-	public static registerNow(tagName?: string): void {
+	static registerNow(tagName?: string): void {
 		if (tagName)
 			this.tagName = tagName;
 
@@ -36,14 +37,14 @@ export class SignalElement extends DisposingEventHost {
 			customElements.define(this.tagName, this);
 	}
 
-	public static get observedAttributes(): string[] {
+	static get observedAttributes(): string[] {
 		const metadata = this[Symbol.metadata] as SignalElementMetadata;
 
 		return metadata?.observedAttributes ?? [];
 	}
 
 	protected static elementStyles: CSSStyleSheet[];
-	protected static defineStyles() {
+	protected static defineStyles(): void {
 		if (this.elementStyles)
 			return;
 
@@ -80,9 +81,9 @@ export class SignalElement extends DisposingEventHost {
 		this.shadowRoot!.adoptedStyleSheets = base.elementStyles;
 	}
 
-	public readonly updateComplete: ResolvablePromise<boolean> = promise.resolve(true);
-	public readonly hasConnected:   boolean = false;
-	public readonly hasUpdated:     boolean = false;
+	readonly updateComplete: ResolvablePromise<boolean> = promise.resolve(true);
+	readonly hasConnected:   boolean = false;
+	readonly hasUpdated:     boolean = false;
 
 	private get __metadata(): SignalElementMetadata | undefined {
 		const metadata = this.constructor[Symbol.metadata] as SignalElementMetadata;
@@ -90,40 +91,11 @@ export class SignalElement extends DisposingEventHost {
 		return metadata;
 	}
 
-	private __unsubEffect?:  () => void;
-	private __changedProps:  Set<string | symbol> = new Set();
-	private __previousProps: Map<string | symbol, any> = new Map();
+	private __unsubEffect?: () => void;
+	private __changedProps = new Set<string | symbol>();
+	private __previousProps = new Map<string | symbol, any>();
 
-	protected connectedCallback(): void {
-		const ref = new WeakRef(this);
-
-		// eslint-disable-next-line prefer-arrow-callback
-		this.__unsubEffect = effect(function() {
-			// We utilize a WeakRef to avoid a potential leak from
-			// locking a direct reference to the instance in this scope.
-			const self = ref.deref();
-			if (!self)
-				return;
-
-			self.requestUpdate();
-		});
-
-		if (!this.hasConnected) {
-			(this.hasConnected as boolean) = true;
-			this.firstConnected();
-		}
-	}
-
-	protected override disconnectedCallback(): void {
-		super.disconnectedCallback();
-
-		this.__unsubEffect?.();
-		this.__unsubEffect = undefined;
-		this.__changedProps.clear();
-		this.__previousProps.clear();
-	}
-
-	public attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+	attributeChangedCallback(name: string, _oldValue: string, newValue: string): void {
 		const metadata = this.__metadata;
 		const propMeta = metadata?.propertyMetadata?.[name];
 		if (!propMeta)
@@ -148,7 +120,50 @@ export class SignalElement extends DisposingEventHost {
 			self[propMeta.propName] = convertedValue;
 	}
 
-	public requestUpdate(): Promise<boolean> {
+	protected override connected(): void {
+		super.connected();
+
+		const ref = new WeakRef(this);
+
+		// eslint-disable-next-line prefer-arrow-callback
+		this.__unsubEffect = effect(function() {
+			// We utilize a WeakRef to avoid a potential leak from
+			// locking a direct reference to the instance in this scope.
+			const self = ref.deref();
+			if (!self)
+				return;
+
+			self.requestUpdate();
+		});
+
+		if (!this.hasConnected) {
+			(this.hasConnected as boolean) = true;
+			this.firstConnected();
+		}
+	}
+
+	protected override disconnected(): void {
+		this.__unsubEffect?.();
+		this.__unsubEffect = undefined;
+		this.__changedProps.clear();
+		this.__previousProps.clear();
+	}
+
+	/** Runs the immediatly after connectedCallback, the first time this component connects. */
+	protected firstConnected(): void {}
+
+	/** Runs after render has completed and dom has been painted after a connectedCallback. */
+	protected afterConnected(): void {}
+
+	/** Runs immediatly before render is performed. */
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	protected beforeUpdate(changedProps: Set<string | symbol>): void {}
+
+	/** Runs after render has completed and dom has painted. */
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	protected afterUpdate(changedProps: Set<string | symbol>): void {}
+
+	requestUpdate(): Promise<boolean> {
 		for (const prop of this.__metadata?.signalProps ?? []) {
 			const value = this[prop as keyof typeof this];
 
@@ -168,7 +183,7 @@ export class SignalElement extends DisposingEventHost {
 		return this.updateComplete;
 	}
 
-	public performUpdate(): void {
+	performUpdate(): void {
 		if (this.updateComplete.done)
 			return;
 
@@ -177,7 +192,7 @@ export class SignalElement extends DisposingEventHost {
 		render(this.render(), this.shadowRoot!, { host: this });
 
 		// We need to wait for the next frame to ensure the DOM has been updated.
-		requestAnimationFrame(() => {
+		setTimeout(() => {
 			this.afterUpdate(this.__changedProps);
 			this.__changedProps.clear();
 
@@ -190,24 +205,10 @@ export class SignalElement extends DisposingEventHost {
 		});
 	}
 
-	/** Runs the immediatly after connectedCallback, the first time this component connects. */
-	protected firstConnected(): void {}
-
-	/** Runs after render has completed and dom has been painted after a connectedCallback. */
-	protected afterConnected(): void {}
-
-	/** Runs immediatly before render is performed. */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	protected beforeUpdate(changedProps: Set<string | symbol>): void {}
-
-	/** Runs after render has completed and dom has painted. */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	protected afterUpdate(changedProps: Set<string | symbol>): void {}
-
 	/** Return a value which will be rendered into the componens shadowroot. */
 	protected render(): unknown { return; }
 
-	public static styles: CSSStyle;
+	static styles: CSSStyle;
 
 }
 
@@ -302,9 +303,9 @@ export const property = (
 
 export class EnhancedCSSStyleSheet extends CSSStyleSheet {
 
-	public text: string;
+	text: string;
 
-	public override replaceSync(text: string): void {
+	override replaceSync(text: string): void {
 		this.text = text;
 		super.replaceSync(text);
 	}

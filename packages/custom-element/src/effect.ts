@@ -4,7 +4,7 @@ import { Signal } from 'signal-polyfill';
 let needsEnqueue = true;
 
 
-const w = new Signal.subtle.Watcher(() => {
+const watcher = new Signal.subtle.Watcher(() => {
 	if (needsEnqueue) {
 		needsEnqueue = false;
 		queueMicrotask(processPending);
@@ -15,10 +15,10 @@ const w = new Signal.subtle.Watcher(() => {
 function processPending() {
 	needsEnqueue = true;
 
-	for (const s of w.getPending())
+	for (const s of watcher.getPending())
 		s.get();
 
-	w.watch();
+	watcher.watch();
 }
 
 
@@ -30,13 +30,13 @@ export function effect(callback: () => any) {
 		cleanup = callback();
 	});
 
-	w.watch(computed);
+	watcher.watch(computed);
 	computed.get();
 
-	return () => {
-		w.unwatch(computed);
+	return (): void => {
+		watcher.unwatch(computed);
 
 		cleanup?.();
 		cleanup = undefined;
 	};
-}
+};

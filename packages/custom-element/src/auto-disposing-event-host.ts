@@ -1,25 +1,31 @@
+import { PreConnectHost } from './pre-connect-host.ts';
+
+
 type EventMap = HTMLElementEventMap;
 type AddEventOptions = boolean | AddEventListenerOptions;
 type EventOptions = boolean | EventListenerOptions;
 type Listener = EventListener | EventListenerObject;
 
 
-export class DisposingEventHost extends HTMLElement {
+export class DisposingEventHost extends PreConnectHost {
 
-	protected disconnectedCallback(): void {
+	/**
+	 * Called when the element is disconnected from the DOM.
+	 */
+	protected override disconnected(): void {
 		this.removeAllEventListeners();
 	}
 
 	#listeners?: Map<string, Set<WeakRef<readonly [
 		original: Listener,
 		bound: Listener,
-		options?: boolean | AddEventListenerOptions
+		options?: boolean | AddEventListenerOptions,
 	]>>>;
 
-	public override addEventListener<K extends keyof EventMap>(
+	override addEventListener<K extends keyof EventMap>(
 		type: K, listener: (this: HTMLElement, ev: EventMap[K]) => any, options?: AddEventOptions): void;
-	public override addEventListener(type: string, listener: Listener, options?: AddEventOptions): void;
-	public override addEventListener(type: string, listener: Listener, options?: AddEventOptions): void {
+	override addEventListener(type: string, listener: Listener, options?: AddEventOptions): void;
+	override addEventListener(type: string, listener: Listener, options?: AddEventOptions): void {
 		this.#listeners ??= new Map();
 
 		if (typeof listener === 'function') {
@@ -36,10 +42,10 @@ export class DisposingEventHost extends HTMLElement {
 		super.addEventListener(type, listener, options);
 	}
 
-	public override removeEventListener<K extends keyof EventMap>(
+	override removeEventListener<K extends keyof EventMap>(
 		type: K, listener: (this: HTMLElement, ev: EventMap[K]) => any, options?: EventOptions): void;
-	public override removeEventListener(type: string, listener: Listener, options?: EventOptions): void;
-	public override removeEventListener(type: string, listener: Listener, options?: EventOptions): void {
+	override removeEventListener(type: string, listener: Listener, options?: EventOptions): void;
+	override removeEventListener(type: string, listener: Listener, options?: EventOptions): void {
 		if (typeof listener === 'function' && this.#listeners) {
 			for (const [ type, refs ] of this.#listeners) {
 				for (const ref of refs) {
@@ -63,7 +69,7 @@ export class DisposingEventHost extends HTMLElement {
 	}
 
 	/** Remove any listeners added directly to the host. */
-	public removeAllEventListeners() {
+	removeAllEventListeners(): void {
 		if (!this.#listeners)
 			return;
 
