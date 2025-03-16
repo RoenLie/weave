@@ -147,11 +147,15 @@ export class AdapterElement {
 			return;
 
 		const adapter = this;
-		const cls = Object.defineProperty(class extends AdapterProxy {
+
+		const cls = class extends AdapterProxy {
 
 			protected static override adapter = adapter;
 
-		}, 'name', { value: this.tagName.replaceAll('-', '_') });
+		};
+		Object.defineProperty(cls, 'name', {
+			value: this.tagName.replaceAll('-', '_'),
+		});
 
 		globalThis.customElements.define(this.tagName, cls);
 	}
