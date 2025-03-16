@@ -1,5 +1,3 @@
-import '../src/adapter-element/adapter-element.ts';
-
 import { html, render } from 'lit-html';
 
 import { AdapterElement } from '../src/adapter-element/adapter-element.ts';

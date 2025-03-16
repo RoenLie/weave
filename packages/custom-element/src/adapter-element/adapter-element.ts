@@ -147,14 +147,13 @@ export class AdapterElement {
 			return;
 
 		const adapter = this;
-		window.customElements.define(
-			this.tagName,
-			class extends AdapterProxy {
+		const cls = Object.defineProperty(class extends AdapterProxy {
 
-				protected static override adapter = adapter;
+			protected static override adapter = adapter;
 
-			},
-		);
+		}, 'name', { value: this.tagName.replaceAll('-', '_') });
+
+		globalThis.customElements.define(this.tagName, cls);
 	}
 
 	declare static [Symbol.metadata]: AdapterMetadata;
