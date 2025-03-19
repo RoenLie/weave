@@ -1,0 +1,14 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"emitDecoratorMetadata": false,
+		"experimentalDecorators": false,
+		"types": [
+			"vite/client",
+		]
+	},
+	"exclude": [
+		"dist",
+		"node_modules",
+	]
+}

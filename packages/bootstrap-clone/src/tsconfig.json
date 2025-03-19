@@ -1,0 +1,11 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"emitDecoratorMetadata": false,
+		"experimentalDecorators": false,
+	},
+	"exclude": [
+		"dist",
+		"node_modules",
+	]
+}

@@ -9,8 +9,8 @@ import { isEmptyObject } from './build/helpers/is-empty-object.js';
 import { stringDedent } from './build/helpers/string-dedent.js';
 import { toCamelCase } from './build/helpers/to-camel-case.js';
 import { markdownIt } from './build/markdown/markdown-it.js';
-import { docPageTemplate } from './generators/doc-page-template.js';
 import type { InternalConfigProperties } from './config.js';
+import { docPageTemplate } from './generators/doc-page-template.js';
 
 
 export class MarkdownComponentFactory {
@@ -27,9 +27,9 @@ export class MarkdownComponentFactory {
 	protected content = '';
 
 	constructor(args: {
-		path:       string,
-		rootDepth:  number,
-		siteConfig: InternalConfigProperties,
+		path:       string;
+		rootDepth:  number;
+		siteConfig: InternalConfigProperties;
 	}) {
 		const cache = getCache();
 		this.tagCache      = cache.tag;
@@ -40,7 +40,7 @@ export class MarkdownComponentFactory {
 		this.siteConfig    = args.siteConfig;
 	}
 
-	protected addUsedTags() {
+	protected addUsedTags(): void {
 		if (!this.siteConfig.autoImport)
 			return;
 
@@ -62,7 +62,7 @@ export class MarkdownComponentFactory {
 		this.imports.push(...relativeComponentImports.map(f => `import '${ f }';`));
 	}
 
-	protected addHoistedImports() {
+	protected addHoistedImports(): void {
 		/* remove hoist expressions and cache the desires imports to hoist. */
 		const hoistExpression = /```typescript hoist\s+(.*?)```/gs;
 
@@ -73,7 +73,7 @@ export class MarkdownComponentFactory {
 		});
 	}
 
-	protected addHeader() {
+	protected addHeader(): void {
 		/* extract the tag that requests component header, replace them with instances of docs component header */
 		const headerExpression = /(\[component-header: *(.*?)])/g;
 		const headerReplacement = (key: string) => stringDedent(`
@@ -101,7 +101,7 @@ export class MarkdownComponentFactory {
 		}
 	}
 
-	protected addMetadata() {
+	protected addMetadata(): void {
 		/* extract the tags that request metadata, replace them with instances of the metadata viewer */
 		const metadataExpression   = /(\[component-metadata: *(.*?)])/g;
 		const metadataReplacement  = (key: string) => stringDedent(`
@@ -129,7 +129,7 @@ export class MarkdownComponentFactory {
 		}
 	}
 
-	protected addEditors() {
+	protected addEditors(): void {
 		/* Mutate and inject the script editors */
 		const exampleExpression = /<!--\s*Example:\s*((?:\w+\.)+js)\s*-->/gi;
 		const exampleScriptExpr = /<script type="module" id="(\w+)">(.*?)<\/script>/gs;
@@ -168,7 +168,7 @@ export class MarkdownComponentFactory {
 		}
 	}
 
-	public create = async () => {
+	create = async (): Promise<string> => {
 		this.content = await promises.readFile(this.path, { encoding: 'utf8' });
 
 		this.addUsedTags();

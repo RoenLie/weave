@@ -785,6 +785,22 @@ importers:
         specifier: ^0.1.51
         version: 0.1.56
 
+  packages/bootstrap-clone:
+    dependencies:
+      '@roenlie/custom-element':
+        specifier: workspace:^
+        version: link:../custom-element
+      lit-html:
+        specifier: ^3.2.1
+        version: 3.2.1
+    devDependencies:
+      '@roenlie/mirage-docs':
+        specifier: workspace:^
+        version: link:../mirage-docs
+      lit:
+        specifier: ^3.2.1
+        version: 3.2.1
+
   packages/core:
     dependencies:
       nanoid:

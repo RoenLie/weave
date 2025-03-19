@@ -1,8 +1,8 @@
 import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import litConfig from 'eslint-plugin-lit';
 import stylistic from '@stylistic/eslint-plugin';
-import simpleImportSort from "eslint-plugin-simple-import-sort";
+import litConfig from 'eslint-plugin-lit';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import tseslint from 'typescript-eslint';
 
 
 /** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigArray} */

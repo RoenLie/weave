@@ -8,7 +8,7 @@ export const docPageTemplate = (props: {
 	examples: string;
 	metadata: string;
 	markdown: string;
-}) => {
+}): string => {
 	const className = randomString(10);
 
 	return `

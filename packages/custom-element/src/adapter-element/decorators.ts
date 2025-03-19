@@ -8,6 +8,12 @@ import type { AdapterMetadata, PropertyType } from './types.ts';
 (Symbol as { metadata: symbol; }).metadata ??= Symbol('metadata');
 
 
+export const customElement = (tagName: string) => <C extends typeof AdapterElement>(base: C): void => {
+	base.tagName = tagName;
+	base.register();
+};
+
+
 export const state = () => <C extends AdapterElement, V>(
 	target: ClassAccessorDecoratorTarget<C, V>,
 	context: ClassAccessorDecoratorContext<C, V>,
