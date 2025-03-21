@@ -1,3 +1,4 @@
+/* eslint-disable @stylistic/max-len */
 import { shadeColor, tintColor } from './styles/functions.ts';
 
 export const createStyleVariables = (options: {
@@ -5,7 +6,8 @@ export const createStyleVariables = (options: {
 }): Map<string, string> => {
 	const { prefix } = options;
 
-	class StrictMap<K, V> extends Map<K, NonNullable<V>> {
+	class StyleMap<K extends string, V extends string | number | undefined>
+		extends Map<K, NonNullable<V>> {
 
 		override get(key: K): NonNullable<V> {
 			const value = super.get(key);
@@ -15,9 +17,13 @@ export const createStyleVariables = (options: {
 			return value as NonNullable<V>;
 		}
 
+		getNumber(key: K): number {
+			return Number(this.get(key));
+		}
+
 	}
 
-	const vars = new StrictMap<string, string | undefined>();
+	const vars = new StyleMap<string, string | number | undefined>();
 
 	//#region gray-color-variables
 	vars.set('white',    '#fff');
@@ -60,7 +66,7 @@ export const createStyleVariables = (options: {
 	//#endregion theme-color-variables
 
 
-	// scss-docs-start theme-text-variables
+	//#region theme-text-variables
 	vars.set('primary-text-emphasis',   shadeColor(vars.get('primary'),   60));
 	vars.set('secondary-text-emphasis', shadeColor(vars.get('secondary'), 60));
 	vars.set('success-text-emphasis',   shadeColor(vars.get('success'),   60));
@@ -69,7 +75,7 @@ export const createStyleVariables = (options: {
 	vars.set('danger-text-emphasis',    shadeColor(vars.get('danger'),    60));
 	vars.set('light-text-emphasis',     vars.get('gray-700'));
 	vars.set('dark-text-emphasis',      vars.get('gray-700'));
-	// scss-docs-end theme-text-variables
+	//#endregion theme-text-variables
 
 
 	//#region body
@@ -82,6 +88,35 @@ export const createStyleVariables = (options: {
 	vars.set('body-tertiary-bg',     vars.get('gray-100'));
 	vars.set('body-emphasis-color',  vars.get('black'));
 	//#endregion body
+
+
+	//#region links
+	//// Style anchor elements.
+
+	//$link-color:                              $primary !default;
+	//$link-decoration:                         underline !default;
+	//$link-shade-percentage:                   20% !default;
+	//$link-hover-color:                        shift-color($link-color, $link-shade-percentage) !default;
+	//$link-hover-decoration:                   null !default;
+
+	//$stretched-link-pseudo-element:           after !default;
+	//$stretched-link-z-index:                  1 !default;
+
+	//// Icon links
+	//// scss-docs-start icon-link-variables
+	//$icon-link-gap:               .375rem !default;
+	//$icon-link-underline-offset:  .25em !default;
+	//$icon-link-icon-size:         1em !default;
+	//$icon-link-icon-transition:   .2s ease-in-out transform !default;
+	//$icon-link-icon-transform:    translate3d(.25em, 0, 0) !default;
+	//// scss-docs-end icon-link-variables
+
+	//// Paragraphs
+	////
+	//// Style p element.
+
+	//$paragraph-margin-bottom:   1rem !default;
+	//#endregion links
 
 
 	//#region components
@@ -156,66 +191,191 @@ export const createStyleVariables = (options: {
 	//#endregion components
 
 
+	//#region typography
+	// Font, line-height, and color for body text, headings, and more.
+
+	//#region font-variables
+	vars.set('font-family-sans-serif', 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"');
+	vars.set('font-family-monospace', 'SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace');
+	vars.set('font-family-base', `var(--${ prefix }font-sans-serif)`);
+	vars.set('font-family-code', `var(--${ prefix }font-monospace)`);
+
+	// $font-size-root affects the value of `rem`, which is used for as well font sizes, paddings, and margins
+	// $font-size-base affects the font size of the body text
+	vars.set('font-size-root', '');
+	vars.set('font-size-base', '1rem'); // Assumes the browser default, typically `16px`
+	vars.set('font-size-sm',   '' + vars.getNumber('font-size-base') * .875);
+	vars.set('font-size-lg',   '' + vars.getNumber('font-size-base') * 1.25);
+
+	vars.set('font-weight-lighter',  'lighter');
+	vars.set('font-weight-light',    '300');
+	vars.set('font-weight-normal',   '400');
+	vars.set('font-weight-medium',   '500');
+	vars.set('font-weight-semibold', '600');
+	vars.set('font-weight-bold',     '700');
+	vars.set('font-weight-bolder',   'bolder');
+
+	vars.set('font-weight-base', vars.get('font-weight-normal'));
+
+	vars.set('line-height-base', '1.5');
+	vars.set('line-height-sm',   '1.25');
+	vars.set('line-height-lg',   '2');
+
+	vars.set('h1-font-size', '' + vars.getNumber('font-size-base') * 2.5);
+	vars.set('h2-font-size', '' + vars.getNumber('font-size-base') * 2);
+	vars.set('h3-font-size', '' + vars.getNumber('font-size-base') * 1.75);
+	vars.set('h4-font-size', '' + vars.getNumber('font-size-base') * 1.5);
+	vars.set('h5-font-size', '' + vars.getNumber('font-size-base') * 1.25);
+	vars.set('h6-font-size', '' + vars.getNumber('font-size-base'));
+	//#endregion font-variables
+
+
+	//// scss-docs-start font-sizes
+	//$font-sizes: (
+	//1: $h1-font-size,
+	//2: $h2-font-size,
+	//3: $h3-font-size,
+	//4: $h4-font-size,
+	//5: $h5-font-size,
+	//6: $h6-font-size
+	//) !default;
+	//// scss-docs-end font-sizes
+
+	//// scss-docs-start headings-variables
+	//$headings-margin-bottom:      $spacer * .5 !default;
+	//$headings-font-family:        null !default;
+	//$headings-font-style:         null !default;
+	//$headings-font-weight:        500 !default;
+	//$headings-line-height:        1.2 !default;
+	//$headings-color:              inherit !default;
+	//// scss-docs-end headings-variables
+
+	//// scss-docs-start display-headings
+	//$display-font-sizes: (
+	//1: 5rem,
+	//2: 4.5rem,
+	//3: 4rem,
+	//4: 3.5rem,
+	//5: 3rem,
+	//6: 2.5rem
+	//) !default;
+
+	//$display-font-family: null !default;
+	//$display-font-style:  null !default;
+	//$display-font-weight: 300 !default;
+	//$display-line-height: $headings-line-height !default;
+	//// scss-docs-end display-headings
+
+	//// scss-docs-start type-variables
+	//$lead-font-size:              $font-size-base * 1.25 !default;
+	//$lead-font-weight:            300 !default;
+
+	//$small-font-size:             .875em !default;
+
+	//$sub-sup-font-size:           .75em !default;
+
+	//// fusv-disable
+	//$text-muted:                  var(--#{$prefix}secondary-color) !default; // Deprecated in 5.3.0
+	//// fusv-enable
+
+	//$initialism-font-size:        $small-font-size !default;
+
+	//$blockquote-margin-y:         $spacer !default;
+	//$blockquote-font-size:        $font-size-base * 1.25 !default;
+	//$blockquote-footer-color:     $gray-600 !default;
+	//$blockquote-footer-font-size: $small-font-size !default;
+
+	//$hr-margin-y:                 $spacer !default;
+	//$hr-color:                    inherit !default;
+
+	//// fusv-disable
+	//$hr-bg-color:                 null !default; // Deprecated in v5.2.0
+	//$hr-height:                   null !default; // Deprecated in v5.2.0
+	//// fusv-enable
+
+	//$hr-border-color:             null !default; // Allows for inherited colors
+	//$hr-border-width:             var(--#{$prefix}border-width) !default;
+	//$hr-opacity:                  .25 !default;
+
+	//// scss-docs-start vr-variables
+	//$vr-border-width:             var(--#{$prefix}border-width) !default;
+	//// scss-docs-end vr-variables
+
+	//$legend-margin-bottom:        .5rem !default;
+	//$legend-font-size:            1.5rem !default;
+	//$legend-font-weight:          null !default;
+
+	//$dt-font-weight:              $font-weight-bold !default;
+
+	//$list-inline-padding:         .5rem !default;
+
+	//$mark-padding:                .1875em !default;
+	//$mark-color:                  $body-color !default;
+	//$mark-bg:                     $yellow-100 !default;
+	//// scss-docs-end type-variables
+	//#endregion typography
+
+
 	//#region buttons + forms
 	// shared variables that are reassigned to `$input-` and `$btn-` specific variables.
 
-	// scss-docs-start input-btn-variables
+	//#region input-btn-variables
 	vars.set('input-btn-padding-y',           '.375rem');
 	vars.set('input-btn-padding-x',           '.75rem');
 	vars.set('input-btn-font-family',         '');
-	vars.set('input-btn-font-size',           '$font-size-base');
-	vars.set('input-btn-line-height',         '$line-height-base');
-	vars.set('input-btn-focus-width',         '$focus-ring-width');
-	vars.set('input-btn-focus-color-opacity', '$focus-ring-opacity');
-	vars.set('input-btn-focus-color',         '$focus-ring-color');
-	vars.set('input-btn-focus-blur',          '$focus-ring-blur');
-	vars.set('input-btn-focus-box-shadow',    '$focus-ring-box-shadow');
+	vars.set('input-btn-font-size',           vars.get('font-size-base'));
+	vars.set('input-btn-line-height',         vars.get('line-height-base'));
+	vars.set('input-btn-focus-width',         vars.get('focus-ring-width'));
+	vars.set('input-btn-focus-color-opacity', vars.get('focus-ring-opacity'));
+	vars.set('input-btn-focus-color',         vars.get('focus-ring-color'));
+	vars.set('input-btn-focus-blur',          vars.get('focus-ring-blur'));
+	vars.set('input-btn-focus-box-shadow',    vars.get('focus-ring-box-shadow'));
 	vars.set('input-btn-padding-y-sm',        '.25rem');
 	vars.set('input-btn-padding-x-sm',        '.5rem');
-	vars.set('input-btn-font-size-sm',        '$font-size-sm');
+	vars.set('input-btn-font-size-sm',        vars.get('font-size-sm'));
 	vars.set('input-btn-padding-y-lg',        '.5rem');
 	vars.set('input-btn-padding-x-lg',        '1rem');
-	vars.set('input-btn-font-size-lg',        '$font-size-lg');
-	vars.set('input-btn-border-width',        'var(--#{$prefix}border-width)');
-	// scss-docs-end input-btn-variables
+	vars.set('input-btn-font-size-lg',        vars.get('font-size-lg'));
+	vars.set('input-btn-border-width',        `var(--${ prefix }border-width)`);
+	//#endregion input-btn-variables
 	//#endregion Buttons + Forms
 
 
 	//#region buttons
-	//$btn-color:                   var(--#{$prefix}body-color) !default;
-	//$btn-padding-y:               $input-btn-padding-y !default;
-	//$btn-padding-x:               $input-btn-padding-x !default;
-	//$btn-font-family:             $input-btn-font-family !default;
-	//$btn-font-size:               $input-btn-font-size !default;
-	//$btn-line-height:             $input-btn-line-height !default;
-	//$btn-white-space:             null !default; // Set to `nowrap` to prevent text wrapping
+	vars.set('btn-color',       `var(--${ prefix }body-color)`);
+	vars.set('btn-padding-y',   vars.get('input-btn-padding-y'));
+	vars.set('btn-padding-x',   vars.get('input-btn-padding-x'));
+	vars.set('btn-font-family', vars.get('input-btn-font-family'));
+	vars.set('btn-font-size',   vars.get('input-btn-font-size'));
+	vars.set('btn-line-height', vars.get('input-btn-line-height'));
+	vars.set('btn-white-space', ''); // Set to `nowrap` to prevent text wrapping
 
-	//$btn-padding-y-sm:            $input-btn-padding-y-sm !default;
-	//$btn-padding-x-sm:            $input-btn-padding-x-sm !default;
-	//$btn-font-size-sm:            $input-btn-font-size-sm !default;
+	vars.set('btn-padding-y-sm', vars.get('input-btn-padding-y-sm'));
+	vars.set('btn-padding-x-sm', vars.get('input-btn-padding-x-sm'));
+	vars.set('btn-font-size-sm', vars.get('input-btn-font-size-sm'));
 
-	//$btn-padding-y-lg:            $input-btn-padding-y-lg !default;
-	//$btn-padding-x-lg:            $input-btn-padding-x-lg !default;
-	//$btn-font-size-lg:            $input-btn-font-size-lg !default;
+	vars.set('btn-padding-y-lg', vars.get('input-btn-padding-y-lg'));
+	vars.set('btn-padding-x-lg', vars.get('input-btn-padding-x-lg'));
+	vars.set('btn-font-size-lg', vars.get('input-btn-font-size-lg'));
 
-	//$btn-border-width:            $input-btn-border-width !default;
+	vars.set('btn-border-width', vars.get('input-btn-border-width'));
 
-	//$btn-font-weight:             $font-weight-normal !default;
-	//$btn-box-shadow:              inset 0 1px 0 rgba($white, .15), 0 1px 1px rgba($black, .075) !default;
-	//$btn-focus-width:             $input-btn-focus-width !default;
-	vars.set('btn-focus-box-shadow', '$input-btn-focus-box-shadow');
-	//$btn-disabled-opacity:        .65 !default;
-	//$btn-active-box-shadow:       inset 0 3px 5px rgba($black, .125) !default;
+	vars.set('btn-font-weight',      vars.get('font-weight-normal'));
+	vars.set('btn-box-shadow',       `inset 0 1px 0 rgba(${ vars.get('white') }, .15), 0 1px 1px rgba(${ vars.get('black') }, .075)`);
+	vars.set('btn-focus-width',      vars.get('input-btn-focus-width'));
+	vars.set('btn-focus-box-shadow', vars.get('input-btn-focus-box-shadow'));
+	vars.set('btn-disabled-opacity', '.65');
+	vars.set('btn-active-box-shadow', `inset 0 3px 5px rgba(${ vars.get('black') }, .125)`);
 
-	//$btn-link-color:              var(--#{$prefix}link-color) !default;
-	//$btn-link-hover-color:        var(--#{$prefix}link-hover-color) !default;
-	//$btn-link-disabled-color:     $gray-600 !default;
-	//$btn-link-focus-shadow-rgb:   to-rgb(mix(color-contrast($link-color), $link-color, 15%)) !default;
+	vars.set('btn-link-color',            'var(--#{$prefix}link-color)');
+	vars.set('btn-link-hover-color',      'var(--#{$prefix}link-hover-color)');
+	vars.set('btn-link-disabled-color',   `${ vars.get('gray-600') }`);
+	vars.set('btn-link-focus-shadow-rgb', `to-rgb(mix(color-contrast(${ vars.get('link-color') }), ${ vars.get('link-color') }, 15%))`);
 
-	//// Allows for customizing button radius independently from global border radius
-	//$btn-border-radius:           var(--#{$prefix}border-radius) !default;
-	//$btn-border-radius-sm:        var(--#{$prefix}border-radius-sm) !default;
-	//$btn-border-radius-lg:        var(--#{$prefix}border-radius-lg) !default;
+	// Allows for customizing button radius independently from global border radius
+	vars.set('btn-border-radius',    `var(--${ prefix }border-radius)`);
+	vars.set('btn-border-radius-sm', `var(--${ prefix }border-radius-sm)`);
+	vars.set('btn-border-radius-lg', `var(--${ prefix }border-radius-lg)`);
 
 	vars.set('btn-transition', 'color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out !default');
 
@@ -285,7 +445,7 @@ export const createStyleVariables = (options: {
 	//#endregion form-input-variables
 
 
-	// Accordion
+	//#region accordion
 	vars.set('accordion-padding-y',                 `1rem`);
 	vars.set('accordion-padding-x',                 `1.25rem`);
 	vars.set('accordion-color',                     `var(--${ prefix }body-color)`);
@@ -312,19 +472,11 @@ export const createStyleVariables = (options: {
 	vars.set('accordion-icon-transform',            `rotate(-180deg)`);
 	vars.set('accordion-button-icon',               `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='#{$accordion-icon-color}' stroke-linecap='round' stroke-linejoin='round'><path d='m2 5 6 6 6-6'/></svg>")`);
 	vars.set('accordion-button-active-icon',        `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='#{$accordion-icon-active-color}' stroke-linecap='round' stroke-linejoin='round'><path d='m2 5 6 6 6-6'/></svg>")`);
-
-	//const vars = { ...accordianVars };
-
-	//for (const key of Object.keys(vars)) {
-	//	vars[key] = vars[key]!.replace(
-	//		/\$([a-z]+)/g,
-	//		(match, name) => vars[name] ?? vars[key]!,
-	//	);
-	//}
+	//#endregion accordion
 
 	console.log(vars);
 
-	return vars;
+	return vars as Map<string, string>;
 };
 
 
