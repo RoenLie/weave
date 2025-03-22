@@ -1,3 +1,6 @@
+import { styleVariables } from '../style-variables.ts';
+
+
 /** Tint a color: mix a color with white */
 export const tintColor = (color: string, weight: number): string => {
 	//@function tint-color($color, $weight) {
@@ -15,3 +18,6 @@ export const shadeColor = (color: string, weight: number): string => {
 
 	return `color-mix(in srgb, black, ${ color } ${ weight }%)`;
 };
+
+
+

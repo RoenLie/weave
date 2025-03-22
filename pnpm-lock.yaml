@@ -800,6 +800,9 @@ importers:
       lit:
         specifier: ^3.2.1
         version: 3.2.1
+      vitest:
+        specifier: ^2.1.2
+        version: 2.1.9(@types/node@22.13.10)(happy-dom@16.8.1)(lightningcss@1.29.3)(terser@5.39.0)
 
   packages/core:
     dependencies:

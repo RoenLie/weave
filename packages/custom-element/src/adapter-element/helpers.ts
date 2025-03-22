@@ -41,7 +41,7 @@ export const getFlatStyles = (
 
 
 export type CSSStyle = CSSStyleSheet | CSSStyleSheet[] | CSSStyle[];
-export const css = (strings: TemplateStringsArray, ...values: any[]): CSSStyle => {
+export const css = (strings: TemplateStringsArray, ...values: any[]): EnhancedCSSStyleSheet => {
 	const text = strings.reduce((acc, str, i) => {
 		const value = values[i] ?? '';
 		if (value instanceof EnhancedCSSStyleSheet)
@@ -63,6 +63,10 @@ export class EnhancedCSSStyleSheet extends CSSStyleSheet {
 	override replaceSync(text: string): void {
 		this.text = text;
 		super.replaceSync(text);
+	}
+
+	override toString(): string {
+		return this.text;
 	}
 
 }

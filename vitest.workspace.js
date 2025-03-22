@@ -4,15 +4,15 @@ import { defineWorkspace } from 'vitest/config';
 export default defineWorkspace([
 	{
 		test: {
-			name:       'sanguine',
-			include:    [ 'packages/sanguine/**/*.{spec,test,bench}.ts' ],
+			name:       'poe2-passive-editor',
+			include:    [ 'apps/poe2-passive-editor/**/*.{spec,test,bench}.ts' ],
 			setupFiles: [],
 		},
 	},
 	{
 		test: {
-			name:       'poe2-passive-editor',
-			include:    [ 'apps/poe2-passive-editor/**/*.{spec,test,bench}.ts' ],
+			name:       'bootstrap-clone',
+			include:    [ 'packages/bootstrap-clone/**/*.{spec,test,bench}.ts' ],
 			setupFiles: [],
 		},
 	},

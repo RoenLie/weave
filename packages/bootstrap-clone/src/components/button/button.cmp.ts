@@ -2,7 +2,6 @@ import { AdapterElement, type CSSStyle, customElement, property } from '@roenlie
 import { html } from 'lit-html';
 import { classMap } from 'lit-html/directives/class-map.js';
 
-import { styleVariables } from '../../style-variables.ts';
 import { createButtonStyles } from './button-styles.ts';
 
 
@@ -34,10 +33,6 @@ export class BsButton extends AdapterElement {
 		`;
 	}
 
-	static prefix = 'bs-';
-	static override styles: CSSStyle = createButtonStyles({
-		prefix:    this.prefix,
-		variables: styleVariables,
-	});
+	static override styles: CSSStyle = createButtonStyles();
 
 }

@@ -1,18 +1,17 @@
 /* eslint-disable @stylistic/max-len */
 import { css, type CSSStyle } from '@roenlie/custom-element/adapter-element';
 
+import { style, styleVariables } from '../../style-variables.ts';
+import { borderRadius } from '../../styles/mixins/border-radius.ts';
 import { rfs } from '../../styles/rfs.ts';
 
 
-export const createButtonStyles = (options: {
-	prefix:    string;
-	variables: Map<string, string>;
-}): CSSStyle[] => {
-	const { prefix, variables: vars } = options;
-	console.log(rfs(vars.get('btn-font-size')!, `--${ prefix }btn-font-size`));
+export const createButtonStyles = (): CSSStyle[] => {
+	const vars = styleVariables.value;
+	const prefix = vars.get('prefix');
 
 	return [
-		css` // btn-css-vars
+		css` /* btn-css-vars */
 		:host {
 			--${ prefix }btn-padding-x:        ${ vars.get('btn-padding-x') };
 			--${ prefix }btn-padding-y:        ${ vars.get('btn-padding-y') };
@@ -32,24 +31,27 @@ export const createButtonStyles = (options: {
 		}
 		`,
 		css`
+		:host {
+			display: inline-block;
+		}
 		.btn {
 			display: inline-block;
-			padding: var(--#{$prefix}btn-padding-y) var(--#{$prefix}btn-padding-x);
-			font-family: var(--#{$prefix}btn-font-family);
-			@include font-size(var(--#{$prefix}btn-font-size));
-			font-weight: var(--#{$prefix}btn-font-weight);
-			line-height: var(--#{$prefix}btn-line-height);
-			color: var(--#{$prefix}btn-color);
+			padding: var(--${ prefix }btn-padding-y) var(--${ prefix }btn-padding-x);
+			font-family: var(--${ prefix }btn-font-family);
+			@include font-size(var(--${ prefix }btn-font-size));
+			font-weight: var(--${ prefix }btn-font-weight);
+			line-height: var(--${ prefix }btn-line-height);
+			color: var(--${ prefix }btn-color);
 			text-align: center;
 			text-decoration: if($link-decoration == none, null, none);
 			white-space: $btn-white-space;
 			vertical-align: middle;
 			cursor: if($enable-button-pointers, pointer, null);
 			user-select: none;
-			border: var(--#{$prefix}btn-border-width) solid var(--#{$prefix}btn-border-color);
-			@include border-radius(var(--#{$prefix}btn-border-radius));
-			@include gradient-bg(var(--#{$prefix}btn-bg));
-			@include box-shadow(var(--#{$prefix}btn-box-shadow));
+			border: var(--${ prefix }btn-border-width) solid var(--${ prefix }btn-border-color);
+			${ borderRadius(`var(--${ prefix }btn-border-radius)`) }
+			@include gradient-bg(var(--${ prefix }btn-bg));
+			@include box-shadow(var(--${ prefix }btn-box-shadow));
 			@include transition($btn-transition);
 
 			&:hover {
@@ -140,9 +142,20 @@ export const createButtonStyles = (options: {
 	];
 };
 
+
+const combined = style.themeColors.map(([ color, value ]) => css`
+.btn-${ color } {
+
+}
+`).join('');
+
+console.log(combined);
+
+
 // //
 // // Alternate buttons
 // //
+
 
 // // scss-docs-start btn-variant-loops
 // @each $color, $value in $theme-colors {

@@ -1,42 +1,71 @@
 /* eslint-disable @stylistic/max-len */
 import { shadeColor, tintColor } from './styles/functions.ts';
 
-export const createStyleVariables = (options: {
-	prefix: string;
-}): Map<string, string> => {
-	const { prefix } = options;
 
-	class StyleMap<K extends string, V extends string | number | undefined>
-		extends Map<K, NonNullable<V>> {
+class StyleMap extends Map<string, string | number | undefined> {
 
-		override get(key: K): NonNullable<V> {
-			const value = super.get(key);
-			if (value === undefined)
-				throw new Error(`Variable "${ key }" is not defined.`);
+	override get(key: string): string {
+		const value = super.get(key);
+		if (value === undefined)
+			throw new Error(`Variable "${ key }" is not defined.`);
 
-			return value as NonNullable<V>;
-		}
-
-		getNumber(key: K): number {
-			return Number(this.get(key));
-		}
-
+		return String(value);
 	}
 
-	const vars = new StyleMap<string, string | number | undefined>();
+	getNumber(key: string): number {
+		return Number(this.get(key));
+	}
 
+}
+
+
+type StyleProxy = StyleMap & Record<string, string | number | undefined> & Record<never, never>;
+
+
+const createStyleProxy = () => {
+	const map = new StyleMap();
+
+	const proxy = new Proxy(map as StyleMap & Record<keyof any, any>, {
+		get(target, p, receiver) {
+			if (p in target) {
+				if (typeof target[p] === 'function')
+					return target[p].bind(target);
+
+				return Reflect.get(target, p, receiver);
+			}
+
+			return target.get(p as string);
+		},
+		set(target, p, newValue, receiver) {
+			target.set(p as string, newValue);
+
+			return true;
+		},
+	});
+
+	return proxy as StyleProxy;
+};
+
+
+export const createStyleVariables = (options: {
+	prefix: string;
+}): StyleProxy => {
+	const { prefix } = options;
+	const vars = createStyleProxy();
+
+	//#region color system
 	//#region gray-color-variables
-	vars.set('white',    '#fff');
-	vars.set('gray-100', '#f8f9fa');
-	vars.set('gray-200', '#e9ecef');
-	vars.set('gray-300', '#dee2e6');
-	vars.set('gray-400', '#ced4da');
-	vars.set('gray-500', '#adb5bd');
-	vars.set('gray-600', '#6c757d');
-	vars.set('gray-700', '#495057');
-	vars.set('gray-800', '#343a40');
-	vars.set('gray-900', '#212529');
-	vars.set('black',    '#000');
+	vars['white'   ] = '#fff';
+	vars['gray-100'] = '#f8f9fa';
+	vars['gray-200'] = '#e9ecef';
+	vars['gray-300'] = '#dee2e6';
+	vars['gray-400'] = '#ced4da';
+	vars['gray-500'] = '#adb5bd';
+	vars['gray-600'] = '#6c757d';
+	vars['gray-700'] = '#495057';
+	vars['gray-800'] = '#343a40';
+	vars['gray-900'] = '#212529';
+	vars['black'   ] = '#000';
 	//#endregion gray-color-variables
 
 
@@ -76,6 +105,35 @@ export const createStyleVariables = (options: {
 	vars.set('light-text-emphasis',     vars.get('gray-700'));
 	vars.set('dark-text-emphasis',      vars.get('gray-700'));
 	//#endregion theme-text-variables
+	//#endregion color system
+
+
+	//#region options
+	// Quickly modify global styling by enabling or disabling optional features.
+	vars.set('enable-caret',                'true');
+	vars.set('enable-rounded',              'true');
+	vars.set('enable-shadows',              'false');
+	vars.set('enable-gradients',            'false');
+	vars.set('enable-transitions',          'true');
+	vars.set('enable-reduced-motion',       'true');
+	vars.set('enable-smooth-scroll',        'true');
+	vars.set('enable-grid-classes',         'true');
+	vars.set('enable-container-classes',    'true');
+	vars.set('enable-cssgrid',              'false');
+	vars.set('enable-button-pointers',      'true');
+	vars.set('enable-rfs',                  'true');
+	vars.set('enable-validation-icons',     'true');
+	vars.set('enable-negative-margins',     'false');
+	vars.set('enable-deprecation-messages', 'true');
+	vars.set('enable-important-utilities',  'true');
+
+	vars.set('enable-dark-mode',            'true');
+	vars.set('color-mode-type:',            'data'); // `data` or `media-query'
+
+	// prefix for :root CSS variables
+	vars.set('variable-prefix',             'bs-'); // Deprecated in v5.2.0 for the shorter `$prefix'
+	vars.set('prefix',                      vars.get('variable-prefix'));
+	//#endregion options
 
 
 	//#region body
@@ -91,13 +149,13 @@ export const createStyleVariables = (options: {
 
 
 	//#region links
-	//// Style anchor elements.
+	// Style anchor elements.
 
-	//$link-color:                              $primary !default;
-	//$link-decoration:                         underline !default;
-	//$link-shade-percentage:                   20% !default;
-	//$link-hover-color:                        shift-color($link-color, $link-shade-percentage) !default;
-	//$link-hover-decoration:                   null !default;
+	vars.set('link-color',            `${ vars.get('primary') }`);
+	vars.set('link-decoration',       'underline');
+	vars.set('link-shade-percentage', '20%');
+	vars.set('link-hover-color',      `shift-color(${ vars.get('link-color') }, $link-shade-percentage)`);
+	vars.set('link-hover-decoration', '');
 
 	//$stretched-link-pseudo-element:           after !default;
 	//$stretched-link-z-index:                  1 !default;
@@ -367,8 +425,8 @@ export const createStyleVariables = (options: {
 	vars.set('btn-disabled-opacity', '.65');
 	vars.set('btn-active-box-shadow', `inset 0 3px 5px rgba(${ vars.get('black') }, .125)`);
 
-	vars.set('btn-link-color',            'var(--#{$prefix}link-color)');
-	vars.set('btn-link-hover-color',      'var(--#{$prefix}link-hover-color)');
+	vars.set('btn-link-color',            `var(--${ prefix }link-color)`);
+	vars.set('btn-link-hover-color',      `var(--${ prefix }link-hover-color)`);
 	vars.set('btn-link-disabled-color',   `${ vars.get('gray-600') }`);
 	vars.set('btn-link-focus-shadow-rgb', `to-rgb(mix(color-contrast(${ vars.get('link-color') }), ${ vars.get('link-color') }, 15%))`);
 
@@ -476,8 +534,25 @@ export const createStyleVariables = (options: {
 
 	console.log(vars);
 
-	return vars as Map<string, string>;
+	return vars;
 };
 
 
-export const styleVariables = createStyleVariables({ prefix: 'bs-' });
+export const style = {} as {
+	vars:        StyleProxy;
+	themeColors: (string | number)[][];
+};
+style.vars = createStyleVariables({ prefix: 'bs-' });
+style.themeColors = [
+	[ 'primary',    style.vars['primary']! ],
+	[ 'secondary',  style.vars['secondary']! ],
+	[ 'success',    style.vars['success']! ],
+	[ 'info',       style.vars['info']! ],
+	[ 'warning',    style.vars['warning']! ],
+	[ 'danger',     style.vars['danger']! ],
+	[ 'light',      style.vars['light']! ],
+	[ 'dark',       style.vars['dark']! ],
+];
+
+
+export const styleVariables = { value: style.vars };
