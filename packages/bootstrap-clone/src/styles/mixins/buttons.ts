@@ -5,6 +5,24 @@
 // Easily pump out default styles, as well as :hover, :focus, :active,
 // and disabled options for all buttons
 
+export const buttonVariant = (args: {
+	background:          string;
+	border:              string;
+	color?:              string;
+	hoverBackground?:    string;
+	hoverBorder?:        string;
+	hoverColor?:         string;
+	activeBackground?:   string;
+	activeBorder?:       string;
+	activeColor?:        string;
+	disabledBackground?: string;
+	disabledBorder?:     string;
+	disabledColor?:      string;
+}) => {
+	args.color ??= colorContrast(args.background);
+
+};
+
 //// scss-docs-start btn-variant-mixin
 //@mixin button-variant(
 //	$background,

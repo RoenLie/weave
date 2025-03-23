@@ -19,7 +19,7 @@ class StyleMap extends Map<string, string | number | undefined> {
 }
 
 
-type StyleProxy = StyleMap & Record<string, string | number | undefined> & Record<never, never>;
+type StyleProxy = StyleMap & Record<string, string> & Record<never, never>;
 
 
 const createStyleProxy = () => {
@@ -544,14 +544,14 @@ export const style = {} as {
 };
 style.vars = createStyleVariables({ prefix: 'bs-' });
 style.themeColors = [
-	[ 'primary',    style.vars['primary']! ],
+	[ 'primary',    style.vars['primary'  ]! ],
 	[ 'secondary',  style.vars['secondary']! ],
-	[ 'success',    style.vars['success']! ],
-	[ 'info',       style.vars['info']! ],
-	[ 'warning',    style.vars['warning']! ],
-	[ 'danger',     style.vars['danger']! ],
-	[ 'light',      style.vars['light']! ],
-	[ 'dark',       style.vars['dark']! ],
+	[ 'success',    style.vars['success'  ]! ],
+	[ 'info',       style.vars['info'     ]! ],
+	[ 'warning',    style.vars['warning'  ]! ],
+	[ 'danger',     style.vars['danger'   ]! ],
+	[ 'light',      style.vars['light'    ]! ],
+	[ 'dark',       style.vars['dark'     ]! ],
 ];
 
 

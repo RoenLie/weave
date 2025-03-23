@@ -36,7 +36,9 @@ export default defineDocConfig(
 			build: {
 				outDir: './dist/docs',
 			},
-			esbuild: {},
+			esbuild: {
+				target: 'es2024',
+			},
 			plugins: [],
 		};
 	},
