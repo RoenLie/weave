@@ -1,3 +1,5 @@
+// https://css-tricks.com/converting-color-spaces-in-javascript/
+
 import type { RGBColor } from './from-rgb.ts';
 
 export type HexColor = string & Record<never, never>;
