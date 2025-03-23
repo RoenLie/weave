@@ -3,16 +3,19 @@
 import type { HexColor } from './from-hex.ts';
 
 
+export type RGBA = [ number, number, number, number ];
 export type RGBColor = string & Record<never, never>;
 
+export const isRGB = (color: string): color is RGBColor => /^rgba?\([\d,. /%]+\)$/.test(color);
 
-export const extractRGB = (color: RGBColor): [ number, number, number, number ] | undefined => {
+
+export const extractRGB = (color: RGBColor): [ number, number, number, number ] => {
 	const rgbRegex1 = /^rgba?\((\d+%?) +(\d+%?) +(\d+%?)(?: *\/ *(\d+(?:\.\d+?)?%?))?\)$/;
 	const rgbRegex2 = /^rgba?\((\d+%?) *, *(\d+%?) *, *(\d+%?)(?: *, *(\d+(?:\.\d+?)?%?))?\)$/;
 
 	const match = color.match(rgbRegex1) || color.match(rgbRegex2);
 	if (!match)
-		return;
+		return [ 0, 0, 0, 1 ];
 
 	const rgba: string[] = match.slice(1, 5)
 		.map(val => (val ?? '1').trim());
@@ -68,8 +71,6 @@ export function RGBtoHexa(r: string | number, g?: number, b?: number, a?: number
 	// If we supplied a single argument, extract the RGB values
 	if (arguments.length === 1) {
 		const rgba = extractRGB(r as RGBColor);
-		if (!rgba)
-			throw new Error('Invalid rgb value');
 
 		[ rgbaArr[0], rgbaArr[1], rgbaArr[2], rgbaArr[3] ] = rgba;
 	}
