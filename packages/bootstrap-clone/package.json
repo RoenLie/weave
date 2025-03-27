@@ -5,7 +5,8 @@
 	"version": "1.0.0",
 	"main": "pathToMain",
 	"scripts": {
-		"dev": "vite --config ./docs/vite.config.ts"
+		"dev": "vite --config ./docs/vite.config.ts",
+		"test": "vitest --dom ./src/**/*.test.ts"
 	},
 	"dependencies": {
 		"@roenlie/custom-element": "workspace:^",

@@ -82,6 +82,14 @@ export const createStyleVariables = (options: {
 	vars.set('cyan',   '#0dcaf0');
 	//#endregion color-variables
 
+	// The contrast ratio to reach against white, to determine if color changes from "light" to "dark".
+	// Acceptable values for WCAG 2.2 are 3, 4.5 and 7.
+	// See https://www.w3.org/TR/WCAG/#contrast-minimum
+	vars.set('min-contrast-ratio', 4.5);
+
+	// Customize the light and dark text colors for use in our color contrast function.
+	vars.set('color-contrast-dark',  vars.get('black'));
+	vars.set('color-contrast-light', vars.get('white'));
 
 	//#region theme-color-variables
 	vars.set('primary',   vars.get('blue'));

@@ -2,6 +2,7 @@
 
 
 //import { style } from '../style-variables.ts';
+import { style } from '../style-variables.ts';
 import { hexToRGBA, isHex } from './color-conversion/from-hex.ts';
 import { extractRGB, isRGB } from './color-conversion/from-rgb.ts';
 
@@ -81,6 +82,20 @@ export const colorContrast = (args: {
 //  @return $max-ratio-color;
 //}
 //#endregion
+
+
+export const contrastRatio = (
+	background: string,
+	foreground: string = style.vars.get('color-contrast-light'),
+): number => {
+	const l1 = luminance(background);
+	const l2 = luminance(opaque(background, foreground));
+
+	return l1 > l2
+		? (l1 + .05) / (l2 + .05)
+		: (l2 + .05) / (l1 + .05);
+};
+
 
 //#region contrast-ratio
 //@function contrast-ratio($background, $foreground: $color-contrast-light) {
@@ -382,3 +397,10 @@ const _luminanceList: number[] = [
 	0.9911,
 	1,
 ];
+
+
+//// Return opaque color
+//// opaque(#fff, rgba(0, 0, 0, .5)) => #808080
+//@function opaque($background, $foreground) {
+//	@return mix(rgba($foreground, 1), $background, opacity($foreground) * 100%);
+// }

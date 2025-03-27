@@ -2,6 +2,7 @@ import { AdapterElement, type CSSStyle, customElement, property } from '@roenlie
 import { html } from 'lit-html';
 import { classMap } from 'lit-html/directives/class-map.js';
 
+import { colorMix } from '../../styles/mixins/color-mix.ts';
 import { createButtonStyles } from './button-styles.ts';
 
 
@@ -36,3 +37,6 @@ export class BsButton extends AdapterElement {
 	static override styles: CSSStyle = createButtonStyles();
 
 }
+
+
+colorMix('srgb', 'red', 50, 'blue', 50);

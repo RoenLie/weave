@@ -149,7 +149,7 @@ const combined = style.themeColors.map(([ color, value ]) => css`
 }
 `).join('');
 
-console.log(combined);
+//console.log(combined);
 
 
 // //
