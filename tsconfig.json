@@ -3,12 +3,13 @@
 	"compilerOptions": {
 		"rootDir": ".",
 		"baseUrl": ".",
+		"checkJs": true,
 		"types": [
 			"node"
 		]
 	},
 	"include": [
 		"scripts",
-		"vitest.workspace.js"
+		"vitest.workspace.ts"
 	],
 }

@@ -22,6 +22,8 @@ export class ButtonDemo extends AdapterElement {
 		<bs-button type="light"    >Light    </bs-button>
 		<bs-button type="dark"     >Dark     </bs-button>
 		<bs-button type="link"     >Link     </bs-button>
+
+		<input type="color" value="color(255 0 0 / 0.5)" />
 		`;
 	}
 

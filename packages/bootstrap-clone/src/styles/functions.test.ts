@@ -35,10 +35,4 @@ describe('luminance', () => {
 		expect(luminance('rgba(255, 255, 255, 0.5)')).toBeCloseTo(1);
 		expect(luminance('rgba(0, 0, 0, 0.5)')).toBeCloseTo(0);
 	});
-
-	// Test error cases
-	it('throws error for invalid color formats', () => {
-		expect(() => luminance('invalid')).toThrow('Invalid color format');
-		expect(() => luminance('hsl(0, 0%, 0%)')).toThrow('Invalid color format');
-	});
 });

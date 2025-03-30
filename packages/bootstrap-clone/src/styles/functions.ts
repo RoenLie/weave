@@ -1,28 +1,8 @@
 // https://github.com/twbs/bootstrap/blob/5c75fda23160dace4c0e6ed62dce37b6b1109350/scss/_functions.scss
 
-
-//import { style } from '../style-variables.ts';
 import { style } from '../style-variables.ts';
-import { hexToRGBA, isHex } from './color-conversion/from-hex.ts';
-import { extractRGB, isRGB } from './color-conversion/from-rgb.ts';
-
-/** Tint a color: mix a color with white */
-export const tintColor = (color: string, weight: number): string => {
-	//@function tint-color($color, $weight) {
-	//	@return mix(white, $color, $weight);
-	//}
-
-	return `color-mix(in srgb, white, ${ color } ${ weight }%)`;
-};
-
-/** Shade a color: mix a color with black */
-export const shadeColor = (color: string, weight: number): string => {
-	// @function shade-color($color, $weight) {
-	//	@return mix(black, $color, $weight);
-	// }
-
-	return `color-mix(in srgb, black, ${ color } ${ weight }%)`;
-};
+import { RGBA } from './color-conversion/rgba.ts';
+import { colorMix, convertToRgb, rgbToString } from './mixins/color-mix.ts';
 
 
 // Color contrast
@@ -32,62 +12,72 @@ export const colorContrast = (args: {
 	colorContrastDark?:  string;
 	colorContrastLight?: string;
 	minContrastRatio?:   number;
-}) => {
-	//args.colorContrastDark  ??= style.vars.get('color-contrast-dark');
-	//args.colorContrastLight ??= style.vars.get('color-contrast-light');
-	//args.minContrastRatio   ??= style.vars.getNumber('min-contrast-ratio');
+}): string => {
+	//@function color-contrast(
+	// $background,
+	// $color-contrast-dark: $color-contrast-dark,
+	// $color-contrast-light: $color-contrast-light,
+	// $min-contrast-ratio: $min-contrast-ratio
+	// ) {
+	//  $foregrounds: $color-contrast-light, $color-contrast-dark, $white, $black;
+	//  $max-ratio: 0;
+	//  $max-ratio-color: null;
 
-	//const foregrounds = [
-	//	args.colorContrastLight,
-	//	args.colorContrastDark,
-	//	style.vars.get('white'),
-	//	style.vars.get('black'),
-	//];
+	//  @each $color in $foregrounds {
+	//    $contrast-ratio: contrast-ratio($background, $color);
+	//    @if $contrast-ratio > $min-contrast-ratio {
+	//      @return $color;
+	//    } @else if $contrast-ratio > $max-ratio {
+	//      $max-ratio: $contrast-ratio;
+	//      $max-ratio-color: $color;
+	//    }
+	//  }
 
-	//let maxRatio = 0;
-	//let maxRatioColor: string = '';
+	//  @warn "Found no color leading to #{$min-contrast-ratio}:1 contrast ratio against #{$background}...";
 
-	//for (const color of foregrounds) {
-	//	const ratio = contrastRatio(args.background, color);
-	//	if (ratio > args.minContrastRatio)
-	//		return color;
-
-	//	if (ratio > maxRatio) {
-	//		maxRatio = ratio;
-	//		maxRatioColor = color;
-	//	}
+	//  @return $max-ratio-color;
 	//}
 
-	//return maxRatioColor;
+	args.colorContrastDark  ??= style.vars.get('color-contrast-dark');
+	args.colorContrastLight ??= style.vars.get('color-contrast-light');
+	args.minContrastRatio   ??= style.vars.getNumber('min-contrast-ratio');
+
+	const foregrounds = [
+		args.colorContrastLight,
+		args.colorContrastDark,
+		style.vars.get('white'),
+		style.vars.get('black'),
+	];
+
+	let maxRatio = 0;
+	let maxRatioColor: string = '';
+
+	for (const color of foregrounds) {
+		const ratio = contrastRatio(args.background, color);
+		if (ratio > args.minContrastRatio)
+			return color;
+
+		if (ratio > maxRatio) {
+			maxRatio = ratio;
+			maxRatioColor = color;
+		}
+	}
+
+	return maxRatioColor;
 };
-
-//#region color-contrast
-//@function color-contrast($background, $color-contrast-dark: $color-contrast-dark, $color-contrast-light: $color-contrast-light, $min-contrast-ratio: $min-contrast-ratio) {
-//  $foregrounds: $color-contrast-light, $color-contrast-dark, $white, $black;
-//  $max-ratio: 0;
-//  $max-ratio-color: null;
-
-//  @each $color in $foregrounds {
-//    $contrast-ratio: contrast-ratio($background, $color);
-//    @if $contrast-ratio > $min-contrast-ratio {
-//      @return $color;
-//    } @else if $contrast-ratio > $max-ratio {
-//      $max-ratio: $contrast-ratio;
-//      $max-ratio-color: $color;
-//    }
-//  }
-
-//  @warn "Found no color leading to #{$min-contrast-ratio}:1 contrast ratio against #{$background}...";
-
-//  @return $max-ratio-color;
-//}
-//#endregion
 
 
 export const contrastRatio = (
 	background: string,
 	foreground: string = style.vars.get('color-contrast-light'),
 ): number => {
+	//@function contrast-ratio($background, $foreground: $color-contrast-light) {
+	//	$l1: luminance($background);
+	//	$l2: luminance(opaque($background, $foreground));
+
+	//	@return if($l1 > $l2, divide($l1 + .05, $l2 + .05), divide($l2 + .05, $l1 + .05));
+	// }
+
 	const l1 = luminance(background);
 	const l2 = luminance(opaque(background, foreground));
 
@@ -97,40 +87,24 @@ export const contrastRatio = (
 };
 
 
-//#region contrast-ratio
-//@function contrast-ratio($background, $foreground: $color-contrast-light) {
-//	$l1: luminance($background);
-//	$l2: luminance(opaque($background, $foreground));
-
-//	@return if($l1 > $l2, divide($l1 + .05, $l2 + .05), divide($l2 + .05, $l1 + .05));
-// }
-//#endregion
-
-
 /**
  * Return WCAG2.2 relative luminance
  * See https://www.w3.org/TR/WCAG/#dfn-relative-luminance
  * See https://www.w3.org/TR/WCAG/#dfn-contrast-ratio
  */
-export const luminance = (color: string): number => {
-	// Need to extract red green and blue values from color
-	// Color can be in hex, rgb, rgba, hsl, hsla, or named color
-	// Create a helper function to extract the red, green, and blue values from the color
-	// How to convert all the things, see below.
-	// See https://css-tricks.com/converting-color-spaces-in-javascript/
+export const luminance = (color: string | RGBA): number => {
+	const rgbTuple = color instanceof RGBA
+		? color.slice(0, -1)
+		: convertToRgb(color).slice(0, -1);
 
-	const func = isRGB(color)
-		? extractRGB : isHex(color)
-			? hexToRGBA : undefined;
-
-	if (!func)
-		throw new Error('Invalid color format: ' + color);
-
-	const rgb = func(color).slice(0, -1).map(value => {
+	const rgb = rgbTuple.map(value => {
 		if (value / 255 < .04045)
 			return value / 255 / 12.92;
 
-		const index = Math.min(_luminanceList.length - 1, Math.max(0, Math.round(value) + 1));
+		const index = Math.min(
+			_luminanceList.length - 1,
+			Math.max(0, Math.round(value) + 1),
+		);
 
 		return _luminanceList[index]!;
 	}) as [number, number, number];
@@ -399,8 +373,31 @@ const _luminanceList: number[] = [
 ];
 
 
-//// Return opaque color
-//// opaque(#fff, rgba(0, 0, 0, .5)) => #808080
-//@function opaque($background, $foreground) {
-//	@return mix(rgba($foreground, 1), $background, opacity($foreground) * 100%);
-// }
+export const opaque = (background: string | RGBA, foreground: string | RGBA): RGBA => {
+	// opaque(#fff, rgba(0, 0, 0, .5)) => #808080
+	// @function opaque($background, $foreground) {
+	//   @return mix(rgba($foreground, 1), $background, opacity($foreground) * 100%);
+	// }
+
+	const foregroundRGB = foreground instanceof RGBA
+		? foreground
+		: convertToRgb(foreground);
+
+	foregroundRGB[3] = 1; // Set alpha to 1
+
+	return colorMix({
+		colorSpace: 'srgb',
+		color1:     rgbToString(foregroundRGB),
+		color2:     background,
+		percent2:   opacity(foreground),
+	});
+};
+
+
+export const opacity = (color: string | RGBA): number => {
+	const rgba = color instanceof RGBA
+		? color
+		: convertToRgb(color);
+
+	return rgba[3]! * 100;
+};

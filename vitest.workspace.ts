@@ -11,10 +11,16 @@ export default defineWorkspace([
 	},
 	{
 		test: {
-			name:        'bootstrap-clone',
-			include:     [ 'packages/bootstrap-clone/**/*.{spec,test,bench}.ts' ],
-			environment: 'happy-dom',
-			setupFiles:  [],
+			name:       'bootstrap_clone',
+			setupFiles: [],
+			include:    [ 'packages/bootstrap-clone/**/*.{spec,test,bench}.ts' ],
+			browser:    {
+				enabled:            true,
+				headless:           true,
+				provider:           'playwright',
+				screenshotFailures: false,
+				instances:          [ { browser: 'chromium' } ],
+			},
 		},
 	},
 	//{

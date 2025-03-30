@@ -1,5 +1,6 @@
 /* eslint-disable @stylistic/max-len */
-import { shadeColor, tintColor } from './styles/functions.ts';
+
+import { shadeColor, tintColor } from './styles/modify-color.ts';
 
 
 class StyleMap extends Map<string, string | number | undefined> {
@@ -540,7 +541,7 @@ export const createStyleVariables = (options: {
 	vars.set('accordion-button-active-icon',        `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='#{$accordion-icon-active-color}' stroke-linecap='round' stroke-linejoin='round'><path d='m2 5 6 6 6-6'/></svg>")`);
 	//#endregion accordion
 
-	console.log(vars);
+	//console.log(vars);
 
 	return vars;
 };
