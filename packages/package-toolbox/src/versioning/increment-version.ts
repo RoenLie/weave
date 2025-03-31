@@ -1,12 +1,13 @@
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 
-import { inc, type ReleaseType } from 'semver';
+import type { ReleaseType } from 'semver';
+import { inc } from 'semver';
 
 
 export const incrementVersion = (options?: {
-	release?: ReleaseType
-}) => {
+	release?: ReleaseType;
+}): void => {
 	const { release = 'patch' } = options ?? {};
 
 	const packageJsonInput = readFileSync('./package.json', { encoding: 'utf-8' });

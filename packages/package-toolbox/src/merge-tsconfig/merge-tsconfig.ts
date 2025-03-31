@@ -7,7 +7,7 @@ import {
 } from './merge-tsconfig-utils.js';
 
 
-export const mergeTSConfig = (config: string, outFile: string) => {
+export const mergeTSConfig = (config: string, outFile: string): void => {
 	const localDir = process.cwd();
 
 	const entrypointPath = join(resolve(localDir, dirname(config)), basename(config));

@@ -1,11 +1,11 @@
+import { readFile, writeFile } from 'node:fs/promises';
 import { parse, resolve } from 'node:path';
 
 import ts from 'typescript';
 
 import { getFiles } from '../filesystem/get-files.js';
-import { genToArray } from '../utils/gen-to-array.js';
-import { readFile, writeFile } from 'node:fs/promises';
 import { exists } from '../filesystem/path-exists.js';
+import { genToArray } from '../utils/gen-to-array.js';
 
 
 /**
@@ -18,7 +18,7 @@ export const indexBuilder = async (
 		/** @default `@internalexport` */
 		exclusionJSDocTag?: string;
 	},
-) => {
+): Promise<void> => {
 	/* destructured options */
 	const { exclusionJSDocTag = '@internalexport' } = options ?? {};
 

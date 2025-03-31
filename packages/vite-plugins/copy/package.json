@@ -1,0 +1,36 @@
+{
+	"name": "@roenlie/vite-plugin-copy",
+	"version": "1.0.0",
+	"description": "Copies files during vite build.",
+	"license": "MIT",
+	"author": {
+		"name": "Kristoffer Roen-Lie",
+		"url": "https://github.com/RoenLie"
+	},
+	"files": [
+		"dist",
+		"src",
+		"client.d.ts",
+		"README.md"
+	],
+	"engines": {
+		"node": ">=22"
+	},
+	"type": "module",
+	"types": "./dist/index.d.ts",
+	"main": "./dist/index.js",
+	"scripts": {
+		"build": "vite build && tsc --project ./src/tsconfig.json"
+	},
+	"peerDependencies": {
+		"vite": "^6.2.4"
+	},
+	"dependencies": {
+		"fs-extra": "^11.3.0",
+		"globby": "^14.1.0"
+	},
+	"devDependencies": {
+		"@types/fs-extra": "^11.0.4",
+		"@roenlie/vite-lib-config": "workspace:^"
+	}
+}

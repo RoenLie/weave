@@ -1,7 +1,7 @@
 import { access } from 'node:fs/promises';
 
 
-export const exists = async (path: string) => {
+export const exists = async (path: string): Promise<boolean> => {
 	let exists = false;
 
 	await access(path)

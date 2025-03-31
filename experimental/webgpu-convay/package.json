@@ -6,6 +6,6 @@
 	"main": "pathToMain",
 	"type": "module",
 	"dependencies": {
-		"@webgpu/types": "^0.1.51"
+		"@webgpu/types": "^0.1.60"
 	}
 }

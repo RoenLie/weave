@@ -1,6 +1,7 @@
-import { type Plugin } from 'vite';
+import type { PluginOption } from 'vite';
 
-import { copy, type CopyOptions } from '../filesystem/copy-files.js';
+import type { CopyOptions } from './copy-files.js';
+import { copy } from './copy-files.js';
 
 
 interface ViteCopyOptions extends CopyOptions {
@@ -18,7 +19,7 @@ interface ViteCopyOptions extends CopyOptions {
 }
 
 
-export const viteCopy = (options: ViteCopyOptions = {}) => {
+export const viteCopy = (options: ViteCopyOptions = {}): PluginOption => {
 	options = {
 		copyOnce: false,
 		hook:     'buildEnd',
@@ -36,5 +37,5 @@ export const viteCopy = (options: ViteCopyOptions = {}) => {
 			copied = true;
 			await copy(options);
 		},
-	}satisfies Plugin;
+	} satisfies PluginOption;
 };

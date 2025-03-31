@@ -20,7 +20,7 @@
 	"main": "./dist/lib/index.js",
 	"typings": "./dist/lib/index.d.ts",
 	"engines": {
-		"node": ">=16.13.1"
+		"node": ">=22"
 	},
 	"scripts": {
 		"dev": "vite",
@@ -29,16 +29,16 @@
 		"package:move": "node --no-warnings --experimental-modules --loader tsm ./scripts/move-output.ts --color"
 	},
 	"dependencies": {
-		"@floating-ui/dom": "^1.0.3",
+		"@floating-ui/dom": "^1.6.13",
 		"@lit-labs/context": "^0.5.1",
-		"@lit-labs/virtualizer": "^2.0.13",
+		"@lit-labs/virtualizer": "^2.1.0",
 		"lit": "^3.2.1",
-		"tslib": "^2.4.0"
+		"tslib": "^2.8.1"
 	},
 	"devDependencies": {
-		"@types/sharedworker": "^0.0.117",
-		"rimraf": "^5.0.7",
+		"@types/sharedworker": "^0.0.154",
+		"rimraf": "^6.0.1",
 		"ts-toolbelt": "^9.6.0",
-		"type-fest": "^4.21.0"
+		"type-fest": "^4.38.0"
 	}
 }

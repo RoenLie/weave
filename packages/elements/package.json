@@ -34,15 +34,15 @@
 		"typecheck": "tsc --project ./tsconfig.json"
 	},
 	"dependencies": {
-		"@floating-ui/dom": "^1.6.4",
+		"@floating-ui/dom": "^1.6.13",
 		"@roenlie/core": "workspace:^",
 		"@roenlie/lit-localize": "workspace:^",
 		"@roenlie/lit-utilities": "workspace:^",
 		"lit": "^3.2.1",
-		"tslib": "^2.7.0"
+		"tslib": "^2.8.1"
 	},
 	"devDependencies": {
-		"@faker-js/faker": "^9.0.3",
+		"@faker-js/faker": "^9.6.0",
 		"@roenlie/elements": "workspace:^",
 		"@roenlie/mirage-docs": "workspace:^",
 		"@roenlie/vite-plugin-import-css-sheet": "workspace:^"

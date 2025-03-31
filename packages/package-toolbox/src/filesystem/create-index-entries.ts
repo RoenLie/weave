@@ -14,7 +14,7 @@ export const createEntrypointsFromDirectories = (
 	directories: string[],
 	entryFilters: ((path: string) => boolean)[] = [],
 	exclude: ((path: string) => boolean)[] = [],
-) => {
+): Entrypoint[] => {
 	const entrypoints: Entrypoint[] = [];
 
 	const create = (

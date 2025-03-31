@@ -22,7 +22,6 @@
 		"build:prepare": "rimraf dist"
 	},
 	"dependencies": {
-		"tslib": "^2.4.1"
-	},
-	"devDependencies": {}
+		"tslib": "^2.8.1"
+	}
 }

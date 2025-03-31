@@ -28,7 +28,7 @@
 	"dependencies": {
 		"@roenlie/core": "workspace:^",
 		"lit": "^3.2.1",
-		"nanoid": "^5.0.7",
+		"nanoid": "^5.1.5",
 		"urlpattern-polyfill": "^10.0.0"
 	}
 }

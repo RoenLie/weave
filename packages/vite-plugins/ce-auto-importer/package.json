@@ -1,0 +1,33 @@
+{
+	"name": "@roenlie/vite-plugin-ce-auto-import",
+	"version": "1.0.0",
+	"description": "Minifies css literals.",
+	"license": "MIT",
+	"author": {
+		"name": "Kristoffer Roen-Lie",
+		"url": "https://github.com/RoenLie"
+	},
+	"files": [
+		"dist",
+		"src",
+		"client.d.ts",
+		"README.md"
+	],
+	"engines": {
+		"node": ">=22"
+	},
+	"type": "module",
+	"types": "./dist/index.d.ts",
+	"main": "./dist/index.js",
+	"scripts": {
+		"dev": "pnpm vite --config ./demo/vite.config.ts",
+		"build": "vite build && tsc --project ./src/tsconfig.json"
+	},
+	"peerDependencies": {
+		"vite": "^6.2.4"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@roenlie/vite-lib-config": "workspace:^"
+	}
+}

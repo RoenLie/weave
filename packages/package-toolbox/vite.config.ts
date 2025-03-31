@@ -1,6 +1,4 @@
-import { defineConfig } from 'vite';
-
-import { libConfig } from './src/vite-utils/vite-lib-config.js';
+import { libConfig } from '@roenlie/vite-lib-config';
 
 
-export default defineConfig(libConfig());
+export default libConfig();

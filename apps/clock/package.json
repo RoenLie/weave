@@ -14,14 +14,14 @@
 		"typecheck": "tsc --project ./tsconfig.json"
 	},
 	"dependencies": {
-		"@roenlie/lit-fabric": "workspace:^",
-		"@roenlie/lit-utilities": "workspace:^",
 		"@roenlie/core": "workspace:^",
 		"@roenlie/elements": "workspace:^",
+		"@roenlie/lit-fabric": "workspace:^",
+		"@roenlie/lit-utilities": "workspace:^",
 		"lit": "^3.2.1",
-		"tslib": "^2.6.2"
+		"tslib": "^2.8.1"
 	},
 	"devDependencies": {
-		"dotenv": "^16.3.1"
+		"dotenv": "^16.4.7"
 	}
 }

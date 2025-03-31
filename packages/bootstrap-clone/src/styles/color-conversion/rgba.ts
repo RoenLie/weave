@@ -6,8 +6,6 @@ export class RGBA extends Array<number> {
 	static fromString(color: string): RGBA {
 		const rgba = convertToRgb(color);
 
-		console.log('RGBA.fromString', color, rgba);
-
 		return rgba;
 	}
 

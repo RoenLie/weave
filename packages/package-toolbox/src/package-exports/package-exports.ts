@@ -8,16 +8,16 @@ export interface ExportEntry {
 	import?:  string;
 	node?:    string;
 	require?: string;
-	custom?:  Omit<ExportEntry, 'custom'>[]
+	custom?:  Omit<ExportEntry, 'custom'>[];
 }
 
 
 export const createPackageExports = async (
 	entries: ExportEntry[],
 	options?: {
-		override?: boolean
+		override?: boolean;
 	},
-) => {
+): Promise<void> => {
 	const packageJson = readFileSync('./package.json', { encoding: 'utf8' });
 	const parsedPackage = JSON.parse(packageJson);
 
@@ -42,7 +42,7 @@ export const createPackageExports = async (
 			default?: string;
 		}
 
-		type EntryRec = { [key: string]: string | EntryRec } & Entry;
+		type EntryRec = { [key: string]: string | EntryRec; } & Entry;
 
 		const target = (exports[entry.path] ??= {}) as EntryRec;
 		target.types = entry.types;
@@ -54,7 +54,7 @@ export const createPackageExports = async (
 			if (val.import)
 				tar.import = val.import;
 			if (val.node)
-			   tar.node = val.node;
+				tar.node = val.node;
 			if (val.require)
 				tar.require = val.require;
 			if (val.default)
@@ -64,7 +64,7 @@ export const createPackageExports = async (
 		if (entry.import)
 			target.import = entry.import;
 		if (entry.node)
-		   target.node = entry.node;
+			target.node = entry.node;
 		if (entry.require)
 			target.require = entry.require;
 		if (entry.default)
@@ -78,7 +78,7 @@ export const createPackageExports = async (
 				delete entry[key];
 			}
 
-			const assignValue = (kv: { key: string }) =>
+			const assignValue = (kv: { key: string; }) =>
 				kv.key === 'types' ? 0
 					: kv.key === 'import'  ? 20
 						: kv.key === 'node' ? 30
@@ -106,7 +106,7 @@ export const createPackageExports = async (
 };
 
 
-export const createTypePath = (path: string) => {
+export const createTypePath = (path: string): string => {
 	const split = path.split('/');
 	const filesplit = split.at(-1)!.split('.');
 	filesplit[filesplit.length - 1] = 'd.ts';

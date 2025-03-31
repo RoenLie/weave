@@ -37,6 +37,7 @@ describe('RGB to Hex conversion', () => {
 	});
 });
 
+
 describe('RGBA to Hex conversion', () => {
 	test('convert RGBA string to hex', () => {
 		expect(RGBA.fromString('rgba(255,255,255,1)').toHexaString()).toBe('#ffffffff');

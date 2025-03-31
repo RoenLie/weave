@@ -1,6 +1,6 @@
 import { deepmerge } from 'deepmerge-ts';
 import { globby } from 'globby';
-import { type ConfigEnv, type UserConfig } from 'vite';
+import type { ConfigEnv, UserConfig } from 'vite';
 
 
 export type ConfigOverrides = UserConfig
@@ -11,7 +11,7 @@ export type ConfigOverrides = UserConfig
 export interface ConfigOptions {
 	entry?: {
 		patterns: string[];
-	},
+	};
 	externalImport?: {
 		/**
   		 *  Return `true or false` to override default externalize logic for this path.

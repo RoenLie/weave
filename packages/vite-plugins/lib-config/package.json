@@ -1,0 +1,32 @@
+{
+	"name": "@roenlie/vite-lib-config",
+	"version": "1.0.0",
+	"description": "Library configuration for vite",
+	"license": "MIT",
+	"author": {
+		"name": "Kristoffer Roen-Lie",
+		"url": "https://github.com/RoenLie"
+	},
+	"files": [
+		"dist",
+		"src",
+		"README.md"
+	],
+	"engines": {
+		"node": ">=22"
+	},
+	"type": "module",
+	"types": "./dist/index.d.ts",
+	"main": "./dist/index.js",
+	"scripts": {
+		"build": "vite build && tsc --project ./src/tsconfig.json"
+	},
+	"peerDependencies": {
+		"vite": "^6.2.4"
+	},
+	"dependencies": {
+		"deepmerge-ts": "^7.1.5",
+		"globby": "^14.1.0"
+	},
+	"devDependencies": {}
+}

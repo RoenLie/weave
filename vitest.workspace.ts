@@ -1,15 +1,18 @@
+import { componentAutoImporter } from '@roenlie/package-toolbox/vite-utils';
 import { defineWorkspace } from 'vitest/config';
 
 
 export default defineWorkspace([
 	{
-		test: {
+		extends: './apps/poe2builder/vite.config.ts',
+		test:    {
 			name:       'poe2-passive-editor',
 			include:    [ 'apps/poe2-passive-editor/**/*.{spec,test,bench}.ts' ],
 			setupFiles: [],
 		},
 	},
 	{
+		extends: './packages/bootstrap-clone/vite.config.ts',
 		test: {
 			name:       'bootstrap_clone',
 			setupFiles: [],

@@ -19,18 +19,18 @@
 		"build": "rimraf dist && vite build"
 	},
 	"dependencies": {
-		"@faker-js/faker": "^8.4.1",
-		"@floating-ui/dom": "^1.6.5",
-		"@lit-labs/preact-signals": "^1.0.2",
+		"@faker-js/faker": "^9.6.0",
+		"@floating-ui/dom": "^1.6.13",
+		"@lit-labs/preact-signals": "^1.0.3",
+		"@roenlie/core": "workspace:^",
+		"@roenlie/elements": "workspace:^",
 		"@roenlie/lit-context": "workspace:^",
 		"@roenlie/lit-state-store": "workspace:^",
 		"@roenlie/lit-utilities": "workspace:^",
-		"@roenlie/core": "workspace:^",
-		"@roenlie/elements": "workspace:^",
 		"lit": "^3.2.1",
-		"monaco-editor": "^0.50.0",
-		"socket.io-client": "^4.7.4",
-		"tslib": "^2.6.2"
+		"monaco-editor": "^0.52.2",
+		"socket.io-client": "^4.8.1",
+		"tslib": "^2.8.1"
 	},
 	"devDependencies": {
 		"@roenlie/vite-plugin-html-modules": "workspace:^",

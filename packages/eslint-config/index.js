@@ -1,6 +1,6 @@
 import eslint from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
-import litConfig from 'eslint-plugin-lit';
+import { configs as litConfigs } from 'eslint-plugin-lit';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import tseslint from 'typescript-eslint';
 
@@ -343,7 +343,7 @@ const node = tseslint.config({
 
 /** @type {import('@typescript-eslint/utils').TSESLint.FlatConfig.ConfigArray} */
 const lit = tseslint.config({
-	extends: [ litConfig.configs['flat/recommended'] ],
+	extends: [ litConfigs['flat/recommended'] ],
 	files:   [ '**/*.{js,jsx,mjs,cjs,ts,tsx}' ],
 	ignores: [ '**/dist/**' ],
 });

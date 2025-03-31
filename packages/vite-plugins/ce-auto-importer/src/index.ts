@@ -1,12 +1,12 @@
 import fs from 'node:fs';
 
-import { type Plugin, type ResolvedConfig } from 'vite';
+import type { PluginOption, ResolvedConfig } from 'vite';
 
-import { createTagCache, getUsedTags } from '../filesystem/create-tag-cache.js';
+import { createTagCache, getUsedTags } from './tag-cache.js';
 
 
 export interface AutoImportPluginProps {
-	directories:    { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
+	directories:    { path: string; whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
 	prefixes:       RegExp[];
 	loadWhitelist:  RegExp[];
 	loadBlacklist?: RegExp[];
@@ -24,7 +24,7 @@ export interface AutoImportLoadProps {
 }
 
 
-export const componentAutoImportLoad = (props: AutoImportLoadProps) => {
+export const componentAutoImportLoad = (props: AutoImportLoadProps): string | undefined => {
 	const {
 		id,
 		config,
@@ -68,7 +68,7 @@ export const componentAutoImportLoad = (props: AutoImportLoadProps) => {
 	return code;
 };
 
-export const componentAutoImporter = (props: AutoImportPluginProps): Plugin => {
+export const componentAutoImporter = (props: AutoImportPluginProps): PluginOption => {
 	const {
 		cache = new Map(),
 		directories,
@@ -109,5 +109,5 @@ export const componentAutoImporter = (props: AutoImportPluginProps): Plugin => {
 			if (transformed)
 				return transformed;
 		},
-	};
+	} satisfies PluginOption;
 };

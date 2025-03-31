@@ -1,11 +1,12 @@
 import fsp from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
-import { type ToolboxConfig } from './define-toolbox.js';
 import { build } from 'vite';
 
+import { type ToolboxConfig } from './define-toolbox.js';
 
-export const loadConfig = async (filePath: string) => {
+
+export const loadConfig = async (filePath: string): Promise<ToolboxConfig> => {
 	const ext = '.mjs';
 	const fileBase = filePath.replace('.ts', '.')
 		+ crypto.randomUUID().split('-').at(-1);

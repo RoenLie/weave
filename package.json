@@ -6,20 +6,18 @@
 		"build-toolbox": "tsx ./scripts/build-package.ts @roenlie/package-toolbox",
 		"build": "pnpm build-toolbox && tsx ./scripts/build-package.ts",
 		"release": "pnpm build-toolbox && tsx ./scripts/build-package.ts --publish",
-		"clean": "rimraf --glob packages/**/*/node_modules && rimraf node_modules dist"
+		"clean": "rimraf --glob **/node_modules **/dist"
 	},
 	"devDependencies": {
 		"@roenlie/eslint-config": "workspace:^",
-		"@roenlie/package-toolbox": "workspace:^",
 		"@roenlie/tsconfig": "workspace:^",
-		"@types/node": "^22.10.5",
-		"@vitest/browser": "^3.0.9",
+		"@types/node": "^22.13.14",
+		"@vitest/browser": "^3.1.1",
 		"playwright": "^1.51.1",
-		"rimraf": "^6.0.1",
-		"tsx": "^4.19.0",
-		"typescript": "^5.7.3",
-		"vite": "^6.0.7",
-		"vitest": "^3.0.9",
+		"tsx": "^4.19.3",
+		"typescript": "^5.8.2",
+		"vite": "^6.2.4",
+		"vitest": "^3.1.1",
 		"wrangler": "^4.6.0"
 	},
 	"pnpm": {
@@ -29,6 +27,7 @@
 			"bcrypt",
 			"better-sqlite3",
 			"esbuild",
+			"msw",
 			"protobufjs",
 			"sharp",
 			"tesseract.js",

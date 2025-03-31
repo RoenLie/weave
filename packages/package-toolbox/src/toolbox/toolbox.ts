@@ -1,37 +1,47 @@
-import { existsSync } from 'fs';
+import { existsSync } from 'node:fs';
+
 import type { ReleaseType } from 'semver';
 
 import { copy } from '../filesystem/copy-files.js';
 import { indexBuilder as buildIndex } from '../index-builder/index-builder.js';
 import { mergeTSConfig } from '../merge-tsconfig/merge-tsconfig.js';
-import {
-	createPackageExports,
-	createTypePath,
-	type ExportEntry,
-} from '../package-exports/package-exports.js';
+import { createPackageExports, createTypePath, type ExportEntry } from '../package-exports/package-exports.js';
 import { incrementVersion } from '../versioning/increment-version.js';
 import { loadConfig } from './config.js';
 
 
-export const toolbox = async (filePath = './pkg-toolbox.ts') => {
+interface PartialToolbox {
+	mergeTSConfig:    (config: string, outFile: string) => void;
+	incrementVersion: (release?: ReleaseType) => void;
+}
+
+interface Toolbox extends PartialToolbox {
+	indexBuilder:   () => Promise<void>;
+	exportsBuilder: () => Promise<void>;
+	copy:           (profile: string) => Promise<void>;
+}
+
+
+export const toolbox = async (filePath = './pkg-toolbox.ts'): Promise<PartialToolbox | Toolbox> => {
+	const partialToolbox = {
+		mergeTSConfig: (config: string, outFile: string) => {
+			mergeTSConfig(config, outFile);
+		},
+		incrementVersion: (release: ReleaseType | undefined) => {
+			incrementVersion({ release });
+		},
+	} satisfies PartialToolbox;
+
 	if (!existsSync(filePath)) {
 		console.warn('No pkg-toolbox.ts file found. Only certain actions available.');
 
-		return {
-			mergeTSConfig: (config: string, outFile: string) => {
-				mergeTSConfig(config, outFile);
-			},
-			incrementVersion: (
-				release: ReleaseType | undefined,
-			) => {
-				incrementVersion({ release });
-			},
-		};
+		return partialToolbox;
 	}
 
 	const config = await loadConfig(filePath);
 
 	return {
+		...partialToolbox,
 		indexBuilder: async () => {
 			if (!config.indexBuilder)
 				throw ('No index builder config supplied.');
@@ -83,7 +93,6 @@ export const toolbox = async (filePath = './pkg-toolbox.ts') => {
 
 			await createPackageExports(packageExports);
 		},
-
 		exportsBuilder: async () => {
 			if (!config.exportsBuilder)
 				throw ('No exports builder config supplied.');
@@ -93,21 +102,10 @@ export const toolbox = async (filePath = './pkg-toolbox.ts') => {
 				config.exportsBuilder.options,
 			);
 		},
-
 		copy: async (profile: string) => {
 			const cfg = config?.copy?.[profile];
 			if (cfg)
 				await copy(cfg);
 		},
-
-		mergeTSConfig: (config: string, outFile: string) => {
-			mergeTSConfig(config, outFile);
-		},
-
-		incrementVersion: (
-			release: ReleaseType | undefined,
-		) => {
-			incrementVersion({ release });
-		},
-	};
+	} satisfies Toolbox;
 };

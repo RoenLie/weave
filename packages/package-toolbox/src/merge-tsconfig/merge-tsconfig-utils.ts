@@ -9,8 +9,8 @@ const errors = {
 
 
 export const parseArgsToObject = <
-	Arguments extends Record<string, string | number | boolean>
->(args: string[]) => {
+	Arguments extends Record<string, string | number | boolean>,
+>(args: string[]): Arguments => {
 	const isConfigKey = (str: string) => str.startsWith('-');
 
 	const argObject: Record<string, string | number | boolean> = {};
@@ -106,6 +106,8 @@ const getTSConfig = (path: string): TSConfig | undefined => {
 	}
 };
 
-export const getTSConfigFromPath = (path: string) => getTSConfig(path);
-export const getTSConfigFromModule = (module: string) =>
+export const getTSConfigFromPath = (path: string): TSConfig | undefined =>
+	getTSConfig(path);
+
+export const getTSConfigFromModule = (module: string): TSConfig | undefined =>
 	getTSConfig(fileURLToPath(import.meta.resolve(module)));

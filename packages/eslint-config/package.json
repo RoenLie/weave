@@ -15,15 +15,15 @@
 		"lint-windows": "set TIMING=1 && pnpm eslint"
 	},
 	"dependencies": {
-		"@eslint/js": "^9.22.0",
+		"@eslint/js": "^9.23.0",
 		"@stylistic/eslint-plugin": "^4.2.0",
-		"eslint": "^9.22.0",
-		"eslint-plugin-lit": "^1.13.0",
+		"eslint": "^9.23.0",
+		"eslint-plugin-lit": "^2.0.0",
 		"eslint-plugin-simple-import-sort": "^12.1.1",
-		"typescript": "^5.5.2",
-		"typescript-eslint": "^8.26.1"
+		"typescript": "^5.8.2",
+		"typescript-eslint": "^8.29.0"
 	},
 	"engines": {
-		"node": ">=22.5.1"
+		"node": ">=22"
 	}
 }

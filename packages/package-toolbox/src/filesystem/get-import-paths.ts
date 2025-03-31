@@ -1,33 +1,11 @@
-import Fs from 'node:fs';
-import path from 'node:path';
+import { readFileSync } from 'node:fs';
 
-
-async function genToArray<T>(generated: AsyncIterable<T>): Promise<T[]> {
-	const out: T[] = [];
-	for await (const x of generated)
-		out.push(x);
-
-	return out;
-}
-
-
-async function* getFiles(
-	directory: string,
-	pattern?: RegExp,
-): AsyncGenerator<string, void, string | undefined> {
-	const dirents = await Fs.promises.readdir(directory, { withFileTypes: true });
-	for (const dirent of dirents) {
-		const res = path.resolve(directory, dirent.name);
-		if (dirent.isDirectory())
-			yield* getFiles(res, pattern);
-		else if (pattern?.test(res) ?? true)
-			yield res;
-	}
-}
+import { genToArray } from '../utils/gen-to-array.ts';
+import { getFiles } from './get-files.ts';
 
 
 const _getImportPaths = (filepath: string) => {
-	const fileContent = Fs.readFileSync(filepath, { encoding: 'utf8' });
+	const fileContent = readFileSync(filepath, { encoding: 'utf8' });
 	const paths = new Set<string>();
 
 	const wildImports = fileContent.matchAll(/import ['"](.+?)['"]/gs);
@@ -52,15 +30,15 @@ export const getImportPaths = async (
 				startsWith: string[];
 				includes:   string[];
 				endsWith:   string[];
-			}>
+			}>;
 			path: Partial<{
 				startsWith: string[];
 				includes:   string[];
 				endsWith:   string[];
 			}>;
-		}>
+		}>;
 	},
-) => {
+): Promise<string[]> => {
 	const pathSet = new Set<string>();
 	let files = (await genToArray(getFiles(from)));
 
@@ -101,7 +79,7 @@ export const getImportPaths = async (
 
 export const getExternalImportPaths = async (
 	...[ from, options ]: Parameters<typeof getImportPaths>
-) => {
+): Promise<string[]> => {
 	options ??= {};
 	options.exclude ??= {};
 	options.exclude.path ??= {};

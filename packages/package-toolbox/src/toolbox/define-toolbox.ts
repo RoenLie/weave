@@ -4,7 +4,7 @@ import type { createPackageExports  } from '../package-exports/package-exports.j
 
 export interface ToolboxConfig {
 	incrementPackage?: {
-		registry: 'npmjs'
+		registry: 'npmjs';
 	};
 	indexBuilder?: {
 		entrypoints: {
@@ -20,13 +20,13 @@ export interface ToolboxConfig {
 		packageExportNameTransform?: (path: string) => string;
 	};
 	exportsBuilder?: {
-		entries:  Parameters<typeof createPackageExports>['0'],
-		options?: Parameters<typeof createPackageExports>['1']
-	},
+		entries:  Parameters<typeof createPackageExports>['0'];
+		options?: Parameters<typeof createPackageExports>['1'];
+	};
 	copy?: Record<string, CopyOptions>;
 }
 
 
 export const defineToolbox = async (
 	config: () => (ToolboxConfig | Promise<ToolboxConfig>),
-) => config;
+): Promise<() => (ToolboxConfig | Promise<ToolboxConfig>)> => config;
