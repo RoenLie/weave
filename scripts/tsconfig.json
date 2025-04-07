@@ -1,0 +1,10 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "nodenext",
+		"allowImportingTsExtensions": true,
+		"rewriteRelativeImportExtensions": true,
+		"verbatimModuleSyntax": true,
+		"erasableSyntaxOnly": true // TS 5.8+
+	}
+}

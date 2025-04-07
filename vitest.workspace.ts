@@ -1,4 +1,3 @@
-import { componentAutoImporter } from '@roenlie/package-toolbox/vite-utils';
 import { defineWorkspace } from 'vitest/config';
 
 
@@ -13,7 +12,7 @@ export default defineWorkspace([
 	},
 	{
 		extends: './packages/bootstrap-clone/vite.config.ts',
-		test: {
+		test:    {
 			name:       'bootstrap_clone',
 			setupFiles: [],
 			include:    [ 'packages/bootstrap-clone/**/*.{spec,test,bench}.ts' ],

@@ -1,6 +1,6 @@
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
 
-import { getPackagePaths } from '../utilities/get-package-paths.js';
+import { getPackagePaths } from '../utilities/get-package-paths.ts';
 
 
 export const getPackageInfo = async () => {

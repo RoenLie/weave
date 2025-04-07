@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
-
 import { glob } from 'node:fs/promises';
-import type { PackageJson } from '../types/package-json.js';
 import { dirname } from 'node:path';
+import { join } from 'node:path/posix';
+
+import type { PackageJson } from '../types/package-json.ts';
 
 
 const nameToPathMap = new Map<string, string>();
@@ -11,7 +12,12 @@ const ensurePackageLookup = async () => {
 	if (nameToPathMap.size)
 		return;
 
-	const packageGlob = glob('**/package.json');
+	const globPath = join(
+		process.cwd().replaceAll('\\', '/').split('/').slice(0, -1).join('/'),
+		'/**/package.json',
+	);
+
+	const packageGlob = glob(globPath);
 	const packagePaths: string[] = [];
 	for await (const path of packageGlob)
 		packagePaths.push(path);

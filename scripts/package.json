@@ -1,0 +1,11 @@
+{
+	"name": "@roenlie/workspace-scripts",
+	"description": "pnpm monorepo workspace scripts",
+	"authors": "Kristoffer Roen-Lie",
+	"version": "1.0.0",
+	"type": "module",
+	"dependencies": {},
+	"devDependencies": {
+		"@types/node": "^22.14.0"
+	}
+}

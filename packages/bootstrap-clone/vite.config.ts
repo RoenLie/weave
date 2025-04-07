@@ -1,4 +1,4 @@
-import { /*componentAutoImporter,*/ libConfig } from '@roenlie/package-toolbox/vite-utils';
+import { /*componentAutoImporter,*/ libConfig } from '@roenlie/vite-lib-config';
 import { defineConfig } from 'vite';
 
 

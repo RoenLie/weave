@@ -1,11 +1,11 @@
 import { resolve } from 'node:path';
 
-import { libConfig } from '@roenlie/package-toolbox/vite-utils';
+import { libConfig } from '@roenlie/vite-lib-config';
 import { rimraf } from 'rimraf';
-import { defineConfig, type Plugin, type ResolvedConfig } from 'vite';
+import type { Plugin, ResolvedConfig } from 'vite';
 
 
-export default defineConfig(libConfig({
+export default libConfig({
 	build: {
 		outDir:               './dist',
 		emptyOutDir:          true,
@@ -48,4 +48,4 @@ export default defineConfig(libConfig({
 			},
 		},
 	},
-}));
+});

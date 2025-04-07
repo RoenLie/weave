@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { execPromise } from './utilities/exec-promise.js';
-import { getPackagePaths } from './utilities/get-package-paths.js';
+import { execPromise } from './utilities/exec-promise.ts';
+import { getPackagePaths } from './utilities/get-package-paths.ts';
 
 
 const entries: {

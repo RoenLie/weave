@@ -30,7 +30,6 @@
 		"globby": "^14.1.0"
 	},
 	"devDependencies": {
-		"@types/fs-extra": "^11.0.4",
-		"@roenlie/vite-lib-config": "workspace:^"
+		"@types/fs-extra": "^11.0.4"
 	}
 }

@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
-import { getPackageInfo } from './get-project-package-paths.js';
+import { getPackageInfo } from './get-project-package-paths.ts';
 
 
 const { packages } = await getPackageInfo();
@@ -11,8 +11,8 @@ const fileToWorkspaceDeps = () => {
 	packages.forEach(p => {
 		const content = readFileSync(p, { encoding: 'utf8' });
 		const parsed: {
-			name?: string;
-			dependencies?: Record<string, string>;
+			name?:            string;
+			dependencies?:    Record<string, string>;
 			devDependencies?: Record<string, string>;
 		} = JSON.parse(content);
 

@@ -1,9 +1,9 @@
-import { componentAutoImporter, libConfig } from '@roenlie/package-toolbox/vite-utils';
+import { libConfig } from '@roenlie/vite-lib-config';
+import { componentAutoImporter } from '@roenlie/vite-plugin-ce-auto-import';
 import { importCSSSheet } from '@roenlie/vite-plugin-import-css-sheet';
-import { defineConfig } from 'vite';
 
 
-export default defineConfig(libConfig({
+export default libConfig({
 	esbuild: {
 		minifyIdentifiers: false,
 	},
@@ -16,4 +16,4 @@ export default defineConfig(libConfig({
 		}),
 		importCSSSheet(),
 	],
-}));
+});

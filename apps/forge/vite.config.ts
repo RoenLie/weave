@@ -1,14 +1,12 @@
-import { viteCopy } from '@roenlie/package-toolbox/vite-utils';
-import { keystone } from 'keystone-vite';
-import { defineConfig } from 'vite';
+import { viteCopy } from '@roenlie/vite-plugin-copy';
 import { importCSSSheet } from '@roenlie/vite-plugin-import-css-sheet';
+import { defineConfig } from 'vite';
 
 
 export default defineConfig((env) => ({
 	root:      './src',
 	publicDir: '../public',
 	plugins:   [
-		keystone(),
 		importCSSSheet(),
 		viteCopy({
 			targets: [

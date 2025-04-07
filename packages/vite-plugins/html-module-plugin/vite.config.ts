@@ -1,4 +1,4 @@
-import { libConfig } from '@roenlie/package-toolbox/vite-utils';
+import { libConfig } from '@roenlie/vite-lib-config';
 
 
-export default libConfig({});
+export default libConfig();

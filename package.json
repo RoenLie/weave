@@ -3,14 +3,19 @@
 	"name": "weave-workspace",
 	"type": "module",
 	"scripts": {
-		"build-toolbox": "tsx ./scripts/build-package.ts @roenlie/package-toolbox",
-		"build": "pnpm build-toolbox && tsx ./scripts/build-package.ts",
-		"release": "pnpm build-toolbox && tsx ./scripts/build-package.ts --publish",
-		"clean": "rimraf --glob **/node_modules **/dist"
+		"build-toolbox": "cd scripts && node ./build-package.ts @roenlie/package-toolbox",
+		"build": "pnpm build-toolbox && node ./scripts/build-package.ts",
+		"release": "pnpm build-toolbox && node ./scripts/build-package.ts --publish",
+		"clean-node": "rimraf --glob **/node_modules **/dist",
+		"clean-all": "rimraf --glob **/node_modules **/dist"
 	},
 	"devDependencies": {
 		"@roenlie/eslint-config": "workspace:^",
 		"@roenlie/tsconfig": "workspace:^",
+		"@roenlie/vite-lib-config": "workspace:^",
+		"@roenlie/vite-plugin-copy": "workspace:^",
+		"@roenlie/vite-plugin-ce-auto-import": "workspace:^",
+		"@roenlie/vite-plugin-import-css-sheet": "workspace:^",
 		"@types/node": "^22.13.14",
 		"@vitest/browser": "^3.1.1",
 		"playwright": "^1.51.1",

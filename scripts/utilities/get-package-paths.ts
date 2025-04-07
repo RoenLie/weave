@@ -1,4 +1,4 @@
-import { genToArray, getFiles } from './file-lookup.js';
+import { genToArray, getFiles } from './file-lookup.ts';
 
 export const getPackagePaths = async (startPath = '.') =>
 	(await genToArray(getFiles(startPath, /package\.json/))).filter(p => !p.includes('node_modules'));

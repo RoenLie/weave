@@ -11,12 +11,21 @@ importers:
       '@roenlie/eslint-config':
         specifier: workspace:^
         version: link:packages/eslint-config
-      '@roenlie/package-toolbox':
-        specifier: workspace:^
-        version: link:packages/package-toolbox
       '@roenlie/tsconfig':
         specifier: workspace:^
         version: link:packages/tsconfig-config
+      '@roenlie/vite-lib-config':
+        specifier: workspace:^
+        version: link:packages/vite-plugins/lib-config
+      '@roenlie/vite-plugin-ce-auto-import':
+        specifier: workspace:^
+        version: link:packages/vite-plugins/ce-auto-importer
+      '@roenlie/vite-plugin-copy':
+        specifier: workspace:^
+        version: link:packages/vite-plugins/copy
+      '@roenlie/vite-plugin-import-css-sheet':
+        specifier: workspace:^
+        version: link:packages/vite-plugins/import-css-sheet
       '@types/node':
         specifier: ^22.13.14
         version: 22.13.14
@@ -583,13 +592,6 @@ importers:
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
-    devDependencies:
-      '@roenlie/vite-plugin-import-css-sheet':
-        specifier: workspace:^
-        version: link:../../../packages/vite-plugins/import-css-sheet
-      vite-plugin-mkcert:
-        specifier: ^1.17.8
-        version: 1.17.8(vite@6.2.4(@types/node@22.13.14)(lightningcss@1.29.3)(terser@5.39.0)(tsx@4.19.3))
 
   apps/synapse/server:
     dependencies:
@@ -700,6 +702,9 @@ importers:
       monaco-editor:
         specifier: ^0.52.2
         version: 0.52.2
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.0.1
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -1273,10 +1278,6 @@ importers:
       vite:
         specifier: ^6.2.4
         version: 6.2.4(@types/node@22.13.14)(lightningcss@1.29.3)(terser@5.39.0)(tsx@4.19.3)
-    devDependencies:
-      '@roenlie/vite-lib-config':
-        specifier: workspace:^
-        version: link:../lib-config
 
   packages/vite-plugins/copy:
     dependencies:
@@ -1290,9 +1291,6 @@ importers:
         specifier: ^6.2.4
         version: 6.2.4(@types/node@22.13.14)(lightningcss@1.29.3)(terser@5.39.0)(tsx@4.19.3)
     devDependencies:
-      '@roenlie/vite-lib-config':
-        specifier: workspace:^
-        version: link:../lib-config
       '@types/fs-extra':
         specifier: ^11.0.4
         version: 11.0.4
@@ -3705,9 +3703,6 @@ packages:
   atomic-sleep@1.0.0:
     resolution: {integrity: sha512-kNOjDqAh7px0XWNI+4QbzoiR/nTkHAWNud2uvnJquD1/x5a7EQZMJT0AczqK0Qn67oY/TTQ1LbUKajZpp3I9tQ==}
     engines: {node: '>=8.0.0'}
-
-  axios@1.8.4:
-    resolution: {integrity: sha512-eBSYY4Y68NNlHbHBMdeDmKNtDgXWhQsJcGqzO3iLUM0GraQFSS9cVgPX5I9b3lbdFKyYoAEGAZF1DwhTaljNAw==}
 
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
@@ -6164,9 +6159,6 @@ packages:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
 
-  proxy-from-env@1.1.0:
-    resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
-
   psl@1.15.0:
     resolution: {integrity: sha512-JZd3gMVBAVQkSs6HdNZo9Sdo0LNcQeMNP3CozBJb3JYC/QUYZTnKxP+f8oWRX4rHP5EurWxqAHTSwUCjlNKa1w==}
 
@@ -7076,12 +7068,6 @@ packages:
     resolution: {integrity: sha512-V+IxPAE2FvXpTCHXyNem0M+gWm6J7eRyWPR6vYoG/Gl+IscNOjXzztUhimQgTxaAoUoj40Qqimaa0NLIOOAH4w==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
-
-  vite-plugin-mkcert@1.17.8:
-    resolution: {integrity: sha512-S+4tNEyGqdZQ3RLAG54ETeO2qyURHWrVjUWKYikLAbmhh/iJ+36gDEja4OWwFyXNuvyXcZwNt5TZZR9itPeG5Q==}
-    engines: {node: '>=v16.7.0'}
-    peerDependencies:
-      vite: '>=3'
 
   vite@6.2.4:
     resolution: {integrity: sha512-veHMSew8CcRzhL5o8ONjy8gkfmFJAd5Ac16oxBUjlwgX3Gq2Wqr+qNC3TjPIpy7TPV/KporLga5GT9HqdrCizw==}
@@ -10172,14 +10158,6 @@ snapshots:
 
   atomic-sleep@1.0.0: {}
 
-  axios@1.8.4(debug@4.4.0):
-    dependencies:
-      follow-redirects: 1.15.9(debug@4.4.0)
-      form-data: 4.0.2
-      proxy-from-env: 1.1.0
-    transitivePeerDependencies:
-      - debug
-
   bail@2.0.2: {}
 
   balanced-match@1.0.2: {}
@@ -13067,8 +13045,6 @@ snapshots:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
 
-  proxy-from-env@1.1.0: {}
-
   psl@1.15.0:
     dependencies:
       punycode: 2.3.1
@@ -14280,15 +14256,6 @@ snapshots:
       - terser
       - tsx
       - yaml
-
-  vite-plugin-mkcert@1.17.8(vite@6.2.4(@types/node@22.13.14)(lightningcss@1.29.3)(terser@5.39.0)(tsx@4.19.3)):
-    dependencies:
-      axios: 1.8.4(debug@4.4.0)
-      debug: 4.4.0(supports-color@5.5.0)
-      picocolors: 1.1.1
-      vite: 6.2.4(@types/node@22.13.14)(lightningcss@1.29.3)(terser@5.39.0)(tsx@4.19.3)
-    transitivePeerDependencies:
-      - supports-color
 
   vite@6.2.4(@types/node@22.13.14)(lightningcss@1.29.3)(terser@5.39.0)(tsx@4.19.3):
     dependencies:

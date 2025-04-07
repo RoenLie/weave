@@ -1,11 +1,7 @@
-import { defineConfig } from 'vite';
-//import mkcert from 'vite-plugin-mkcert';
 import { importCSSSheet } from '@roenlie/vite-plugin-import-css-sheet';
+import { defineConfig } from 'vite';
 
 
 export default defineConfig({
-	plugins: [
-		//mkcert(),
-		importCSSSheet(),
-	],
+	plugins: [ importCSSSheet() ],
 });

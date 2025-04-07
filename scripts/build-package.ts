@@ -1,5 +1,5 @@
-import { execPromise } from './utilities/exec-promise.js';
-import { getPackageBuildOrder, getPackageDir } from './utilities/find-build-order.js';
+import { execPromise } from './utilities/exec-promise.ts';
+import { getPackageBuildOrder, getPackageDir } from './utilities/find-build-order.ts';
 
 
 const args = process.argv.slice(2);
