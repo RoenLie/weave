@@ -34,7 +34,7 @@ const ensurePackageLookup = async () => {
 	}
 };
 
-export const getPackageDir = async (packageName: string) => {
+export const getPackageDir = async (packageName: string): Promise<string> => {
 	await ensurePackageLookup();
 
 	const packagePath = nameToPathMap.get(packageName);
@@ -45,7 +45,7 @@ export const getPackageDir = async (packageName: string) => {
 };
 
 
-export const getPackageDeps = (json: PackageJson) => {
+export const getPackageDeps = (json: PackageJson): [string, string][] => {
 	const dependencies = json.dependencies;
 	const devDependencies = json.devDependencies;
 
@@ -58,14 +58,14 @@ export const getPackageDeps = (json: PackageJson) => {
 };
 
 
-export const getWorkspaceDeps = (json: PackageJson) => {
+export const getWorkspaceDeps = (json: PackageJson): string[] => {
 	return getPackageDeps(json)
 		.filter(([ , ver ]) => ver.startsWith('workspace:'))
 		.map(([ name ]) => name);
 };
 
 
-export const getPackageBuildOrder = async (packageName: string) => {
+export const getPackageBuildOrder = async (packageName: string): Promise<string[]> => {
 	await ensurePackageLookup();
 
 	interface Node {

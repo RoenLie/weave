@@ -4,6 +4,11 @@
 	"authors": "Kristoffer Roen-Lie",
 	"version": "1.0.0",
 	"type": "module",
+	"scripts": {
+		"build-toolbox": "node ./build-package.ts @roenlie/package-toolbox",
+		"build": "pnpm build-toolbox && node ./build-package.ts",
+		"release": "pnpm build-toolbox && node ./build-package.ts --publish"
+	},
 	"dependencies": {},
 	"devDependencies": {
 		"@types/node": "^22.14.0"

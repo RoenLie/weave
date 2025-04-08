@@ -3,9 +3,9 @@
 	"name": "weave-workspace",
 	"type": "module",
 	"scripts": {
-		"build-toolbox": "cd scripts && node ./build-package.ts @roenlie/package-toolbox",
-		"build": "pnpm build-toolbox && node ./scripts/build-package.ts",
-		"release": "pnpm build-toolbox && node ./scripts/build-package.ts --publish",
+		"build-toolbox": "pnpm --filter @roenlie/workspace-scripts build-toolbox",
+		"build": "pnpm --filter @roenlie/workspace-scripts build",
+		"release": "pnpm --filter @roenlie/workspace-scripts release",
 		"clean-node": "rimraf --glob **/node_modules **/dist",
 		"clean-all": "rimraf --glob **/node_modules **/dist"
 	},

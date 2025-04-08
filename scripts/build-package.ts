@@ -48,10 +48,13 @@ for (const cmd of buildOrder) {
 		throw err;
 }
 
-
 if (publish || dryRun) {
 	console.log('Merging tsconfig.json files...');
-	let [ _, err ] = await execPromise(`cd ${ packageDir } && pkg-toolbox merge-tsconfig --config ./src/tsconfig.json`, handleStdout);
+	let [ _, err ] = await execPromise(
+		`cd ${ packageDir } && pkg-toolbox merge-tsconfig --config ./src/tsconfig.json`,
+		handleStdout,
+	);
+
 	if (err)
 		throw err;
 

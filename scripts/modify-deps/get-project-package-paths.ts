@@ -3,7 +3,10 @@ import { readFileSync } from 'node:fs';
 import { getPackagePaths } from '../utilities/get-package-paths.ts';
 
 
-export const getPackageInfo = async () => {
+export const getPackageInfo = async (): Promise<{
+	packages:         string[];
+	projectPathCache: Map<string, string>;
+}> => {
 	// Get all workspace package.json files
 	const packages = await getPackagePaths();
 
