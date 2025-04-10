@@ -39,6 +39,6 @@
 		"@types/sharedworker": "^0.0.154",
 		"rimraf": "^6.0.1",
 		"ts-toolbelt": "^9.6.0",
-		"type-fest": "^4.38.0"
+		"type-fest": "^4.39.1"
 	}
 }

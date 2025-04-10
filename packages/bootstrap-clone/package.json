@@ -13,6 +13,7 @@
 		"lit-html": "^3.2.1"
 	},
 	"devDependencies": {
+		"@roenlie/vite-lib-config": "workspace:^",
 		"@roenlie/mirage-docs": "workspace:^",
 		"lit": "^3.2.1"
 	}

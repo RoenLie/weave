@@ -24,13 +24,13 @@
 		"express": "^5.1.0",
 		"formidable": "^3.5.2",
 		"globby": "^14.1.0",
-		"mime": "^4.0.6",
+		"mime": "^4.0.7",
 		"nodemon": "^3.1.9",
 		"pino": "^9.6.0",
 		"rotating-file-stream": "^3.2.6",
-		"tesseract.js": "^6.0.0",
+		"tesseract.js": "^6.0.1",
 		"tslib": "^2.8.1",
-		"weaviate-client": "^3.4.2"
+		"weaviate-client": "^3.5.2"
 	},
 	"devDependencies": {
 		"@types/cors": "^2.8.17",

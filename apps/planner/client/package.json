@@ -32,7 +32,7 @@
 		"@roenlie/reflect-metadata": "workspace:^",
 		"deepmerge-ts": "^7.1.5",
 		"fast-equals": "^5.2.2",
-		"inversify": "^7.3.0",
+		"inversify": "^7.5.0",
 		"lit": "^3.2.1",
 		"nanoid": "^5.1.5",
 		"tabbable": "^6.2.0",

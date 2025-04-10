@@ -26,6 +26,7 @@
 		}
 	},
 	"dependencies": {
+		"@roenlie/vite-lib-config": "workspace:^",
 		"@roenlie/core": "workspace:^",
 		"lit": "^3.2.1",
 		"nanoid": "^5.1.5",

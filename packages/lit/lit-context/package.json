@@ -37,5 +37,8 @@
 		"lit": "^3.2.1",
 		"tslib": "^2.8.1"
 	},
+	"devDependencies": {
+		"@roenlie/vite-lib-config": "workspace:^"
+	},
 	"sideEffects": false
 }

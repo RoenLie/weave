@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite';
+import type { PluginOption } from 'vite';
 
 import { ImportCSSSheet } from './import-css-sheet.js';
 
@@ -7,7 +7,7 @@ export const importCSSSheet = (options?: Partial<{
 	transformers:   ((code: string, id: string) => string)[];
 	additionalCode: string[];
 	minify:         boolean;
-}>): Plugin => {
+}>): PluginOption => {
 	const {
 		transformers = [],
 		additionalCode = [],
@@ -40,6 +40,6 @@ export const importCSSSheet = (options?: Partial<{
 				console.log('Minified css sheet by', totalBeforeMinify - totalAfterMinify, 'characters.');
 				console.log('Before minify:', totalBeforeMinify, '. After minify:', totalAfterMinify);
 			}
-		}
+		},
 	};
 };

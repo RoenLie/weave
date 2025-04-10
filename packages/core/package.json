@@ -99,5 +99,8 @@
 		"nanoid": "^5.1.5",
 		"ts-toolbelt": "^9.6.0",
 		"tslib": "^2.8.1"
+	},
+	"devDependencies": {
+		"@roenlie/vite-lib-config": "workspace:^"
 	}
 }

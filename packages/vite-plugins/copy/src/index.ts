@@ -29,7 +29,7 @@ export const viteCopy = (options: ViteCopyOptions = {}): PluginOption => {
 	let copied = false;
 
 	return {
-		name:            'copy',
+		name:            'vite-plugin-copy',
 		[options.hook!]: async () => {
 			if (options.copyOnce && copied)
 				return;

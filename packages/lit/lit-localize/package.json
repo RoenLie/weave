@@ -40,14 +40,15 @@
 		"build:index": "pkg-toolbox build-indexes",
 		"build:types": "tsc --project ./src/tsconfig.json"
 	},
-	"dependencies": {
-		"@roenlie/core": "workspace:^"
-	},
 	"peerDependencies": {
 		"@lit-labs/preact-signals": "^1.0.2",
 		"lit": "^3.2.1"
 	},
+	"dependencies": {
+		"@roenlie/core": "workspace:^"
+	},
 	"devDependencies": {
+		"@roenlie/vite-lib-config": "workspace:^",
 		"@lit-labs/preact-signals": "^1.0.3",
 		"happy-dom": "^17.4.4",
 		"lit": "^3.2.1"

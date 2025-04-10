@@ -42,9 +42,10 @@
 		"tslib": "^2.8.1"
 	},
 	"devDependencies": {
-		"@faker-js/faker": "^9.6.0",
+		"@roenlie/vite-lib-config": "workspace:^",
+		"@roenlie/vite-plugin-import-css-sheet": "workspace:^",
 		"@roenlie/elements": "workspace:^",
 		"@roenlie/mirage-docs": "workspace:^",
-		"@roenlie/vite-plugin-import-css-sheet": "workspace:^"
+		"@faker-js/faker": "^9.6.0"
 	}
 }

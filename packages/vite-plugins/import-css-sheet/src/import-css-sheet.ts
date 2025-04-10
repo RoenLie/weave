@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
+
 import { transform } from 'lightningcss';
 import type { CustomPluginOptions, PluginContext } from 'rollup';
 import type { ResolvedConfig } from 'vite';
@@ -7,16 +8,16 @@ import type { ResolvedConfig } from 'vite';
 
 export class ImportCSSSheet {
 
-	public filetypes = new Set([ '.ts', '.mts', '.js', '.mjs' ]);
-	public virtualModules = new Map<string, string>();
-	public charReplacements = new Map<string, string>([
+	filetypes = new Set([ '.ts', '.mts', '.js', '.mjs' ]);
+	virtualModules = new Map<string, string>();
+	charReplacements = new Map<string, string>([
 		[ '\\', '\\\\' ],
 		[ '`', '\\`' ],
 		[ '$', '\\$' ],
 	]);
 
-	public totalBeforeMinify = 0;
-	public totalAfterMinify = 0;
+	totalBeforeMinify = 0;
+	totalAfterMinify = 0;
 
 	constructor(
 		public config: ResolvedConfig,
@@ -25,7 +26,7 @@ export class ImportCSSSheet {
 		public minify: boolean,
 	) {}
 
-	public convert(str: string) {
+	convert(str: string): string {
 		let res = '';
 		for (const c of str)
 			res += this.charReplacements.get(c) || c;
@@ -33,11 +34,11 @@ export class ImportCSSSheet {
 		return `\`${ res }\``;
 	}
 
-	public cssImportAssertRegex(str: string) {
+	cssImportAssertRegex(str: string): RegExp {
 		return new RegExp(str + `['"] *(?:with|assert) *{ *type: *['"]css['"]`);
 	}
 
-	public async resolveId(
+	async resolveId(
 		context: PluginContext,
 		source: string,
 		importer: string | undefined,
@@ -47,15 +48,15 @@ export class ImportCSSSheet {
 			ssr?:       boolean | undefined;
 			isEntry:    boolean;
 		},
-	) {	
+	): Promise<string | undefined> {
 		if (!source.endsWith('.css') || !importer)
 			return;
 
 		// Remove query string part of path.
 		// Vite sometimes adds this to .html files.
 		if (importer.includes('?'))
-	 		importer = importer.split('?')[0]!;
-		
+			importer = importer.split('?')[0]!;
+
 		const ext = extname(importer);
 		if (!this.filetypes.has(ext))
 			return;
@@ -75,13 +76,13 @@ export class ImportCSSSheet {
 		}
 	}
 
-	public async load(
+	async load(
 		context: PluginContext,
 		id: string,
 		_options?: {
 			ssr?: boolean | undefined;
 		},
-	) {
+	): Promise<string | undefined> {
 		if (!this.virtualModules.has(id))
 			return;
 
@@ -97,20 +98,21 @@ export class ImportCSSSheet {
 			try {
 				if (this.config.mode !== 'development')
 					this.totalBeforeMinify += fileContent.length;
-				
+
 				const { code } = transform({
 					code:     Buffer.from(fileContent),
 					filename: realId,
 					minify:   true,
 				});
-				
+
 				const decoder = new TextDecoder();
 				fileContent = decoder.decode(code);
 
 				if (this.config.mode !== 'development')
 					this.totalAfterMinify += fileContent.length;
-			} catch(err) {
-				console.error("Failed to minify css sheet");
+			}
+			catch (err) {
+				console.error('Failed to minify css sheet');
 				console.error(err);
 			}
 		}

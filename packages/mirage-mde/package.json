@@ -41,11 +41,14 @@
 		"cm6-theme-basic-dark": "^0.2.0",
 		"highlight.js": "^11.11.1",
 		"lit": "^3.2.1",
-		"marked": "^15.0.7",
+		"marked": "^15.0.8",
 		"marked-extended-tables": "^2.0.1",
 		"marked-gfm-heading-id": "^4.1.1",
 		"marked-highlight": "^2.2.1",
 		"marked-mangle": "^1.1.10",
 		"tslib": "^2.8.1"
+	},
+	"devDependencies": {
+		"@roenlie/vite-lib-config": "workspace:^"
 	}
 }

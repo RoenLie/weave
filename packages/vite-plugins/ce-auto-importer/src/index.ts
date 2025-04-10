@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 import type { PluginOption, ResolvedConfig } from 'vite';
 
@@ -40,10 +40,10 @@ export const componentAutoImportLoad = (props: AutoImportLoadProps): string | un
 	if (!whitelisted || blacklisted)
 		return;
 
-	if (!fs.existsSync(id))
+	if (!existsSync(id))
 		return;
 
-	let code = fs.readFileSync(id, { encoding: 'utf8' });
+	let code = readFileSync(id, { encoding: 'utf8' });
 
 	const tagsUsed = getUsedTags(code, prefixes, tagPattern);
 	if (!tagsUsed.size)
@@ -59,7 +59,7 @@ export const componentAutoImportLoad = (props: AutoImportLoadProps): string | un
 			.replace('.ts', '.js')
 		}';`);
 
-	const msg = `/* Component imports injected from: vite-lit-component-auto-import */`;
+	const msg = `/* Component imports injected from: @roenlie/vite-plugin-ce-auto-import */`;
 	imports.unshift(msg);
 	imports.push(`/*  */`);
 
@@ -81,7 +81,7 @@ export const componentAutoImporter = (props: AutoImportPluginProps): PluginOptio
 	const tagPattern = /<\/([\w-]+)>/g;
 
 	return {
-		name:    'vite-lit-component-auto-import',
+		name:    'vite-plugin-ce-auto-import',
 		enforce: 'pre',
 
 		configResolved(cfg) {

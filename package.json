@@ -6,24 +6,22 @@
 		"build-toolbox": "pnpm --filter @roenlie/workspace-scripts build-toolbox",
 		"build": "pnpm --filter @roenlie/workspace-scripts build",
 		"release": "pnpm --filter @roenlie/workspace-scripts release",
-		"clean-node": "rimraf --glob **/node_modules **/dist",
+		"clean-dist": "rimraf --glob **/dist",
+		"clean-node": "rimraf --glob **/node_modules",
 		"clean-all": "rimraf --glob **/node_modules **/dist"
 	},
 	"devDependencies": {
 		"@roenlie/eslint-config": "workspace:^",
+		"@roenlie/package-toolbox": "workspace:^",
 		"@roenlie/tsconfig": "workspace:^",
-		"@roenlie/vite-lib-config": "workspace:^",
-		"@roenlie/vite-plugin-copy": "workspace:^",
-		"@roenlie/vite-plugin-ce-auto-import": "workspace:^",
-		"@roenlie/vite-plugin-import-css-sheet": "workspace:^",
-		"@types/node": "^22.13.14",
+		"@types/node": "^22.14.0",
 		"@vitest/browser": "^3.1.1",
 		"playwright": "^1.51.1",
 		"tsx": "^4.19.3",
-		"typescript": "^5.8.2",
-		"vite": "^6.2.4",
+		"typescript": "^5.8.3",
+		"vite": "^6.2.6",
 		"vitest": "^3.1.1",
-		"wrangler": "^4.6.0"
+		"wrangler": "^4.10.0"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
