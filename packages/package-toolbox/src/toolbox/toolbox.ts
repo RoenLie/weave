@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 
 import type { ReleaseType } from 'semver';
 
+import type { BuildPackageOptions } from '../build-package/build-package.js';
 import { copy } from '../filesystem/copy-files.js';
 import { indexBuilder as buildIndex } from '../index-builder/index-builder.js';
 import { mergeTSConfig } from '../merge-tsconfig/merge-tsconfig.js';
@@ -10,25 +11,35 @@ import { incrementVersion } from '../versioning/increment-version.js';
 import { loadConfig } from './config.js';
 
 
-interface PartialToolbox {
+export interface PartialToolbox {
+	type:             'partial';
 	mergeTSConfig:    (config: string, outFile: string) => void;
 	incrementVersion: (release?: ReleaseType) => void;
+	buildPackage:     (options: BuildPackageOptions) => Promise<void>;
 }
 
-interface Toolbox extends PartialToolbox {
-	indexBuilder:   () => Promise<void>;
-	exportsBuilder: () => Promise<void>;
-	copy:           (profile: string) => Promise<void>;
+export interface Toolbox {
+	type:             'full';
+	mergeTSConfig:    (config: string, outFile: string) => void;
+	incrementVersion: (release?: ReleaseType) => void;
+	buildPackage:     (options: BuildPackageOptions) => Promise<void>;
+	indexBuilder:     () => Promise<void>;
+	exportsBuilder:   () => Promise<void>;
+	copy:             (profile: string) => Promise<void>;
 }
 
 
 export const toolbox = async (filePath = './pkg-toolbox.ts'): Promise<PartialToolbox | Toolbox> => {
 	const partialToolbox = {
+		type:          'partial',
 		mergeTSConfig: (config: string, outFile: string) => {
 			mergeTSConfig(config, outFile);
 		},
 		incrementVersion: (release: ReleaseType | undefined) => {
 			incrementVersion({ release });
+		},
+		buildPackage: async (options) => {
+			console.log('Building package...', options);
 		},
 	} satisfies PartialToolbox;
 
@@ -40,8 +51,8 @@ export const toolbox = async (filePath = './pkg-toolbox.ts'): Promise<PartialToo
 
 	const config = await loadConfig(filePath);
 
-	return {
-		...partialToolbox,
+	return Object.assign(partialToolbox, {
+		type:         'full',
 		indexBuilder: async () => {
 			if (!config.indexBuilder)
 				throw ('No index builder config supplied.');
@@ -102,10 +113,10 @@ export const toolbox = async (filePath = './pkg-toolbox.ts'): Promise<PartialToo
 				config.exportsBuilder.options,
 			);
 		},
-		copy: async (profile: string) => {
+		copy: async (profile) => {
 			const cfg = config?.copy?.[profile];
 			if (cfg)
 				await copy(cfg);
 		},
-	} satisfies Toolbox;
+	} satisfies Omit<Toolbox, Exclude<keyof PartialToolbox, 'type'>>);
 };

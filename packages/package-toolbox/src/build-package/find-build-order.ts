@@ -3,7 +3,7 @@ import { glob } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { join } from 'node:path/posix';
 
-import type { PackageJson } from '../types/package-json.ts';
+import type { PackageJson } from './package-json.ts';
 
 
 const nameToPathMap = new Map<string, string>();
@@ -34,7 +34,7 @@ const ensurePackageLookup = async () => {
 	}
 };
 
-export const getPackageDir = async (packageName: string): Promise<string> => {
+export const getPackageDir = async (packageName: string): Promise<string | undefined> => {
 	await ensurePackageLookup();
 
 	const packagePath = nameToPathMap.get(packageName);
