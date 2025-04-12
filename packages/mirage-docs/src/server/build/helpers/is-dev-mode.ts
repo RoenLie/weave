@@ -1,5 +1,5 @@
 let devMode = false;
 
 
-export const setDevMode = (value: boolean) => devMode = value;
-export const fileExt = () => devMode ? 'ts' : 'js';
+export const setDevMode = (value: boolean): boolean => devMode = value;
+export const fileExt = (): 'ts' | 'js' => devMode ? 'ts' : 'js';

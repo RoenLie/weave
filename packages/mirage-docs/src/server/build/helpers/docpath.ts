@@ -3,10 +3,10 @@ import { join, normalize } from 'node:path';
 
 export class DocPath {
 
-	public static createFileRoute(
+	static createFileRoute(
 		absoluteFilePath: string,
 		absoluteSourcePath: string,
-	) {
+	): string {
 		// C:\\Devstuff\\PersonalProjects\\mirage-docs\\docpages\\pages\\1.category-1\\editortest.editor.ts
 		absoluteFilePath = normalize(absoluteFilePath);
 		// C:\\Devstuff\\PersonalProjects\\mirage-docs\\docpages
@@ -21,12 +21,12 @@ export class DocPath {
 		return withoutExtension.replaceAll(/\\+/g, '/');
 	}
 
-	public static createFileCachePath(
+	static createFileCachePath(
 		absoluteFilePath: string,
 		absoluteSourcePath: string,
 		absoluteCachePath: string,
 		newExtension: string,
-	) {
+	): string {
 		// C:\\Devstuff\\PersonalProjects\\mirage-docs\\docpages\\pages\\1.category-1\\editortest.editor.ts
 		absoluteFilePath = normalize(absoluteFilePath);
 		// C:\\Devstuff\\PersonalProjects\\mirage-docs\\docs\\.mirage

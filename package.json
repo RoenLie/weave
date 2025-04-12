@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"build-toolbox": "pnpm --filter @roenlie/workspace-scripts build-toolbox",
-		"build": "pnpm --filter @roenlie/workspace-scripts build",
+		"build": "pnpm pkg-toolbox build-package",
 		"release": "pnpm --filter @roenlie/workspace-scripts release",
 		"clean-dist": "rimraf --glob **/dist",
 		"clean-node": "rimraf --glob **/node_modules",
@@ -14,7 +14,7 @@
 		"@roenlie/eslint-config": "workspace:^",
 		"@roenlie/package-toolbox": "workspace:^",
 		"@roenlie/tsconfig": "workspace:^",
-		"@types/node": "^22.14.0",
+		"@types/node": "^22.14.1",
 		"@vitest/browser": "^3.1.1",
 		"playwright": "^1.51.1",
 		"tsx": "^4.19.3",

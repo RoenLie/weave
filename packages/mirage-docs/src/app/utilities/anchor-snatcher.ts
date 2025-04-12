@@ -1,8 +1,8 @@
-import { ContainerLoader } from '../aegis/index.js';
 import type { SiteConfig } from '../../shared/config.types.ts';
+import { ContainerLoader } from '../aegis/index.js';
 
 
-const _anchorSnatcher = (event: MouseEvent) => {
+const _anchorSnatcher = (event: MouseEvent): void => {
 	const eventPath = event.composedPath();
 	const anchor = eventPath.find(el => el instanceof HTMLAnchorElement);
 	if (!anchor || !anchor.classList.contains('internal'))
@@ -44,7 +44,10 @@ const _anchorSnatcher = (event: MouseEvent) => {
 };
 
 
-export const anchorSnatcher = {
+export const anchorSnatcher: {
+	register:   () => void;
+	unregister: () => void;
+} = {
 	register:   () => globalThis.addEventListener('click', _anchorSnatcher),
 	unregister: () => globalThis.removeEventListener('click', _anchorSnatcher),
 };

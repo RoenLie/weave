@@ -1,0 +1,29 @@
+{
+	"name": "@roenlie/injector",
+	"description": "Dependency injection done simple.",
+	"license": "MIT",
+	"contributors": [
+		"Kristoffer Roen-Lie"
+	],
+	"version": "1.0.0",
+	"files": [
+		"dist",
+		"src"
+	],
+	"type": "module",
+	"main": "./dist/lib/index.js",
+	"types": "./dist/lib/index.d.ts",
+	"exports": {
+		".": "./dist/lib/index.js"
+	},
+	"sideEffects": false,
+	"scripts": {
+		"build": "pnpm run --sequential \"/^build::.?/\"",
+		"build::js": "vite build",
+		"build::types": "tsc --project ./src/tsconfig.json --noEmit false"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@roenlie/vite-lib-config": "workspace:*"
+	}
+}

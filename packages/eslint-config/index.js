@@ -323,7 +323,7 @@ const recommendedTs = tseslint.config({
 		'@typescript-eslint/consistent-indexed-object-style': 'off',
 		'@typescript-eslint/no-this-alias':                   'off',
 		'@typescript-eslint/no-inferrable-types':             'off',
-		'@typescript-eslint/consistent-generic-constructors': [ 'warn', 'constructor' ],
+		'@typescript-eslint/consistent-generic-constructors': [ 'warn', 'type-annotation' ],
 		'@typescript-eslint/explicit-module-boundary-types':  [
 			'warn', {
 				allowArgumentsExplicitlyTypedAsAny: true,

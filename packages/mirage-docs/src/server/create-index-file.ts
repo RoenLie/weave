@@ -7,7 +7,7 @@ export const createIndexFile = (
 	scriptLinks: NonNullable<SiteConfig['pages']>['scripts'],
 	componentPath: string,
 	siteConfigPath: string,
-) => {
+): string => {
 	const content = indexPageTemplate({
 		moduleId:     componentPath,
 		siteConfigId: siteConfigPath,

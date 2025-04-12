@@ -14,7 +14,7 @@ export const getFlatStyles = (
 	styleKey: string,
 	protoChain: Record<keyof any, any>[],
 ): CSSStyleSheet[] => {
-	const flatStyles = new Set<CSSStyleSheet>();
+	const flatStyles: Set<CSSStyleSheet> = new Set();
 
 	for (const proto of protoChain) {
 		if (!proto[styleKey])

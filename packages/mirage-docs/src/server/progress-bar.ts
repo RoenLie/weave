@@ -129,63 +129,63 @@ export class ConsoleBar {
 	/**
 	 * Format of the displayed progressbar
 	 */
-	public formatString = '#percent #bar';
+	formatString = '#percent #bar';
 
 	/**
 	* Number of steps to finish progress
 	*/
-	public total = 100;
+	total = 100;
 
 	/**
 	 * Startdate to calculate elapsed time (in milliseconds)
 	 */
-	public startDate = new Date().getTime();
+	startDate = new Date().getTime();
 
 	/**
 	 * Which timespan to use for timing calculation - If you are unsure allways use false here!
 	 */
-	public lastUpdateForTiming = false;
+	lastUpdateForTiming = false;
 
 	/**
 	 * Width of the progress bar (only the #bar part)
 	 */
-	public width = 20;
+	width = 20;
 
 	/**
 	* Symbol for the done progress in the #bar part
 	*/
-	public doneSymbol = '>';
+	doneSymbol = '>';
 
 	/**
 	* Symbol for the undone progress in the #bar part
 	*/
-	public undoneSymbol = '-';
+	undoneSymbol = '-';
 
 	/**
 	* Wether to print to configured stream or not
 	*/
-	public print = true;
+	print = true;
 
 	/**
 	 * A spinner object describing how the spinner looks like
 	 * Change this for another spinner
 	 */
-	public spinner = defaultSpinner;
+	spinner = defaultSpinner;
 
 	/**
 	 * The message displayed at the #message placeholder
 	 */
-	public message = '';
+	message = '';
 
 	/**
 	* wether to call progressbar's stop() function automatically if the progress reaches 100%
 	*/
-	public autoStop = true;
+	autoStop = true;
 
 	/**
 	* wether to hide the terminal's cursor while displaying the progress bar
 	*/
-	public hideCursor = false;
+	hideCursor = false;
 
 	private elapsed = 0;
 	private lastUpdate = new Date().getTime();
@@ -195,7 +195,7 @@ export class ConsoleBar {
 	private spinnerTimeout;
 	private enableSpinner = false;
 	private currentSpinnerSymbol = '';
-	public get current() { return this.#current; }
+	get current(): number { return this.#current; }
 	#current = 0;
 
 	constructor(options?: string | ProgressbarOptions) {
@@ -225,7 +225,7 @@ export class ConsoleBar {
 	 * Creates the progressbar string with all configured settings
 	 * @returns a string representating the progressbar
 	 */
-	public renderLine(): string {
+	renderLine(): string {
 		const plusCount = Math.round(this.#current / this.total * this.width);
 		const minusCount = this.width - plusCount;
 		let plusString = '';
@@ -283,7 +283,7 @@ export class ConsoleBar {
 	/**
 	 * Render the progressbar and print it to output stream
 	 */
-	public printLine(): void {
+	printLine(): void {
 		if (!this.print)
 			return;
 
@@ -297,7 +297,7 @@ export class ConsoleBar {
 	 * @param current the new absolute progress value
 	 * @param message [optional] update the message displayed at the #message placeholder
 	 */
-	public update(current: number, message?: string) {
+	update(current: number, message?: string): this {
 		this.#current = current;
 
 		if (message)
@@ -380,7 +380,7 @@ export class ConsoleBar {
 	 * This function will be triggered automatically if the progressbar reaches 100% (if not disabled)
 	 * @param withInfo wether to auto-update the progressbar's spinner and message after stopping
 	 */
-	public stop(withInfo = true) {
+	stop(withInfo = true): void {
 		//Stop the spinner
 		if (this.spinnerTimeout)
 			clearTimeout(this.spinnerTimeout);

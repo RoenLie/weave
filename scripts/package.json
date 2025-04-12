@@ -9,8 +9,7 @@
 		"build": "pnpm build-toolbox && node ./build-package.ts",
 		"release": "pnpm build-toolbox && node ./build-package.ts --publish"
 	},
-	"dependencies": {},
 	"devDependencies": {
-		"@types/node": "^22.14.0"
+		"@types/node": "^22.14.1"
 	}
 }

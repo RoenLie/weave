@@ -12,13 +12,13 @@
 		"src"
 	],
 	"exports": {
-		"./signal-element": {
-			"types": "./dist/signal-element/custom-element.d.ts",
-			"default": "./dist/signal-element/custom-element.js"
+		"./signal": {
+			"types": "./dist/signal/index.d.ts",
+			"default": "./dist/signal/index.js"
 		},
-		"./adapter-element": {
-			"types": "./dist/adapter-element/index.d.ts",
-			"default": "./dist/adapter-element/index.js"
+		"./adapter": {
+			"types": "./dist/adapter/index.d.ts",
+			"default": "./dist/adapter/index.js"
 		}
 	},
 	"scripts": {
@@ -29,9 +29,10 @@
 	},
 	"dependencies": {
 		"@roenlie/core": "workspace:^",
-		"lit-html": "^3.2.1",
+		"lit-html": "^3.3.0",
+		"signal-polyfill": "^0.2.2",
 		"tslib": "^2.8.1",
-		"signal-polyfill": "^0.2.2"
+		"urlpattern-polyfill": "^10.0.0"
 	},
 	"devDependencies": {
 		"@roenlie/vite-lib-config": "workspace:^"

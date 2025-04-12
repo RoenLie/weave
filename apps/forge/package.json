@@ -13,7 +13,7 @@
 		"@roenlie/core": "workspace:^",
 		"@roenlie/elements": "workspace:^",
 		"@roenlie/lit-utilities": "workspace:^",
-		"lit": "^3.2.1",
+		"lit": "^3.3.0",
 		"posix-path-browser": "workspace:^",
 		"quill": "2.0.3",
 		"tslib": "^2.8.1",

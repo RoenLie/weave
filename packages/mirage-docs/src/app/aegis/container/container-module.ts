@@ -37,9 +37,9 @@ export interface ModuleOptions {
 
 export class ContainerModule implements interfaces.ContainerModule {
 
-	public id:       number;
-	public registry: any; /** Not using inversify default registry func */
-	public load:     (methods: ModuleOptions) => void;
+	id:       number;
+	registry: any; /** Not using inversify default registry func */
+	load:     (methods: ModuleOptions) => void;
 
 	constructor(registry: (options: ModuleOptions) => void) {
 		this.id = id();
@@ -55,7 +55,7 @@ export class ContainerModuleMethodsFactory {
 		bindingToSyntax: interfaces.BindingToSyntax<unknown>,
 		moduleId: interfaces.ContainerModuleBase['id'],
 	) {
-		interface SyntaxBinding { _binding: { moduleId: interfaces.ContainerModuleBase['id'] } }
+		interface SyntaxBinding { _binding: { moduleId: interfaces.ContainerModuleBase['id']; }; }
 		(bindingToSyntax as unknown as SyntaxBinding)._binding.moduleId = moduleId;
 	}
 
@@ -139,7 +139,7 @@ export class ContainerModuleMethodsFactory {
 		};
 	}
 
-	public create(mId: interfaces.ContainerModuleBase['id']): ModuleOptions {
+	create(mId: interfaces.ContainerModuleBase['id']): ModuleOptions {
 		return {
 			isBound:        this.isboundFunction(),
 			isCurrentBound: this.isCurrentBoundFunction(),

@@ -7,7 +7,7 @@ export const indexPageTemplate = (props: {
 	siteConfigId: string;
 	styleLinks:   SiteConfig['pages']['styles'];
 	scriptLinks:  SiteConfig['pages']['scripts'];
-}) => {
+}): string => {
 	interface HeadTemplate { template: string; order: number; }
 
 	const styleTemplate = (src: string) => `<link rel="stylesheet" href="${ src }">`;

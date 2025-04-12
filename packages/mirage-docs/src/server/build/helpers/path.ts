@@ -1,7 +1,7 @@
 import { sep } from 'node:path';
 
 
-export const normalizePath = (path: string) => {
+export const normalizePath = (path: string): string => {
 	return path
 		.replaceAll('/', sep)
 		.replaceAll('\\', sep)
@@ -9,7 +9,7 @@ export const normalizePath = (path: string) => {
 };
 
 
-export const browserifyPath = (path: string) => {
+export const browserifyPath = (path: string): string => {
 	return path
 		.replaceAll('\\', '/')
 		.replaceAll(/\/{2,}/g, '/');

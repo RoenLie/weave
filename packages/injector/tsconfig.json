@@ -1,0 +1,16 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"noEmit": true,
+		"types": [
+			"node"
+		]
+	},
+	"exclude": [
+		"dist",
+		"node_modules"
+	],
+	"include": [
+		"${configDir}/**/*.ts",
+	],
+}

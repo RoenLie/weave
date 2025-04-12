@@ -7,7 +7,7 @@ export const editorPageTemplate = (props: {
 	code:   string;
 	class:  string;
 	codeId: string;
-}) => {
+}): string => {
 	const className = randomString(10);
 
 	return `

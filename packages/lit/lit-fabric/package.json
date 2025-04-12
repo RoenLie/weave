@@ -33,11 +33,11 @@
 	},
 	"dependencies": {
 		"@roenlie/core": "workspace:^",
-		"lit": "^3.2.1"
+		"lit": "^3.3.0"
 	},
 	"devDependencies": {
-		"@roenlie/vite-lib-config": "workspace:^",
-		"@roenlie/mirage-docs": "workspace:^"
+		"@roenlie/mirage-docs": "workspace:^",
+		"@roenlie/vite-lib-config": "workspace:^"
 	},
 	"sideEffects": false
 }

@@ -3,8 +3,8 @@ import type { Writeable } from '@roenlie/core/types';
 import { render } from 'lit-html';
 import { Signal } from 'signal-polyfill';
 
+import { effect } from '../shared/effect.ts';
 import { DisposingEventHost } from './auto-disposing-event-host.ts';
-import { effect } from './effect.ts';
 
 
 // Ensure metadata is enabled. TypeScript does not polyfill
@@ -91,9 +91,9 @@ export class SignalElement extends DisposingEventHost {
 		return metadata;
 	}
 
-	private __unsubEffect?: () => void;
-	private __changedProps = new Set<string | symbol>();
-	private __previousProps = new Map<string | symbol, any>();
+	private __unsubEffect?:  () => void;
+	private __changedProps:  Set<string | symbol> = new Set();
+	private __previousProps: Map<string | symbol, any> = new Map();
 
 	attributeChangedCallback(name: string, _oldValue: string, newValue: string): void {
 		const metadata = this.__metadata;

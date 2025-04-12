@@ -1,10 +1,10 @@
-import { parse } from 'path';
+import { parse } from 'node:path';
 
 import { toPascalCase } from '../../../shared/to-pascal-case.js';
 import { toTagName } from './to-tag-name.js';
 
 
-export const createModuleIdFromPath = (path: string, prefix = 'alias:') => {
+export const createModuleIdFromPath = (path: string, prefix = 'alias:'): string => {
 	const fileInfo = parse(path);
 
 	return prefix + fileInfo.name
@@ -13,7 +13,7 @@ export const createModuleIdFromPath = (path: string, prefix = 'alias:') => {
 };
 
 
-export const createComponentTagFromPath = (path: string) => {
+export const createComponentTagFromPath = (path: string): string => {
 	const fileInfo = parse(path);
 	const tagname = toTagName(fileInfo.name, 'midoc');
 
@@ -33,7 +33,7 @@ export const createComponentTagFromPath = (path: string) => {
 };
 
 
-export const createComponentNameFromPath = (path: string) => {
+export const createComponentNameFromPath = (path: string): string => {
 	const fileInfo = parse(path);
 
 	return toPascalCase('Midoc' + fileInfo.name.replaceAll(' ', '-') + 'Cmp');

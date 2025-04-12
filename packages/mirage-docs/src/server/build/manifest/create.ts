@@ -1,7 +1,9 @@
-import { type AnalyzePhaseParams, type Plugin } from '@custom-elements-manifest/analyzer';
-import { create, litPlugin, ts } from '@custom-elements-manifest/analyzer/src/browser-entrypoint.js';
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
 
+import type { AnalyzePhaseParams, Plugin } from '@custom-elements-manifest/analyzer';
+import { create, litPlugin, ts } from '@custom-elements-manifest/analyzer/src/browser-entrypoint.js';
+
+import type { CustomElementManifest } from '../../../shared/metadata.types.js';
 import { TagCatcher } from '../cache/create-tag-cache.js';
 
 
@@ -12,14 +14,14 @@ export interface CreateManifestOptions {
 	 * Run the analyze builder in dev mode.
 	 * @default false
 	 */
-	dev?:     boolean,
+	dev?:     boolean;
 	/**
 	 * Use ``custom-elements-manifest/analyzer`` plugins.
 	 * Get more information about these plugins here:
 	 *
 	 * https://custom-elements-manifest.open-wc.org/analyzer/plugins/intro/
 	 */
-	plugins?: Plugin[],
+	plugins?: Plugin[];
 }
 
 
@@ -37,7 +39,7 @@ const createModule = (path: string) => {
 export const createManifest = (paths: string[], {
 	dev = false,
 	plugins = [],
-}: CreateManifestOptions = {}) => {
+}: CreateManifestOptions = {}): CustomElementManifest => {
 	const modules = paths.map(createModule);
 
 	plugins.push(...litPlugin(), litUsedTagsPlugin());
@@ -50,8 +52,7 @@ export const createManifest = (paths: string[], {
 };
 
 
-function litUsedTagsPlugin(): Plugin {
-// Write a custom plugin
+const litUsedTagsPlugin = (): Plugin => {
 	return {
 		// Make sure to always give your plugins a name, this helps when debugging
 		name: 'lit-used-tags',
@@ -82,8 +83,7 @@ function litUsedTagsPlugin(): Plugin {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		packageLinkPhase({ customElementsManifest, context }) {},
 	};
-}
+};
 
-function getDeclarationDoc(moduleDoc: Module, name: string) {
-	return moduleDoc.declarations?.find(x => x.name === name);
-}
+const getDeclarationDoc = (moduleDoc: Module, name: string) =>
+	moduleDoc.declarations?.find(x => x.name === name);

@@ -1,18 +1,18 @@
-import { ContainerLoader } from '../aegis/index.js';
 import { LitElement } from 'lit';
 
 import type { SiteConfig } from '../../shared/config.types.js';
+import { ContainerLoader } from '../aegis/index.js';
 
 
-const subscribers = new Set<WeakRef<LitElement>>();
+const subscribers: Set<WeakRef<LitElement>> = new Set();
 
 
-export const subscribeToColorChange = (element: LitElement) => {
+export const subscribeToColorChange = (element: LitElement): void => {
 	subscribers.add(new WeakRef(element));
 };
 
 
-export const getColorScheme = () => {
+export const getColorScheme = (): string => {
 	const localTheme = localStorage.getItem('midocColorScheme') ?? 'dark';
 	const currentTheme = document.documentElement.getAttribute('color-scheme') ?? localTheme;
 
@@ -20,7 +20,7 @@ export const getColorScheme = () => {
 };
 
 
-export const setColorScheme = (theme: string) => {
+export const setColorScheme = (theme: string): void => {
 	localStorage.setItem('midocColorScheme', theme);
 	document.documentElement.setAttribute('color-scheme', theme);
 
@@ -28,13 +28,13 @@ export const setColorScheme = (theme: string) => {
 };
 
 
-export const ensureColorScheme = () => {
+export const ensureColorScheme = (): void => {
 	const currentTheme = getColorScheme();
 	setColorScheme(currentTheme);
 };
 
 
-export const toggleColorScheme = () => {
+export const toggleColorScheme = (): 'dark' | 'light' => {
 	const localTheme = localStorage.getItem('midocColorScheme') ?? 'dark';
 	const currentTheme = document.documentElement.getAttribute('color-scheme') ?? localTheme;
 	const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
@@ -45,7 +45,7 @@ export const toggleColorScheme = () => {
 };
 
 
-export const updateColorSchemeLinks = () => {
+export const updateColorSchemeLinks = (): void => {
 	const cfg = ContainerLoader.get<SiteConfig>('site-config');
 
 	const mode = getColorScheme();

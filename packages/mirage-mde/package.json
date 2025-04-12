@@ -40,7 +40,7 @@
 		"@roenlie/mirage-mde-display": "workspace:^",
 		"cm6-theme-basic-dark": "^0.2.0",
 		"highlight.js": "^11.11.1",
-		"lit": "^3.2.1",
+		"lit": "^3.3.0",
 		"marked": "^15.0.8",
 		"marked-extended-tables": "^2.0.1",
 		"marked-gfm-heading-id": "^4.1.1",

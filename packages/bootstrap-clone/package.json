@@ -10,11 +10,11 @@
 	},
 	"dependencies": {
 		"@roenlie/custom-element": "workspace:^",
-		"lit-html": "^3.2.1"
+		"lit-html": "^3.3.0"
 	},
 	"devDependencies": {
-		"@roenlie/vite-lib-config": "workspace:^",
 		"@roenlie/mirage-docs": "workspace:^",
-		"lit": "^3.2.1"
+		"@roenlie/vite-lib-config": "workspace:^",
+		"lit": "^3.3.0"
 	}
 }

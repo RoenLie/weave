@@ -1,4 +1,4 @@
-export const trim = (string: string[]) => {
+export const trim = (string: string[]): string => {
 	let trimmed = string.join('/').replaceAll('./', '/');
 	while (trimmed.includes('//'))
 		trimmed = trimmed.replaceAll('//', '/');
@@ -7,14 +7,14 @@ export const trim = (string: string[]) => {
 };
 
 
-export const expandHash = (prefix: string, hash: string) => {
+export const expandHash = (prefix: string, hash: string): string => {
 	hash = trim([ prefix, '/', hash ]);
 	hash = hash.slice([ ...hash ].findIndex(c => c !== '/'));
 
 	return hash;
 };
 
-export const trimHash = (prefix: string, hash: string) => {
+export const trimHash = (prefix: string, hash: string): string => {
 	hash = trim(hash.replace(prefix, '').split('/'));
 	hash = hash.slice([ ...hash ].findIndex(c => c !== '/'));
 
@@ -22,7 +22,7 @@ export const trimHash = (prefix: string, hash: string) => {
 };
 
 
-export const randomString = (length: number) => {
+export const randomString = (length: number): string => {
 	const characters = 'abcdefghijklmnopqrstuvwxyz';
 	let randomString = '';
 

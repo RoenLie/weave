@@ -26,9 +26,9 @@
 		}
 	},
 	"dependencies": {
-		"@roenlie/vite-lib-config": "workspace:^",
 		"@roenlie/core": "workspace:^",
-		"lit": "^3.2.1",
+		"@roenlie/vite-lib-config": "workspace:^",
+		"lit": "^3.3.0",
 		"nanoid": "^5.1.5",
 		"urlpattern-polyfill": "^10.0.0"
 	}

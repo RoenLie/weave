@@ -1,8 +1,10 @@
 import type { Writeable } from '@roenlie/core/types';
 import { render } from 'lit-html';
 
-import { effect } from '../signal-element/effect.ts';
-import { type CSSStyle, getFlatStyles, getPrototypeChain } from './helpers.ts';
+import { effect } from '../shared/effect.ts';
+import type { ReactiveController, ReactiveControllerHost } from '../shared/reactive-controller.ts';
+import type { CSSStyle } from './helpers.ts';
+import { getFlatStyles, getPrototypeChain } from './helpers.ts';
 import type { AdapterMetadata } from './types.ts';
 
 
@@ -18,7 +20,6 @@ export class AdapterProxy extends HTMLElement {
 		return value instanceof this.adapter;
 	}
 
-	declare ['constructor']: typeof AdapterProxy;
 	constructor() {
 		super();
 
@@ -28,13 +29,15 @@ export class AdapterProxy extends HTMLElement {
 
 	protected adapter?: AdapterElement;
 	protected attrCtrl: MutationObserver;
-	renderRoot:         ShadowRoot | HTMLElement;
+
+	renderRoot: ShadowRoot | HTMLElement;
 
 	protected connectedCallback(): void { this.connectAdapter(); }
 	protected disconnectedCallback(): void { this.disconnectAdapter(); }
 
 	protected connectAdapter(): void {
-		const metadata = this.constructor.adapter.metadata;
+		const base = this.constructor as any as typeof AdapterProxy;
+		const metadata = base.adapter.metadata;
 
 		if (!this.adapter) {
 			for (const { propName } of Object.values(metadata.propertyMetadata)) {
@@ -48,13 +51,13 @@ export class AdapterProxy extends HTMLElement {
 				});
 			}
 
-			const protoChain = getPrototypeChain(this.constructor.adapter);
+			const protoChain = getPrototypeChain(base.adapter);
 			metadata.styles = getFlatStyles('styles', protoChain);
 
 			this.shadowRoot!.adoptedStyleSheets = metadata.styles;
 			this.attrCtrl = new MutationObserver(this.observeAttributes);
 
-			this.adapter = new this.constructor.adapter();
+			this.adapter = new base.adapter();
 			(this.adapter as any).__element = new WeakRef(this);
 		}
 
@@ -108,7 +111,8 @@ export class AdapterProxy extends HTMLElement {
 	};
 
 	protected attributeChanged(name: string, value: string): void {
-		const metadata = this.constructor.adapter.metadata;
+		const base = this.constructor as any as typeof AdapterProxy;
+		const metadata = base.adapter.metadata;
 
 		const propMeta = metadata.propertyMetadata?.[name];
 		if (!propMeta)
@@ -139,7 +143,7 @@ export class AdapterProxy extends HTMLElement {
 }
 
 
-export class AdapterElement {
+export class AdapterElement implements ReactiveControllerHost {
 
 	static tagName: string;
 	static register(): void {
@@ -147,12 +151,12 @@ export class AdapterElement {
 			return;
 
 		const adapter = this;
-
 		const cls = class extends AdapterProxy {
 
 			protected static override adapter = adapter;
 
 		};
+
 		Object.defineProperty(cls, 'name', {
 			value: this.tagName.replaceAll('-', '_'),
 		});
@@ -172,7 +176,6 @@ export class AdapterElement {
 		return metadata;
 	}
 
-	declare ['constructor']: typeof AdapterElement;
 	constructor() {
 		this.updateComplete = Promise.resolve(true);
 	}
@@ -185,6 +188,7 @@ export class AdapterElement {
 	private __element:        WeakRef<AdapterProxy>;
 	private __unsubEffect?:   () => void;
 	private __resolveUpdate?: (bool: true) => void;
+	private __controllers:    Set<ReactiveController> = new Set();
 
 	readonly hasConnected:   boolean = false;
 	readonly hasUpdated:     boolean = false;
@@ -213,14 +217,30 @@ export class AdapterElement {
 		this.__unsubEffect?.();
 	}
 
+	addController(controller: ReactiveController): void {
+		this.__controllers.add(controller);
+
+		if (this.hasConnected)
+			controller.hostConnected?.();
+	}
+
+	removeController(controller: ReactiveController): void {
+		this.__controllers.delete(controller);
+	}
+
 	protected beforeUpdate(changedProps: Set<string | symbol>): void {
+		for (const controller of this.__controllers)
+			controller.hostUpdate?.();
 	}
 
 	protected afterUpdate(changedProps: Set<string | symbol>): void {
+		for (const controller of this.__controllers)
+			controller.hostUpdated?.();
 	}
 
 	requestUpdate(): Promise<boolean> {
-		const metadata = this.constructor.metadata;
+		const base = this.constructor as any as typeof AdapterElement;
+		const metadata = base.metadata;
 
 		for (const prop of metadata.signalProps ?? []) {
 			const value = this[prop as keyof typeof this];
@@ -247,7 +267,8 @@ export class AdapterElement {
 		if (!this.__resolveUpdate)
 			return;
 
-		const metadata = this.constructor.metadata;
+		const base = this.constructor as any as typeof AdapterElement;
+		const metadata = base.metadata;
 
 		this.beforeUpdate(metadata.changedProps);
 

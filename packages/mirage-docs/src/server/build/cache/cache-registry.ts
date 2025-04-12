@@ -11,7 +11,7 @@ let editor: FilePathCache;
 let markdown: FilePathCache;
 
 
-export const createCache = async (props: InternalConfigProperties) => {
+export const createCache = async (props: InternalConfigProperties): Promise<void> => {
 	[ manifest, tag, editor, markdown ] = await Promise.all([
 		createManifestCache({ directories: props.tagDirs! }),
 		createTagCache({ directories: props.tagDirs! }),
@@ -21,6 +21,11 @@ export const createCache = async (props: InternalConfigProperties) => {
 };
 
 
-export const getCache = () => {
+export const getCache = (): {
+	manifest: Map<string, Declarations>;
+	tag:      Map<string, string>;
+	editor:   FilePathCache;
+	markdown: FilePathCache;
+} => {
 	return { manifest, tag, editor, markdown };
 };

@@ -1,8 +1,7 @@
-import { stringRepeat } from '../helpers/string-repeat.js';
 import type { PluginWithOptions } from 'markdown-it';
 
 
-export const tabReplacePlugin: PluginWithOptions<{ tabWidth: number }> = (md, options) => {
+export const tabReplacePlugin: PluginWithOptions<{ tabWidth: number; }> = (md, options) => {
 	// default to being two spaces wide
 	const tabWidth: number = options?.tabWidth ?? 2;
 
@@ -24,7 +23,7 @@ export const tabReplacePlugin: PluginWithOptions<{ tabWidth: number }> = (md, op
 		// - no, jump to the character after the next newline
 		while (idx > -1 && idx < content.length) {
 			while (content[idx] === '\t') {
-				content = content.substring(0, idx) + stringRepeat(tabWidth, ' ') + content.substring(idx + 1);
+				content = content.substring(0, idx) + ' '.repeat(tabWidth) + content.substring(idx + 1);
 				idx += tabWidth;
 			}
 			idx = content.indexOf('\n', idx);

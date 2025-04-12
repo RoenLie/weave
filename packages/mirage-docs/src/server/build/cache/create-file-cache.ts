@@ -9,7 +9,7 @@ export type FilePathCache = Map<string, string> & {
 
 
 export const createFileCache = async (options: {
-	directories: { path: string; pattern: RegExp }[];
+	directories: { path: string; pattern: RegExp; }[];
 	cache?:      Map<string, string>;
 }): Promise<FilePathCache> => {
 	const { cache = new Map<string, string>() } = options;

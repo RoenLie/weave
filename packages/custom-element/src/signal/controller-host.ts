@@ -1,4 +1,4 @@
-import type { ReactiveController, ReactiveControllerHost } from './reactive-controller.ts';
+import type { ReactiveController, ReactiveControllerHost } from '../shared/reactive-controller.ts';
 import { SignalElement } from './signal-element.ts';
 
 
@@ -21,14 +21,14 @@ export class ReactiveSignalControllerHost extends SignalElement implements React
 	}
 
 
-	public addController(controller: ReactiveController): void {
+	addController(controller: ReactiveController): void {
 		this.#controllers.add(controller);
 
 		if (this.hasConnected)
 			controller.hostConnected?.();
 	}
 
-	public removeController(controller: ReactiveController): void {
+	removeController(controller: ReactiveController): void {
 		this.#controllers.delete(controller);
 	}
 

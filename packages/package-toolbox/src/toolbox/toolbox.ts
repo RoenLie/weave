@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 
 import type { ReleaseType } from 'semver';
 
-import type { BuildPackageOptions } from '../build-package/build-package.js';
+import { buildPackage, type BuildPackageOptions } from '../build-package/build-package.js';
 import { copy } from '../filesystem/copy-files.js';
 import { indexBuilder as buildIndex } from '../index-builder/index-builder.js';
 import { mergeTSConfig } from '../merge-tsconfig/merge-tsconfig.js';
@@ -39,7 +39,7 @@ export const toolbox = async (filePath = './pkg-toolbox.ts'): Promise<PartialToo
 			incrementVersion({ release });
 		},
 		buildPackage: async (options) => {
-			console.log('Building package...', options);
+			await buildPackage(options);
 		},
 	} satisfies PartialToolbox;
 
@@ -51,7 +51,8 @@ export const toolbox = async (filePath = './pkg-toolbox.ts'): Promise<PartialToo
 
 	const config = await loadConfig(filePath);
 
-	return Object.assign(partialToolbox, {
+	return {
+		...partialToolbox,
 		type:         'full',
 		indexBuilder: async () => {
 			if (!config.indexBuilder)
@@ -118,5 +119,5 @@ export const toolbox = async (filePath = './pkg-toolbox.ts'): Promise<PartialToo
 			if (cfg)
 				await copy(cfg);
 		},
-	} satisfies Omit<Toolbox, Exclude<keyof PartialToolbox, 'type'>>);
+	} satisfies Toolbox;
 };

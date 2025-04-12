@@ -1,6 +1,6 @@
 import { promises } from 'node:fs';
 
-import { resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
+import { type ResolvablePromise, resolvablePromise } from '@roenlie/core/async';
 import { withDebounce } from '@roenlie/core/timing';
 import type { HtmlTagDescriptor, ModuleNode, Plugin, ResolvedConfig } from 'vite';
 
@@ -8,8 +8,8 @@ import { getCache } from './build/cache/cache-registry.js';
 import { componentAutoImportLoad } from './build/component/auto-import.js';
 import { DocPath } from './build/helpers/docpath.js';
 import { fileExt } from './build/helpers/is-dev-mode.js';
-import { MarkdownComponentFactory } from './create-markdown-cmp.js';
 import type { InternalConfigProperties } from './config.js';
+import { MarkdownComponentFactory } from './create-markdown-cmp.js';
 
 
 export const createPlugin = (args: {

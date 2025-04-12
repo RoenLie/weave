@@ -48,10 +48,10 @@
 		"@roenlie/core": "workspace:^"
 	},
 	"devDependencies": {
-		"@roenlie/vite-lib-config": "workspace:^",
 		"@lit-labs/preact-signals": "^1.0.3",
+		"@roenlie/vite-lib-config": "workspace:^",
 		"happy-dom": "^17.4.4",
-		"lit": "^3.2.1"
+		"lit": "^3.3.0"
 	},
 	"sideEffects": false
 }

@@ -3,105 +3,105 @@ import { Container } from './container.js';
 
 export class ContainerFacility {
 
-	public static container = new Container({ skipBaseClassChecks: true });
+	static container = new Container({ skipBaseClassChecks: true });
 
 }
 
 
 export class ContainerLoader {
 
-	public static readonly loadingQueue: Promise<any>[] = [];
+	static readonly loadingQueue: Promise<any>[] = [];
 
-	public static async waitForQueue() {
+	static async waitForQueue() {
 		while (ContainerLoader.loadingQueue.length)
 			await ContainerLoader.loadingQueue[0];
 	}
 
-	public static addToLoadingQueue(promise: Promise<any>) {
+	static addToLoadingQueue(promise: Promise<any>) {
 		this.loadingQueue.push(promise);
 	}
 
-	public static removeFromLoadingQueue(promise: Promise<any>) {
+	static removeFromLoadingQueue(promise: Promise<any>) {
 		this.loadingQueue
 			.splice(this.loadingQueue.indexOf(promise), 1);
 	}
 
-	public static get load() {
+	static get load() {
 		return ContainerFacility.container.load
 			.bind(ContainerFacility.container);
 	}
 
-	public static get unload() {
+	static get unload() {
 		return ContainerFacility.container.unload
 			.bind(ContainerFacility.container);
 	}
 
-	public static get isBound() {
+	static get isBound() {
 		return ContainerFacility.container.isBound
 			.bind(ContainerFacility.container);
 	}
 
-	public static get get() {
+	static get get() {
 		return ContainerFacility.container.get
 			.bind(ContainerFacility.container);
 	}
 
-	public static get getAsync() {
+	static get getAsync() {
 		return ContainerFacility.container.getAsync
 			.bind(ContainerFacility.container);
 	}
 
-	public static get getTagged() {
+	static get getTagged() {
 		return ContainerFacility.container.getTagged
 			.bind(ContainerFacility.container);
 	}
 
-	public static get getTaggedAsync() {
+	static get getTaggedAsync() {
 		return ContainerFacility.container.getTaggedAsync
 			.bind(ContainerFacility.container);
 	}
 
-	public static get getNamed() {
+	static get getNamed() {
 		return ContainerFacility.container.getNamed
 			.bind(ContainerFacility.container);
 	}
 
-	public static get getNamedAsync() {
+	static get getNamedAsync() {
 		return ContainerFacility.container.getNamedAsync
 			.bind(ContainerFacility.container);
 	}
 
-	public static get getAll() {
+	static get getAll() {
 		return ContainerFacility.container.getAll
 			.bind(ContainerFacility.container);
 	}
 
-	public static get getAllAsync() {
+	static get getAllAsync() {
 		return ContainerFacility.container.getAllAsync
 			.bind(ContainerFacility.container);
 	}
 
-	public static get getAllTagged() {
+	static get getAllTagged() {
 		return ContainerFacility.container.getAllTagged
 			.bind(ContainerFacility.container);
 	}
 
-	public static get getAllTaggedAsync() {
+	static get getAllTaggedAsync() {
 		return ContainerFacility.container.getAllTaggedAsync
 			.bind(ContainerFacility.container);
 	}
 
-	public static get getAllNamed() {
+	static get getAllNamed() {
 		return ContainerFacility.container.getAllNamed
 			.bind(ContainerFacility.container);
 	}
 
-	public static get getAllNamedAsync() {
+	static get getAllNamedAsync() {
 		return ContainerFacility.container.getAllNamedAsync
 			.bind(ContainerFacility.container);
 	}
 
-	public static get resolve() {
+	static get resolve() {
 		return ContainerFacility.container.resolve
 			.bind(ContainerFacility.container);
 	}

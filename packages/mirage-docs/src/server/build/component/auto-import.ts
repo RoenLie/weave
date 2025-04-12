@@ -1,9 +1,9 @@
 import Fs from 'node:fs';
 
-import { type AutoImportLoadProps } from './auto-import.types.js';
+import type { AutoImportLoadProps } from './auto-import.types.js';
 
 
-export const componentAutoImportLoad = (props: AutoImportLoadProps) => {
+export const componentAutoImportLoad = (props: AutoImportLoadProps): string | undefined => {
 	const {
 		id,
 		config,
@@ -25,7 +25,7 @@ export const componentAutoImportLoad = (props: AutoImportLoadProps) => {
 	let code = Fs.readFileSync(id, { encoding: 'utf8' });
 
 	/* save the matching tags to a set, to avoid duplicates */
-	const tagsUsed = new Set<string>();
+	const tagsUsed: Set<string> = new Set();
 
 	/* loop through all tags that match the capture expression. */
 	code.replaceAll(tagCaptureExpr, (val, tag) => {

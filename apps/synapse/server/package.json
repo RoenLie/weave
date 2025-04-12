@@ -19,7 +19,7 @@
 		"@roenlie/synapse-server": "workspace:^",
 		"better-sqlite3": "^11.9.1",
 		"cors": "^2.8.5",
-		"dotenv": "^16.4.7",
+		"dotenv": "^16.5.0",
 		"env-paths": "^3.0.0",
 		"express": "^5.1.0",
 		"formidable": "^3.5.2",

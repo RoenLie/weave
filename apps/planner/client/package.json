@@ -33,7 +33,7 @@
 		"deepmerge-ts": "^7.1.5",
 		"fast-equals": "^5.2.2",
 		"inversify": "^7.5.0",
-		"lit": "^3.2.1",
+		"lit": "^3.3.0",
 		"nanoid": "^5.1.5",
 		"tabbable": "^6.2.0",
 		"ts-pattern": "^5.7.0",
@@ -41,6 +41,6 @@
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^9.6.0",
-		"dotenv": "^16.4.7"
+		"dotenv": "^16.5.0"
 	}
 }

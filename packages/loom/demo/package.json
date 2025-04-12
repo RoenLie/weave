@@ -7,6 +7,6 @@
 	"main": "pathToMain",
 	"dependencies": {
 		"@roenlie/loom": "workspace:^",
-		"lit": "^3.2.1"
+		"lit": "^3.3.0"
 	}
 }

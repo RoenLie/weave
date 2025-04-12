@@ -2,7 +2,7 @@ import type { PluginSimple } from 'markdown-it';
 import type { RenderRule } from 'markdown-it/lib/renderer.mjs';
 
 
-function renderCode(origRule?: RenderRule): RenderRule | undefined {
+const renderCode = (origRule?: RenderRule): RenderRule | undefined => {
 	if (!origRule)
 		return;
 
@@ -28,7 +28,7 @@ function renderCode(origRule?: RenderRule): RenderRule | undefined {
 		</div>
 		`;
 	};
-}
+};
 
 export const copyCodePlugin: PluginSimple = (md) => {
 	md.renderer.rules.code_block = renderCode(md.renderer.rules.code_block);

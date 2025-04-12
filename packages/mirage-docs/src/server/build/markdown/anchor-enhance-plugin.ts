@@ -1,7 +1,7 @@
 import type { PluginWithOptions } from 'markdown-it';
 
 
-export const anchorEnhancePlugin: PluginWithOptions<{ class: string }> = (md) => {
+export const anchorEnhancePlugin: PluginWithOptions<{ class: string; }> = (md) => {
 	md.core.ruler.push('anchor_internalizer', (state) => {
 		const tokens = state.tokens;
 
@@ -9,9 +9,9 @@ export const anchorEnhancePlugin: PluginWithOptions<{ class: string }> = (md) =>
 			if (token?.type !== 'inline')
 				continue;
 
-			token.children?.forEach(value => {
+			for (const value of token.children ?? []) {
 				if (value.type !== 'link_open')
-					return;
+					continue;
 
 				const classes = (value.attrGet('class') ?? '')
 					.split(' ')
@@ -22,7 +22,7 @@ export const anchorEnhancePlugin: PluginWithOptions<{ class: string }> = (md) =>
 					classes.push('internal');
 
 				value.attrSet('class', classes.join(' '));
-			});
+			}
 		}
 	});
 };

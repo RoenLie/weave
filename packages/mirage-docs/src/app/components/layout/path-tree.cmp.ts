@@ -1,4 +1,3 @@
-import { Adapter, AegisComponent, ContainerLoader, customElement, inject, state } from '../../aegis/index.js';
 import { css, html, type PropertyValues, type TemplateResult, unsafeCSS } from 'lit';
 import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
@@ -7,6 +6,7 @@ import { when } from 'lit/directives/when.js';
 import { type FocusableElement, tabbable } from 'tabbable';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
+import { Adapter, AegisComponent, ContainerLoader, customElement, inject, state } from '../../aegis/index.js';
 import { buttonStyle } from '../../styles/button.styles.js';
 import { componentStyles } from '../../styles/component.styles.js';
 import { findActiveElement } from '../../utilities/domquery.js';
@@ -17,14 +17,14 @@ import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
 @customElement('midoc-path-tree')
 export class PathTreeCmp extends AegisComponent {
 
-	@property({ type: Array }) public paths: string[] = [];
-	protected override adapter:              PathTreeAdapter;
+	@property({ type: Array }) paths: string[] = [];
+	protected override adapter:       PathTreeAdapter;
 
 	constructor() {
 		super(PathTreeAdapter);
 	}
 
-	public toggleAll(value: boolean) {
+	toggleAll(value: boolean): void {
 		this.adapter.toggleAll(value);
 	}
 
@@ -53,7 +53,7 @@ export class PathTreeAdapter extends Adapter<PathTreeCmp> {
 
 
 	//#region lifecycle
-	public override connectedCallback(): void {
+	override connectedCallback(): void {
 		this.element.addEventListener('keydown', this.handleKeydown);
 		window.addEventListener('hashchange', this.handleHashChange, { passive: true });
 
@@ -71,12 +71,12 @@ export class PathTreeAdapter extends Adapter<PathTreeCmp> {
 		}, 0);
 	}
 
-	public override disconnectedCallback(): void {
+	override disconnectedCallback(): void {
 		this.element.removeEventListener('keydown', this.handleKeydown);
 		window.removeEventListener('hashchange', this.handleHashChange);
 	}
 
-	public override willUpdate(props: PropertyValues): void {
+	override willUpdate(props: PropertyValues): void {
 		if (props.has('paths')) {
 			const { groupingKey, nameReplacements } = this.siteConfig.root!.sidebar!;
 
@@ -103,7 +103,7 @@ export class PathTreeAdapter extends Adapter<PathTreeCmp> {
 
 
 	//#region logic
-	public toggleAll(value: boolean) {
+	toggleAll(value: boolean) {
 		const toggle = (hierarchy: Record<string, string | any>) => {
 			Object.entries(hierarchy).forEach(([ dir, next ]) => {
 				if (typeof next !== 'string') {
@@ -255,14 +255,14 @@ export class PathTreeAdapter extends Adapter<PathTreeCmp> {
 		`;
 	};
 
-	public override render() {
+	override render() {
 		return this.groupTemplate(this.hierarchy);
 	}
 	//#endregion
 
 
 	//#region styles
-	public static override styles = [
+	static override styles = [
 		componentStyles,
 		css`
 		${ buttonStyle('button.toggle', 30, 20) }

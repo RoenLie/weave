@@ -10,7 +10,7 @@ import { editorPageTemplate } from './generators/editor-page-template.js';
 export const createEditorComponent = async (
 	targetPath: string,
 	path: string,
-) => {
+): Promise<string> => {
 	let content = await promises.readFile(path, { encoding: 'utf8' });
 	const componentTag   = createComponentTagFromPath(path);
 	const componentClass = createComponentNameFromPath(path);

@@ -27,7 +27,7 @@
 		"@roenlie/lit-context": "workspace:^",
 		"@roenlie/lit-state-store": "workspace:^",
 		"@roenlie/lit-utilities": "workspace:^",
-		"lit": "^3.2.1",
+		"lit": "^3.3.0",
 		"monaco-editor": "^0.52.2",
 		"socket.io-client": "^4.8.1",
 		"tslib": "^2.8.1"

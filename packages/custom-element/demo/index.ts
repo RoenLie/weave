@@ -1,8 +1,8 @@
 import { html, render } from 'lit-html';
 
-import { AdapterElement } from '../src/adapter-element/adapter-element.ts';
-import { property, state } from '../src/adapter-element/decorators.ts';
-import { css, type CSSStyle } from '../src/adapter-element/helpers.ts';
+import { AdapterElement } from '../src/adapter/adapter-element.ts';
+import { property, state } from '../src/adapter/decorators.ts';
+import { css, type CSSStyle } from '../src/adapter/helpers.ts';
 
 
 export class RootPage extends AdapterElement {

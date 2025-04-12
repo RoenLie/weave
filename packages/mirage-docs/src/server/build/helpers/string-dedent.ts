@@ -5,7 +5,7 @@ export const stringDedent = (
 		count?:   number;
 		closest?: boolean;
 	}>,
-) => {
+): string => {
 	const { trim = true, closest = true } = options ?? {};
 	let { count = Infinity } = options ?? {};
 
@@ -33,7 +33,8 @@ export const stringDedent = (
 	return lines.join('\n');
 };
 
-export const countFirstCharSequence = (content: string, char: string) => {
+
+export const countFirstCharSequence = (content: string, char: string): number => {
 	let tabCount = 0;
 
 	for (const element of content) {

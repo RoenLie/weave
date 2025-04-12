@@ -28,13 +28,10 @@ export const buildPackage = async (options: BuildPackageOptions): Promise<void> 
 	if (!packageDir)
 		throw new Error('Package not found');
 
-
 	const buildOrder = await getPackageBuildOrder(packageName);
 	console.log('Building packages...', '\n' + buildOrder.join('\n→ ') + '\n');
 
-
 	const handleStdout = (data: any) => verbose && process.stdout.write(data);
-
 
 	let count = 0;
 	for (const cmd of buildOrder) {

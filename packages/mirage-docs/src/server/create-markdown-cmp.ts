@@ -15,17 +15,6 @@ import { docPageTemplate } from './generators/doc-page-template.js';
 
 export class MarkdownComponentFactory {
 
-	protected readonly projectRoot = resolve();
-	protected readonly rootDepth:     number;
-	protected readonly siteConfig:    InternalConfigProperties;
-	protected readonly tagCache:      Map<string, string>;
-	protected readonly manifestCache: Map<string, Declarations>;
-	protected readonly path:          string;
-	protected imports:                string[] = [];
-	protected examples:               Record<string, string> = {};
-	protected metadata:               Record<string, Declarations> = {};
-	protected content = '';
-
 	constructor(args: {
 		path:       string;
 		rootDepth:  number;
@@ -40,12 +29,23 @@ export class MarkdownComponentFactory {
 		this.siteConfig    = args.siteConfig;
 	}
 
+	protected readonly projectRoot = resolve();
+	protected readonly rootDepth:     number;
+	protected readonly siteConfig:    InternalConfigProperties;
+	protected readonly tagCache:      Map<string, string>;
+	protected readonly manifestCache: Map<string, Declarations>;
+	protected readonly path:          string;
+	protected imports:                string[] = [];
+	protected examples:               Record<string, string> = {};
+	protected metadata:               Record<string, Declarations> = {};
+	protected content:                string = '';
+
 	protected addUsedTags(): void {
 		if (!this.siteConfig.autoImport)
 			return;
 
 		/* save the matching tags to a set, to avoid duplicates */
-		const componentImportPaths = new Set<string>();
+		const componentImportPaths: Set<string> = new Set();
 
 		/* loop through and cache paths for all custom element tags. */
 		TagCatcher.get(this.content).forEach(tag => {

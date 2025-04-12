@@ -5,21 +5,29 @@ import { join, normalize, resolve } from 'path';
 
 import { getCache } from './build/cache/cache-registry.js';
 import { DocPath } from './build/helpers/docpath.js';
+import type { InternalConfigProperties } from './config.js';
 import { createEditorComponent } from './create-editor-cmp.js';
 import { createIndexFile } from './create-index-file.js';
 import { MarkdownComponentFactory } from './create-markdown-cmp.js';
 import { siteConfigTemplate } from './generators/site-config-template.js';
 import { tsconfigTemplate } from './generators/tsconfig-template.js';
 import { typingsTemplate } from './generators/typings-template.js';
-import type { InternalConfigProperties } from './config.js';
 
 
-export const createDocFiles = async (props: InternalConfigProperties) => {
+export const createDocFiles = async (props: InternalConfigProperties): Promise<{
+	filesToCreate:          Map<string, string>;
+	markdownComponentPaths: Set<string>;
+	siteconfigImportPath:   string;
+	oramaDb:                Orama<any, any, any, any>;
+	absoluteRootDir:        string;
+	absoluteSourceDir:      string;
+	absoluteLibDir:         string;
+}> => {
 	const cache = getCache();
 	const libDir = props.siteConfig.env.libDir;
 
 	/** Holds the path and content that will be created. */
-	const filesToCreate = new Map<string, string>();
+	const filesToCreate: Map<string, string> = new Map();
 
 	const absoluteLibDir    = normalize(join(resolve(), props.root, libDir));
 	const absoluteRootDir   = normalize(join(resolve(), props.root));
@@ -70,7 +78,7 @@ export const createDocFiles = async (props: InternalConfigProperties) => {
 	//#region create markdown routes
 	// How many levels deep the docsite root is compared to project root.
 	const rootDepth = props.root.split('/').filter(Boolean).length;
-	const markdownComponentPaths = new Set<string>();
+	const markdownComponentPaths: Set<string> = new Set();
 
 	await Promise.all([ ...cache.markdown ].map(async ([ , path ]) => {
 		const factory = new MarkdownComponentFactory({ path, rootDepth, siteConfig: props });

@@ -3,25 +3,25 @@ import hljs from 'highlight.js';
 import mdIt, { type PluginSimple, type PluginWithOptions } from 'markdown-it';
 import mdItAnchor from 'markdown-it-anchor';
 
-import { anchorEnhancePlugin } from './anchor-enhance-plugin.js';
-import { tabReplacePlugin } from './tab-replace-plugin.js';
-import { MermaidPlugin } from './mermaid-plugin.js';
 import type { InternalConfigProperties } from '../../config.js';
+import { anchorEnhancePlugin } from './anchor-enhance-plugin.js';
 import { copyCodePlugin } from './copy-code-plugin.js';
+import { MermaidPlugin } from './mermaid-plugin.js';
+import { tabReplacePlugin } from './tab-replace-plugin.js';
 
 
 export interface MarkdownItConfig {
 	plugins?: ({
-		plugin:   PluginWithOptions<any> | PluginSimple,
-		options?: any
-	})[],
+		plugin:   PluginWithOptions<any> | PluginSimple;
+		options?: any;
+	})[];
 	use?: {
 		anchor?:        boolean;
 		anchorEnhance?: boolean;
 		tabReplace?:    boolean;
 		mermaid?:       boolean;
 		copyCode?:      boolean;
-	}
+	};
 };
 
 
@@ -46,7 +46,7 @@ export const markdownIt = {
 };
 
 
-export const addDefaultMarkdownItPlugins = (use: MarkdownItConfig['use']) => {
+export const addDefaultMarkdownItPlugins = (use: MarkdownItConfig['use']): void => {
 	if (use?.anchor ?? true) {
 		markdownIt.value.use(mdItAnchor, {
 			level:     1,
@@ -71,7 +71,7 @@ export const addDefaultMarkdownItPlugins = (use: MarkdownItConfig['use']) => {
 };
 
 
-export const addMarkdownItPlugins = (plugins: InternalConfigProperties['markdownit']['plugins'] = []) => {
+export const addMarkdownItPlugins = (plugins: InternalConfigProperties['markdownit']['plugins'] = []): void => {
 	for (const { plugin, options } of plugins)
 		markdownIt.value.use(plugin, options);
 };

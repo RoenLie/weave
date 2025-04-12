@@ -4,10 +4,10 @@ import { genToArray, getFiles } from '../helpers/get-files.js';
 
 
 export const createTagCache = async (options: {
-	directories:         { path: string; whitelist?: RegExp[]; blacklist?: RegExp[] }[];
+	directories:         { path: string; whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
 	componentTagCache?:  Map<string, string>;
 	tagCapturePatterns?: RegExp[];
-}) => {
+}): Promise<Map<string, string>> => {
 	const { componentTagCache = new Map<string, string>() } = options;
 
 	options.tagCapturePatterns = [
@@ -62,8 +62,8 @@ export class TagCatcher {
 	// Searches for tags that contain a hypen ( - ).
 	protected static tagExpr = /<\/(\w+-[\w-]+)>/g;
 
-	public static get(...text: string[]) {
-		const tags = new Set<string>();
+	static get(...text: string[]): string[] {
+		const tags: Set<string> = new Set();
 		for (const txt of text)
 			txt.replaceAll(TagCatcher.tagExpr, (s: string, c1: string) => (tags.add(c1), s));
 

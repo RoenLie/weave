@@ -10,6 +10,7 @@ export const toTagName = (text: string, prefix?: string, postfix?: string): stri
 
 	if (prefix)
 		tag = prefix + '-' + tag;
+
 	if (postfix)
 		tag += '-' + postfix;
 

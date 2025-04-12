@@ -13,6 +13,13 @@ import { toolbox } from '../dist/toolbox/toolbox.js';
 
 /**
 * @typedef { Args<{
+* 	config: string,
+* 	outFile?: string,
+* }> } MergeTSConfig
+*/
+
+/**
+* @typedef { Args<{
 * 	release: import('semver').ReleaseType
 * }> } IncrementVersion
 */
@@ -35,7 +42,7 @@ cli = cli.command(
 	'Merges tsconfig inheritance chain into a single tsconfig.',
 	noop,
 	async (args) => {
-		const { config, outFile } = args;
+		const { config, outFile } = /** @type {MergeTSConfig} */ (args);
 		if (typeof config !== 'string')
 			throw new Error('Missing config argument.');
 

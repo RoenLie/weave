@@ -5,7 +5,7 @@ import { genToArray, getFiles } from './get-files.js';
 
 const _getImportPaths = (filepath: string) => {
 	const fileContent = fs.readFileSync(filepath, { encoding: 'utf8' });
-	const paths = new Set<string>();
+	const paths: Set<string> = new Set();
 
 	const wildImports = fileContent.matchAll(/import ['"](.+?)['"]/gs);
 	const normalImports = fileContent.matchAll(/import (?!['"]).+? from ['"](.+?)['"];/gs);
@@ -29,16 +29,16 @@ export const getImportPaths = async (
 				startsWith: string[];
 				includes:   string[];
 				endsWith:   string[];
-			}>
+			}>;
 			path: Partial<{
 				startsWith: string[];
 				includes:   string[];
 				endsWith:   string[];
 			}>;
-		}>
+		}>;
 	},
-) => {
-	const pathSet = new Set<string>();
+): Promise<string[]> => {
+	const pathSet: Set<string> = new Set();
 	let files = (await genToArray(getFiles(from)));
 
 	const { exclude = {} } = options ?? {};
@@ -76,7 +76,9 @@ export const getImportPaths = async (
 };
 
 
-export const getExternalImportPaths = async (...[ from, options ]: Parameters<typeof getImportPaths>) => {
+export const getExternalImportPaths = async (
+	...[ from, options ]: Parameters<typeof getImportPaths>
+): Promise<string[]> => {
 	options ??= {};
 	options.exclude ??= {};
 	options.exclude.path ??= {};

@@ -13,9 +13,11 @@ const ensurePackageLookup = async () => {
 		return;
 
 	const globPath = join(
-		process.cwd().replaceAll('\\', '/').split('/').slice(0, -1).join('/'),
+		process.cwd().replaceAll('\\', '/'),
 		'/**/package.json',
 	);
+
+	//console.log('Looking for package.json files in', globPath);
 
 	const packageGlob = glob(globPath);
 	const packagePaths: string[] = [];

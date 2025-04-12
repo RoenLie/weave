@@ -1,9 +1,9 @@
-import { type ResolvedConfig } from 'vite';
+import type { ResolvedConfig } from 'vite';
 
 
 export interface AutoImportPluginProps {
-	tagPrefixes:     string[],
-	loadWhitelist:   RegExp[],
+	tagPrefixes:     string[];
+	loadWhitelist:   RegExp[];
 	loadBlacklist?:  RegExp[];
 	tagCaptureExpr?: RegExp;
 }

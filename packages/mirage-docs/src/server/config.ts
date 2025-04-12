@@ -2,19 +2,18 @@ import { promises } from 'node:fs';
 import { join, normalize, resolve, sep } from 'node:path';
 
 import { persistToFile } from '@orama/plugin-data-persistence/server';
+import { viteCopy } from '@roenlie/vite-plugin-copy';
 import { deepmerge, deepmergeInto } from 'deepmerge-ts';
-import copy from 'rollup-plugin-copy';
-import { type ConfigEnv, defineConfig, type UserConfig } from 'vite';
+import { type ConfigEnv, defineConfig, type UserConfig, type UserConfigFnPromise } from 'vite';
 
+import type { SiteConfig, UserSiteConfig } from '../shared/config.types.js';
 import { createCache } from './build/cache/cache-registry.js';
+import type { AutoImportPluginProps } from './build/component/auto-import.types.js';
 import { setDevMode } from './build/helpers/is-dev-mode.js';
+import { addDefaultMarkdownItPlugins, addMarkdownItPlugins, type MarkdownItConfig } from './build/markdown/markdown-it.js';
 import { createDocFiles } from './create-files.js';
 import { createPlugin } from './create-plugin.js';
 import { ConsoleBar } from './progress-bar.js';
-import type { PluginWithOptions, PluginSimple } from 'markdown-it';
-import type { SiteConfig, UserSiteConfig } from '../shared/config.types.js';
-import type { AutoImportPluginProps } from './build/component/auto-import.types.js';
-import { addDefaultMarkdownItPlugins, addMarkdownItPlugins, type MarkdownItConfig } from './build/markdown/markdown-it.js';
 
 
 const pRoot = resolve();
@@ -36,7 +35,7 @@ export interface ConfigProperties {
 	/** @default 500ms */
 	hmrReloadDelay?: number | false;
 	debug?:          boolean;
-	markdownit?:     MarkdownItConfig
+	markdownit?:     MarkdownItConfig;
 }
 
 
@@ -49,7 +48,7 @@ export type InternalConfigProperties = Omit<Required<ConfigProperties>, 'autoImp
 export const defineDocConfig = async (
 	docsiteConfig: (env: ConfigEnv) => ConfigProperties | Promise<ConfigProperties>,
 	viteConfig: (env: ConfigEnv) => Omit<UserConfig, 'root' | 'base'> | Promise<Omit<UserConfig, 'root' | 'base'>>,
-) => {
+): Promise<UserConfigFnPromise> => {
 	return defineConfig(async env => {
 		const props = await docsiteConfig(env);
 		const config = await viteConfig(env);
@@ -211,11 +210,11 @@ export const defineDocConfig = async (
 		mergedConfig.build.outDir ??= outDir;
 		mergedConfig.build.emptyOutDir ??= true;
 		mergedConfig.plugins?.push(
-			copy({
+			viteCopy({
 				targets: [
 					{
-						src:  './node_modules/@roenlie/mirage-docs/dist/workers',
-						dest: join(internalProps.root, mergedConfig.publicDir, '.mirage'),
+						from: './node_modules/@roenlie/mirage-docs/dist/workers',
+						to:   join(internalProps.root, mergedConfig.publicDir, '.mirage'),
 					},
 				],
 				hook:     'config',
