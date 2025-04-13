@@ -1,7 +1,7 @@
 /**
  * Does the array contain all of the other items?
  */
-export const hasSameElements = (array: unknown[], other: unknown[]) => {
+export const hasSameElements = (array: unknown[], other: unknown[]): boolean => {
 	// Early return if lengths are not equal
 	if (array.length !== other.length)
 		return false;

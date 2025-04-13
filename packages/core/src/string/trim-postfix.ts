@@ -4,5 +4,5 @@
  *
  * Otherwise, it returns the original string.
  */
-export const trimPostfix = (str: string, postfix: string) =>
+export const trimPostfix = (str: string, postfix: string): string =>
 	str.endsWith(postfix) ? str.slice(0, -postfix.length) : str;

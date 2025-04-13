@@ -7,7 +7,7 @@ export const animateTo = (
 	el: HTMLElement,
 	keyframes: Keyframe[],
 	options?: KeyframeAnimationOptions,
-) => {
+): Promise<unknown> => {
 	return new Promise(resolve => {
 		if (options?.duration === Infinity)
 			throw new Error('Promise-based animations must be finite.');
@@ -26,7 +26,7 @@ export const animateTo = (
 /**
  * Parses a CSS duration and returns the number of milliseconds.
  */
-export const parseDuration = (delay: number | string) => {
+export const parseDuration = (delay: number | string): number => {
 	delay = (delay + '').toLowerCase();
 
 	if (delay.indexOf('ms') > -1)
@@ -44,7 +44,7 @@ export const parseDuration = (delay: number | string) => {
 /**
  * Tells if the user has enabled the "reduced motion" setting in their browser or OS.
  */
-export const prefersReducedMotion = () => {
+export const prefersReducedMotion = (): boolean => {
 	const query = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 	return query?.matches;
@@ -56,7 +56,7 @@ export const prefersReducedMotion = () => {
  *
  * Returns a promise that resolves after all animations are canceled.
  */
-export const stopAnimations = (el: HTMLElement) => {
+export const stopAnimations = (el: HTMLElement): Promise<unknown[]> => {
 	return Promise.all(
 		el.getAnimations().map((animation: any) => {
 			return new Promise(resolve => {
@@ -77,12 +77,15 @@ export const stopAnimations = (el: HTMLElement) => {
  *
  * @example
  * ```ts
- * 	await animateTo(this.body, shimKeyframesHeightAuto(keyframes, this.body.scrollHeight), options);
- * 	this.body.style.height = 'auto';
+ * await animateTo(this.body, shimKeyframesHeightAuto(keyframes, this.body.scrollHeight), options);
+ * this.body.style.height = 'auto';
  * ```
- * .
  */
-export const shimKeyframesHeightAuto = (keyframes: Keyframe[], calculatedHeight: number, initialHeight?: number) => {
+export const shimKeyframesHeightAuto = (
+	keyframes: Keyframe[],
+	calculatedHeight: number,
+	initialHeight?: number,
+): (Keyframe & { height: string | number | null | undefined; })[] => {
 	if (initialHeight) {
 		Object.assign(keyframes.at(0) ?? {}, {
 			height: initialHeight + 'px',

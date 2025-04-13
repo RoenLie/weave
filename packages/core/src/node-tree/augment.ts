@@ -7,8 +7,12 @@ export const $Augmented = Symbol();
 
 export const augment = <
 	TObj extends object,
-	TProp extends Key
->(obj: TObj, childProp: TProp, parent?: TreeNode<TObj, TProp>) => {
+	TProp extends Key,
+>(
+	obj: TObj,
+	childProp: TProp,
+	parent?: TreeNode<TObj, TProp>,
+): TreeNode<TObj, TProp> => {
 	const proxy = new Proxy(obj, {
 		get(target, p, _receiver) {
 			if (p === $Augmented)

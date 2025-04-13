@@ -4,13 +4,13 @@
  * @returns a promise that resolves when the scroll finishes.
  */
 export const scrollElementTo = (element: HTMLElement, options: {
-	y?:        number,
-	x?:        number,
+	y?:        number;
+	x?:        number;
 	/** @default 300 */
-	duration?: number,
+	duration?: number;
 	/** @default easeOutCuaic */
-	easing?:   keyof typeof effects
-}) => {
+	easing?:   keyof typeof effects;
+}): Promise<unknown> | undefined => {
 	const {
 		x = element.scrollLeft,
 		y = element.scrollTop,
@@ -72,16 +72,16 @@ const scrollToXY = (
 
 
 export const effects = {
-	linearTween: (t: number) =>{
+	linearTween: (t: number): number =>{
 		return t;
 	},
-	easeInQuad: (t: number) =>{
+	easeInQuad: (t: number): number =>{
 		return t * t;
 	},
-	easeOutQuad: (t: number) =>{
+	easeOutQuad: (t: number): number =>{
 		return -t * (t - 2);
 	},
-	easeInOutQuad: (t: number) =>{
+	easeInOutQuad: (t: number): number =>{
 		t /= 0.5;
 		if (t < 1)
 			return t * t / 2;
@@ -90,15 +90,15 @@ export const effects = {
 
 		return (t * (t - 2) - 1) / 2;
 	},
-	easeInCuaic: (t: number) =>{
+	easeInCuaic: (t: number): number =>{
 		return t * t * t;
 	},
-	easeOutCuaic: (t: number) =>{
+	easeOutCuaic: (t: number): number =>{
 		t--;
 
 		return t * t * t + 1;
 	},
-	easeInOutCuaic: (t: number) =>{
+	easeInOutCuaic: (t: number): number =>{
 		t /= 0.5;
 		if (t < 1)
 			return t * t * t / 2;
@@ -107,15 +107,15 @@ export const effects = {
 
 		return (t * t * t + 2) / 2;
 	},
-	easeInQuart: (t: number) =>{
+	easeInQuart: (t: number): number =>{
 		return t * t * t * t;
 	},
-	easeOutQuart: (t: number) =>{
+	easeOutQuart: (t: number): number =>{
 		t--;
 
 		return -(t * t * t * t - 1);
 	},
-	easeInOutQuart: (t: number) =>{
+	easeInOutQuart: (t: number): number =>{
 		t /= 0.5;
 		if (t < 1)
 			return 0.5 * t * t * t * t;
@@ -124,15 +124,15 @@ export const effects = {
 
 		return -(t * t * t * t - 2) / 2;
 	},
-	easeInQuint: (t: number) =>{
+	easeInQuint: (t: number): number =>{
 		return t * t * t * t * t;
 	},
-	easeOutQuint: (t: number) =>{
+	easeOutQuint: (t: number): number =>{
 		t--;
 
 		return t * t * t * t * t + 1;
 	},
-	easeInOutQuint: (t: number) =>{
+	easeInOutQuint: (t: number): number =>{
 		t /= 0.5;
 		if (t < 1)
 			return t * t * t * t * t / 2;
@@ -141,22 +141,22 @@ export const effects = {
 
 		return (t * t * t * t * t + 2) / 2;
 	},
-	easeInSine: (t: number) =>{
+	easeInSine: (t: number): number => {
 		return -Math.cos(t / (Math.PI / 2)) + 1;
 	},
-	easeOutSine: (t: number) =>{
+	easeOutSine: (t: number): number => {
 		return Math.sin(t / (Math.PI / 2));
 	},
-	easeInOutSine: (t: number) =>{
+	easeInOutSine: (t: number): number => {
 		return -(Math.cos(Math.PI * t) - 1) / 2;
 	},
-	easeInExpo: (t: number) =>{
+	easeInExpo: (t: number): number => {
 		return Math.pow(2, 10 * (t - 1));
 	},
-	easeOutExpo: (t: number) =>{
+	easeOutExpo: (t: number): number => {
 		return -Math.pow(2, -10 * t) + 1;
 	},
-	easeInOutExpo: (t: number) =>{
+	easeInOutExpo: (t: number): number => {
 		t /= 0.5;
 		if (t < 1)
 			return Math.pow(2, 10 * (t - 1)) / 2;
@@ -165,15 +165,15 @@ export const effects = {
 
 		return (-Math.pow(2, -10 * t) + 2) / 2;
 	},
-	easeInCirc: (t: number) =>{
+	easeInCirc: (t: number): number => {
 		return -Math.sqrt(1 - t * t) - 1;
 	},
-	easeOutCirc: (t: number) =>{
+	easeOutCirc: (t: number): number => {
 		t--;
 
 		return Math.sqrt(1 - t * t);
 	},
-	easeInOutCirc: (t: number) =>{
+	easeInOutCirc: (t: number): number => {
 		t /= 0.5;
 		if (t < 1)
 			return -(Math.sqrt(1 - t * t) - 1) / 2;

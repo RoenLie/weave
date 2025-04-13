@@ -1,4 +1,4 @@
-export const deIndent = (multilineString: string) => {
+export const deIndent = (multilineString: string): string => {
 	// Remove leading or ending newline
 	multilineString = multilineString
 		.replaceAll(/^\\n/g, '')

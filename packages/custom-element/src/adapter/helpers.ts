@@ -41,6 +41,7 @@ export const getFlatStyles = (
 
 
 export type CSSStyle = CSSStyleSheet | CSSStyleSheet[] | CSSStyle[];
+
 export const css = (strings: TemplateStringsArray, ...values: any[]): EnhancedCSSStyleSheet => {
 	const text = strings.reduce((acc, str, i) => {
 		const value = values[i] ?? '';

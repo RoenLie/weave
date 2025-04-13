@@ -5,7 +5,7 @@ type CreatePromiseResolver = <TPromise = unknown>() => Readonly<[
 	promise: Promise<TPromise>,
 	resolver: (value?: any) => void,
 	rejector: (reason?: any) => void,
-	id: string
+	id: string,
 ]>;
 
 

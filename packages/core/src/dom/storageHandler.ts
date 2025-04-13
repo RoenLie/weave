@@ -22,6 +22,7 @@ const stringify = (val: any) => {
 
 	return jsonStringify(val) || String(val);
 };
+
 const parse = (val: string) => {
 	const parsed = jsonParse(val);
 	if (parsed)
@@ -37,24 +38,24 @@ const parse = (val: string) => {
 
 class LocalStorageHandler {
 
-	public getItem<T>(key: string, value?: T) {
+	getItem<T>(key: string, value?: T) {
 		const existingValue = localStorage.getItem(key);
 		existingValue ?? localStorage.setItem(key, stringify(value));
 
 		return parse(localStorage.getItem(key)!) as T;
 	}
 
-	public setItem<T>(key: string, value: T): T {
+	setItem<T>(key: string, value: T): T {
 		localStorage.setItem(key, stringify(value));
 
 		return parse(localStorage.getItem(key)!) as T;
 	}
 
-	public removeItem(key: string) {
+	removeItem(key: string) {
 		localStorage.removeItem(key);
 	}
 
-	public clear() {
+	clear() {
 		localStorage.clear();
 	}
 

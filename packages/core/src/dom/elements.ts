@@ -11,7 +11,7 @@ export const findDocumentOrShadowRoot = (node: Node): DocumentOrShadowRoot => {
 /**
  * Is the `ancestor` actually an ancestor of the `node`? (Pierces shadow boundaries to find out.)
  */
-export const elementHasAncestor = (node: Node, ancestor: Node) => {
+export const elementHasAncestor = (node: Node, ancestor: Node): boolean => {
 	let n: null | Node = node;
 
 	while (n) {
@@ -32,7 +32,7 @@ export const elementHasAncestor = (node: Node, ancestor: Node) => {
 /**
  * Is the `descendant` actually a descendant of the `node`? (Pierces shadow boundaries to find out.)
  */
-export const elementHasDescendant = (node: Node, descendant: Node) => {
+export const elementHasDescendant = (node: Node, descendant: Node): boolean => {
 	return elementHasAncestor(descendant, node);
 };
 

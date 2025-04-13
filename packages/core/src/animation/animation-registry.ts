@@ -52,7 +52,9 @@ const getLogicalAnimation = (animation: ElementAnimation, dir: Direction = 'ltr'
  * for secondary animations, e.g. `dialog.show` and `dialog.overlay.show`.
  * For modifiers, use `drawer.showTop`.
  */
-export const setDefaultAnimation = (animationName: string, animation: ElementAnimation | null) => {
+export const setDefaultAnimation = (
+	animationName: string, animation: ElementAnimation | null,
+): void => {
 	defaultAnimationRegistry.set(animationName, ensureAnimation(animation));
 };
 
@@ -60,7 +62,9 @@ export const setDefaultAnimation = (animationName: string, animation: ElementAni
 /**
  * Gets an element's animation. Falls back to the default if no animation is found.
  */
-export const getAnimation = (el: Element, animationName: string, options?: GetAnimationOptions) => {
+export const getAnimation = (
+	el: Element, animationName: string, options?: GetAnimationOptions,
+): ElementAnimation => {
 	const customAnimations = customAnimationRegistry.get(el);
 	const animation = customAnimations?.[animationName];
 
@@ -76,7 +80,9 @@ export const getAnimation = (el: Element, animationName: string, options?: GetAn
 /**
  * Gets a default animation.
  */
-export const getDefaultAnimation = (animationName: string, options?: GetAnimationOptions) => {
+export const getDefaultAnimation = (
+	animationName: string, options?: GetAnimationOptions,
+): ElementAnimation => {
 	// Check for a default animation.
 	const defaultAnimation = defaultAnimationRegistry.get(animationName);
 	if (defaultAnimation)

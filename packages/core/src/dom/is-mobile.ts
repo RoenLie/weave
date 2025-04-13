@@ -1,1 +1,1 @@
-export const isMobile = /Mobi/.test(navigator.userAgent);
+export const isMobile: boolean = /Mobi/.test(navigator.userAgent);

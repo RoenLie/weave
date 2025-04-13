@@ -11,6 +11,14 @@ export default defineWorkspace([
 		},
 	},
 	{
+		extends: './packages/core/vite.config.ts',
+		test:    {
+			name:       'core',
+			include:    [ 'packages/core/**/*.{spec,test,bench}.ts' ],
+			setupFiles: [],
+		},
+	},
+	{
 		extends: './packages/bootstrap-clone/vite.config.ts',
 		test:    {
 			name:       'bootstrap_clone',

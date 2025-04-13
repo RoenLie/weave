@@ -21,11 +21,11 @@ class Beholder {
 
 	static #beholders: Map<string, Set<(phenom: Phenomenon) => any>> = new Map();
 
-	public static add<K extends keyof PhenomBeholderMap>(
+	static add<K extends keyof PhenomBeholderMap>(
 		type: K, listener: (ev: PhenomBeholderMap[K]) => any
 	): void;
-	public static add(type: stringliteral, listener: (ev: Phenomenon) => any): void;
-	public static add(type: string, listener: (phenom: Phenomenon) => any): void {
+	static add(type: stringliteral, listener: (ev: Phenomenon) => any): void;
+	static add(type: string, listener: (phenom: Phenomenon) => any): void {
 		const set = Beholder.#beholders.get(type) ?? (() => {
 			const set: Set<(phenom: Phenomenon<any>) => any> = new Set();
 			Beholder.#beholders.set(type, set);
@@ -36,15 +36,15 @@ class Beholder {
 		set.add(listener);
 	}
 
-	public static remove<K extends keyof PhenomBeholderMap>(
+	static remove<K extends keyof PhenomBeholderMap>(
 		type: K, listener: (ev: PhenomBeholderMap[K]) => any
 	): void;
-	public static remove(type: stringliteral, listener: (ev: Phenomenon) => any): void;
-	public static remove(type: string, listener: (ev: Phenomenon) => any): void {
+	static remove(type: stringliteral, listener: (ev: Phenomenon) => any): void;
+	static remove(type: string, listener: (ev: Phenomenon) => any): void {
 		Beholder.#beholders.get(type)?.delete(listener);
 	}
 
-	public static dispatch(phenom: Phenomenon) {
+	static dispatch(phenom: Phenomenon) {
 		Beholder.#beholders.get(phenom.type)?.forEach(beholder => beholder(phenom));
 	}
 

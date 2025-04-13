@@ -1,4 +1,4 @@
-export const shimPromiseWithResolvers = () => {
+export const shimPromiseWithResolvers = (): void => {
 	if (!Promise.withResolvers) {
 		Promise.withResolvers = <T>() => {
 			let resolve, reject;
@@ -18,7 +18,7 @@ export type ResolvablePromise<T = void> = Promise<T> & {
 };
 
 
-export const resolvablePromise = <T = void>() => {
+export const resolvablePromise = <T = void>(): ResolvablePromise<T> => {
 	shimPromiseWithResolvers();
 
 	const { promise, resolve, reject } = Promise.withResolvers<T>();
@@ -39,8 +39,6 @@ export const resolvablePromise = <T = void>() => {
 
 	return superPromise as ResolvablePromise<T>;
 };
-
-
 resolvablePromise.resolve = <T>(value: T) => {
 	const promise = resolvablePromise<T>();
 	promise.resolve(value);

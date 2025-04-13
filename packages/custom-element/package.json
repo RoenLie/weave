@@ -4,8 +4,8 @@
 	"authors": "Kristoffer Roen-Lie",
 	"version": "1.0.0",
 	"type": "module",
-	"types": "./dist/custom-element.d.ts",
-	"main": "./dist/custom-element.js",
+	"types": "./dist/adapter/index.d.ts",
+	"main": "./dist/adapter/index.js",
 	"sideEffects": false,
 	"files": [
 		"dist",
@@ -19,6 +19,14 @@
 		"./adapter": {
 			"types": "./dist/adapter/index.d.ts",
 			"default": "./dist/adapter/index.js"
+		},
+		"./router": {
+			"types": "./dist/router/index.d.ts",
+			"default": "./dist/router/index.js"
+		},
+		"./shared": {
+			"types": "./dist/shared/index.d.ts",
+			"default": "./dist/shared/index.js"
 		}
 	},
 	"scripts": {

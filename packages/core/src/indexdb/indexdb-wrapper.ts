@@ -1,7 +1,7 @@
 export class IndexDBSchema<T> {
 
-	public static dbIdentifier: string;
-	public static dbKey:        string;
+	static dbIdentifier: string;
+	static dbKey:        string;
 
 	constructor(init: {
 		[P in keyof T as P extends keyof IndexDBSchema<T> ? never : P]: T[P]
@@ -27,7 +27,7 @@ export class IndexDBWrapper {
 		resolve(target.result);
 	}
 
-	public static connect(dbName: string, version?: number): Database {
+	static connect(dbName: string, version?: number): Database {
 		const request = window.indexedDB.open(dbName, version);
 		const promise: Promise<IDBDatabase> = new Promise((res, rej) => {
 			request.onerror = ev => this.#handleRequestError(ev, rej);
@@ -49,7 +49,7 @@ export class IndexDBWrapper {
 		return new Database(promise);
 	}
 
-	public static setup(dbName: string, fn: (setup: DBSetup) => void) {
+	static setup(dbName: string, fn: (setup: DBSetup) => void): void {
 		if (this.#setups.find(s => s.dbName === dbName))
 			throw new Error(`setup for ${ dbName } has already been registered.`);
 
@@ -74,7 +74,7 @@ class Setup {
 
 	constructor(public dbName: string) {}
 
-	public createCollection<T extends typeof IndexDBSchema<any>>(
+	createCollection<T extends typeof IndexDBSchema<any>>(
 		schema: T,
 		...[ name, options ]: Parameters<IDBDatabase['createObjectStore']>
 	): SetupChain<T> {
@@ -108,7 +108,7 @@ class Setup {
 		return chain;
 	}
 
-	public __execute(db: IDBDatabase) {
+	__execute(db: IDBDatabase): void {
 		this.#setups.forEach(setup => setup(db));
 	}
 
@@ -119,7 +119,7 @@ class Database {
 
 	constructor(public database: Promise<IDBDatabase>) {}
 
-	public collection<T extends typeof IndexDBSchema<any>>(schema: T) {
+	collection<T extends typeof IndexDBSchema<any>>(schema: T) {
 		return new Collection(
 			schema,
 			async (mode) => {
@@ -152,7 +152,7 @@ class Collection<T extends typeof IndexDBSchema<any>> {
 		resolve(target.result);
 	}
 
-	public async get(
+	async get(
 		query: IDBValidKey | IDBKeyRange,
 	): Promise<InstanceType<T> | undefined> {
 		const coll = await this.collection('readonly');
@@ -169,7 +169,7 @@ class Collection<T extends typeof IndexDBSchema<any>> {
 			: undefined as any;
 	}
 
-	public async getByIndex(
+	async getByIndex(
 		indexName: string,
 		query: IDBValidKey | IDBKeyRange,
 	): Promise<InstanceType<T> | undefined> {
@@ -187,7 +187,7 @@ class Collection<T extends typeof IndexDBSchema<any>> {
 			: undefined as any;
 	}
 
-	public async getAll() {
+	async getAll() {
 		const coll = await this.collection('readonly');
 		const promise = await new Promise<T[]>((res, rej) => {
 			const req = coll.getAll();
@@ -199,7 +199,7 @@ class Collection<T extends typeof IndexDBSchema<any>> {
 		return promise.map(item => new this.schema(item) as InstanceType<T>);
 	}
 
-	public async add<TKey extends IDBValidKey>(item: InstanceType<T>, key?: TKey): Promise<TKey> {
+	async add<TKey extends IDBValidKey>(item: InstanceType<T>, key?: TKey): Promise<TKey> {
 		const coll = await this.collection('readwrite');
 		const promise = await new Promise<TKey>((res, rej) => {
 			const req = coll.add(item, key ?? (item as any)[this.schema.dbKey]);
@@ -211,7 +211,7 @@ class Collection<T extends typeof IndexDBSchema<any>> {
 		return promise;
 	}
 
-	public async put<TKey extends IDBValidKey>(item: InstanceType<T>, key?: TKey): Promise<TKey> {
+	async put<TKey extends IDBValidKey>(item: InstanceType<T>, key?: TKey): Promise<TKey> {
 		const coll = await this.collection('readwrite');
 		const promise = await new Promise<TKey>((res, rej) => {
 			const req = coll.put(item, key ?? (item as any)[this.schema.dbKey]);
@@ -223,7 +223,7 @@ class Collection<T extends typeof IndexDBSchema<any>> {
 		return promise;
 	}
 
-	public async putByIndex<TKey extends IDBValidKey>(
+	async putByIndex<TKey extends IDBValidKey>(
 		indexName: string,
 		query: IDBValidKey | IDBKeyRange,
 		item: InstanceType<T>,
@@ -239,7 +239,7 @@ class Collection<T extends typeof IndexDBSchema<any>> {
 		return await this.put(item, collKey);
 	}
 
-	public async delete<TKey extends IDBValidKey>(key: TKey): Promise<any> {
+	async delete<TKey extends IDBValidKey>(key: TKey): Promise<any> {
 		const coll = await this.collection('readwrite');
 		const promise = await new Promise((res, rej) => {
 			const req = coll.delete(key);
@@ -251,7 +251,7 @@ class Collection<T extends typeof IndexDBSchema<any>> {
 		return promise;
 	}
 
-	public async deleteByIndex<TKey extends IDBValidKey>(
+	async deleteByIndex<TKey extends IDBValidKey>(
 		indexName: string,
 		key: TKey,
 	): Promise<any> {

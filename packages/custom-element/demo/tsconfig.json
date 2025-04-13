@@ -1,0 +1,8 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"rootDir": "..",
+		"emitDecoratorMetadata": false,
+		"experimentalDecorators": false,
+	}
+}

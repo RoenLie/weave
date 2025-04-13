@@ -9,7 +9,7 @@ const locks = new Set();
  * Keeps track of which elements requested a lock so multiple levels of locking are possible
  * without premature unlocking.
  */
-export const lockBodyScrolling = (lockingEl: HTMLElement) => {
+export const lockBodyScrolling = (lockingEl: HTMLElement): void => {
 	locks.add(lockingEl);
 	document.body.classList.add('scroll-lock');
 };
@@ -19,7 +19,7 @@ export const lockBodyScrolling = (lockingEl: HTMLElement) => {
  * Unlocks body scrolling.
  * Scrolling will only be unlocked once all elements that requested a lock call this method.
  */
-export const unlockBodyScrolling = (lockingEl: HTMLElement) => {
+export const unlockBodyScrolling = (lockingEl: HTMLElement): void => {
 	locks.delete(lockingEl);
 
 	if (locks.size === 0)
@@ -36,7 +36,7 @@ export const scrollIntoView = (
 	container: HTMLElement,
 	direction: 'horizontal' | 'vertical' | 'both' = 'vertical',
 	behavior: 'smooth' | 'auto' = 'smooth',
-) => {
+): void => {
 	const containerStyles = getComputedStyle(container);
 	const [ padInStart, padInEnd, padBlStart, padBlEnd ] = [
 		parseInt(containerStyles.paddingInlineStart),
@@ -54,16 +54,26 @@ export const scrollIntoView = (
 	const maxY = container.scrollTop + container.offsetHeight;
 
 	if (direction === 'horizontal' || direction === 'both') {
-		if (offsetLeft < minX)
+		if (offsetLeft < minX) {
 			container.scrollTo({ left: offsetLeft - padInStart, behavior });
-		else if (offsetLeft + element.clientWidth > maxX)
-			container.scrollTo({ left: offsetLeft + padInEnd - container.offsetWidth + element.clientWidth, behavior });
+		}
+		else if (offsetLeft + element.clientWidth > maxX) {
+			container.scrollTo({
+				left: offsetLeft + padInEnd - container.offsetWidth + element.clientWidth,
+				behavior,
+			});
+		}
 	}
 
 	if (direction === 'vertical' || direction === 'both') {
-		if (offsetTop < minY)
+		if (offsetTop < minY) {
 			container.scrollTo({ top: offsetTop - padBlStart, behavior });
-		else if (offsetTop + element.clientHeight > maxY)
-			container.scrollTo({ top: offsetTop + padBlEnd - container.offsetHeight + element.clientHeight, behavior });
+		}
+		else if (offsetTop + element.clientHeight > maxY) {
+			container.scrollTo({
+				top: offsetTop + padBlEnd - container.offsetHeight + element.clientHeight,
+				behavior,
+			});
+		}
 	}
 };

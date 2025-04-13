@@ -1,11 +1,12 @@
 import { nanoid } from 'nanoid';
 
-import { type Fn } from '../types/function.types.js';
 import { lazyMap } from '../structs/lazy-map.js';
 import { ReflectMap } from '../structs/reflect-map.js';
+import type { Fn } from '../types/function.types.js';
 
 
 type Handlers = ReflectMap<string, Fn>;
+
 
 /**
  * Provide hooks for the `TEvents`; a type-map of events to handlers.
@@ -21,7 +22,7 @@ export class Hooks<TEvents extends Record<string, Fn>> {
 	 * Add the `handler` to the `event`.
 	 * @returns An ID which can be passed to remove in lieu of passing the handler itself.
 	 */
-	public add<TEvent extends keyof TEvents>(event: TEvent, handler: TEvents[TEvent]): string {
+	add<TEvent extends keyof TEvents>(event: TEvent, handler: TEvents[TEvent]): string {
 		const key = nanoid(6);
 
 		this.handlersFor(event).set(key, handler);
@@ -30,7 +31,7 @@ export class Hooks<TEvents extends Record<string, Fn>> {
 	}
 
 	/** Add a handler from the `event` by either providing it or its ID (returned from this.Add). */
-	public remove<TEvent extends keyof TEvents>(
+	remove<TEvent extends keyof TEvents>(
 		event: TEvent,
 		handlerOrId: TEvents[TEvent] | string,
 	): void {
@@ -42,10 +43,8 @@ export class Hooks<TEvents extends Record<string, Fn>> {
 			handlers.deleteByValue(handlerOrId);
 	}
 
-	/**
-	 * Trigger the `event`, by running each of its handlers on the provided `args`.
-	 */
-	public trigger<TEvent extends keyof TEvents>(
+	/** Trigger the `event`, by running each of its handlers on the provided `args`. */
+	trigger<TEvent extends keyof TEvents>(
 		event: TEvent, ...args: Parameters<TEvents[TEvent]>
 	): ReturnType<TEvents[TEvent]>[] {
 		return [ ...this.handlersFor(event).values() ].map(fn => fn(...args));

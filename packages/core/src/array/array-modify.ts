@@ -6,7 +6,7 @@ export const arrayMove = <T>(
 	array: (T | undefined)[],
 	old_index: number,
 	new_index: number,
-) => {
+): (T | undefined)[] => {
 	if (new_index >= array.length) {
 		let k = new_index - array.length;
 		while ((k--) + 1)
@@ -23,7 +23,7 @@ export const arrayMove = <T>(
  * @param item The item to be removed.
  * @returns Wether or not the item was removed.
  */
-export const arrayRemove = <T>(array: T[], item: T) => {
+export const arrayRemove = <T>(array: T[], item: T): boolean => {
 	const index = array.indexOf(item);
 
 	return arrayRemoveAt(array, index);
@@ -34,7 +34,7 @@ export const arrayRemove = <T>(array: T[], item: T) => {
  * @param index The index of the item to remove.
  * @returns Wether or not the item was removed.
  */
-export const arrayRemoveAt = <T>(array: T[], index: number) => {
+export const arrayRemoveAt = <T>(array: T[], index: number): boolean => {
 	if (index > -1) {
 		array.splice(index, 1);
 

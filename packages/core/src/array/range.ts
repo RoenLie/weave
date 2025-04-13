@@ -1,7 +1,7 @@
 /**
  * Creates an array of numbers from first to last.
  */
-export const range = (first: number, last?: number, step = 1) => {
+export const range = (first: number, last?: number, step = 1): number[] => {
 	if (last === undefined) {
 		last = first;
 		first = 0;

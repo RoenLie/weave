@@ -1,6 +1,7 @@
 import type { Vec2 } from '../types/data-structure.types.ts';
 
-export interface Viewport { x1: number, x2: number, y1: number, y2: number }
+
+export interface Viewport { x1: number; x2: number; y1: number; y2: number; }
 
 
 /**
@@ -23,22 +24,22 @@ export class WorkerView {
 		this.context = this.canvas.getContext('2d')!;
 	}
 
-	public readonly canvas:  OffscreenCanvas;
-	public readonly context: OffscreenCanvasRenderingContext2D;
+	readonly canvas:  OffscreenCanvas;
+	readonly context: OffscreenCanvasRenderingContext2D;
 
-	public get viewport(): Viewport { return this._viewport; }
+	get viewport(): Viewport { return this._viewport; }
 	protected _viewport: Viewport = { x1: 0, x2: 0, y1: 0, y2: 0 };
 
-	public get visiblePercentage(): number { return this._visiblePercentage; }
+	get visiblePercentage(): number { return this._visiblePercentage; }
 	protected _visiblePercentage: number = 0;
 
-	public get position(): Vec2 { return this._position; }
+	get position(): Vec2 { return this._position; }
 	protected _position: Vec2 = { x: 0, y: 0 };
 
-	public get scaleFactor(): number { return this._scaleFactor; }
+	get scaleFactor(): number { return this._scaleFactor; }
 	protected _scaleFactor: number = 1;
 
-	public get rotation(): number { return this._rotation; }
+	get rotation(): number { return this._rotation; }
 	protected _rotation: number = 0;
 
 	protected totalArea:      number = 0;
@@ -53,7 +54,7 @@ export class WorkerView {
 	 * @param width The new width of the canvas
 	 * @param height The new height of the canvas
 	 */
-	public setCanvasSize(width: number, height: number) {
+	setCanvasSize(width: number, height: number): void {
 		this.canvas.width = width;
 		this.canvas.height = height;
 	}
@@ -62,7 +63,7 @@ export class WorkerView {
 	 * Sets the image to be displayed in the view.
 	 * @param image The image to display
 	 */
-	public setImage(image?: ImageBitmap) {
+	setImage(image?: ImageBitmap): void {
 		this.image = image;
 	}
 
@@ -72,7 +73,7 @@ export class WorkerView {
 	 * @param width The width of the total area
 	 * @param height The height of the total area
 	*/
-	public setTotalArea(width: number, height: number) {
+	setTotalArea(width: number, height: number): void {
 		this.totalArea = width * height;
 	}
 
@@ -81,7 +82,7 @@ export class WorkerView {
 	 * This includes resetting the position, scale, and rotation.
 	 * If an image is present, it will be centered.
 	 */
-	public reset(): void {
+	reset(): void {
 		// Reset rotation
 		this._rotation = 0;
 
@@ -102,7 +103,7 @@ export class WorkerView {
 	}
 
 	/** Centers the current image in the viewport */
-	public centerImage(): void {
+	centerImage(): void {
 		if (!this.image)
 			return;
 
@@ -124,7 +125,7 @@ export class WorkerView {
 	 * Fits the current image to the view,
 	 * centering it and scaling it to fit within the viewport.
 	 */
-	public fitToView(): void {
+	fitToView(): void {
 		if (!this.image)
 			return;
 
@@ -160,7 +161,7 @@ export class WorkerView {
 	 * Clears the canvas context and resets the transformation matrix.
 	 * This method should be called before drawing new content.
 	 */
-	public clearContext() {
+	clearContext(): void {
 		const { width, height } = this.canvas;
 		this.context.resetTransform();
 		this.context.clearRect(0, 0, width, height);
@@ -173,7 +174,7 @@ export class WorkerView {
 	 * @param vec The point to scale from
 	 * @param factor The new scale factor (between SCALE_MIN and SCALE_MAX)
 	 */
-	public scaleAt(vec: Vec2, factor: number) {
+	scaleAt(vec: Vec2, factor: number): void {
 		const newScale = this._scaleFactor * factor;
 		if (newScale < WorkerView.SCALE_MIN || WorkerView.SCALE_MAX < newScale)
 			return;
@@ -213,7 +214,7 @@ export class WorkerView {
 	 * Scales the view by a factor from the current center.
 	 * @param factor The scaling factor (>1 zooms in, <1 zooms out)
 	 */
-	public scale(factor: number): void {
+	scale(factor: number): void {
 		if (!this.canvas)
 			return;
 
@@ -229,7 +230,7 @@ export class WorkerView {
 	 * Sets the scale factor of the view.
 	 * @param factor The new scale factor (between SCALE_MIN and SCALE_MAX)
 	 */
-	public setScale(factor: number) {
+	setScale(factor: number): void {
 		if (factor < WorkerView.SCALE_MIN || factor > WorkerView.SCALE_MAX)
 			return;
 
@@ -242,7 +243,7 @@ export class WorkerView {
 	 * @param x The new x-coordinate
 	 * @param y The new y-coordinate
 	*/
-	public moveTo(x: number, y: number) {
+	moveTo(x: number, y: number): void {
 		this._position.x = x;
 		this._position.y = y;
 
@@ -253,7 +254,7 @@ export class WorkerView {
 	 * Rotates the view by the specified angle in degrees
 	 * @param degrees The angle to rotate by in degrees
 	 */
-	public rotate(degrees: number) {
+	rotate(degrees: number): void {
 		// Normalize angle to keep it between 0 and 360
 		this._rotation = (this._rotation + degrees) % 360;
 		if (this._rotation < 0)
@@ -266,7 +267,7 @@ export class WorkerView {
 	 * Sets the rotation of the view to the specified angle in degrees.
 	 * @param degrees The angle to rotate to in degrees
 	 */
-	public setRotation(degrees: number) {
+	setRotation(degrees: number): void {
 		// Normalize angle to keep it between 0 and 360
 		this._rotation = degrees % 360;
 		if (this._rotation < 0)
@@ -282,7 +283,7 @@ export class WorkerView {
 	 * The order of transformations is scale, rotate, translate.\
 	 * The rotation is around the center of the canvas.
 	 */
-	public updateMatrix() {
+	updateMatrix(): void {
 		const { matrix: m, _scaleFactor, _position, _rotation } = this;
 
 		// Reset to identity matrix
@@ -336,7 +337,7 @@ export class WorkerView {
 	 * Applies the current transformation matrix to the canvas context.
 	 * This method should only be called in the clearContext method.
 	 */
-	protected applyTransform() {
+	protected applyTransform(): void {
 		const { matrix, context } = this;
 		context.setTransform(matrix);
 
@@ -368,7 +369,7 @@ export class WorkerView {
 	 * Normalizes the transformation matrix to prevent floating point errors.\
 	 * The matrix is reset to the identity matrix and then reapplied.
 	 */
-	protected normalizeMatrix() {
+	protected normalizeMatrix(): void {
 		// Reset matrix to identity
 		const m = this.matrix;
 		m.a = 1; m.b = 0;

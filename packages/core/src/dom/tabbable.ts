@@ -1,5 +1,5 @@
 /** Determines if the specified element is tabbable using heuristics inspired by https://github.com/focus-trap/tabbable */
-export const isTabbable = (el: HTMLElement) => {
+export const isTabbable = (el: HTMLElement): boolean => {
 	const tag = el.tagName.toLowerCase();
 
 	// Elements with a -1 tab index are not tabbable
@@ -47,7 +47,10 @@ export const isTabbable = (el: HTMLElement) => {
  * Returns the first and last bounding elements that are tabbable. This is more performant than checking every single
  * element because it short-circuits after finding the first and last ones.
  */
-export const getTabbableBoundary = (root: HTMLElement | ShadowRoot) => {
+export const getTabbableBoundary = (root: HTMLElement | ShadowRoot): {
+	start: HTMLElement | null;
+	end:   HTMLElement | null;
+} => {
 	const allElements: HTMLElement[] = [];
 
 	const walk = (el: HTMLElement | ShadowRoot) => {

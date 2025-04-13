@@ -25,7 +25,7 @@ export const normalizeSearchParam = (value: SearchParamValue): string => {
 export const configureSearchParams = (
 	searchParamConfig: SearchParamConfig,
 	urlSearchParams: URLSearchParams,
-) => {
+): void => {
 	for (const [ key, value ] of Object.entries(searchParamConfig)) {
 		if (Array.isArray(value)) {
 			for (const val of value) {
@@ -48,8 +48,7 @@ export const configureSearchParams = (
 /**
  * Create a new URLSearchParams object from the given `searchParamConfig` and `url`.
  *
- * A new URLSearchParams object is created from the `url`
- * and then the `searchParamConfig` is applied.
+ * A new URLSearchParams object is created from the `url` and then the `searchParamConfig` is applied.
  *
  * Supplied `searchParamConfig` will override any duplicate search params on the `url`.
  */
@@ -74,7 +73,7 @@ export const pushSearchState = (
 	data?: Record<string, string | number> | null,
 	/** if set to `true` does not dispatch a `popstate` event. */
 	silent?: boolean,
-) => {
+): void => {
 	const url = new URL(globalThis.location.href);
 	url.search = search.toString();
 
@@ -95,7 +94,7 @@ export const replaceSearchState = (
 	data?: Record<string, string | number> | null,
 	/** if set to `true` does not dispatch a `popstate` event. */
 	silent?: boolean,
-) => {
+): void => {
 	const url = new URL(globalThis.location.href);
 	url.search = search.toString();
 

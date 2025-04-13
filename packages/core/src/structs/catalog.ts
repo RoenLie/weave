@@ -14,7 +14,7 @@ export type Use<TCatalog extends object = Record<string, any>> = {
 
 
 /** Build a list of items based on the record and use supplied. */
-export const catalogToList = <TRec extends { catalog: Record<string, any>, use?: Use<TRec> }>(
+export const catalogToList = <TRec extends { catalog: Record<string, any>; use?: Use<TRec>; }>(
 	record: TRec,
 ): TRec['catalog'][keyof TRec['catalog']][] => {
 	const keys = record.use
@@ -31,7 +31,7 @@ export const getUsage = <TCatalog extends Record<string, any>>(
 ): (string & keyof TCatalog)[] => useSort(use, Object.keys(use));
 
 
-export const useContains = (use: Use, name: string) => {
+export const useContains = (use: Use, name: string): boolean => {
 	const usage = use[name];
 
 	return usage === true
@@ -62,7 +62,7 @@ export const useCompare = (use: Use, a: string, b: string): number => {
 const isUseObject = (use?: Use): use is Use => use !== null && typeof use === 'object';
 
 
-export const useSort = (use: Use | undefined, names: string[]) => {
+export const useSort = (use: Use | undefined, names: string[]): string[] => {
 	if (!isUseObject(use))
 		throw new Error("Cannot sort by use when no 'use' is provided!");
 

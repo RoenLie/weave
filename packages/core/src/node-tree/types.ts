@@ -12,7 +12,7 @@ export type RootNode<TObj extends Rec, TProp extends Key> = {
 
 export type TreeNode<
 	TObj extends Rec,
-	TProp extends Key
+	TProp extends Key,
 > = Omit<TObj, TProp>
 & { [key in TProp]?: TreeNode<TObj, TProp>[] }
 & Node<TObj, TProp, TreeNode<TObj, TProp>>;

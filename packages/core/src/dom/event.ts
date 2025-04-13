@@ -28,8 +28,8 @@ export const emitEvent = <T extends EventMap, R extends EventList, K extends str
 	el: HTMLElement,
 	name: R | K,
 	options?: T[R] extends CustomEvent ? CustomEventInit<T[R]['detail']> : CustomEventInit,
-) => {
-	const event: CustomEvent<T[R] extends CustomEvent ? T[R]['detail'] : any> = new CustomEvent(
+): CustomEvent<T[R] extends CustomEvent ? T[R]['detail'] : any> => {
+	const event = new CustomEvent(
 		name,
 		{
 			bubbles:    true,
@@ -46,6 +46,13 @@ export const emitEvent = <T extends EventMap, R extends EventList, K extends str
 };
 
 
+type EventType<T extends EventMap, R extends EventList> =
+	T[R] extends CustomEvent ? CustomEvent<T[R]['detail']> : T[R];
+
+type EventReturnType<T extends EventMap, R extends EventList> =
+	T[R] extends CustomEvent ? T[R]['detail'] | undefined : undefined;
+
+
 /**
  * Waits for a specific event to be emitted from an element.
  *
@@ -57,21 +64,18 @@ export const waitForEvent = <T extends EventMap, R extends EventList, K extends 
 	el: Window | HTMLElement,
 	eventName: R | K,
 	options?: {
-		bubbles?:  boolean,
+		bubbles?:  boolean;
 		/** Predicate that can be used to terminate the waiting state. */
-		continue?: (ev: T[R] extends CustomEvent ? CustomEvent<T[R]['detail']> : T[R]) => boolean
+		continue?: (ev: T[R] extends CustomEvent ? CustomEvent<T[R]['detail']> : T[R]) => boolean;
 	},
-) => {
-	type EventType = T[R] extends CustomEvent ? CustomEvent<T[R]['detail']> : T[R];
-	type EventReturnType = T[R] extends CustomEvent ? T[R]['detail'] | undefined : undefined;
-
-	return new Promise<EventReturnType>(resolve => {
-		const end = (details: EventReturnType) => {
+): Promise<EventReturnType<T, R>> => {
+	return new Promise<EventReturnType<T, R>>(resolve => {
+		const end = (details: EventReturnType<T, R>) => {
 			el.removeEventListener(eventName, done as any);
 			resolve(details);
 		};
 
-		const done = (event: EventType) => {
+		const done = (event: EventType<T, R>) => {
 			if (options?.bubbles) {
 				if (event.currentTarget === window)
 					end(undefined);
@@ -99,11 +103,13 @@ export const waitForEvent = <T extends EventMap, R extends EventList, K extends 
 /**
  * Prevents default and stops propagation.
  *
- * @param immediate - By default all propagation is stopped. Pass `false` if you don't want to stop immediate propagation.
+ * @param immediate - By default all propagation is stopped.
+ * Pass `false` if you don't want to stop immediate propagation.
  */
-export const setEventHandled = (e: Event, immediate = true) => {
+export const setEventHandled = (e: Event, immediate = true): void => {
 	e.preventDefault();
 	e.stopPropagation();
+
 	if (immediate)
 		e.stopImmediatePropagation();
 };

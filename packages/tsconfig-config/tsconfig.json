@@ -18,7 +18,7 @@
 		"allowSyntheticDefaultImports": true,
 		"importHelpers": true,
 		"incremental": false,
-		"removeComments": true,
+		"removeComments": false,
 		"skipLibCheck": true,
 		"allowImportingTsExtensions": true,
 		// strictness

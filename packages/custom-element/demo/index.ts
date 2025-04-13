@@ -18,13 +18,13 @@ export class RootPage extends AdapterElement {
 	}
 
 	static override styles: CSSStyle = css`
-	:host {
-		display: grid;
-		place-items: center;
-	}
-	s-controls {
-		display: flex;
-	}
+		:host {
+			display: grid;
+			place-items: center;
+		}
+		s-controls {
+			display: flex;
+		}
 	`;
 
 }
@@ -44,7 +44,9 @@ class TestAdapter extends AdapterElement {
 	}
 
 	protected override render() {
-		return html`<h1>${ this.label }</h1>`;
+		return html`
+		<h1>${ this.label }</h1>
+		`;
 	}
 
 	static override styles = css`

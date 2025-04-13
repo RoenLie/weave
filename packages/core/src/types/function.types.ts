@@ -1,9 +1,10 @@
 /**
  * Alias for a generic function.
  */
-export type Fn<T = any, O = any> = (...args: T[]) => O;
+export type Fn<A = any, R = any> = (...args: A[]) => R;
+
 
 /**
  * Alias for a generic async function.
  */
-export type AsyncFn<T = any, O = void> = (...args: T[]) => Promise<O>;
+export type AsyncFn<A = any, R = void> = (...args: A[]) => Promise<R>;

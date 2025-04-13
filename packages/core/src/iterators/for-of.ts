@@ -1,4 +1,4 @@
-export const forOf = <T extends Iterable<any>[]>(...iterables: T) => new ForOf(iterables);
+export const forOf = <T extends Iterable<any>[]>(...iterables: T): ForOf<T> => new ForOf(iterables);
 
 
 class ForOf<T extends Iterable<any>[]> {
@@ -8,7 +8,7 @@ class ForOf<T extends Iterable<any>[]> {
 		this.#iterables = iterables;
 	}
 
-	public find(predicate: ForOfPredicate<T, boolean>): IterableTupleToUnion<T> | undefined {
+	find(predicate: ForOfPredicate<T, boolean>): IterableTupleToUnion<T> | undefined {
 		for (const iterable of this.#iterables) {
 			let index = 0;
 			for (const value of iterable) {
@@ -21,7 +21,7 @@ class ForOf<T extends Iterable<any>[]> {
 		}
 	}
 
-	public includes(value: IterableTupleToUnion<T>): boolean {
+	includes(value: IterableTupleToUnion<T>): boolean {
 		for (const iterable of this.#iterables) {
 			for (const _value of iterable) {
 				if (value === _value)
@@ -32,7 +32,7 @@ class ForOf<T extends Iterable<any>[]> {
 		return false;
 	}
 
-	public some(predicate: ForOfPredicate<T, boolean>): boolean {
+	some(predicate: ForOfPredicate<T, boolean>): boolean {
 		for (const iterable of this.#iterables) {
 			let index = 0;
 			for (const value of iterable) {
@@ -47,7 +47,7 @@ class ForOf<T extends Iterable<any>[]> {
 		return false;
 	}
 
-	public every(predicate: ForOfPredicate<T, boolean>): boolean {
+	every(predicate: ForOfPredicate<T, boolean>): boolean {
 		let result = false;
 
 		for (const iterable of this.#iterables) {
@@ -61,7 +61,7 @@ class ForOf<T extends Iterable<any>[]> {
 		return result;
 	}
 
-	public forEach(predicate: ForOfPredicate<T, void>): void {
+	forEach(predicate: ForOfPredicate<T, void>): void {
 		for (const iterable of this.#iterables) {
 			let index = 0;
 			for (const value of iterable) {
@@ -71,7 +71,7 @@ class ForOf<T extends Iterable<any>[]> {
 		}
 	}
 
-	public map<R>(predicate: ForOfPredicate<T, R>): R[] {
+	map<R>(predicate: ForOfPredicate<T, R>): R[] {
 		const arr: R[] = [];
 
 		for (const iterable of this.#iterables) {
@@ -85,7 +85,7 @@ class ForOf<T extends Iterable<any>[]> {
 		return arr;
 	}
 
-	public reduce<R>(predicate: ForOfReducePredicate<T, R>, initialValue: R): R {
+	reduce<R>(predicate: ForOfReducePredicate<T, R>, initialValue: R): R {
 		let result: R | undefined = initialValue;
 
 		for (const iterable of this.#iterables) {

@@ -1,5 +1,6 @@
-export const getFirstSelector = (startEl: HTMLElement, selector: string) => {
-	type El = (HTMLElement & ShadowRoot);
+type El = (HTMLElement & ShadowRoot);
+
+export const getFirstSelector = (startEl: HTMLElement, selector: string): El | undefined => {
 	let el = startEl as El;
 	do {
 		const result = el.matches?.(selector);

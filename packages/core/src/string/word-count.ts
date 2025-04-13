@@ -3,7 +3,7 @@ const pattern = /[a-zA-Z0-9_\u00A0-\u02AF\u0392-\u03c9\u0410-\u04F9]+|[\u4E00-\u
 
 
 /* The right word count in respect for CJK. */
-export const wordCount = (data: string) => {
+export const wordCount = (data: string): number => {
 	const m = data.match(pattern);
 	let count = 0;
 	if (m === null)

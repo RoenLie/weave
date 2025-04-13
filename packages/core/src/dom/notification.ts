@@ -1,4 +1,4 @@
-export const askForNotificationPermissions = () => {
+export const askForNotificationPermissions = (): Promise<NotificationPermission> | undefined => {
 	// Check if the browser supports notifications
 	if (!('Notification' in window))
 		return;
@@ -9,7 +9,7 @@ export const askForNotificationPermissions = () => {
 };
 
 
-export const notification = (title: string, body: string) => {
+export const notification = (title: string, body: string): void => {
 	// Check if the browser supports notifications
 	if (!('Notification' in window))
 		return;

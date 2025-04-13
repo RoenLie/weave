@@ -5,17 +5,8 @@ import { type Key, type TreeNode } from './types.js';
 export class Node<
 	TObj extends object,
 	TProp extends Key,
-	TNode extends TreeNode<TObj, TProp> = TreeNode<TObj, TProp>
+	TNode extends TreeNode<TObj, TProp> = TreeNode<TObj, TProp>,
 > {
-
-	public get parent() {
-		return this.#parent;
-	}
-
-	#parent?:   TNode;
-	#proxy:     TNode;
-	#original:  TObj;
-	#childProp: TProp;
 
 	constructor(
 		target: TObj,
@@ -29,13 +20,20 @@ export class Node<
 		this.#childProp = childProp;
 	}
 
-	public get isRoot() {
+	get parent(): TNode | undefined {
+		return this.#parent;
+	}
+
+	#parent?:   TNode;
+	#proxy:     TNode;
+	#original:  TObj;
+	#childProp: TProp;
+
+	get isRoot(): boolean {
 		return this.parent === undefined;
 	}
 
-	public unproxy = () => {
-		return this.#original;
-	};
+	unproxy(): TObj { return this.#original; };
 
 	#walkDepthFirst(fn: (node: TNode) => void | false) {
 		const traverse = (node: TNode) => {
@@ -68,7 +66,7 @@ export class Node<
 		breadthTraverse(this.#proxy);
 	}
 
-	public forEach(fn: (item: TNode) => void) {
+	forEach(fn: (item: TNode) => void): void {
 		this.#walkDepthFirst(item => {
 			fn(item);
 		});
@@ -83,7 +81,7 @@ export class Node<
 		//traverse(this.#proxy);
 	}
 
-	public find(fn: (item: TNode) => boolean) {
+	find(fn: (item: TNode) => boolean): TNode | undefined {
 		let item: TNode | undefined = undefined;
 
 		this.#walkDepthFirst(node => {
@@ -97,7 +95,7 @@ export class Node<
 		return item;
 	}
 
-	public filter(fn: (item: TNode) => boolean) {
+	filter(fn: (item: TNode) => boolean): TNode[] {
 		const items: TNode[] = [];
 
 		this.#walkDepthFirst(node => {
@@ -108,11 +106,11 @@ export class Node<
 		return items;
 	}
 
-	public some(fn: (item: TNode) => boolean) {
+	some(fn: (item: TNode) => boolean): boolean {
 		return !!this.find(fn);
 	}
 
-	public every(fn: (item: TNode) => boolean) {
+	every(fn: (item: TNode) => boolean): boolean {
 		let valid = true;
 
 		this.#walkDepthFirst(node => {
@@ -123,21 +121,21 @@ export class Node<
 		return valid;
 	}
 
-	public push(...items: TObj[]) {
+	push(...items: TObj[]): number {
 		this.#proxy[this.#childProp]
 			?.push(...items.map(item => augment(item, this.#childProp, this.#proxy)));
 
-		return this.#proxy[this.#childProp]?.length;
+		return this.#proxy[this.#childProp]?.length ?? 0;
 	}
 
-	public unshift(...items: TObj[]) {
+	unshift(...items: TObj[]): number {
 		this.#proxy[this.#childProp]
 			?.unshift(...items.map(item => augment(item, this.#childProp, this.#proxy)));
 
-		return this.#proxy[this.#childProp]?.length;
+		return this.#proxy[this.#childProp]?.length ?? 0;
 	}
 
-	public remove() {
+	remove(): TNode | undefined {
 		const siblings = this.#parent?.[this.#childProp];
 		if (!siblings?.length)
 			return;

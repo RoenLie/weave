@@ -13,7 +13,7 @@ import type { AdapterMetadata } from './types.ts';
 (Symbol as { metadata: symbol; }).metadata ??= Symbol('metadata');
 
 
-export class AdapterProxy extends HTMLElement {
+export class AdapterBase extends HTMLElement {
 
 	protected static adapter: typeof AdapterElement;
 	static override [Symbol.hasInstance](value: object): boolean {
@@ -27,19 +27,19 @@ export class AdapterProxy extends HTMLElement {
 		this.renderRoot = this.shadowRoot ?? this;
 	}
 
-	protected adapter?: AdapterElement;
-	protected attrCtrl: MutationObserver;
-
 	renderRoot: ShadowRoot | HTMLElement;
+
+	protected __adapter:  AdapterElement | undefined;
+	protected __attrCtrl: MutationObserver | undefined;
 
 	protected connectedCallback(): void { this.connectAdapter(); }
 	protected disconnectedCallback(): void { this.disconnectAdapter(); }
 
 	protected connectAdapter(): void {
-		const base = this.constructor as any as typeof AdapterProxy;
+		const base = this.constructor as any as typeof AdapterBase;
 		const metadata = base.adapter.metadata;
 
-		if (!this.adapter) {
+		if (!this.__adapter) {
 			for (const { propName } of Object.values(metadata.propertyMetadata)) {
 				Object.defineProperty(this, propName, {
 					get() {
@@ -55,10 +55,12 @@ export class AdapterProxy extends HTMLElement {
 			metadata.styles = getFlatStyles('styles', protoChain);
 
 			this.shadowRoot!.adoptedStyleSheets = metadata.styles;
-			this.attrCtrl = new MutationObserver(this.observeAttributes);
 
-			this.adapter = new base.adapter();
-			(this.adapter as any).__element = new WeakRef(this);
+			if (metadata.observedAttributes)
+				this.__attrCtrl = new MutationObserver(this.observeAttributes.bind(this));
+
+			this.__adapter = new base.adapter();
+			(this.__adapter as any).__element = new WeakRef(this);
 		}
 
 		// Set the initial values of the attribute properties.
@@ -71,29 +73,29 @@ export class AdapterProxy extends HTMLElement {
 		});
 
 		// Observe the attributes for changes.
-		this.attrCtrl.observe(this, {
+		this.__attrCtrl?.observe(this, {
 			attributes:      true,
 			attributeFilter: metadata.observedAttributes,
 		});
 
 		// If this is the first time the adapter has connected,
 		// call the firstConnected method.
-		if (!this.adapter.hasConnected)
-			this.adapter.firstConnected();
+		if (!this.__adapter.hasConnected)
+			this.__adapter.firstConnected();
 
 		// Call the connected method on the adapter.
-		this.adapter.connected();
+		this.__adapter.connected();
 	}
 
 	protected disconnectAdapter(): void {
 		// First clean up anything that may react to changes.
-		this.attrCtrl.disconnect();
+		this.__attrCtrl?.disconnect();
 
 		// Then clean up the adapter.
-		this.adapter?.disconnected();
+		this.__adapter?.disconnected();
 	}
 
-	protected observeAttributes = (entries: MutationRecord[]): void => {
+	protected observeAttributes(entries: MutationRecord[]): void {
 		entries.forEach(entry => {
 			const name = entry.attributeName;
 			if (!name)
@@ -111,14 +113,14 @@ export class AdapterProxy extends HTMLElement {
 	};
 
 	protected attributeChanged(name: string, value: string): void {
-		const base = this.constructor as any as typeof AdapterProxy;
+		const base = this.constructor as any as typeof AdapterBase;
 		const metadata = base.adapter.metadata;
 
 		const propMeta = metadata.propertyMetadata?.[name];
 		if (!propMeta)
 			return console.warn(`Unknown attribute: ${ name }`);
 
-		const adapter = this.adapter;
+		const adapter = this.__adapter;
 		if (!adapter)
 			return;
 
@@ -151,7 +153,7 @@ export class AdapterElement implements ReactiveControllerHost {
 			return;
 
 		const adapter = this;
-		const cls = class extends AdapterProxy {
+		const cls = class extends AdapterBase {
 
 			protected static override adapter = adapter;
 
@@ -176,23 +178,19 @@ export class AdapterElement implements ReactiveControllerHost {
 		return metadata;
 	}
 
-	constructor() {
-		this.updateComplete = Promise.resolve(true);
-	}
-
 	/**
 	 * A weak reference to the AdapterProxy element that is managing this adapter.\
 	 * This is used to avoid potential memory leaks from locking a direct reference.\
 	 * For internal use only.
 	 */
-	private __element:        WeakRef<AdapterProxy>;
+	private __element:        WeakRef<AdapterBase>;
 	private __unsubEffect?:   () => void;
 	private __resolveUpdate?: (bool: true) => void;
 	private __controllers:    Set<ReactiveController> = new Set();
 
 	readonly hasConnected:   boolean = false;
 	readonly hasUpdated:     boolean = false;
-	readonly updateComplete: Promise<boolean>;
+	readonly updateComplete: Promise<boolean> = Promise.resolve(true);
 
 	firstConnected(): void {
 		(this.hasConnected as boolean) = true;

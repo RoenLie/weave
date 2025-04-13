@@ -7,8 +7,8 @@ let activeModals: HTMLElement[] = [];
 
 export class Modal {
 
-	public element:      HTMLElement;
-	public tabDirection: 'forward' | 'backward' = 'forward';
+	element:      HTMLElement;
+	tabDirection: 'forward' | 'backward' = 'forward';
 	protected trapFocus = false;
 
 	constructor(element: HTMLElement) {
@@ -20,26 +20,26 @@ export class Modal {
 		this.handleFocusIn();
 	}
 
-	public activate() {
+	activate(): void {
 		activeModals.push(this.element);
 		document.addEventListener('focusin', this.handleFocusIn);
 		document.addEventListener('focusout', this.handleFocusOut);
 		document.addEventListener('keydown', this.handleKeyDown);
 	}
 
-	public deactivate() {
+	deactivate(): void {
 		activeModals = activeModals.filter(modal => modal !== this.element);
 		document.removeEventListener('focusin', this.handleFocusIn);
 		document.removeEventListener('focusout', this.handleFocusOut);
 		document.removeEventListener('keydown', this.handleKeyDown);
 	}
 
-	public isActive() {
+	isActive(): boolean {
 		// The "active" modal is always the most recent one shown
 		return activeModals[activeModals.length - 1] === this.element;
 	}
 
-	public checkFocus(event: KeyboardEvent) {
+	checkFocus(event: KeyboardEvent): void {
 		if (!this.isActive() || !this.trapFocus)
 			return;
 
@@ -63,15 +63,15 @@ export class Modal {
 		}
 	}
 
-	public handleFocusIn() {
+	handleFocusIn(): void {
 		this.trapFocus = true;
 	}
 
-	public handleFocusOut() {
+	handleFocusOut(): void {
 		this.trapFocus = false;
 	}
 
-	public handleKeyDown(event: KeyboardEvent) {
+	handleKeyDown(event: KeyboardEvent): void {
 		if (event.key === 'Tab') {
 			if (event.shiftKey)
 				this.tabDirection = 'backward';
@@ -82,7 +82,7 @@ export class Modal {
 		}
 	}
 
-	public handleKeyUp() {
+	handleKeyUp(): void {
 		this.tabDirection = 'forward';
 	}
 

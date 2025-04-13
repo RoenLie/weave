@@ -1,7 +1,8 @@
 /**
  * Await a single render cycle.
  */
-export const paintCycle = () => new Promise(resolve => requestAnimationFrame(resolve));
+export const paintCycle = (): Promise<unknown> =>
+	new Promise(resolve => requestAnimationFrame(resolve));
 
 
 /**
@@ -9,4 +10,5 @@ export const paintCycle = () => new Promise(resolve => requestAnimationFrame(res
  *
  * @param delay The delay in milliseconds.
  */
-export const sleep = (delay: number) => new Promise(resolve => setTimeout(resolve, delay));
+export const sleep = (delay: number): Promise<unknown> =>
+	new Promise(resolve => setTimeout(resolve, delay));

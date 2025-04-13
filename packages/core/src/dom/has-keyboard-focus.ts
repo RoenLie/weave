@@ -1,6 +1,7 @@
-export const hasKeyboardFocus = (elements: Element | Element[]) => {
+export const hasKeyboardFocus = (elements: Element | Element[]): boolean => {
 	if (!Array.isArray(elements))
 		elements = [ elements ];
+
 	if (!elements?.length)
 		return false;
 

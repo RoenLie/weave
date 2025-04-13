@@ -24,7 +24,7 @@ const fallbackCopyTextToClipboard = (text: string) => {
 };
 
 
-export const copyTextToClipboard = async (text: string) => {
+export const copyTextToClipboard = async (text: string): Promise<void> => {
 	if (!navigator.clipboard) {
 		fallbackCopyTextToClipboard(text);
 

@@ -5,7 +5,7 @@ const isPlainObject = (value: any): value is Record<PropertyKey, any> =>
 const handleArray = (
 	merged: Record<PropertyKey, any> | any[],
 	obj: any[],
-	options: { array?: 'merge' | 'extend' | 'override' },
+	options: { array?: 'merge' | 'extend' | 'override'; },
 ) => {
 	if (options.array === 'merge') {
 		obj.forEach((value: any, index: number) => {
@@ -30,7 +30,7 @@ const handleArray = (
 const handleObject = (
 	merged: Record<PropertyKey, any> | any[],
 	obj: Record<PropertyKey, any>,
-	options: { array?: 'merge' | 'extend' | 'override' },
+	options: { array?: 'merge' | 'extend' | 'override'; },
 ) => {
 	for (const [ key, value ] of Object.entries(obj)) {
 		// Javascript allows indexing arrays with strings, but typescript does not.
@@ -67,7 +67,7 @@ const handleObject = (
  */
 export const deepMerge = <T extends Record<keyof any, any> | any[]>(
 	objects: Partial<T>[],
-	options: { array?: 'merge' | 'extend' | 'override' } = {},
+	options: { array?: 'merge' | 'extend' | 'override'; } = {},
 ): T => {
 	const merged: Record<PropertyKey, any> | [] = Array.isArray(objects[0]) ? [] : {};
 	options.array ??= 'extend';

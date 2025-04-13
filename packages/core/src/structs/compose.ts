@@ -2,9 +2,10 @@ import type { Ctor } from '../types/class.types.ts';
 import type { UnionToIntersection } from '../types/union.types.ts';
 import type { ExtractReturnTypes } from '../types/utility-types.ts';
 
+
 export type Class<TInterface, TBase extends Ctor> = {
 	new (...args: any[]): TInterface & InstanceType<TBase>;
-	prototype: TInterface & InstanceType<TBase>
+	prototype: TInterface & InstanceType<TBase>;
 } & TBase;
 
 export type MixinFn<TInt = any, TBase extends Ctor = Ctor> =
@@ -26,8 +27,10 @@ if (globalThis.Δcompose) {
 		'but weakmap related lookup functionality might fail, as there will be multiple sources of truth.',
 	);
 }
+else {
+	globalThis.Δcompose = true;
+}
 
-globalThis.Δcompose = true;
 
 /**
  * Holds a reference to each class combination.
@@ -42,15 +45,17 @@ const classWeakMap: WeakMap<Ctor, WeakMap<MixinFn, Ctor>> = new WeakMap();
 /**
  * Returns `true` if the class was directly created from the application of the mixin.
  */
-export const isApplicationOf = (base: Ctor, mixin: MixinFn<any, any>) => {
-	return !!classWeakMap.get(base)?.has(mixin);
-};
+export const isApplicationOf = (
+	base: Ctor, mixin: MixinFn<any, any>,
+): boolean => !!classWeakMap.get(base)?.has(mixin);
 
 
 /**
  * Returns `true` if the class has the mixin as part of its prototype chain.
  */
-export const hasMixin = (initial: Record<keyof any, any> | Ctor, mixin: MixinFn<any, any>) => {
+export const hasMixin = (
+	initial: Record<keyof any, any> | Ctor, mixin: MixinFn<any, any>,
+): boolean => {
 	let base = initial as Ctor;
 
 	if (!initial.prototype)
@@ -70,8 +75,9 @@ export const hasMixin = (initial: Record<keyof any, any> | Ctor, mixin: MixinFn<
 /**
  * Decorates a mixin function to add typing support.
  */
-export const createMixin = <TInt, TBase extends Ctor>(mixin: MixinFn<TInt, TBase>) =>
-	mixin as MixinFn<TInt, TBase>;
+export const createMixin = <TInt, TBase extends Ctor>(
+	mixin: MixinFn<TInt, TBase>,
+): MixinFn<TInt, TBase> => mixin;
 
 
 /**
@@ -90,28 +96,29 @@ export const createMixin = <TInt, TBase extends Ctor>(mixin: MixinFn<TInt, TBase
  * class X extends C(B(A(BaseClass))) {}
  * ```
  */
-export const compose = <TBase extends Ctor>(superclass?: TBase) =>
-	new MixinBuilder<TBase>(superclass);
+export const compose = <TBase extends Ctor>(
+	superclass?: TBase,
+): MixinBuilder<TBase> => new MixinBuilder<TBase>(superclass);
 
 
 class MixinBuilder<TBase extends Ctor> {
 
-	private supercls: TBase;
-
 	constructor(superclass?: TBase) {
 		this.supercls = superclass || class {} as TBase;
 	}
+
+	private supercls: TBase;
 
 	/**
    * Applies `mixins` in order to the superclass given to `compose()`.
    *
    * @return a subclass of `superclass` with `mixins` applied
    */
-	public with<M extends MixinFn<any, any>[]>(...mixins: M): MixinResult<M, TBase> {
+	with<M extends MixinFn<any, any>[]>(...mixins: M): MixinResult<M, TBase> {
 		return mixins.reduce(
 			(c, m) => {
-				const classCache = classWeakMap.get(c) ??
-					classWeakMap.set(c, new WeakMap()).get(c)!;
+				const classCache = classWeakMap.get(c) ?? classWeakMap
+					.set(c, new WeakMap()).get(c)!;
 
 				const mixinCacheResult = classCache.get(m);
 
@@ -127,7 +134,7 @@ class MixinBuilder<TBase extends Ctor> {
 				return res;
 			},
 			this.supercls,
-		) as any;
+		) as MixinResult<M, TBase>;
 	}
 
 }

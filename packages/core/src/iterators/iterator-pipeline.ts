@@ -1,12 +1,12 @@
 abstract class TransformIterable<T, R> {
 
-	protected transformers: ((value: T, previous: T | undefined) => R)[] = [];
-
 	constructor(protected iterable: Iterable<T>) { }
 
-	public abstract pipe<P>(transformer: (value: Exclude<T, undefined>, previous: T | undefined) => P): any;
+	protected transformers: ((value: T, previous: T | undefined) => R)[] = [];
 
-	public [Symbol.iterator](): Iterator<Exclude<R, undefined>> {
+	abstract pipe<P>(transformer: (value: Exclude<T, undefined>, previous: T | undefined) => P): any;
+
+	[Symbol.iterator](): Iterator<Exclude<R, undefined>> {
 		const iterator = this.iterable[Symbol.iterator]();
 		let hasNext = true;
 
@@ -66,13 +66,15 @@ export class IterableTransformer<T, R> extends TransformIterable<T, R> {
 		this.transformers.push(...transformers);
 	}
 
-	public pipe<P>(transformer: (value: Exclude<T, undefined>, previous: T | undefined) => P) {
+	pipe<P>(
+		transformer: (value: Exclude<T, undefined>, previous: T | undefined) => P,
+	): IterableTransformer<P, P> {
 		const iterable = this.iterable;
 
 		return new IterableTransformer<P, P>(iterable as any, [ ...this.transformers, transformer as any ]);
 	}
 
-	public toArray() {
+	toArray(): Exclude<R, undefined>[] {
 		return [ ...this ];
 	}
 
@@ -88,14 +90,16 @@ export class IterablePipeline<T, R, O = T> extends TransformIterable<T, R> {
 		this.transformers.push(...transformers);
 	}
 
-	public pipe<P>(transformer: (value: Exclude<T, undefined>, previous: T | undefined) => P) {
+	pipe<P>(
+		transformer: (value: Exclude<T, undefined>, previous: T | undefined) => P,
+	): IterablePipeline<P, P, O> {
 		const iterable = this.iterable;
 
 		return new IterablePipeline<P, P, O>(iterable as any, [ ...this.transformers, transformer as any ]);
 	}
 
-	public toPipeline() {
-		return (iterable: Iterable<O>) => {
+	toPipeline() {
+		return (iterable: Iterable<O>): Exclude<R, undefined>[] => {
 			return new IterableTransformer<O, R>(iterable, this.transformers as any).toArray();
 		};
 	}

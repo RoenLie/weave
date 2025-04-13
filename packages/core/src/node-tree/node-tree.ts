@@ -3,7 +3,7 @@ import { type Key, type Rec, type RootNode, type TreeNode } from './types.js';
 
 
 export const fromSingleObject = <TObj extends Rec, const TProp extends keyof TObj>(
-	object: TObj, childProp: TProp) => _traverse(object, childProp);
+	object: TObj, childProp: TProp): TreeNode<TObj, TProp> => _traverse(object, childProp);
 
 
 export const fromMultiObject = <TObj extends Rec, const TProp extends keyof TObj>(
@@ -19,7 +19,7 @@ export const fromMultiObject = <TObj extends Rec, const TProp extends keyof TObj
 
 const _traverse = <TObj extends Rec, const TProp extends keyof TObj>(
 	obj: TObj, childProp: TProp, parent?: TreeNode<TObj, TProp>,
-) => {
+): TreeNode<TObj, TProp> => {
 	if (obj[$Augmented])
 		return obj as unknown as TreeNode<TObj, TProp>;
 
@@ -33,30 +33,42 @@ const _traverse = <TObj extends Rec, const TProp extends keyof TObj>(
 };
 
 
+type Item<
+	TObj extends Rec,
+	TIdProp extends keyof TObj,
+	TParentProp extends keyof TObj,
+	TChildProp extends string,
+> = TObj & {
+	[key in TIdProp]?: Key;
+} & {
+	[key in TParentProp]?: Key;
+} & {
+	[key in TChildProp]?: Item<TObj, TIdProp, TParentProp, TChildProp>[];
+};
+
 export const fromList = <
 	TObj extends Rec,
 	TIdProp extends keyof TObj,
 	TParentProp extends keyof TObj,
-	TChildProp extends string
->(list: TObj[], idProp: TIdProp, parentProp: TParentProp, childProp: TChildProp) => {
-	type Item = TObj & {
-		[key in TIdProp]?: Key;
-	} & {
-		[key in TParentProp]?: Key;
-	} & {
-		[key in TChildProp]?: Item[];
-	};
+	TChildProp extends string,
+>(
+	list: TObj[],
+	idProp: TIdProp,
+	parentProp: TParentProp,
+	childProp: TChildProp,
+): RootNode<Item<TObj, TIdProp, TParentProp, TChildProp>, TChildProp> => {
+	type _Item = Item<TObj, TIdProp, TParentProp, TChildProp>;
 
-	const objMap: Map<string | number, Item> = new Map();
+	const objMap: Map<string | number, _Item> = new Map();
 	list.forEach(listItem => objMap.set(listItem[idProp], { ...listItem }));
 
-	const roots: Item[] = [];
+	const roots: _Item[] = [];
 
 	objMap.forEach(item => {
 		// If it has a parent, attach it as a child of that parent.
 		if (item[parentProp]) {
 			const parent = objMap.get(item[parentProp])!;
-			(parent[childProp] as Item[] | undefined) ??= [] as Item[];
+			(parent[childProp] as _Item[] | undefined) ??= [] as _Item[];
 			parent[childProp].push(item);
 		}
 		else {
@@ -70,8 +82,8 @@ export const fromList = <
 
 export const unwrap = <
 	TObj extends TreeNode<Rec, TProp>,
-	TProp extends keyof TObj
->(object: TObj, childProp: TProp) => {
+	TProp extends keyof TObj,
+>(object: TObj, childProp: TProp): ReturnType<TObj['unproxy']> => {
 	type Original = ReturnType<TObj['unproxy']>;
 
 	const traverse = (obj: TObj) => {
@@ -97,15 +109,15 @@ export const unwrap = <
 
 export class NodeTree {
 
-	public static fromObject<TObj extends Rec, TProp extends keyof TObj>(
+	static fromObject<TObj extends Rec, TProp extends keyof TObj>(
 		objects: TObj[], childProp: TProp
 	): RootNode<TObj, TProp>;
 
-	public static fromObject<TObj extends Rec, TProp extends keyof TObj>(
+	static fromObject<TObj extends Rec, TProp extends keyof TObj>(
 		objects: TObj, childProp: TProp
 	): TreeNode<TObj, TProp>;
 
-	public static fromObject<TObj extends Rec, TProp extends keyof TObj>(
+	static fromObject<TObj extends Rec, TProp extends keyof TObj>(
 		objects: TObj | TObj[], childProp: TProp,
 	): TreeNode<TObj, TProp> | RootNode<TObj, TProp> {
 		if (Array.isArray(objects))
@@ -114,8 +126,8 @@ export class NodeTree {
 		return fromSingleObject(objects, childProp);
 	}
 
-	public static fromList = fromList;
+	static fromList = fromList;
 
-	public static unwrap = unwrap;
+	static unwrap = unwrap;
 
 }

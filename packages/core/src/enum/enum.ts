@@ -16,7 +16,9 @@ export type CamelSpaces<TString extends string> =
 export type InferEnum<T extends Record<string, string>> = T[keyof T];
 
 
-export const Enum = <T extends string[]>(...keys: [...T]) => {
+export const Enum = <T extends string[]>(
+	...keys: [...T]
+): { [P in T[number] as ToCamelCase<P>]: P } => {
 	const obj = {} as Record<keyof any, any>;
 	for (const key of keys) {
 		const modifiedKey = key.replaceAll(/-(\w)/g, (_, c: string) => c.toUpperCase());

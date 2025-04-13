@@ -1,8 +1,9 @@
 import { type Fn } from '../types/function.types.js';
 
 
-export type Maybe<T> = readonly [data: T, error: undefined]
-	| readonly [data: undefined, error: Error];
+export type Maybe<T> =
+| readonly [data: T, error: undefined]
+| readonly [data: undefined, error: Error];
 
 
 /**

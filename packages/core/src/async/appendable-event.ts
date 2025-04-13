@@ -9,7 +9,7 @@ export type PauseableEvent = CustomEvent<{
 }>;
 
 
-export const pauseableEvent = async (element: HTMLElement, eventName: string) => {
+export const pauseableEvent = async (element: HTMLElement, eventName: string): Promise<void> => {
 	const [ promise, resolve, , id ] = createPromiseResolver();
 	const promises = new Set([ promise ]);
 	promise.finally(() => promises.delete(promise));
