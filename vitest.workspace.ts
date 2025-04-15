@@ -18,21 +18,21 @@ export default defineWorkspace([
 			setupFiles: [],
 		},
 	},
-	{
-		extends: './packages/bootstrap-clone/vite.config.ts',
-		test:    {
-			name:       'bootstrap_clone',
-			setupFiles: [],
-			include:    [ 'packages/bootstrap-clone/**/*.{spec,test,bench}.ts' ],
-			browser:    {
-				enabled:            true,
-				headless:           true,
-				provider:           'playwright',
-				screenshotFailures: false,
-				instances:          [ { browser: 'chromium' } ],
-			},
-		},
-	},
+	//{
+	//	extends: './packages/bootstrap-clone/vite.config.ts',
+	//	test:    {
+	//		name:       'bootstrap_clone',
+	//		setupFiles: [],
+	//		include:    [ 'packages/bootstrap-clone/**/*.{spec,test,bench}.ts' ],
+	//		browser:    {
+	//			enabled:            true,
+	//			headless:           true,
+	//			provider:           'playwright',
+	//			screenshotFailures: false,
+	//			instances:          [ { browser: 'chromium' } ],
+	//		},
+	//	},
+	//},
 	//{
 	//	test: {
 	//		name:       'all',

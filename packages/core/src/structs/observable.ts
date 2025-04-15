@@ -1,6 +1,7 @@
-import { nanoid } from 'nanoid';
-import type { AsyncFn, Fn } from '../types/function.types.ts';
+
+import { nanoid } from '../dom/dom-id.ts';
 import type { Ctor } from '../types/class.types.ts';
+import type { AsyncFn, Fn } from '../types/function.types.ts';
 import { compose, createMixin } from './compose.ts';
 
 
@@ -17,7 +18,7 @@ export type IObservable<T = unknown, TVal = any> = T & {
 	/** Removes a listener by id */
 	unobserve(id: string): void;
 	/** Removes all listeners */
-	disconnect(): void
+	disconnect(): void;
 };
 
 
@@ -29,22 +30,22 @@ export const ObservableMixin = createMixin<IObservable, any>(base => {
 	class Observable extends base implements IObservable {
 
 		private observers: Map<string, Fn | AsyncFn> = new Map();
-		public observe(fn: (value: any, operation: Operation, from: any) => void) {
+		observe(fn: (value: any, operation: Operation, from: any) => void) {
 			const _id = nanoid(10);
 			this.observers.set(_id, fn);
 
 			return { id: _id, unobserve: () => this.unobserve(_id) };
 		}
 
-		public unobserve(id: string) {
+		unobserve(id: string) {
 			this.observers.delete(id);
 		}
 
-		public [react](value: any, operation: Operation) {
+		[react](value: any, operation: Operation) {
 			this.observers.forEach(val => val(value, operation, this));
 		}
 
-		public disconnect() {
+		disconnect() {
 			this.observers.clear();
 		}
 
@@ -54,27 +55,28 @@ export const ObservableMixin = createMixin<IObservable, any>(base => {
 });
 
 
-export const makeObservableBase = <TBase extends Ctor>(base: TBase) =>
-	compose(base).with(ObservableMixin) as new <TBase, TVal>() => IObservable<TBase, TVal>;
+export const makeObservableBase = <TBase extends Ctor>(
+	base: TBase,
+): new <TBase, TVal>() => IObservable<TBase, TVal> => compose(base).with(ObservableMixin);
 
 
-export class ObservableSet<V> extends makeObservableBase(Set)<Set<V>, { value?: V }> {
+export class ObservableSet<V> extends makeObservableBase(Set)<Set<V>, { value?: V; }> {
 
-	public override add(value: V): this {
+	override add(value: V): this {
 		const res = super.add(value);
 		this[react]({ value }, 'add');
 
 		return res;
 	}
 
-	public override delete(value: V): boolean {
+	override delete(value: V): boolean {
 		const res = super.delete(value);
 		this[react]({ value }, 'remove');
 
 		return res;
 	}
 
-	public override clear(): void {
+	override clear(): void {
 		super.clear();
 		this[react]({}, 'clear');
 	}
@@ -82,23 +84,23 @@ export class ObservableSet<V> extends makeObservableBase(Set)<Set<V>, { value?: 
 }
 
 
-export class ObservableMap<K, V> extends makeObservableBase(Map)<Map<K, V>, { key?: K, value?: V }> {
+export class ObservableMap<K, V> extends makeObservableBase(Map)<Map<K, V>, { key?: K; value?: V; }> {
 
-	public override set(key: K, value: V): this {
+	override set(key: K, value: V): this {
 		const res = super.set(key, value);
 		this[react]({ key, value }, 'add');
 
 		return res;
 	}
 
-	public override delete(key: K): boolean {
+	override delete(key: K): boolean {
 		const res = super.delete(key);
 		this[react]({ key }, 'remove');
 
 		return res;
 	}
 
-	public override clear(): void {
+	override clear(): void {
 		super.clear();
 		this[react]({}, 'clear');
 	}

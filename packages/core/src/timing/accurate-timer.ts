@@ -1,4 +1,6 @@
-export const accurateTimer = (fn: (...args: any) => any, time = 1000) => {
+export const accurateTimer = (fn: (...args: any) => any, time = 1000): {
+	cancel: () => void;
+} => {
 	// nextAt is the value for the next time the timer should fire.
 	// timeout holds the timeoutID so the timer can be stopped.
 	let timeout: ReturnType<typeof setTimeout>;

@@ -1,7 +1,7 @@
 import { maybeSync } from '../async/maybe.ts';
 
 
-export const safeJsonStringify = (val: any) => {
+export const safeJsonStringify = (val: any): string => {
 	if (typeof val === 'string')
 		return val;
 
@@ -11,7 +11,7 @@ export const safeJsonStringify = (val: any) => {
 };
 
 
-export const safeJsonParse = <T>(val: string, def?: T) => {
+export const safeJsonParse = <T>(val: string, def?: T): T => {
 	const [ parsed ] = maybeSync(() => JSON.parse(val));
 	let value: unknown = parsed ?? def;
 

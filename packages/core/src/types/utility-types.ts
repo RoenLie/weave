@@ -17,7 +17,7 @@ export type Timeout = ReturnType<typeof setTimeout> | number;
 
 
 export type ExtractReturnTypes<T extends readonly ((i: any) => any)[]> = [
-	...{ [K in keyof T]: T[K] extends ((i: any) => infer R) ? R : never }
+	...{ [K in keyof T]: T[K] extends ((i: any) => infer R) ? R : never },
 ];
 
 
@@ -26,7 +26,7 @@ export type ExtractReturnTypes<T extends readonly ((i: any) => any)[]> = [
  */
 export type Mandatory<
 	Target extends Record<keyof any, any>,
-	Keys extends string
+	Keys extends string,
 > = {
 	[P in keyof Target as P extends Keys ? P : never]-?: Target[P];
 } & {
@@ -39,7 +39,7 @@ export type Mandatory<
  */
 export type Optional<
 	Target extends Record<keyof any, any>,
-	Keys extends string
+	Keys extends string,
 > = {
 	[P in keyof Target as P extends Keys ? P : never]?: Target[P];
 } & {

@@ -1,6 +1,7 @@
 /* eslint-disable @stylistic/max-len */
 import type { O, U } from 'ts-toolbelt';
 import type { Greater } from 'ts-toolbelt/out/Number/Greater.js';
+
 import type { ObjectHasKeys, ObjectHasLiteralKeys, ObjectTypesToUnion } from './record.types.ts';
 
 
@@ -75,7 +76,7 @@ export type PathOfLeaf<TTarget extends Record<keyof any, any>> = ObjectHasLitera
 type PathOfInternal<
 	TTarget extends Record<keyof any, any>,
 	TLeafOnly extends boolean,
-	IIteration extends number[]
+	IIteration extends number[],
 > = ObjectTypesToUnion<PropertyNameMap<TTarget, TLeafOnly, [...IIteration, 1]>> & Path;
 
 
@@ -88,7 +89,7 @@ type SubPathsOf<
 	TTarget extends Record<keyof any, any>,
 	TKey extends keyof TTarget,
 	TLeafOnly extends boolean,
-	IIteration extends number[]
+	IIteration extends number[],
 > = `${ (string | number) & TKey }.${ (string | number) & PathOfInternal<Extract<TTarget[TKey], object>, TLeafOnly, IIteration> }`;
 
 
@@ -107,7 +108,7 @@ type SubPathsOf<
 type PropertyNameMap<
 	TTarget extends Record<keyof any, any>,
 	TLeafOnly extends boolean = false,
-	IIteration extends number[] = []
+	IIteration extends number[] = [],
 > = {
 	[Key in keyof TTarget]-?: [Extract<Required<TTarget>[Key], object>] extends [never]
 		? `${ (string | number) & Key }`

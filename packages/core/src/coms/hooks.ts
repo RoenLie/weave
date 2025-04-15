@@ -1,11 +1,11 @@
 import { nanoid } from 'nanoid';
 
 import { lazyMap } from '../structs/lazy-map.js';
-import { ReflectMap } from '../structs/reflect-map.js';
+import { MirrorMap } from '../structs/mirror-map.js';
 import type { Fn } from '../types/function.types.js';
 
 
-type Handlers = ReflectMap<string, Fn>;
+type Handlers = MirrorMap<string, Fn>;
 
 
 /**
@@ -52,7 +52,7 @@ export class Hooks<TEvents extends Record<string, Fn>> {
 
 	/** Lazy-initialize the ReflectMap for the `event`. */
 	protected handlersFor<TEvent extends keyof TEvents>(event: TEvent): Handlers {
-		return lazyMap(this._handlers, event, () => new ReflectMap<string, Fn>);
+		return lazyMap(this._handlers, event, () => new MirrorMap<string, Fn>);
 	}
 
 }

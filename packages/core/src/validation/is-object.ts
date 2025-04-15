@@ -1,12 +1,12 @@
-export const isEmptyObject = (obj: object) => !Object.keys(obj).length;
+export const isEmptyObject = (obj: any): obj is {} => !Object.keys(obj).length;
 
 
-export const isObject = (obj: any) => {
+export const isObject = (obj: any): obj is Record<keyof any, any> => {
 	return Object.prototype.toString.call(obj) === '[object Object]';
 };
 
 
-export const isPlainObject = (obj: any) => {
+export const isPlainObject = (obj: any): obj is Record<keyof any, any> => {
 	if (isObject(obj) === false)
 		return false;
 

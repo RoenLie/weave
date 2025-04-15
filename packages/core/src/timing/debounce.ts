@@ -11,7 +11,11 @@ import type { Timeout } from '../types/utility-types.js';
 export const debounce = <T extends () => any>(
 	func: T,
 	delay = 0,
-) => {
+): {
+	(): void;
+	run(): void;
+	cancel(): void;
+} => {
 	let timeout: Timeout = 0;
 
 	const innerFunc = () => { func(); };
@@ -53,7 +57,7 @@ export const debounce = <T extends () => any>(
 export const curryDebounce = <T extends Fn<any, ReturnType<T>> | AsyncFn<any, ReturnType<T>>>(
 	func: T,
 	delay = 0,
-) => {
+): (...args: Parameters<T>) => (callback: (result: Awaited<ReturnType<T>>) => void) => void => {
 	const callbacks: Map<string, (...args: any) => any> = new Map();
 	let timer: number;
 
@@ -72,8 +76,7 @@ export const curryDebounce = <T extends Fn<any, ReturnType<T>> | AsyncFn<any, Re
 		};
 	};
 
-	return debounceFunc as unknown as (...args: Parameters<T>) =>
-		(callback: (result: Awaited<ReturnType<T>>) => void) => void;
+	return debounceFunc;
 };
 
 
@@ -84,12 +87,16 @@ export const curryDebounce = <T extends Fn<any, ReturnType<T>> | AsyncFn<any, Re
  */
 export const withDebounce = <
 	TFunc extends (...args: any[]) => any,
-	TDebounce extends () => any
+	TDebounce extends () => any,
 >(
 	func: TFunc,
 	debounceFunc: TDebounce,
 	delay: number,
-) => {
+): {
+	(...args: Parameters<TFunc>): any;
+	run:    () => void;
+	cancel: () => void;
+} => {
 	const deb = debounce(debounceFunc, delay);
 	const fn = (...args: Parameters<TFunc>) => { return deb(), func(...args); };
 	fn.run = deb.run;

@@ -1,5 +1,5 @@
-type InferMapKey<T extends Map<any, any>> = T extends Map<infer K, any> ? K : never;
-type InferMapValue<T extends Map<any, any>> = T extends Map<any, infer V> ? V : never;
+export type InferMapKey<T extends Map<any, any>> = T extends Map<infer K, any> ? K : never;
+export type InferMapValue<T extends Map<any, any>> = T extends Map<any, infer V> ? V : never;
 
 
 export const mapFind = <T extends Map<any, any>>(
