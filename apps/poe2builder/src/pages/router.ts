@@ -1,11 +1,12 @@
-import { html } from 'lit-html';
-import { Router } from '@sanguinejs/router';
+import { Router } from '@roenlie/custom-element/router';
+import { css, type CSSStyle, CustomElement, state } from '@roenlie/custom-element/signal';
+import type { UserResponse } from '@supabase/supabase-js';
 import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, type User } from 'firebase/auth';
+import { html } from 'lit-html';
 import { when } from 'lit-html/directives/when.js';
+
 import { app } from '../app/firebase.ts';
 import { supabase } from '../app/supabase.ts';
-import type { UserResponse } from '@supabase/supabase-js';
-import { css, CustomElement, state, type CSSStyle } from '@roenlie/custom-element';
 
 
 export class RouterCmp extends CustomElement {
@@ -67,7 +68,7 @@ export class RouterCmp extends CustomElement {
 		this.initialize();
 	}
 
-	protected async initialize() {
+	protected async initialize(): Promise<void> {
 		this.currentUser2 = await supabase.auth.getUser();
 
 		const auth = getAuth(app);
@@ -82,7 +83,7 @@ export class RouterCmp extends CustomElement {
 		});
 	}
 
-	protected async login() {
+	protected async login(): Promise<void> {
 		const auth = getAuth(app);
 		await setPersistence(auth, browserLocalPersistence);
 
@@ -92,7 +93,7 @@ export class RouterCmp extends CustomElement {
 		location.reload();
 	}
 
-	protected async logout() {
+	protected async logout(): Promise<void> {
 		const auth = getAuth(app);
 		await auth.signOut();
 	}
@@ -127,7 +128,7 @@ export class RouterCmp extends CustomElement {
 		`;
 	}
 
-	public static override styles: CSSStyle = css`
+	static override styles: CSSStyle = css`
 		:host {
 			display: grid;
 			grid-template-rows: auto 1fr;
@@ -162,7 +163,7 @@ export class LoginBtnCmp extends CustomElement {
 
 	static { this.register('login-button'); }
 
-	@state() public accessor useBase: boolean = false;
+	@state() accessor useBase: boolean = false;
 
 	protected override render(): unknown {
 		if (this.useBase) {
@@ -182,7 +183,7 @@ export class LoginBtnCmp extends CustomElement {
 		`;
 	}
 
-	public static override styles: CSSStyle = css`
+	static override styles: CSSStyle = css`
 		button { all: unset; }
 		:host {
 			display: block;

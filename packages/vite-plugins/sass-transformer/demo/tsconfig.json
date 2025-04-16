@@ -1,0 +1,13 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"rootDir": "..",
+		"types": [
+			"../client.d.ts"
+		]
+	},
+	"exclude": [
+		"node_modules",
+		"dist"
+	]
+}

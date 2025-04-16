@@ -42,7 +42,7 @@
 		"tslib": "^2.8.1"
 	},
 	"devDependencies": {
-		"@faker-js/faker": "^9.6.0",
+		"@faker-js/faker": "^9.7.0",
 		"@roenlie/elements": "workspace:^",
 		"@roenlie/mirage-docs": "workspace:^",
 		"@roenlie/vite-lib-config": "workspace:^",

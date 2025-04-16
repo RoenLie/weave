@@ -15,7 +15,6 @@
 		"@codemirror/view": "^6.36.5",
 		"@roenlie/core": "workspace:^",
 		"@roenlie/custom-element": "workspace:^",
-		"@sanguinejs/router": "^0.0.1",
 		"@supabase/supabase-js": "^2.49.4",
 		"cm6-theme-basic-dark": "^0.2.0",
 		"codemirror": "^6.0.1",

@@ -1,18 +1,19 @@
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import demoStyles from './index.css'  with { type: 'css' };
+
+import demoStyles from './index.css' with { type: 'css' };
 
 
 @customElement('demo-element')
 export class DemoCmp extends LitElement {
 
-	protected override render() {
+	protected override render(): unknown {
 		return html`
 		Hello
 		`;
 	}
 
-	public static override styles = [
+	static override styles = [
 		demoStyles,
 		css`
 		/* Box sizing rules */

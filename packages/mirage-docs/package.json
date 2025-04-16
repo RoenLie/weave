@@ -39,13 +39,13 @@
 	},
 	"dependencies": {
 		"@custom-elements-manifest/analyzer": "^0.10.4",
-		"@orama/orama": "3.1.5",
-		"@orama/plugin-data-persistence": "3.1.5",
-		"@orama/plugin-match-highlight": "3.1.5",
-		"@orama/plugin-parsedoc": "3.1.5",
+		"@orama/orama": "3.1.6",
+		"@orama/plugin-data-persistence": "3.1.6",
+		"@orama/plugin-match-highlight": "3.1.6",
+		"@orama/plugin-parsedoc": "3.1.6",
 		"@roenlie/core": "workspace:^",
-		"@roenlie/injector": "workspace:^",
 		"@roenlie/custom-element": "workspace:^",
+		"@roenlie/injector": "workspace:^",
 		"@roenlie/monaco-editor-wc": "workspace:^",
 		"@roenlie/vite-plugin-copy": "workspace:^",
 		"@sindresorhus/slugify": "^2.2.1",
@@ -64,7 +64,7 @@
 	},
 	"devDependencies": {
 		"@types/markdown-it": "^14.1.2",
-		"@types/sharedworker": "^0.0.154"
+		"@types/sharedworker": "^0.0.155"
 	},
 	"sideEffects": []
 }

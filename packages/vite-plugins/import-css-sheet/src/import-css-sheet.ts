@@ -8,9 +8,16 @@ import type { ResolvedConfig } from 'vite';
 
 export class ImportCSSSheet {
 
+	constructor(
+		public config: ResolvedConfig,
+		public transformers: ((code: string, id: string) => string)[],
+		public additionalCode: string[],
+		public minify: boolean,
+	) {}
+
 	filetypes = new Set([ '.ts', '.mts', '.js', '.mjs' ]);
-	virtualModules = new Map<string, string>();
-	charReplacements = new Map<string, string>([
+	virtualModules:   Map<string, string> = new Map();
+	charReplacements: Map<string, string> = new Map([
 		[ '\\', '\\\\' ],
 		[ '`', '\\`' ],
 		[ '$', '\\$' ],
@@ -18,13 +25,6 @@ export class ImportCSSSheet {
 
 	totalBeforeMinify = 0;
 	totalAfterMinify = 0;
-
-	constructor(
-		public config: ResolvedConfig,
-		public transformers: ((code: string, id: string) => string)[],
-		public additionalCode: string[],
-		public minify: boolean,
-	) {}
 
 	convert(str: string): string {
 		let res = '';

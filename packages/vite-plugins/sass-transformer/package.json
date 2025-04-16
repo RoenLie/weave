@@ -1,0 +1,43 @@
+{
+	"name": "@roenlie/vite-plugin-sass",
+	"version": "1.0.0",
+	"description": "Applies SASS transformer to sass literals and allows importing sass files.",
+	"license": "MIT",
+	"author": {
+		"name": "Kristoffer Roen-Lie",
+		"url": "https://github.com/RoenLie"
+	},
+	"files": [
+		"dist",
+		"src",
+		"README.md"
+	],
+	"engines": {
+		"node": ">=22"
+	},
+	"type": "module",
+	"types": "./dist/index.d.ts",
+	"main": "./dist/index.js",
+	"scripts": {
+		"dev": "pnpm vite --config ./demo/vite.config.ts",
+		"build": "vite build && tsc --project ./src/tsconfig.json"
+	},
+	"peerDependencies": {
+		"vite": "^6.2.4"
+	},
+	"dependencies": {
+		"@babel/parser": "^7.27.0",
+		"@babel/traverse": "^7.27.0",
+		"@babel/types": "^7.27.0",
+		"lightningcss": "^1.29.3",
+		"magic-string": "^0.30.17",
+		"sass": "^1.86.3"
+	},
+	"devDependencies": {
+		"@roenlie/vite-lib-config": "workspace:^",
+		"@types/babel__traverse": "^7.20.7",
+		"lit": "^3.3.0",
+		"rollup": "^4.40.0",
+		"tslib": "^2.8.1"
+	}
+}
