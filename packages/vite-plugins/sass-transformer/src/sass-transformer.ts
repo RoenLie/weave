@@ -7,9 +7,10 @@ import * as parser from '@babel/parser';
 import _traverse from '@babel/traverse';
 import { transform } from 'lightningcss';
 import MagicString from 'magic-string';
-import type { PluginContext, TransformPluginContext } from 'rollup';
 import  * as sass from 'sass';
 import type { Plugin, ResolvedConfig } from 'vite';
+
+import { type PluginAsyncFnReturn, type PluginParams, type PluginSyncFnReturn, VitePlugin, vitePluginClassToPlugin } from './vite-plugin.ts';
 
 
 const traverse = (_traverse as unknown as { default: typeof _traverse; }).default;
@@ -21,40 +22,25 @@ export const transformSass = (options?: {
 }): Plugin => {
 	const { rootDir = '', debugLevel = 'silent' } = options || {};
 
-	const plugin = new SassTransformer(rootDir, debugLevel, false);
-
-	return {
-		enforce: plugin.enforce,
-		name:    plugin.name,
-		configResolved(...args) { return plugin.configResolved(this, ...args); },
-		load(...args)           { return plugin.load(this, ...args); },
-		resolveId(...args)      { return plugin.resolveId(this, ...args); },
-		transform(...args)      { return plugin.transform(this, ...args); },
-	};
+	return vitePluginClassToPlugin(
+		new SassTransformer(rootDir, debugLevel, false),
+	);
 };
 
 
-interface PluginParams {
-	ConfigResolved: [context: void, ...Parameters<Extract<Plugin['configResolved'], (...args: any[]) => any>>];
-	ResolveId:      [context: PluginContext, ...Parameters<Extract<Plugin['resolveId'], (...args: any[]) => any>>];
-	Load:           [context: PluginContext, ...Parameters<Extract<Plugin['load'], (...args: any[]) => any>>];
-	Transform:      [context: TransformPluginContext, ...Parameters<Extract<Plugin['transform'], (...args: any[]) => any>>];
-}
-
-
-class SassTransformer {
+class SassTransformer implements VitePlugin {
 
 	constructor(
 		readonly rootDir: string,
 		readonly debugLevel: 'error' | 'silent',
 		readonly minify: boolean,
-	) {}
+	) { }
 
 	enforce:          Plugin['enforce'] = 'pre';
 	name:             string = '@roenlie/vite-plugin-sass-transformer';
-	config:           ResolvedConfig;
+	resolvedConfig:   ResolvedConfig;
 	decoder:          TextDecoder = new TextDecoder();
-	identifierNames:  string[] = [ 'sass', 'scss' ];
+	identifierNames:  string[] = [ 'sass`', 'scss`' ];
 	sourcetypes:      Set<string> = new Set([ '.scss', '.sass' ]);
 	filetypes:        Set<string> = new Set([ '.ts', '.mts', '.js', '.mjs' ]);
 	transformers:     ((code: string, id: string) => string)[] = [];
@@ -84,7 +70,7 @@ class SassTransformer {
 				importers: [
 					{
 						findFileUrl: (url) => {
-							const path = pathToFileURL(join(this.config.root, this.rootDir));
+							const path = pathToFileURL(join(this.resolvedConfig.root, this.rootDir));
 							const newUrl = new URL(url, path + '/');
 
 							return newUrl;
@@ -120,13 +106,15 @@ class SassTransformer {
 	}
 
 	//#region Plugin Hooks
-	configResolved(...[ context, cfg ]: PluginParams['ConfigResolved']): void {
-		this.config = cfg;
+	configResolved(
+		[ context, cfg ]: PluginParams['configResolved'],
+	): PluginSyncFnReturn<'configResolved'> {
+		this.resolvedConfig = cfg;
 	}
 
 	async resolveId(
-		...[ context, source, importer, options ]: PluginParams['ResolveId']
-	): Promise<string | undefined> {
+		[ context, source, importer, options ]: PluginParams[ 'resolveId' ],
+	): PluginAsyncFnReturn<'resolveId'> {
 		const sourceExt = extname(source);
 		if (!this.sourcetypes.has(sourceExt) || !importer)
 			return;
@@ -156,8 +144,8 @@ class SassTransformer {
 	}
 
 	async load(
-		...[ context, id, options ]: PluginParams['Load']
-	): Promise<string | undefined> {
+		[ context, id, options ]: PluginParams['load'],
+	): PluginAsyncFnReturn<'load'> {
 		if (!this.virtualModules.has(id))
 			return;
 
@@ -189,7 +177,9 @@ class SassTransformer {
 		return createCode;
 	}
 
-	transform(...[ context, code, id, options ]: PluginParams['Transform']) {
+	transform(
+		[ context, code, id, options ]: PluginParams['transform'],
+	): PluginSyncFnReturn<'load'> {
 		const ext = extname(id);
 		if (!this.filetypes.has(ext))
 			return;
