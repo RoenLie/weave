@@ -20,6 +20,8 @@ export type IVitePlugin = {
 
 export class VitePlugin implements IVitePlugin {
 
+	constructor(...args: any[]) {}
+
 	name:    string;
 	enforce: Plugin['enforce'];
 
@@ -70,51 +72,55 @@ export class VitePlugin implements IVitePlugin {
 }
 
 
-export const vitePluginClassToPlugin = (plugin: VitePlugin): Plugin => {
-	return {
-		enforce: plugin.enforce,
-		name:    plugin.name,
+export const vitePluginClassToPlugin = <T extends typeof VitePlugin>(cls: T): (...options: ConstructorParameters<T>) => Plugin => {
+	return (...options) => {
+		const plugin = new cls(...options);
 
-		// Build hooks
-		closeWatcher:                plugin.closeWatcher                ? function(...args) { return plugin.closeWatcher               !([ this, ...args ]); } : undefined,
-		moduleParsed:                plugin.moduleParsed                ? function(...args) { return plugin.moduleParsed               !([ this, ...args ]); } : undefined,
-		buildEnd:                    plugin.buildEnd                    ? function(...args) { return plugin.buildEnd                   !([ this, ...args ]); } : undefined,
-		buildStart:                  plugin.buildStart                  ? function(...args) { return plugin.buildStart                 !([ this, ...args ]); } : undefined,
-		options:                     plugin.options                     ? function(...args) { return plugin.options                    !([ this, ...args ]); } : undefined,
-		onLog:                       plugin.onLog                       ? function(...args) { return plugin.onLog                      !([ this, ...args ]); } : undefined,
-		watchChange:                 plugin.watchChange                 ? function(...args) { return plugin.watchChange                !([ this, ...args ]); } : undefined,
-		load:                        plugin.load                        ? function(...args) { return plugin.load                       !([ this, ...args ]); } : undefined,
-		transform:                   plugin.transform                   ? function(...args) { return plugin.transform                  !([ this, ...args ]); } : undefined,
-		resolveId:                   plugin.resolveId                   ? function(...args) { return plugin.resolveId                  !([ this, ...args ]); } : undefined,
-		resolveDynamicImport:        plugin.resolveDynamicImport        ? function(...args) { return plugin.resolveDynamicImport       !([ this, ...args ]); } : undefined,
-		shouldTransformCachedModule: plugin.shouldTransformCachedModule ? function(...args) { return plugin.shouldTransformCachedModule!([ this, ...args ]); } : undefined,
-		// Output hooks
-		augmentChunkHash:            plugin.augmentChunkHash            ? function(...args) { return plugin.augmentChunkHash           !([ this, ...args ]); } : undefined,
-		banner:                      plugin.banner                      ? function(...args) { return plugin.banner                     !([ this, ...args ]); } : undefined,
-		closeBundle:                 plugin.closeBundle                 ? function(...args) { return plugin.closeBundle                !([ this, ...args ]); } : undefined,
-		footer:                      plugin.footer                      ? function(...args) { return plugin.footer                     !([ this, ...args ]); } : undefined,
-		intro:                       plugin.intro                       ? function(...args) { return plugin.intro                      !([ this, ...args ]); } : undefined,
-		outro:                       plugin.outro                       ? function(...args) { return plugin.outro                      !([ this, ...args ]); } : undefined,
-		renderError:                 plugin.renderError                 ? function(...args) { return plugin.renderError                !([ this, ...args ]); } : undefined,
-		outputOptions:               plugin.outputOptions               ? function(...args) { return plugin.outputOptions              !([ this, ...args ]); } : undefined,
-		renderDynamicImport:         plugin.renderDynamicImport         ? function(...args) { return plugin.renderDynamicImport        !([ this, ...args ]); } : undefined,
-		resolveFileUrl:              plugin.resolveFileUrl              ? function(...args) { return plugin.resolveFileUrl             !([ this, ...args ]); } : undefined,
-		writeBundle:                 plugin.writeBundle                 ? function(...args) { return plugin.writeBundle                !([ this, ...args ]); } : undefined,
-		resolveImportMeta:           plugin.resolveImportMeta           ? function(...args) { return plugin.resolveImportMeta          !([ this, ...args ]); } : undefined,
-		generateBundle:              plugin.generateBundle              ? function(...args) { return plugin.generateBundle             !([ this, ...args ]); } : undefined,
-		renderChunk:                 plugin.renderChunk                 ? function(...args) { return plugin.renderChunk                !([ this, ...args ]); } : undefined,
-		renderStart:                 plugin.renderStart                 ? function(...args) { return plugin.renderStart                !([ this, ...args ]); } : undefined,
-		// Vite hooks
-		handleHotUpdate:             plugin.handleHotUpdate             ? function(...args) { return plugin.handleHotUpdate            !([ this, ...args ]); } : undefined,
-		configResolved:              plugin.configResolved              ? function(...args) { return plugin.configResolved             !([ this, ...args ]); } : undefined,
-		configureServer:             plugin.configureServer             ? function(...args) { return plugin.configureServer            !([ this, ...args ]); } : undefined,
-		configurePreviewServer:      plugin.configurePreviewServer      ? function(...args) { return plugin.configurePreviewServer     !([ this, ...args ]); } : undefined,
-		hotUpdate:                   plugin.hotUpdate                   ? function(...args) { return plugin.hotUpdate                  !([ this, ...args ]); } : undefined,
-		transformIndexHtml:          plugin.transformIndexHtml          ? function(...args) { return plugin.transformIndexHtml         !([ this, ...args ]); } : undefined,
-		config:                      plugin.config                      ? function(...args) { return plugin.config                     !([ this, ...args ]); } : undefined,
-		apply:                       plugin.apply                       ? function(...args) { return plugin.apply                      !([ this, ...args ]); } : undefined,
-		configEnvironment:           plugin.configEnvironment           ? function(...args) { return plugin.configEnvironment          !([ this, ...args ]); } : undefined,
-		applyToEnvironment:          plugin.applyToEnvironment          ? function(this: any, ...args) { return plugin.applyToEnvironment!([ this, ...args ]); } : undefined,
-		api:                         plugin.api                         ? function(this: any, ...args: any[]) { return plugin.api!([ this, ...args ]); } : undefined,
+		return {
+			enforce: plugin.enforce,
+			name:    plugin.name,
+
+			// Build hooks
+			closeWatcher:                plugin.closeWatcher                ? function(...args) { return plugin.closeWatcher               !([ this, ...args ]); } : undefined,
+			moduleParsed:                plugin.moduleParsed                ? function(...args) { return plugin.moduleParsed               !([ this, ...args ]); } : undefined,
+			buildEnd:                    plugin.buildEnd                    ? function(...args) { return plugin.buildEnd                   !([ this, ...args ]); } : undefined,
+			buildStart:                  plugin.buildStart                  ? function(...args) { return plugin.buildStart                 !([ this, ...args ]); } : undefined,
+			options:                     plugin.options                     ? function(...args) { return plugin.options                    !([ this, ...args ]); } : undefined,
+			onLog:                       plugin.onLog                       ? function(...args) { return plugin.onLog                      !([ this, ...args ]); } : undefined,
+			watchChange:                 plugin.watchChange                 ? function(...args) { return plugin.watchChange                !([ this, ...args ]); } : undefined,
+			load:                        plugin.load                        ? function(...args) { return plugin.load                       !([ this, ...args ]); } : undefined,
+			transform:                   plugin.transform                   ? function(...args) { return plugin.transform                  !([ this, ...args ]); } : undefined,
+			resolveId:                   plugin.resolveId                   ? function(...args) { return plugin.resolveId                  !([ this, ...args ]); } : undefined,
+			resolveDynamicImport:        plugin.resolveDynamicImport        ? function(...args) { return plugin.resolveDynamicImport       !([ this, ...args ]); } : undefined,
+			shouldTransformCachedModule: plugin.shouldTransformCachedModule ? function(...args) { return plugin.shouldTransformCachedModule!([ this, ...args ]); } : undefined,
+			// Output hooks
+			augmentChunkHash:            plugin.augmentChunkHash            ? function(...args) { return plugin.augmentChunkHash           !([ this, ...args ]); } : undefined,
+			banner:                      plugin.banner                      ? function(...args) { return plugin.banner                     !([ this, ...args ]); } : undefined,
+			closeBundle:                 plugin.closeBundle                 ? function(...args) { return plugin.closeBundle                !([ this, ...args ]); } : undefined,
+			footer:                      plugin.footer                      ? function(...args) { return plugin.footer                     !([ this, ...args ]); } : undefined,
+			intro:                       plugin.intro                       ? function(...args) { return plugin.intro                      !([ this, ...args ]); } : undefined,
+			outro:                       plugin.outro                       ? function(...args) { return plugin.outro                      !([ this, ...args ]); } : undefined,
+			renderError:                 plugin.renderError                 ? function(...args) { return plugin.renderError                !([ this, ...args ]); } : undefined,
+			outputOptions:               plugin.outputOptions               ? function(...args) { return plugin.outputOptions              !([ this, ...args ]); } : undefined,
+			renderDynamicImport:         plugin.renderDynamicImport         ? function(...args) { return plugin.renderDynamicImport        !([ this, ...args ]); } : undefined,
+			resolveFileUrl:              plugin.resolveFileUrl              ? function(...args) { return plugin.resolveFileUrl             !([ this, ...args ]); } : undefined,
+			writeBundle:                 plugin.writeBundle                 ? function(...args) { return plugin.writeBundle                !([ this, ...args ]); } : undefined,
+			resolveImportMeta:           plugin.resolveImportMeta           ? function(...args) { return plugin.resolveImportMeta          !([ this, ...args ]); } : undefined,
+			generateBundle:              plugin.generateBundle              ? function(...args) { return plugin.generateBundle             !([ this, ...args ]); } : undefined,
+			renderChunk:                 plugin.renderChunk                 ? function(...args) { return plugin.renderChunk                !([ this, ...args ]); } : undefined,
+			renderStart:                 plugin.renderStart                 ? function(...args) { return plugin.renderStart                !([ this, ...args ]); } : undefined,
+			// Vite hooks
+			handleHotUpdate:             plugin.handleHotUpdate             ? function(...args) { return plugin.handleHotUpdate            !([ this, ...args ]); } : undefined,
+			configResolved:              plugin.configResolved              ? function(...args) { return plugin.configResolved             !([ this, ...args ]); } : undefined,
+			configureServer:             plugin.configureServer             ? function(...args) { return plugin.configureServer            !([ this, ...args ]); } : undefined,
+			configurePreviewServer:      plugin.configurePreviewServer      ? function(...args) { return plugin.configurePreviewServer     !([ this, ...args ]); } : undefined,
+			hotUpdate:                   plugin.hotUpdate                   ? function(...args) { return plugin.hotUpdate                  !([ this, ...args ]); } : undefined,
+			transformIndexHtml:          plugin.transformIndexHtml          ? function(...args) { return plugin.transformIndexHtml         !([ this, ...args ]); } : undefined,
+			config:                      plugin.config                      ? function(...args) { return plugin.config                     !([ this, ...args ]); } : undefined,
+			apply:                       plugin.apply                       ? function(...args) { return plugin.apply                      !([ this, ...args ]); } : undefined,
+			configEnvironment:           plugin.configEnvironment           ? function(...args) { return plugin.configEnvironment          !([ this, ...args ]); } : undefined,
+			applyToEnvironment:          plugin.applyToEnvironment          ? function(this: any, ...args) { return plugin.applyToEnvironment!([ this, ...args ]); } : undefined,
+			api:                         plugin.api                         ? function(this: any, ...args: any[]) { return plugin.api!([ this, ...args ]); } : undefined,
+		};
 	};
 };

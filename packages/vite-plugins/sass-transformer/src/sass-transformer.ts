@@ -12,22 +12,15 @@ import type { PluginAsyncFnReturn, PluginParams, PluginSyncFnReturn } from './vi
 import { VitePlugin, vitePluginClassToPlugin } from './vite-plugin.ts';
 
 
-export const transformSass = (options?: {
-	rootDir?:    string;
-	debugLevel?: 'error' | 'silent';
-}): Plugin => {
-	const { rootDir = '', debugLevel = 'silent' } = options || {};
-
-	return vitePluginClassToPlugin(
-		new SassTransformer({ rootDir, debugLevel, minify: false }),
-	);
-};
-
-
 class SassTransformer implements VitePlugin {
 
-	constructor(options: SassTransformer['inputOptions']) {
-		this.inputOptions = options;
+	constructor(options?: SassTransformer['inputOptions']) {
+		this.inputOptions = {
+			minify:     true,
+			rootDir:    '',
+			debugLevel: 'silent',
+			...options,
+		};
 	}
 
 	readonly inputOptions: Readonly<{
@@ -248,3 +241,6 @@ class SassTransformer implements VitePlugin {
 	//#endregion Plugin Hooks
 
 }
+
+
+export const transformSass = vitePluginClassToPlugin(SassTransformer);
