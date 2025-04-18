@@ -1,11 +1,13 @@
 import { css as sass, html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 
 import styles from './index.scss' with { type: 'scss' };
 
 
 @customElement('demo-element')
 export class DemoCmp extends LitElement {
+
+	@property({ type: Boolean }) inverse = false;
 
 	protected override render(): unknown {
 		return html`

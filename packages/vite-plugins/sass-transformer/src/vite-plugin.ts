@@ -21,7 +21,7 @@ export type IVitePlugin = {
 export class VitePlugin implements IVitePlugin {
 
 	name:    string;
-	enforce: 'pre' | 'post' | undefined;
+	enforce: Plugin['enforce'];
 
 	// Build hooks
 	closeWatcher               ?(args: PluginParams['closeWatcher']):                PluginFnReturn<'closeWatcher'>;

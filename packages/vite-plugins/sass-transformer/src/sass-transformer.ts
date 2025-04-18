@@ -1,19 +1,15 @@
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { extname } from 'node:path';
+import { extname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import * as parser from '@babel/parser';
-import _traverse from '@babel/traverse';
 import { transform } from 'lightningcss';
 import MagicString from 'magic-string';
+import { parseAndWalk } from 'oxc-walker';
 import  * as sass from 'sass';
 import type { Plugin, ResolvedConfig } from 'vite';
 
-import { type PluginAsyncFnReturn, type PluginParams, type PluginSyncFnReturn, VitePlugin, vitePluginClassToPlugin } from './vite-plugin.ts';
-
-
-const traverse = (_traverse as unknown as { default: typeof _traverse; }).default;
+import type { PluginAsyncFnReturn, PluginParams, PluginSyncFnReturn } from './vite-plugin.ts';
+import { VitePlugin, vitePluginClassToPlugin } from './vite-plugin.ts';
 
 
 export const transformSass = (options?: {
@@ -23,18 +19,22 @@ export const transformSass = (options?: {
 	const { rootDir = '', debugLevel = 'silent' } = options || {};
 
 	return vitePluginClassToPlugin(
-		new SassTransformer(rootDir, debugLevel, false),
+		new SassTransformer({ rootDir, debugLevel, minify: false }),
 	);
 };
 
 
 class SassTransformer implements VitePlugin {
 
-	constructor(
-		readonly rootDir: string,
-		readonly debugLevel: 'error' | 'silent',
-		readonly minify: boolean,
-	) { }
+	constructor(options: SassTransformer['inputOptions']) {
+		this.inputOptions = options;
+	}
+
+	readonly inputOptions: Readonly<{
+		minify:     boolean;
+		rootDir:    string;
+		debugLevel: 'error' | 'silent';
+	}>;
 
 	enforce:          Plugin['enforce'] = 'pre';
 	name:             string = '@roenlie/vite-plugin-sass-transformer';
@@ -70,17 +70,19 @@ class SassTransformer implements VitePlugin {
 				importers: [
 					{
 						findFileUrl: (url) => {
-							const path = pathToFileURL(join(this.resolvedConfig.root, this.rootDir));
-							const newUrl = new URL(url, path + '/');
+							const path = pathToFileURL(join(
+								this.resolvedConfig.root,
+								this.inputOptions.rootDir,
+							));
 
-							return newUrl;
+							return new URL(url, path + '/');
 						},
 					},
 				],
 			}).css;
 		}
 		catch (err) {
-			if (this.debugLevel !== 'silent') {
+			if (this.inputOptions.debugLevel !== 'silent') {
 				console.error('Failed to compile sass literal');
 				console.error(err);
 			}
@@ -98,7 +100,7 @@ class SassTransformer implements VitePlugin {
 			return this.decoder.decode(output);
 		}
 		catch (err) {
-			if (this.debugLevel !== 'silent') {
+			if (this.inputOptions.debugLevel !== 'silent') {
 				console.error('Failed to minify css literal');
 				console.error(err);
 			}
@@ -161,7 +163,7 @@ class SassTransformer implements VitePlugin {
 		if (!compiled)
 			return;
 
-		if (this.minify) {
+		if (this.inputOptions.minify) {
 			compiled = this.minifyCSS(compiled, realId);
 			if (!compiled)
 				return;
@@ -186,47 +188,41 @@ class SassTransformer implements VitePlugin {
 		if (!this.identifierNames.some(name => code.includes(name)))
 			return;
 
-		const ast = parser.parse(code, {
-			sourceType: 'module',
-			plugins:    [ 'importAttributes', 'typescript', 'decorators-legacy' ],
-		});
-
 		const replacements: { from: string; to: string; }[] = [];
 
-		traverse(ast, {
-			TemplateLiteral: (path) => {
-				if (path.parent.type !== 'TaggedTemplateExpression')
-					return;
-				if (path.parent.tag.type !== 'Identifier')
-					return;
+		parseAndWalk(code, id, (node, parent, ctx) => {
+			if (node.type !== 'TaggedTemplateExpression')
+				return;
+			if (node.tag.type !== 'Identifier')
+				return;
 
-				const identifier = path.parent.tag.loc?.identifierName ?? '';
-				if (!this.identifierNames.includes(identifier))
-					return;
+			const identifier = node.tag.name + '`';
+			if (!this.identifierNames.includes(identifier))
+				return;
 
-				const start = path.node.start! + 1;
-				const end = path.node.end! - 1;
 
-				const text = code.slice(start, end);
-				if (!text)
-					return;
+			const start = node.quasi.start! + 1;
+			const end = node.quasi.end! - 1;
 
-				let compiled = this.fromSASSToCSS(text);
+			const text = code.slice(start, end);
+			if (!text)
+				return;
+
+			let compiled = this.fromSASSToCSS(text);
+			if (!compiled)
+				return;
+
+			if (this.inputOptions.minify) {
+				compiled = this.minifyCSS(compiled, id);
 				if (!compiled)
 					return;
+			}
 
-				if (this.minify) {
-					compiled = this.minifyCSS(compiled, id);
-					if (!compiled)
-						return;
-				}
-
-				// we cannot mutate the code string while traversing.
-				// so we gather the text changes that need to be done.
-				// we push the latest changes to the beginning of the array
-				// so that as we apply the changes, the indexes are still valid.
-				replacements.unshift({ from: text, to: compiled });
-			},
+			// we cannot mutate the code string while traversing.
+			// so we gather the text changes that need to be done.
+			// we push the latest changes to the beginning of the array
+			// so that as we apply the changes, the indexes are still valid.
+			replacements.unshift({ from: text, to: compiled });
 		});
 
 		if (!replacements.length)
@@ -243,7 +239,7 @@ class SassTransformer implements VitePlugin {
 			};
 		}
 		catch (err) {
-			if (this.debugLevel !== 'silent') {
+			if (this.inputOptions.debugLevel !== 'silent') {
 				console.error('\nFailed to apply sass transformation and minification: ' + id);
 				console.error(err);
 			}
