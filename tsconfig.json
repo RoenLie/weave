@@ -12,4 +12,7 @@
 		"scripts",
 		"vitest.workspace.ts"
 	],
+	"exclude": [
+		"node_modules",
+	],
 }

@@ -815,6 +815,9 @@ importers:
       '@roenlie/vite-lib-config':
         specifier: workspace:^
         version: link:../vite-plugins/lib-config
+      '@roenlie/vite-plugin-sass':
+        specifier: workspace:^
+        version: link:../vite-plugins/sass-transformer
       lit:
         specifier: ^3.3.0
         version: 3.3.0
