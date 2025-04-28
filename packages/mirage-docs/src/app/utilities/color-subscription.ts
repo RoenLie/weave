@@ -1,7 +1,7 @@
 import { LitElement } from 'lit';
 
 import type { SiteConfig } from '../../shared/config.types.js';
-import { ContainerLoader } from '../aegis/index.js';
+import { container } from '../container/container.js';
 
 
 const subscribers: Set<WeakRef<LitElement>> = new Set();
@@ -46,7 +46,7 @@ export const toggleColorScheme = (): 'dark' | 'light' => {
 
 
 export const updateColorSchemeLinks = (): void => {
-	const cfg = ContainerLoader.get<SiteConfig>('site-config');
+	const cfg = container.get<SiteConfig>('site-config');
 
 	const mode = getColorScheme();
 	const obj = window.top === window ? cfg.root : cfg.pages;

@@ -1,10 +1,10 @@
-import { ContainerLoader } from '../../aegis/index.js';
 import { css, html, LitElement, type TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { type DirectiveResult } from 'lit/directive.js';
 import type { UnsafeHTMLDirective } from 'lit/directives/unsafe-html.js';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
+import { ContainerLoader } from '../../aegis/index.js';
 import { drag } from '../../utilities/drag.js';
 
 
@@ -25,9 +25,9 @@ export class SourceEditor extends LitElement {
 	}
 
 	//#region state
-	@property({ type: String })                            public source: string;
-	@property({ type: Number, attribute: 'max-height' })   public maxHeight = Infinity;
-	@state() public content = html`` as TemplateResult | DirectiveResult<typeof UnsafeHTMLDirective>;
+	@property({ type: String })                            source: string;
+	@property({ type: Number, attribute: 'max-height' })   maxHeight = Infinity;
+	@state() content = html`` as TemplateResult | DirectiveResult<typeof UnsafeHTMLDirective>;
 	//#endregion
 
 
@@ -40,7 +40,7 @@ export class SourceEditor extends LitElement {
 
 
 	//#region lifecycle
-	public override async firstUpdated() {
+	override async firstUpdated() {
 		//this.delayedExecute();
 	}
 	//#endregion
@@ -110,7 +110,7 @@ export class SourceEditor extends LitElement {
 
 
 	//#region template
-	public override render() {
+	override render() {
 		return html`
 		Live editor currently undergoing reworks.
 		`;
@@ -162,7 +162,7 @@ export class SourceEditor extends LitElement {
 
 
 	//#region style
-	public static override styles = [
+	static override styles = [
 		css`
 		:host {
 			display: grid;

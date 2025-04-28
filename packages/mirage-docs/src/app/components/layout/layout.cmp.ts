@@ -1,60 +1,52 @@
-import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '../../aegis/index.js';
-import { html, LitElement, unsafeCSS } from 'lit';
-import { classMap } from 'lit/directives/class-map.js';
-import { when } from 'lit/directives/when.js';
+import { waitForPromises } from '@roenlie/core/async';
+import { AdapterElement, customElement, query, state } from '@roenlie/custom-element/adapter';
+import { classMap, html, when } from '@roenlie/custom-element/shared';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
+import { container } from '../../container/container.js';
 import { componentStyles } from '../../styles/component.styles.js';
+import { toggleColorScheme } from '../../utilities/color-subscription.js';
 import { debounce } from '../../utilities/debounce.js';
 import { GlobalSearchCmp } from './global-search.cmp.js';
 import { chevronUpIcon, Icon, listIcon, moonIcon, spinningCircleIcon, sunIcon } from './icons.js';
 import { layoutStyles } from './layout.styles.js';
 import { SidebarCmp } from './sidebar.cmp.js';
-import { waitForPromises } from '@roenlie/core/async';
-import { toggleColorScheme } from '../../utilities/color-subscription.js';
 
 SidebarCmp.register();
 GlobalSearchCmp.register();
 
 
 @customElement('midoc-layout')
-export class LayoutCmp extends AegisComponent {
+export class LayoutAdapter extends AdapterElement {
 
-	constructor() {
-		super(LayoutAdapter);
-	}
+	//constructor() {
+	//	super();
 
-}
+	//	const cfg = ContainerLoader.get<SiteConfig>('site-config');
+	//	const style = cfg.root.styleOverrides.layout;
 
-
-export class LayoutAdapter extends Adapter {
-
-	constructor() {
-		super();
-
-		const cfg = ContainerLoader.get<SiteConfig>('site-config');
-		const style = cfg.root.styleOverrides.layout;
-
-		const base = (this.constructor as typeof Adapter);
-		if (Array.isArray(base.styles))
-			base.styles.push(unsafeCSS(style));
-	}
+	//	const base = (this.constructor as typeof Adapter);
+	//	if (Array.isArray(base.styles))
+	//		base.styles.push(unsafeCSS(style));
+	//}
 
 	//#region properties
-	@state() protected loading = false;
-	@query('iframe') protected frameQry:           HTMLIFrameElement;
-	@query('midoc-sidebar') protected sidebarQry:  LitElement;
-	@query('.scrollback') protected scrollbackQry: HTMLElement;
+	@state()                protected loading = false;
+	@query('iframe')        protected frameQry:      HTMLIFrameElement;
+	@query('midoc-sidebar') protected sidebarQry:    AdapterElement;
+	@query('.scrollback')   protected scrollbackQry: HTMLElement;
 
 	protected activeFrame = '';
-	protected transitionSet = new Set<Promise<void>>();
+	protected transitionSet: Set<Promise<void>> = new Set();
 	protected navClosedClass = 'nav--closed';
 	protected navStorageProp = 'midocNavClosed';
 	//#endregion
 
 
 	//#region lifecycle
-	public override connectedCallback(): void {
+	override connected(): void {
+		super.connected();
+
 		this.handleHashChange();
 		this.handleNavToggle(true);
 
@@ -71,7 +63,9 @@ export class LayoutAdapter extends Adapter {
 		});
 	}
 
-	public override disconnectedCallback(): void {
+	override disconnected(): void {
+		super.disconnected();
+
 		window.removeEventListener('hashchange', this.handleHashChange);
 	}
 	//#endregion
@@ -117,7 +111,7 @@ export class LayoutAdapter extends Adapter {
 	};
 
 	protected blockTransition = () => {
-		const promise = new Promise<void>(resolve => {
+		const promise: Promise<void> = new Promise(resolve => {
 			this.frameQry.addEventListener(
 				'transitionend',
 				() => {
@@ -136,8 +130,8 @@ export class LayoutAdapter extends Adapter {
 	protected handleHashChange = async (_ev?: HashChangeEvent) => {
 		let path = location.hash.slice(1);
 		if (!path) {
-			const { base } = ContainerLoader.get<SiteConfig>('site-config').env;
-			const routes = ContainerLoader.get<string[]>('routes');
+			const { base } = container.get<SiteConfig>('site-config').env;
+			const routes = container.get<string[]>('routes');
 
 			path = routes[0] ?? '';
 			history.replaceState({}, '', base + '#' + path);
@@ -161,7 +155,7 @@ export class LayoutAdapter extends Adapter {
 	};
 
 	protected startFrameReload = async () => {
-		if (ContainerLoader.get<SiteConfig>('site-config').root.layout.clearLogOnReload)
+		if (container.get<SiteConfig>('site-config').root.layout.clearLogOnReload)
 			console.clear();
 
 		await waitForPromises(this.transitionSet);
@@ -189,7 +183,7 @@ export class LayoutAdapter extends Adapter {
 			this.loading = true;
 			this.activeFrame = path;
 
-			const { base, libDir } = ContainerLoader.get<SiteConfig>('site-config').env;
+			const { base, libDir } = container.get<SiteConfig>('site-config').env;
 			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
 
 			const pathParts = path.split('#');
@@ -219,24 +213,24 @@ export class LayoutAdapter extends Adapter {
 		if (ev.code === 'KeyP' && (ev.ctrlKey || ev.metaKey)) {
 			ev.preventDefault();
 
-			const searchEl = this.querySelector<GlobalSearchCmp>('midoc-global-search');
+			const searchEl = this.query<GlobalSearchCmp>('midoc-global-search');
 			searchEl?.adapter.dialogQry.showModal();
 		}
 	};
 
 	protected async setNavState(state?: boolean) {
-		this.element.classList.toggle(this.navClosedClass, state);
+		this.classList.toggle(this.navClosedClass, state);
 
 		localStorage.setItem(
 			this.navStorageProp,
-			String(this.element.classList.contains(this.navClosedClass)),
+			String(this.classList.contains(this.navClosedClass)),
 		);
 
-		if (!this.element.classList.contains(this.navClosedClass)) {
+		if (!this.classList.contains(this.navClosedClass)) {
 			this.sidebarQry?.addEventListener(
 				'transitionend',
 				() => {
-					this.sidebarQry.renderRoot.querySelector('input')?.focus();
+					this.sidebarQry.query('input')?.focus();
 				},
 				{ once: true },
 			);
@@ -260,8 +254,8 @@ export class LayoutAdapter extends Adapter {
 
 
 	//#region template
-	public override render() {
-		const { base } = ContainerLoader.get<SiteConfig>('site-config').env;
+	override render() {
+		const { base } = container.get<SiteConfig>('site-config').env;
 
 		return html`
 		<midoc-sidebar></midoc-sidebar>
@@ -320,17 +314,10 @@ export class LayoutAdapter extends Adapter {
 
 
 	//#region styles
-	public static override styles = [
+	static override styles = [
 		componentStyles,
 		layoutStyles,
 	];
 	//#endregion
 
-}
-
-
-declare global {
-	interface HTMLElementTagNameMap {
-		'midoc-layout': LayoutCmp;
-	}
 }

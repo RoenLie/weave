@@ -38,27 +38,16 @@ export const customElement = (
 };
 
 
-export const state = (
-): PropertyDecorator => <C extends Interface<AdapterElement>, V>(
-	protoOrTarget:
-	| object
-	| ClassAccessorDecoratorTarget<C, V>
-	| ((value: V) => void),
-	nameOrContext:
-	| PropertyKey
-	| ClassAccessorDecoratorContext<C, V>
-	| ClassSetterDecoratorContext<C, V>,
-): any => {
-	if (typeof nameOrContext === 'string')
-		return legacyState()(protoOrTarget, nameOrContext);
-
-	return standardState()(
-		protoOrTarget as ClassAccessorDecoratorTarget<C, V>,
-		nameOrContext as ClassAccessorDecoratorContext<C, V>,
-	);
+const createStateMetadata = (
+	metadata: AdapterMetadata,
+	propName: string,
+) => {
+	metadata.signalProps ??= [];
+	if (!metadata.signalProps.includes(propName))
+		metadata.signalProps.push(propName);
 };
 
-export const legacyState = (
+const legacyState = (
 ) => (
 	target: object,
 	property: string,
@@ -90,7 +79,7 @@ export const legacyState = (
 		: undefined;
 };
 
-export const standardState = (
+const standardState = (
 ) => <C extends Interface<AdapterElement>, V>(
 	target: ClassAccessorDecoratorTarget<C, V>,
 	context: ClassAccessorDecoratorContext<C, V>,
@@ -117,19 +106,7 @@ export const standardState = (
 	};
 };
 
-const createStateMetadata = (
-	metadata: AdapterMetadata,
-	propName: string,
-) => {
-	metadata.signalProps ??= [];
-	if (!metadata.signalProps.includes(propName))
-		metadata.signalProps.push(propName);
-};
-
-
-export const property = (
-	type: PropertyType = String,
-	options?: { reflect?: boolean; },
+export const state = (
 ): PropertyDecorator => <C extends Interface<AdapterElement>, V>(
 	protoOrTarget:
 	| object
@@ -141,15 +118,44 @@ export const property = (
 	| ClassSetterDecoratorContext<C, V>,
 ): any => {
 	if (typeof nameOrContext === 'string')
-		return legacyProperty(type, options)(protoOrTarget, nameOrContext);
+		return legacyState()(protoOrTarget, nameOrContext);
 
-	return standardProperty(type, options)(
+	return standardState()(
 		protoOrTarget as ClassAccessorDecoratorTarget<C, V>,
 		nameOrContext as ClassAccessorDecoratorContext<C, V>,
 	);
 };
 
-export const legacyProperty = (
+
+const createPropertyMetadata = (
+	type: PropertyType = String,
+	options: { reflect?: boolean; },
+	metadata: AdapterMetadata,
+	propName: string,
+): string => {
+	metadata.signalProps ??= [];
+	if (!metadata.signalProps.includes(propName))
+		metadata.signalProps.push(propName);
+
+	metadata.observedAttributes ??= [];
+	const attrName = propName
+		.replace(/([A-Z])/g, '-$1')
+		.toLowerCase();
+
+	if (!metadata.observedAttributes.includes(attrName)) {
+		metadata.observedAttributes.push(attrName);
+		metadata.propertyMetadata ??= {};
+		metadata.propertyMetadata[attrName] = {
+			propName,
+			type,
+			reflect: options?.reflect ?? false,
+		};
+	}
+
+	return attrName;
+};
+
+const legacyProperty = (
 	type: PropertyType = String,
 	options: { reflect?: boolean; } = {},
 ) => (
@@ -188,7 +194,7 @@ export const legacyProperty = (
 		: undefined;
 };
 
-export const standardProperty = (
+const standardProperty = (
 	type: PropertyType = String,
 	options: { reflect?: boolean; } = {},
 ) => <C extends Interface<AdapterElement>, V>(
@@ -223,30 +229,113 @@ export const standardProperty = (
 	};
 };
 
-const createPropertyMetadata = (
+export const property = (
 	type: PropertyType = String,
-	options: { reflect?: boolean; },
-	metadata: AdapterMetadata,
-	propName: string,
-): string => {
-	metadata.signalProps ??= [];
-	if (!metadata.signalProps.includes(propName))
-		metadata.signalProps.push(propName);
+	options?: { reflect?: boolean; },
+): PropertyDecorator => <C extends Interface<AdapterElement>, V>(
+	protoOrTarget:
+	| object
+	| ClassAccessorDecoratorTarget<C, V>
+	| ((value: V) => void),
+	nameOrContext:
+	| PropertyKey
+	| ClassAccessorDecoratorContext<C, V>
+	| ClassSetterDecoratorContext<C, V>,
+): any => {
+	if (typeof nameOrContext === 'string')
+		return legacyProperty(type, options)(protoOrTarget, nameOrContext);
 
-	metadata.observedAttributes ??= [];
-	const attrName = propName
-		.replace(/([A-Z])/g, '-$1')
-		.toLowerCase();
+	return standardProperty(type, options)(
+		protoOrTarget as ClassAccessorDecoratorTarget<C, V>,
+		nameOrContext as ClassAccessorDecoratorContext<C, V>,
+	);
+};
 
-	if (!metadata.observedAttributes.includes(attrName)) {
-		metadata.observedAttributes.push(attrName);
-		metadata.propertyMetadata ??= {};
-		metadata.propertyMetadata[attrName] = {
-			propName,
-			type,
-			reflect: options?.reflect ?? false,
-		};
-	}
 
-	return attrName;
+const legacyQuery = (
+	selector: string,
+	cache: boolean = false,
+) => (
+	target: object,
+	property: string,
+) => {
+	const hasOwnProperty = target.hasOwnProperty(property);
+	const propName = property;
+
+	const descriptor: PropertyDescriptor = {
+		get() {
+			const me = (this as Interface<AdapterElement> & Record<string, unknown>);
+			if (cache) {
+				const cached = me['__cached' + propName];
+				if (cached !== undefined)
+					return cached;
+			}
+
+			const el = me.query(selector);
+			if (cache)
+				me['__cached' + propName] = el;
+
+			return el;
+
+
+			//return (this as Interface<AdapterElement>).query(selector);
+		},
+		set(v: any) {},
+	};
+
+	Object.defineProperty(target, property, descriptor);
+
+	return hasOwnProperty
+		? Object.getOwnPropertyDescriptor(target, propName)
+		: undefined;
+};
+
+const standardQuery = (
+	selector: string,
+	cache: boolean = false,
+) => <C extends Interface<AdapterElement>, V>(
+	target: ClassAccessorDecoratorTarget<C, V>,
+	context: ClassAccessorDecoratorContext<C, V>,
+): ClassAccessorDecoratorResult<C, V> => {
+	const { get, set } = target;
+
+	return {
+		get() {
+			if (cache) {
+				const cached = get.call(this);
+				if (cached !== undefined)
+					return cached as unknown as V;
+			}
+
+			const el = this.query(selector) as unknown as V;
+			if (cache)
+				set.call(this, el);
+
+			return el;
+		},
+		set(value: V) {},
+		init(value: any): any {},
+	};
+};
+
+
+export const query = (
+	selector: string,
+): PropertyDecorator => <C extends Interface<AdapterElement>, V>(
+	protoOrTarget:
+	| object
+	| ClassAccessorDecoratorTarget<C, V>
+	| ((value: V) => void),
+	nameOrContext:
+	| PropertyKey
+	| ClassAccessorDecoratorContext<C, V>
+	| ClassSetterDecoratorContext<C, V>,
+): any => {
+	if (typeof nameOrContext === 'string')
+		return legacyQuery(selector)(protoOrTarget, nameOrContext);
+
+	return standardQuery(selector)(
+		protoOrTarget as ClassAccessorDecoratorTarget<C, V>,
+		nameOrContext as ClassAccessorDecoratorContext<C, V>,
+	);
 };

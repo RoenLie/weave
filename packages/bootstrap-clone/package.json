@@ -15,6 +15,7 @@
 	"devDependencies": {
 		"@roenlie/mirage-docs": "workspace:^",
 		"@roenlie/vite-lib-config": "workspace:^",
+		"@roenlie/vite-plugin-sass": "workspace:^",
 		"lit": "^3.3.0"
 	}
 }

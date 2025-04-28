@@ -1,5 +1,5 @@
 import type { Writeable } from '@roenlie/core/types';
-import { render } from 'lit-html';
+import { render, type RenderOptions } from 'lit-html';
 
 import { effect } from '../shared/effect.ts';
 import type { ReactiveController, ReactiveControllerHost } from '../shared/reactive-controller.ts';
@@ -192,10 +192,16 @@ export class AdapterElement implements ReactiveControllerHost {
 	readonly hasUpdated:     boolean = false;
 	readonly updateComplete: Promise<boolean> = Promise.resolve(true);
 
+	protected renderOptions?: RenderOptions;
+
+	//#region Component-lifecycle
+
+	/** Called first time this instance of the element is connected to the DOM. */
 	firstConnected(): void {
 		(this.hasConnected as boolean) = true;
 	}
 
+	/** Called everytime this instnace of the element is connected to the DOM. */
 	connected(): void {
 		// We utilize a WeakRef to avoid a potential leak from
 		// locking a direct reference to the instance in this scope.
@@ -203,11 +209,12 @@ export class AdapterElement implements ReactiveControllerHost {
 
 		// eslint-disable-next-line prefer-arrow-callback
 		this.__unsubEffect = effect(function() {
-			// We use a function to prevent this from the class from being captured.
+			// We use a function to prevent `this` from the class from being captured.
 			ref.deref()?.requestUpdate();
 		});
 	}
 
+	/** Called after a setTimeout of 0 after the render method. */
 	afterConnected(): void {
 	}
 
@@ -215,28 +222,22 @@ export class AdapterElement implements ReactiveControllerHost {
 		this.__unsubEffect?.();
 	}
 
-	addController(controller: ReactiveController): void {
-		this.__controllers.add(controller);
-
-		if (this.hasConnected)
-			controller.hostConnected?.();
-	}
-
-	removeController(controller: ReactiveController): void {
-		this.__controllers.delete(controller);
-	}
-
 	protected beforeUpdate(changedProps: Set<string | symbol>): void {
 		for (const controller of this.__controllers)
 			controller.hostUpdate?.();
 	}
 
+	protected render(): unknown {
+		return;
+	};
+
 	protected afterUpdate(changedProps: Set<string | symbol>): void {
 		for (const controller of this.__controllers)
 			controller.hostUpdated?.();
 	}
+	//#endregion
 
-	requestUpdate(): Promise<boolean> {
+	protected __populateChangedProps(): void {
 		const base = this.constructor as any as typeof AdapterElement;
 		const metadata = base.metadata;
 
@@ -248,29 +249,28 @@ export class AdapterElement implements ReactiveControllerHost {
 
 			metadata.previousProps.set(prop, value);
 		}
+	}
 
-		if (this.__resolveUpdate)
-			return this.updateComplete;
-
+	protected __setPendingUpdate(): void {
 		const { promise, resolve } = Promise.withResolvers<boolean>();
 		(this as Writeable<this>).updateComplete = promise;
 		this.__resolveUpdate = resolve;
-
-		queueMicrotask(() => this.performUpdate());
-
-		return this.updateComplete;
 	}
 
-	protected performUpdate(): void {
-		if (!this.__resolveUpdate)
-			return;
+	protected __performUpdate(): void {
+		if (this.__resolveUpdate)
+			throw new Error('Cannot force update while another update is pending.');
 
 		const base = this.constructor as any as typeof AdapterElement;
 		const metadata = base.metadata;
 
 		this.beforeUpdate(metadata.changedProps);
 
-		render(this.render(), this.__element.deref()!.renderRoot, { host: this });
+		render(
+			this.render(),
+			this.__element.deref()!.renderRoot,
+			this.renderOptions ?? { host: this },
+		);
 
 		// We need to wait for the next frame to ensure the DOM has been updated.
 		setTimeout(() => {
@@ -287,24 +287,80 @@ export class AdapterElement implements ReactiveControllerHost {
 		});
 	}
 
-	protected query<T extends HTMLElement>(selector: string): T | undefined {
+	static styles: CSSStyle;
+
+
+	//#region Consumer API
+	addController(controller: ReactiveController): void {
+		this.__controllers.add(controller);
+
+		if (this.hasConnected)
+			controller.hostConnected?.();
+	}
+
+	removeController(controller: ReactiveController): void {
+		this.__controllers.delete(controller);
+	}
+
+	/** Queues up a render to be performed on the next microtask. */
+	requestUpdate(): Promise<boolean> {
+		this.__populateChangedProps();
+
+		if (this.__resolveUpdate)
+			return this.updateComplete;
+
+		this.__setPendingUpdate();
+
+		queueMicrotask(() => this.__performUpdate());
+
+		return this.updateComplete;
+	}
+
+	/** Immediatly performs a render as long as there is not a render already pending. */
+	performUpdate(): Promise<boolean> {
+		this.__populateChangedProps();
+
+		if (this.__resolveUpdate)
+			return this.updateComplete;
+
+		this.__setPendingUpdate();
+		this.__performUpdate();
+
+		return this.updateComplete;
+	}
+
+	query<T extends HTMLElement>(selector: string): T | undefined {
 		const root = this.__element.deref()?.renderRoot;
 
 		return root?.querySelector(selector) ?? undefined;
 	}
 
-	protected queryAll<T extends HTMLElement>(selector: string): T[] {
+	queryAll<T extends HTMLElement>(selector: string): T[] {
 		const root = this.__element.deref()?.renderRoot;
 		if (!root)
 			return [];
 
 		return [ ...root.querySelectorAll<T>(selector) ];
 	}
+	//#endregion
 
-	protected render(): unknown {
-		return;
-	};
 
-	static styles: CSSStyle;
+	//#region HTMLElement interfaces
+	get classList(): HTMLElement['classList'] {
+		const element = this.__element.deref();
+		if (!element)
+			throw new Error('Element is not defined.');
+
+		return element.classList;
+	}
+
+	get querySelector(): HTMLElement['querySelector'] {
+		const element = this.__element.deref();
+		if (!element)
+			throw new Error('Element is not defined.');
+
+		return element.querySelector.bind(element);
+	}
+	//#endregion
 
 }

@@ -1,4 +1,3 @@
-import { ContainerLoader } from '../../aegis/index.js';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
@@ -6,6 +5,7 @@ import type { SiteConfig } from '../../../shared/config.types.js';
 import type { Declarations } from '../../../shared/metadata.types.js';
 import { toPascalCase } from '../../../shared/to-pascal-case.js';
 import { toWords } from '../../../shared/to-words.js';
+import { ContainerLoader } from '../../aegis/index.js';
 import { componentStyles } from '../../styles/component.styles.js';
 
 
@@ -24,24 +24,24 @@ export class MiDocHeaderCmp extends LitElement {
 	}
 
 	//#region properties
-	@property({ type: Boolean }) public editor?:    boolean;
-	@property({ type: Object }) public declaration: Declarations;
+	@property({ type: Boolean }) editor?:    boolean;
+	@property({ type: Object }) declaration: Declarations;
 
-	@property({ attribute: 'component-name' }) public set componentName(v: string) {
+	@property({ attribute: 'component-name' }) set componentName(v: string) {
 		const old = this._name;
 		this._slug = v.slice(v.indexOf('-') + 1);
 		this._name = toWords(toPascalCase(this._slug));
 		this.requestUpdate('name', old);
 	}
 
-	public get componentName() { return this._name; }
+	get componentName() { return this._name; }
 	protected _name = '';
 	protected _slug = '';
 	//#endregion
 
 
 	//#region template
-	public override render() {
+	override render() {
 		const clsname = this.declaration?.name;
 		const tagname = this.declaration?.tagName;
 
@@ -65,7 +65,7 @@ export class MiDocHeaderCmp extends LitElement {
 
 
 	//#region styles
-	public static override styles = [
+	static override styles = [
 		componentStyles,
 		css`
 		:host {

@@ -1,14 +1,14 @@
-import { Adapter, AegisComponent, ContainerLoader, customElement } from '../../aegis/index.js';
 import { css } from 'lit';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
+import { Adapter, AegisComponent, ContainerLoader, customElement } from '../../aegis/index.js';
 import { componentStyles } from '../../styles/component.styles.js';
 import { highlightjsStyles } from '../../styles/highlightjs.styles.js';
 import { markdownStyles } from '../../styles/markdown.styles.js';
+import { markdownTokens } from '../../styles/markdown-tokens.styles.js';
 import { anchorSnatcher } from '../../utilities/anchor-snatcher.js';
 import { subscribeToColorChange } from '../../utilities/color-subscription.js';
 import { MiDocCopyCodeCmp } from './copy-code.js';
-import { markdownTokens } from '../../styles/markdown-tokens.styles.js';
 
 MiDocCopyCodeCmp.register();
 
@@ -33,7 +33,7 @@ export class PageElement extends AegisComponent {
 		}
 	}
 
-	public static stylesheets = [
+	static stylesheets = [
 		componentStyles,
 		highlightjsStyles,
 		markdownTokens,
@@ -85,7 +85,7 @@ export class PageElement extends AegisComponent {
 export class PageAdapter extends Adapter {
 
 	//#region properties
-	public get colorScheme() {
+	get colorScheme() {
 		return document.documentElement.getAttribute('color-scheme');
 	}
 	//#endregion
@@ -112,7 +112,7 @@ export class PageAdapter extends Adapter {
 
 
 	//#region lifecycle
-	public override connectedCallback() {
+	override connectedCallback() {
 		subscribeToColorChange(this.element);
 		this.resizeObserver.observe(this.element);
 
@@ -120,11 +120,11 @@ export class PageAdapter extends Adapter {
 		window.addEventListener('hashchange', this.handleHashChange);
 	}
 
-	public override afterConnectedCallback(): void {
+	override afterConnectedCallback(): void {
 		this.handleHashChange();
 	}
 
-	public override disconnectedCallback() {
+	override disconnectedCallback() {
 		anchorSnatcher.unregister();
 		window.removeEventListener('hashchange', this.handleHashChange);
 	}

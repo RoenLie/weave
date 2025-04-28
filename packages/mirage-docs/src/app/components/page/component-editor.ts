@@ -1,9 +1,9 @@
-import { ContainerLoader } from '../../aegis/index.js';
-import { css, html, LitElement, unsafeCSS, type PropertyValues } from 'lit';
+import { css, html, LitElement, type PropertyValues, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
+import { ContainerLoader } from '../../aegis/index.js';
 import { SourceEditor } from './source-editor.js';
 
 
@@ -47,7 +47,7 @@ export class ComponentEditor extends SourceEditor {
 		}
 	}
 
-	public static override styles = [
+	static override styles = [
 		...SourceEditor.styles,
 		css`
 		:host {
@@ -72,7 +72,7 @@ export class ComponentEditor extends SourceEditor {
 export class EditorScratchpad extends LitElement {
 
 	//#region properties
-	@property({ type: Object, attribute: false }) public mixins: {
+	@property({ type: Object, attribute: false }) mixins: {
 		connectedCallback?(): void;
 		disconnectedCallback?(): void;
 		render?(): string;
@@ -82,12 +82,12 @@ export class EditorScratchpad extends LitElement {
 
 
 	//#region lifecycle
-	public override connectedCallback(): void {
+	override connectedCallback(): void {
 		super.connectedCallback();
 		this.mixins.connectedCallback?.apply(this);
 	}
 
-	public override disconnectedCallback(): void {
+	override disconnectedCallback(): void {
 		super.disconnectedCallback();
 		this.mixins.disconnectedCallback?.apply(this);
 	}

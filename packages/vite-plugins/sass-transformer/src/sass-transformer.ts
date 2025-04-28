@@ -14,7 +14,7 @@ import { VitePlugin, vitePluginClassToPlugin } from './vite-plugin.ts';
 
 class SassTransformer implements VitePlugin {
 
-	constructor(options?: SassTransformer['inputOptions']) {
+	constructor(options?: Partial<SassTransformer['inputOptions']>) {
 		this.inputOptions = {
 			minify:     true,
 			rootDir:    '',

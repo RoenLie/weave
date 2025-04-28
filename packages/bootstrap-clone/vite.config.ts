@@ -1,6 +1,6 @@
 import { /*componentAutoImporter,*/ libConfig } from '@roenlie/vite-lib-config';
+import { transformSass } from '@roenlie/vite-plugin-sass';
 import { defineConfig } from 'vite';
-
 
 export default defineConfig(libConfig({
 	plugins: [
@@ -10,5 +10,6 @@ export default defineConfig(libConfig({
 		//	loadWhitelist: [ /./ ],
 		//	loadBlacklist: [ /\.demo/ ],
 		//}),
+		transformSass({ debugLevel: 'error' }),
 	],
 }));

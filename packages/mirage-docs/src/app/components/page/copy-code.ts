@@ -1,8 +1,9 @@
+/* eslint-disable @stylistic/max-len */
 import { css, html, svg } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 
-import { componentStyles } from '../../styles/component.styles.js';
 import { AegisElement, customElement, state } from '../../aegis/index.js';
+import { componentStyles } from '../../styles/component.styles.js';
 
 
 @customElement('midoc-copy-code')
@@ -49,7 +50,7 @@ export class MiDocCopyCodeCmp extends AegisElement {
 		}
 	}
 
-	public override render() {
+	override render() {
 		return html`
 		<button @click=${ this.handleClick } style=${ styleMap({
 			color: this.activeIcon === 'success' ? 'var(--midoc-success)'
@@ -62,7 +63,7 @@ export class MiDocCopyCodeCmp extends AegisElement {
 		`;
 	}
 
-	public static override styles = [
+	static override styles = [
 		componentStyles,
 		css`
 		:host {

@@ -1,4 +1,5 @@
-import { css } from 'lit';
+
+import { css } from '@roenlie/custom-element/adapter';
 
 import { buttonStyle } from '../../styles/button.styles.js';
 

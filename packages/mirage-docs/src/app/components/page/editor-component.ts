@@ -13,8 +13,8 @@ type EditorComponentBuilder = (api: {
 
 
 export const editorComponent = (builder: EditorComponentBuilder) => (api: {
-	html: typeof html,
-	css:  typeof css,
+	html: typeof html;
+	css:  typeof css;
 }) => {
 	return builder(api);
 };

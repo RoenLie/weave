@@ -1,14 +1,14 @@
-import { resolvablePromise, resolvePromiseOrFunc, type PromiseOrFunc } from '@roenlie/core/async';
+import { type PromiseOrFunc, resolvablePromise, resolvePromiseOrFunc } from '@roenlie/core/async';
+import { isClass, typeOf } from '@roenlie/core/validation';
+import { useReflectMetadata } from '@roenlie/reflect-metadata';
 import { adoptStyles, type CSSResultOrNative, type PropertyValues } from 'lit';
+import { property } from 'lit/decorators.js';
 
 import type { Adapter } from '../adapter/adapter.js';
 import { injectable } from '../annotations/annotations.js';
 import type { ContainerModule } from '../container/container-module.js';
 import { ContainerLoader } from '../container/loader.js';
 import { AegisElement } from './aegis-element.js';
-import { isClass, typeOf } from '@roenlie/core/validation';
-import { property } from 'lit/decorators.js';
-import { useReflectMetadata } from '@roenlie/reflect-metadata';
 
 
 type Modules = PromiseOrFunc<ContainerModule | PromiseOrFunc<ContainerModule>[]>;
@@ -23,10 +23,10 @@ export class AegisComponent extends AegisElement {
 
 	/** True if this component has loaded its modules,
 	 * meaning they will not be loaded again. */
-	public static modulesResolved = false;
+	static modulesResolved = false;
 
 	/** Allows supplying css as a prop which will be added to the components styles. */
-	@property({ type: String }) public sheet: string;
+	@property({ type: String }) sheet: string;
 	protected readonly _sheet = new CSSStyleSheet();
 
 	protected readonly adapterId:   string | symbol = this.localName;
@@ -52,12 +52,12 @@ export class AegisComponent extends AegisElement {
 		this.modules = modules;
 	}
 
-	public override connectedCallback(): void {
+	override connectedCallback(): void {
 		super.connectedCallback();
 		this.containerConnectedCallback();
 	}
 
-	public async containerConnectedCallback(): Promise<void> {
+	async containerConnectedCallback(): Promise<void> {
 		if (this.hasUpdated)
 			return this.adapter?.connectedCallback?.();
 
@@ -130,11 +130,11 @@ export class AegisComponent extends AegisElement {
 		super.scheduleUpdate();
 	}
 
-	public override afterConnectedCallback(): void {
+	override afterConnectedCallback(): void {
 		this.adapter?.afterConnectedCallback?.();
 	}
 
-	public override disconnectedCallback(): void {
+	override disconnectedCallback(): void {
 		// Called before super to allow code to run prior to element being removed.
 		this.adapter?.disconnectedCallback?.();
 		super.disconnectedCallback();

@@ -6,10 +6,10 @@ import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
+import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '../../aegis/index.js';
 import { componentStyles } from '../../styles/component.styles.js';
 import { createSearchWorker } from '../../workers/search-worker.js';
 import { Icon, xIcon } from './icons.js';
-import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '../../aegis/index.js';
 
 
 interface CustomResult {
@@ -41,7 +41,7 @@ export class GlobalSearchAdapter extends Adapter {
 	@state() protected searchValue = '';
 	@state() protected searchResult:    any[] = [];
 	@state() protected activeSearchEl?: HTMLElement;
-	@query('dialog') public dialogQry:  HTMLDialogElement;
+	@query('dialog') dialogQry:         HTMLDialogElement;
 	protected searchWorker:             Worker;
 	protected get colorScheme() {
 		return document.documentElement.getAttribute('color-scheme') ?? '';
@@ -96,7 +96,7 @@ export class GlobalSearchAdapter extends Adapter {
 		}
 	}
 
-	public override async connectedCallback() {
+	override async connectedCallback() {
 		this.searchWorker = createSearchWorker();
 		this.searchWorker.onmessage = this.handleWorkerResponse;
 		this.colorSchemeObs.observe(document.documentElement,
@@ -110,7 +110,7 @@ export class GlobalSearchAdapter extends Adapter {
 		}));
 	}
 
-	public override disconnectedCallback() {
+	override disconnectedCallback() {
 		this.searchWorker.terminate();
 		this.dialogObs.disconnect();
 		this.colorSchemeObs.disconnect();
@@ -139,7 +139,7 @@ export class GlobalSearchAdapter extends Adapter {
 		}
 	}
 
-	protected handleDialogInput(ev: InputEvent & { target: HTMLInputElement }) {
+	protected handleDialogInput(ev: InputEvent & { target: HTMLInputElement; }) {
 		const value = ev.target.value;
 		this.searchValue = value;
 
@@ -291,7 +291,7 @@ export class GlobalSearchAdapter extends Adapter {
 		`;
 	}
 
-	public override render() {
+	override render() {
 		return html`
 		${ this.buttonTemplate() }
 		${ this.dialogTemplate() }
@@ -301,7 +301,7 @@ export class GlobalSearchAdapter extends Adapter {
 
 
 	//#region Style
-	public static override styles = [
+	static override styles = [
 		componentStyles,
 		css`
 		:host {
@@ -443,7 +443,7 @@ export class GlobalSearchAdapter extends Adapter {
 @customElement('midoc-global-search')
 export class GlobalSearchCmp extends AegisComponent {
 
-	public override adapter: GlobalSearchAdapter;
+	override adapter: GlobalSearchAdapter;
 
 	constructor() {
 		super(GlobalSearchAdapter);

@@ -1,8 +1,8 @@
-import { Adapter, AegisComponent, ContainerLoader, customElement, inject, query, state } from '../../aegis/index.js';
 import { css, html, unsafeCSS } from 'lit';
 import { when } from 'lit/directives/when.js';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
+import { Adapter, AegisComponent, ContainerLoader, customElement, inject, query, state } from '../../aegis/index.js';
 import { buttonStyle } from '../../styles/button.styles.js';
 import { componentStyles } from '../../styles/component.styles.js';
 import { inputStyle } from '../../styles/input.styles.js';
@@ -46,7 +46,7 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 
 
 	//#region lifecycle
-	public override connectedCallback(): void {
+	override connectedCallback(): void {
 		this.element.addEventListener('scroll', this.handleScroll);
 
 
@@ -54,14 +54,14 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 		this.handleSearch(this.searchValue, true);
 	}
 
-	public override disconnectedCallback(): void {
+	override disconnectedCallback(): void {
 		this.element.removeEventListener('scroll', this.handleScroll);
 	}
 	//#endregion
 
 
 	//#region logic
-	public toggleAll = () => {
+	toggleAll = () => {
 		this.toggleAllValue = this.toggleIndeterminate === true
 			? false
 			: !this.toggleAllValue;
@@ -92,7 +92,7 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 		});
 	};
 
-	protected handleToggle = (ev: CustomEvent<{ state: Record<string, boolean> }>) => {
+	protected handleToggle = (ev: CustomEvent<{ state: Record<string, boolean>; }>) => {
 		this.setIndeterminateState(Object.values(ev.detail.state).some(Boolean));
 	};
 
@@ -132,7 +132,7 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 
 
 	//#region template
-	public override render() {
+	override render() {
 		const base = this.siteConfig.env.base;
 		const layoutCfg = this.siteConfig.root.layout;
 
@@ -182,7 +182,7 @@ export class SidebarAdapter extends Adapter<SidebarCmp> {
 
 
 	//#region styles
-	public static override styles = [
+	static override styles = [
 		componentStyles,
 		css`
 		:host {

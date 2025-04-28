@@ -1,4 +1,3 @@
-import { ContainerLoader } from '../../aegis/index.js';
 import { css, html, LitElement, type PropertyValues, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { map } from 'lit/directives/map.js';
@@ -6,6 +5,7 @@ import { when } from 'lit/directives/when.js';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
 import type { Declarations } from '../../../shared/metadata.types.js';
+import { ContainerLoader } from '../../aegis/index.js';
 import { componentStyles } from '../../styles/component.styles.js';
 
 
@@ -24,8 +24,8 @@ export class MiDocMetadataViewerCmp extends LitElement {
 	}
 
 	//#region properties
-	@property({ type: Object }) public declaration: Declarations;
-	protected sanitizedDeclarations:                Declarations;
+	@property({ type: Object }) declaration: Declarations;
+	protected sanitizedDeclarations:         Declarations;
 	//#endregion properties
 
 
@@ -213,7 +213,7 @@ export class MiDocMetadataViewerCmp extends LitElement {
 		`;
 	}
 
-	public override render() {
+	override render() {
 		return html`
 
 		${ when(this.sanitizedDeclarations?.members?.length, () => html`
@@ -251,7 +251,7 @@ export class MiDocMetadataViewerCmp extends LitElement {
 
 
 	//#region style
-	public static override styles = [
+	static override styles = [
 		componentStyles,
 		css`
 		:host {

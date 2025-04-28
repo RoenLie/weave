@@ -1,4 +1,4 @@
-import { css } from 'lit';
+import { css } from '@roenlie/custom-element/adapter';
 
 
 export const componentStyles = css`
