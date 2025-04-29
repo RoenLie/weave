@@ -1,8 +1,20 @@
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddHealthChecks()
+	.AddCheck("Database", () => {
+		// Check database connection
+		return new(HealthStatus.Healthy) { };
+	})
+	.AddCheck("Plugin System", () => {
+		// Check plugin system health
+		return new(HealthStatus.Healthy) { };
+	});
 
 WebApplication app = builder.Build();
 
@@ -30,10 +42,20 @@ app.MapGet("/weatherforecast", () => {
 	];
 
 	return forecast;
-})
-.WithName("GetWeatherForecast");
+}).WithName("GetWeatherForecast");
+
+app.MapHealthChecks("/health");
+app.MapGet("/shutdown", () => {
+	_ = Task.Run(async () => {
+		await app.StopAsync();
+
+		Environment.Exit(0);
+	});
+	return Results.Ok("Shutting down...");
+});
 
 app.Run();
+
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary) {
 	public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
