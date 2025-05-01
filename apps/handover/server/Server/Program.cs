@@ -1,6 +1,30 @@
+using System.Reflection;
+using Core;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+Dictionary<string, (Assembly Assembly, List<Type> PluginTypes)> loadedPlugins = [];
+
+string pluginsPath = Path.Combine(AppContext.BaseDirectory, "plugins");
+if (Directory.Exists(pluginsPath)) {
+	foreach (string pluginPath in Directory.GetFiles(pluginsPath, "*.dll")) {
+		Assembly assembly = Assembly.LoadFrom(pluginPath);
+
+		// Find types implementing IPlugin
+		var types = assembly.GetTypes().Where(t => typeof(IPlugin).IsAssignableFrom(t) && !t.IsAbstract).ToList();
+		loadedPlugins[pluginPath] = (assembly, types);
+
+		foreach (var pluginType in types) {
+			if (Activator.CreateInstance(pluginType) is IPlugin plugin) {
+				// Let the plugin register its services
+				plugin.Initialize(builder.Services);
+				Console.WriteLine($"Plugin loaded: {plugin.Name}");
+			}
+		}
+	}
+}
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -17,6 +41,15 @@ builder.Services.AddHealthChecks()
 	});
 
 WebApplication app = builder.Build();
+
+foreach (var (assembly, types) in loadedPlugins.Values) {
+	foreach (var pluginType in types) {
+		if (app.Services.GetService(pluginType) is IPlugin plugin) {
+			// Configure middleware
+			plugin.Configure(app);
+		}
+	}
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
