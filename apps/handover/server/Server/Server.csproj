@@ -11,15 +11,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\BuildTasks\BuildTasks.csproj" />
 		<ProjectReference Include="..\Core\Core.csproj" />
 	</ItemGroup>
 
-	<Target Name="RemoveCore" AfterTargets="Build">
-		<Message Text="Delete Core.dll from $(OutputPath)" Importance="high" />
-		<Delete Files="$(OutputPath)Core.dll" />
+	<UsingTask TaskName="BuildTasks.RunNodeScript" AssemblyFile="$(OutDir)BuildTasks.dll" />
 
-		<Message Text="Delete Core.pdb from $(OutputPath)" Importance="high" />
-		<Delete Files="$(OutputPath)Core.pdb" />
+	<Target Name="RunBuildScript" AfterTargets="Build">
+		<RunNodeScript Dir="..\Scripts" File="DeleteSharedLibs.ts" />
 	</Target>
 
 </Project>
+
+
