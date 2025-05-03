@@ -13,36 +13,39 @@ public partial class RunNodeScript : MSBuildTask {
 	public override bool Execute() {
 		Log.LogMessage(MessageImportance.High, $"Running NodeJS script with: {Dir} and {File}");
 
-		GetBuildProperties();
+		var props = GetBuildProperties();
 
 		string scriptPath = Path.Combine(Dir, File);
 		if (!System.IO.File.Exists(scriptPath)) {
 			Log.LogError($"Script file not found: {scriptPath}");
+
 			return false;
 		}
 
+		string fullPropsPath = Path.Combine(Dir, GetBuildPropsPath(props));
+
 		// Construct arguments - include script path and any additional args
-		string arguments = $"\"{scriptPath}\" {Args}".Trim();
+		string arguments = $"\"{scriptPath}\" --build-props-path {GetBuildPropsPath(props)} {Args}".Trim();
 
-		using var process = new Process();
-		process.StartInfo = new ProcessStartInfo {
-			FileName = "node",
-			Arguments = arguments,
-			WorkingDirectory = Dir,
-			UseShellExecute = false,
-			RedirectStandardOutput = true,
-			RedirectStandardError = true,
-			CreateNoWindow = true
+		using Process process = new() {
+			StartInfo = new() {
+				FileName = "node",
+				Arguments = arguments,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				CreateNoWindow = true
+			}
 		};
 
-		process.OutputDataReceived += (sender, e) => {
-			if (!string.IsNullOrEmpty(e.Data))
-				Log.LogMessage(MessageImportance.High, e.Data);
+		process.OutputDataReceived += (_, ev) => {
+			if (!string.IsNullOrEmpty(ev.Data))
+				Log.LogMessage(MessageImportance.High, ev.Data);
 		};
 
-		process.ErrorDataReceived += (sender, e) => {
-			if (!string.IsNullOrEmpty(e.Data))
-				Log.LogError(e.Data);
+		process.ErrorDataReceived += (_, ev) => {
+			if (!string.IsNullOrEmpty(ev.Data))
+				Log.LogError(ev.Data);
 		};
 
 		try {
@@ -56,10 +59,11 @@ public partial class RunNodeScript : MSBuildTask {
 
 				return false;
 			}
+			else {
+				Log.LogMessage(MessageImportance.High, "Script executed successfully");
 
-			Log.LogMessage(MessageImportance.High, "Script executed successfully");
-
-			return true;
+				return true;
+			}
 		}
 		catch (System.ComponentModel.Win32Exception ex) {
 			Log.LogError($"Failed to start Node.js: {ex.Message}. Is Node.js installed and in your PATH?");

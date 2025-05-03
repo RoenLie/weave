@@ -1,36 +1,28 @@
 #!/usr/bin/env node
 
-import { existsSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { csvToJson } from './read-csv.ts';
 
-
-const configIndex = process.argv.indexOf('--config');
+const configIndex = process.argv.indexOf('--build-props-path');
 if (configIndex === -1)
-	throw new Error('No config file specified. Use --config <path> to specify the config file.');
+	throw new Error('Missing --build-props-path argument.');
 
 
 const configPath = process.argv[configIndex + 1];
 
 
-type stringliteral = (string & Record<never, never>);
 interface BuildVars extends Record<string, string> {
-	OutputPath:        string;
-	TargetFramework:   'net9.0' | stringliteral;
-	Configuration:     'Debug' | 'Release' | stringliteral;
-	ProjectDirectory:  string;
-	SolutionDirectory: string;
-	ProjectName:       string;
+	OutputPath: string;
 }
 
-const buildVars = await csvToJson<BuildVars>(configPath);
+const buildVars: BuildVars | undefined = JSON.parse(readFileSync(configPath, 'utf-8'));
 if (!buildVars)
 	throw new Error('Failed to load build variables from the config file. ' + configPath);
 
 const outputPath = buildVars.OutputPath;
 
-console.log('Cleaning up' + outputPath + '...');
+console.log('Removing shared .dlls from ' + outputPath + '...');
 
 const filesToDelete = [
 	'Core.dll',

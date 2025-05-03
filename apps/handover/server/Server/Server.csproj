@@ -18,7 +18,7 @@
 	<UsingTask TaskName="BuildTasks.RunNodeScript" AssemblyFile="$(OutDir)BuildTasks.dll" />
 
 	<Target Name="RunBuildScript" AfterTargets="Build">
-		<RunNodeScript Dir="..\Scripts" File="DeleteSharedLibs.ts" />
+		<RunNodeScript Dir="..\Scripts" File="delete-shared-libs.ts" />
 	</Target>
 
 </Project>
