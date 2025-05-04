@@ -15,11 +15,9 @@
 		<ProjectReference Include="..\Core\Core.csproj" />
 	</ItemGroup>
 
-	<UsingTask TaskName="BuildTasks.RunNodeScript" AssemblyFile="$(OutDir)BuildTasks.dll" />
-
-	<Target Name="RunBuildScript" AfterTargets="Build">
-		<RunNodeScript Dir="..\Scripts" File="delete-shared-libs.ts" />
-	</Target>
+	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
+		<ProjectReference Include="..\Plugins\Users\Users.csproj" />
+	</ItemGroup>
 
 </Project>
 

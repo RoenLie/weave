@@ -11,9 +11,8 @@
 		<ProjectReference Include="..\..\Core\Core.csproj" />
 	</ItemGroup>
 
-	<Target Name="RemoveCore" AfterTargets="Build">
-		<Delete Files="$(OutputPath)Core.dll" />
-		<Delete Files="$(OutputPath)Core.pdb" />
-	</Target>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
 
 </Project>
