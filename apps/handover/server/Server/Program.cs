@@ -4,8 +4,6 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-PluginLoader pluginLoader = new();
-
 if (builder.Environment.IsDevelopment()) {
 	// Add services to the container.
 	// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

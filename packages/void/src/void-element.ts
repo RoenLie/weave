@@ -1,10 +1,9 @@
-/* eslint-disable lit/binding-positions */
 import { html } from '../../../utilities/template-tag.js';
 
 
 export interface VoidElement {
-	tagName: string;
-	styleUrls: string | string[];
+	tagName:    string;
+	styleUrls:  string | string[];
 	scriptUrls: string | string[];
 	render(props: Record<keyof any, any>): Promise<string>;
 }
@@ -44,8 +43,8 @@ export const voidElement = <T extends VoidElement>(cls: new () => T) => {
 	scriptUrls = Array.isArray(scriptUrls) ? scriptUrls : [ scriptUrls ];
 
 	return (config: {
-		attrs?: Record<string, string | number>,
-		props?: ParamObject<T['render']>
+		attrs?: Record<string, string | number>;
+		props?: ParamObject<T['render']>;
 	} = {}) => {
 		return html`
 		<${ tagName } ${ concatAttrs(config.attrs) }>

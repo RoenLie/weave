@@ -7,6 +7,7 @@
 import { waitForPromises } from '@roenlie/core/async';
 import { URLPattern } from 'urlpattern-polyfill/urlpattern';
 
+import type { AdapterElement } from '../adapter/adapter-element.ts';
 import type { ReactiveController, ReactiveControllerHost } from '../shared/reactive-controller.ts';
 
 
@@ -79,7 +80,7 @@ export class Routes implements ReactiveController {
 	protected static readonly routing: Set<Promise<any>> = new Set();
 
 	constructor(
-		protected readonly host: ReactiveControllerHost & HTMLElement,
+		protected readonly host: ReactiveControllerHost & (HTMLElement | AdapterElement),
 		routes: RouteConfig[] = [],
 		options?: { fallback?: BaseRouteConfig; },
 	) {
@@ -323,7 +324,7 @@ const getTailGroup = (groups: Record<string, string | undefined>) => {
  */
 export class RoutesConnectedEvent extends Event {
 
-	static readonly eventName = 'sanguine-routes-connected';
+	static readonly eventName = 'routes-connected';
 	readonly routes: Routes;
 	onDisconnect?:   () => void;
 

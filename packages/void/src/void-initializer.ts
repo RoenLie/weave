@@ -5,12 +5,12 @@ class Listeners {
 
 	protected cache: [ target: Element, event: string, fn: EventListener ][] = [];
 
-	public add(target: Element, event: string, fn: EventListener) {
+	add(target: Element, event: string, fn: EventListener) {
 		target.addEventListener(event, fn);
 		this.cache.push([ target, event, fn ]);
 	}
 
-	public disconnect() {
+	disconnect() {
 		for (const [ t, e, f ] of this.cache)
 			t.removeEventListener(e, f);
 
@@ -60,7 +60,7 @@ class VoidInitializer extends HTMLElement {
 	protected parentHost: HTMLElement;
 	protected parentRoot: ShadowRoot;
 
-	public connectedCallback() {
+	connectedCallback() {
 		let root: Node | undefined = this.parentNode ?? undefined;
 		while (root && !(root instanceof ShadowRoot))
 			root = root?.parentNode ?? undefined;
@@ -79,7 +79,7 @@ class VoidInitializer extends HTMLElement {
 		this.syncElements(this.parentRoot);
 	}
 
-	public disconnectedCallback() {
+	disconnectedCallback() {
 		this.mutObserver.disconnect();
 		this.listeners.disconnect();
 	}

@@ -15,5 +15,4 @@ export interface AdapterMetadata {
 		type:     PropertyType;
 		reflect:  boolean;
 	}>;
-
 }

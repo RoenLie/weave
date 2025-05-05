@@ -25,11 +25,37 @@ export class AdapterBase extends HTMLElement {
 
 		this.attachShadow({ mode: 'open' });
 		this.renderRoot = this.shadowRoot ?? this;
+
+		const base = this.constructor as any as typeof AdapterBase;
+		const metadata = base.adapter.metadata;
+
+		// We need to set up the adapter and the properties.
+		for (const { propName } of Object.values(metadata.propertyMetadata)) {
+			Object.defineProperty(this, propName, {
+				get(this: AdapterBase) {
+					return this.adapter?.[propName as keyof AdapterElement];
+				},
+				set(this: AdapterBase, value) {
+					(this.adapter as Record<keyof any, any>)[propName] = value;
+				},
+			});
+		}
+
+		const protoChain = getPrototypeChain(base.adapter);
+		metadata.styles = getFlatStyles('styles', protoChain);
+
+		this.shadowRoot!.adoptedStyleSheets = metadata.styles;
+
+		if (metadata.observedAttributes)
+			this.__attrCtrl = new MutationObserver(this.observeAttributes.bind(this));
+
+		this.adapter = new base.adapter();
+		(this.adapter as any).__element = new WeakRef(this);
 	}
 
-	renderRoot: ShadowRoot | HTMLElement;
+	readonly renderRoot: ShadowRoot | HTMLElement;
+	readonly adapter:    AdapterElement;
 
-	protected __adapter:  AdapterElement | undefined;
 	protected __attrCtrl: MutationObserver | undefined;
 
 	protected connectedCallback(): void { this.connectAdapter(); }
@@ -38,30 +64,6 @@ export class AdapterBase extends HTMLElement {
 	protected connectAdapter(): void {
 		const base = this.constructor as any as typeof AdapterBase;
 		const metadata = base.adapter.metadata;
-
-		if (!this.__adapter) {
-			for (const { propName } of Object.values(metadata.propertyMetadata)) {
-				Object.defineProperty(this, propName, {
-					get() {
-						return this.adapter![propName as keyof AdapterElement];
-					},
-					set(value) {
-						this.adapter![propName as keyof AdapterElement] = value;
-					},
-				});
-			}
-
-			const protoChain = getPrototypeChain(base.adapter);
-			metadata.styles = getFlatStyles('styles', protoChain);
-
-			this.shadowRoot!.adoptedStyleSheets = metadata.styles;
-
-			if (metadata.observedAttributes)
-				this.__attrCtrl = new MutationObserver(this.observeAttributes.bind(this));
-
-			this.__adapter = new base.adapter();
-			(this.__adapter as any).__element = new WeakRef(this);
-		}
 
 		// Set the initial values of the attribute properties.
 		metadata.observedAttributes?.forEach(attr => {
@@ -80,11 +82,11 @@ export class AdapterBase extends HTMLElement {
 
 		// If this is the first time the adapter has connected,
 		// call the firstConnected method.
-		if (!this.__adapter.hasConnected)
-			this.__adapter.firstConnected();
+		if (!this.adapter.hasConnected)
+			this.adapter.firstConnected();
 
 		// Call the connected method on the adapter.
-		this.__adapter.connected();
+		this.adapter.connected();
 	}
 
 	protected disconnectAdapter(): void {
@@ -92,7 +94,7 @@ export class AdapterBase extends HTMLElement {
 		this.__attrCtrl?.disconnect();
 
 		// Then clean up the adapter.
-		this.__adapter?.disconnected();
+		this.adapter?.disconnected();
 	}
 
 	protected observeAttributes(entries: MutationRecord[]): void {
@@ -120,7 +122,7 @@ export class AdapterBase extends HTMLElement {
 		if (!propMeta)
 			return console.warn(`Unknown attribute: ${ name }`);
 
-		const adapter = this.__adapter;
+		const adapter = this.adapter;
 		if (!adapter)
 			return;
 
@@ -147,7 +149,7 @@ export class AdapterBase extends HTMLElement {
 
 export class AdapterElement implements ReactiveControllerHost {
 
-	static tagName: string;
+	static readonly tagName: string;
 	static register(): void {
 		if (globalThis.customElements.get(this.tagName))
 			return;
@@ -183,16 +185,21 @@ export class AdapterElement implements ReactiveControllerHost {
 	 * This is used to avoid potential memory leaks from locking a direct reference.\
 	 * For internal use only.
 	 */
-	private __element:        WeakRef<AdapterBase>;
-	private __unsubEffect?:   () => void;
-	private __resolveUpdate?: (bool: true) => void;
-	private __controllers:    Set<ReactiveController> = new Set();
+	private __element:         WeakRef<AdapterBase>;
+	private __unsubEffect?:    () => void;
+	private __resolveUpdate?:  (bool: true) => void;
+	private __controllers:     Set<ReactiveController> = new Set();
+	private __eventListeners?: Map<string, Set<{
+		type:     string;
+		listener: EventListenerOrEventListenerObject;
+		options?: boolean | AddEventListenerOptions;
+	}>>;
 
 	readonly hasConnected:   boolean = false;
 	readonly hasUpdated:     boolean = false;
 	readonly updateComplete: Promise<boolean> = Promise.resolve(true);
 
-	protected renderOptions?: RenderOptions;
+	protected readonly renderOptions?: RenderOptions;
 
 	//#region Component-lifecycle
 
@@ -212,6 +219,9 @@ export class AdapterElement implements ReactiveControllerHost {
 			// We use a function to prevent `this` from the class from being captured.
 			ref.deref()?.requestUpdate();
 		});
+
+		for (const controller of this.__controllers)
+			controller.hostConnected?.();
 	}
 
 	/** Called after a setTimeout of 0 after the render method. */
@@ -220,6 +230,17 @@ export class AdapterElement implements ReactiveControllerHost {
 
 	disconnected(): void {
 		this.__unsubEffect?.();
+		this.__unsubEffect = undefined;
+
+		this.__eventListeners?.forEach((listeners, type) => {
+			for (const { listener, options } of listeners)
+				this.removeEventListener(type, listener, options);
+		});
+
+		this.__eventListeners?.clear();
+
+		for (const controller of this.__controllers)
+			controller.hostDisconnected?.();
 	}
 
 	protected beforeUpdate(changedProps: Set<string | symbol>): void {
@@ -237,7 +258,7 @@ export class AdapterElement implements ReactiveControllerHost {
 	}
 	//#endregion
 
-	protected __populateChangedProps(): void {
+	private __populateChangedProps(): void {
 		const base = this.constructor as any as typeof AdapterElement;
 		const metadata = base.metadata;
 
@@ -251,13 +272,13 @@ export class AdapterElement implements ReactiveControllerHost {
 		}
 	}
 
-	protected __setPendingUpdate(): void {
+	private __setPendingUpdate(): void {
 		const { promise, resolve } = Promise.withResolvers<boolean>();
 		(this as Writeable<this>).updateComplete = promise;
 		this.__resolveUpdate = resolve;
 	}
 
-	protected __performUpdate(): void {
+	private __performUpdate(): void {
 		if (this.__resolveUpdate)
 			throw new Error('Cannot force update while another update is pending.');
 
@@ -360,6 +381,71 @@ export class AdapterElement implements ReactiveControllerHost {
 			throw new Error('Element is not defined.');
 
 		return element.querySelector.bind(element);
+	}
+
+	get dispatchEvent(): HTMLElement['dispatchEvent'] {
+		const element = this.__element.deref();
+		if (!element)
+			throw new Error('Element is not defined.');
+
+		return element.dispatchEvent.bind(element);
+	}
+
+	get addEventListener(): HTMLElement['addEventListener'] {
+		const element = this.__element.deref();
+		if (!element)
+			throw new Error('Element is not defined.');
+
+		return this.__addEventListener.bind(this);
+	}
+
+	get removeEventListener(): HTMLElement['removeEventListener'] {
+		const element = this.__element.deref();
+		if (!element)
+			throw new Error('Element is not defined.');
+
+		return this.__removeEventListener.bind(this);
+	}
+
+	__addEventListener(
+		type: string,
+		listener: EventListenerOrEventListenerObject,
+		options?: boolean | AddEventListenerOptions,
+	): void {
+		const element = this.__element.deref();
+		if (!element)
+			throw new Error('Element is not defined.');
+
+		element.addEventListener(type, listener, options);
+
+		if (!this.__eventListeners)
+			this.__eventListeners = new Map();
+
+		const listeners = this.__eventListeners.get(type)
+			?? this.__eventListeners.set(type, new Set()).get(type)!;
+
+		listeners.add({ type, listener, options });
+	}
+
+	__removeEventListener(
+		type: string,
+		listener: EventListenerOrEventListenerObject,
+		options?: boolean | EventListenerOptions,
+	): void {
+		const element = this.__element.deref();
+		if (!element)
+			throw new Error('Element is not defined.');
+
+		element.removeEventListener(type, listener, options);
+
+		const listeners = this.__eventListeners?.get(type);
+		if (!listeners)
+			return;
+
+		for (const { type: t, listener: l, options: o } of listeners) {
+			if (t === type && l === listener && o === options)
+				listeners.delete({ type: t, listener: l, options: o });
+		}
 	}
 	//#endregion
 

@@ -261,6 +261,24 @@ importers:
         specifier: workspace:^
         version: link:../../packages/vite-plugins/import-css-sheet
 
+  apps/handover/client/core:
+    dependencies:
+      '@roenlie/core':
+        specifier: workspace:^
+        version: link:../../../../packages/core
+      '@roenlie/custom-element':
+        specifier: workspace:^
+        version: link:../../../../packages/custom-element
+
+  apps/handover/client/host:
+    dependencies:
+      '@roenlie/core':
+        specifier: workspace:^
+        version: link:../../../../packages/core
+      '@roenlie/custom-element':
+        specifier: workspace:^
+        version: link:../../../../packages/custom-element
+
   apps/morph/client:
     dependencies:
       '@faker-js/faker':

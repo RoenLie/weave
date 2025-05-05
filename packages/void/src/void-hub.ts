@@ -1,15 +1,15 @@
 declare global {
 	interface WindowEventMap {
-		'void-load': CustomEvent<{element: HTMLElement; host: HTMLElement;}>;
-		'void-get': CustomEvent<{element: HTMLElement; host: HTMLElement;}>;
+		'void-load':     CustomEvent<{ element: HTMLElement; host: HTMLElement; }>;
+		'void-get':      CustomEvent<{ element: HTMLElement; host: HTMLElement; }>;
 		'void-form-get': CustomEvent<{
-			element: HTMLFormElement;
-			host: HTMLElement;
+			element:   HTMLFormElement;
+			host:      HTMLElement;
 			submitter: HTMLElement;
 		}>;
 		'void-form-post': CustomEvent<{
-			element: HTMLFormElement;
-			host: HTMLElement;
+			element:   HTMLFormElement;
+			host:      HTMLElement;
 			submitter: HTMLElement;
 		}>;
 	}
@@ -19,7 +19,7 @@ declare global {
 interface Target { id: string; element: HTMLElement; }
 
 
-export const voidCache = new Map<string, WeakRef<HTMLElement>>();
+export const voidCache: Map<string, WeakRef<HTMLElement>> = new Map();
 
 
 const parser = new DOMParser();

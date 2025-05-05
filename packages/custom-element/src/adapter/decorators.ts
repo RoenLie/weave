@@ -1,4 +1,4 @@
-import type { Interface } from '@roenlie/core/types';
+import type { Interface, Writeable } from '@roenlie/core/types';
 import { Signal } from 'signal-polyfill';
 
 import type { AdapterBase, AdapterElement } from './adapter-element.ts';
@@ -33,7 +33,7 @@ export interface PropertyDecorator {
 export const customElement = (
 	tagName: string,
 ) => <C extends typeof AdapterElement>(base: C): void => {
-	base.tagName = tagName;
+	(base as Writeable<C>).tagName = tagName;
 	base.register();
 };
 
