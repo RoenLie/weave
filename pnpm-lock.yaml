@@ -861,6 +861,9 @@ importers:
       '@roenlie/core':
         specifier: workspace:^
         version: link:../core
+      '@roenlie/injector':
+        specifier: workspace:^
+        version: link:../injector
       lit-html:
         specifier: ^3.3.0
         version: 3.3.0

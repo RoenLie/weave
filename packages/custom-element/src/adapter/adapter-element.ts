@@ -1,4 +1,5 @@
 import type { Writeable } from '@roenlie/core/types';
+import type { Identifier } from '@roenlie/injector';
 import { render, type RenderOptions } from 'lit-html';
 
 import { effect } from '../shared/effect.ts';
@@ -201,8 +202,7 @@ export class AdapterElement implements ReactiveControllerHost {
 
 	protected readonly renderOptions?: RenderOptions;
 
-	//#region Component-lifecycle
-
+	//#region component-lifecycle
 	/** Called first time this instance of the element is connected to the DOM. */
 	firstConnected(): void {
 		(this.hasConnected as boolean) = true;
@@ -256,7 +256,7 @@ export class AdapterElement implements ReactiveControllerHost {
 		for (const controller of this.__controllers)
 			controller.hostUpdated?.();
 	}
-	//#endregion
+	//#endregion component-lifecycle
 
 	private __populateChangedProps(): void {
 		const base = this.constructor as any as typeof AdapterElement;
@@ -311,7 +311,22 @@ export class AdapterElement implements ReactiveControllerHost {
 	static styles: CSSStyle;
 
 
-	//#region Consumer API
+	//#region consumer-api
+	/** Retrieves a bound value from the dependency injection container. */
+	inject(identifier: Identifier): unknown {
+		return;
+	}
+
+	/** Retrieves a named bound value from the dependency injection container. */
+	injectNamed(identifier: Identifier, name: Identifier): unknown {
+		return;
+	}
+
+	/** Retrieves a named and tagged bound value from the dependency injection container. */
+	injectTagged(identifier: Identifier, name: Identifier, tag: Identifier): unknown {
+		return;
+	}
+
 	addController(controller: ReactiveController): void {
 		this.__controllers.add(controller);
 
@@ -363,10 +378,10 @@ export class AdapterElement implements ReactiveControllerHost {
 
 		return [ ...root.querySelectorAll<T>(selector) ];
 	}
-	//#endregion
+	//#endregion consumer-api
 
 
-	//#region HTMLElement interfaces
+	//#region HTMLElement-interfaces
 	get classList(): HTMLElement['classList'] {
 		const element = this.__element.deref();
 		if (!element)
@@ -447,6 +462,6 @@ export class AdapterElement implements ReactiveControllerHost {
 				listeners.delete({ type: t, listener: l, options: o });
 		}
 	}
-	//#endregion
+	//#endregion HTMLElement-interfaces
 
 }
