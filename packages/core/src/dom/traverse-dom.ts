@@ -6,23 +6,23 @@ export type DOMPrimitive  = Element | ShadowRoot | Document | Window | Node;
  */
 export const isNodeOf = {
 	/** Checks if the node is a window. */
-	window:   (node: DOMPrimitive): node is Window     => node instanceof Window,
+	window:   (node: DOMPrimitive): node is Window => node instanceof Window,
 	/** Checks if the node is a document. */
-	document: (node: DOMPrimitive): node is Document     => {
+	document: (node: DOMPrimitive): node is Document => {
 		if ('nodeType' in node)
 			return node.nodeType === Node.DOCUMENT_NODE;
 
 		return false;
 	},
 	/** Checks if the node is an element. */
-	element: (node: DOMPrimitive): node is Element    => {
+	element: (node: DOMPrimitive): node is Element => {
 		if ('nodeType' in node)
 			return node.nodeType === Node.ELEMENT_NODE;
 
 		return false;
 	},
 	/** Checks if the node is an htmlelement. */
-	htmlElement: (node: DOMPrimitive): node is Element    => {
+	htmlElement: (node: DOMPrimitive): node is HTMLElement => {
 		if ('nodeType' in node)
 			return node.nodeType === Node.ELEMENT_NODE && node instanceof HTMLElement;
 

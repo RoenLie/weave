@@ -1,5 +1,6 @@
+import { traverseDomUp } from '@roenlie/core/dom';
 import type { Writeable } from '@roenlie/core/types';
-import type { Identifier } from '@roenlie/injector';
+import { type Identifier, PluginContainer } from '@roenlie/injector';
 import { render, type RenderOptions } from 'lit-html';
 
 import { effect } from '../shared/effect.ts';
@@ -57,14 +58,34 @@ export class AdapterBase extends HTMLElement {
 	readonly renderRoot: ShadowRoot | HTMLElement;
 	readonly adapter:    AdapterElement;
 
-	protected __attrCtrl: MutationObserver | undefined;
+	protected __attrCtrl:        MutationObserver | undefined;
+	protected __pluginContainer: PluginContainer | undefined;
 
 	protected connectedCallback(): void { this.connectAdapter(); }
 	protected disconnectedCallback(): void { this.disconnectAdapter(); }
 
-	protected connectAdapter(): void {
+	protected resolveContainer(): PluginContainer | Promise<PluginContainer> {
+		const container = traverseDomUp<PluginContainer>(this, (node, stop) => {
+			if (!('pluginContainer' in node))
+				return;
+
+			const container = node.pluginContainer;
+			if (container instanceof PluginContainer)
+				stop(container);
+		});
+
+		if (!container)
+			throw new Error('No plugin container found in the DOM.');
+
+		return container;
+	}
+
+	protected async connectAdapter(): Promise<void> {
 		const base = this.constructor as any as typeof AdapterBase;
 		const metadata = base.adapter.metadata;
+
+		// Resolve the plugin container.
+		this.__pluginContainer = await this.resolveContainer();
 
 		// Set the initial values of the attribute properties.
 		metadata.observedAttributes?.forEach(attr => {
@@ -148,6 +169,9 @@ export class AdapterBase extends HTMLElement {
 }
 
 
+export const adapterBase = { value: AdapterBase };
+
+
 export class AdapterElement implements ReactiveControllerHost {
 
 	static readonly tagName: string;
@@ -156,7 +180,7 @@ export class AdapterElement implements ReactiveControllerHost {
 			return;
 
 		const adapter = this;
-		const cls = class extends AdapterBase {
+		const cls = class extends adapterBase.value {
 
 			protected static override adapter = adapter;
 
