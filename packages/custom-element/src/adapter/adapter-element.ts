@@ -1,6 +1,6 @@
 import { traverseDomUp } from '@roenlie/core/dom';
 import type { Writeable } from '@roenlie/core/types';
-import { type Identifier, PluginContainer } from '@roenlie/injector';
+import { PluginContainer, PluginModule } from '@roenlie/injector';
 import { render, type RenderOptions } from 'lit-html';
 
 import { effect } from '../shared/effect.ts';
@@ -18,9 +18,6 @@ import type { AdapterMetadata } from './types.ts';
 export class AdapterBase extends HTMLElement {
 
 	protected static adapter: typeof AdapterElement;
-	static override [Symbol.hasInstance](value: object): boolean {
-		return value instanceof this.adapter;
-	}
 
 	constructor() {
 		super();
@@ -58,18 +55,21 @@ export class AdapterBase extends HTMLElement {
 	readonly renderRoot: ShadowRoot | HTMLElement;
 	readonly adapter:    AdapterElement;
 
-	protected __attrCtrl:        MutationObserver | undefined;
-	protected __pluginContainer: PluginContainer | undefined;
+	protected __attrCtrl: MutationObserver | undefined;
+	pluginContainer:      PluginContainer;
 
 	protected connectedCallback(): void { this.connectAdapter(); }
 	protected disconnectedCallback(): void { this.disconnectAdapter(); }
 
 	protected resolveContainer(): PluginContainer | Promise<PluginContainer> {
 		const container = traverseDomUp<PluginContainer>(this, (node, stop) => {
-			if (!('pluginContainer' in node))
+			if (!(node instanceof AdapterBase))
 				return;
 
-			const container = node.pluginContainer;
+			const base = this.constructor as any as typeof AdapterBase;
+			const metadata = base.adapter.metadata;
+
+			const container = metadata.pluginContainer;
 			if (container instanceof PluginContainer)
 				stop(container);
 		});
@@ -85,7 +85,8 @@ export class AdapterBase extends HTMLElement {
 		const metadata = base.adapter.metadata;
 
 		// Resolve the plugin container.
-		this.__pluginContainer = await this.resolveContainer();
+		this.pluginContainer = await this.resolveContainer();
+		base.adapter.modules.forEach(module => this.pluginContainer.load(module));
 
 		// Set the initial values of the attribute properties.
 		metadata.observedAttributes?.forEach(attr => {
@@ -174,6 +175,8 @@ export const adapterBase = { value: AdapterBase };
 
 export class AdapterElement implements ReactiveControllerHost {
 
+	declare ['constructor']: typeof AdapterElement;
+
 	static readonly tagName: string;
 	static register(): void {
 		if (globalThis.customElements.get(this.tagName))
@@ -205,6 +208,8 @@ export class AdapterElement implements ReactiveControllerHost {
 		return metadata;
 	}
 
+	static readonly modules: readonly PluginModule[] = [];
+
 	/**
 	 * A weak reference to the AdapterProxy element that is managing this adapter.\
 	 * This is used to avoid potential memory leaks from locking a direct reference.\
@@ -212,7 +217,7 @@ export class AdapterElement implements ReactiveControllerHost {
 	 */
 	private __element:         WeakRef<AdapterBase>;
 	private __unsubEffect?:    () => void;
-	private __resolveUpdate?:  (bool: true) => void;
+	private __resolveUpdate?:  ((bool: true) => void) & { stamp: number; };
 	private __controllers:     Set<ReactiveController> = new Set();
 	private __eventListeners?: Map<string, Set<{
 		type:     string;
@@ -223,6 +228,13 @@ export class AdapterElement implements ReactiveControllerHost {
 	readonly hasConnected:   boolean = false;
 	readonly hasUpdated:     boolean = false;
 	readonly updateComplete: Promise<boolean> = Promise.resolve(true);
+	get element(): AdapterBase {
+		const element = this.__element.deref();
+		if (!element)
+			throw new Error('Element is not defined.');
+
+		return element;
+	}
 
 	protected readonly renderOptions?: RenderOptions;
 
@@ -296,16 +308,14 @@ export class AdapterElement implements ReactiveControllerHost {
 		}
 	}
 
-	private __setPendingUpdate(): void {
+	private __setPendingUpdate(stamp: number): void {
 		const { promise, resolve } = Promise.withResolvers<boolean>();
 		(this as Writeable<this>).updateComplete = promise;
-		this.__resolveUpdate = resolve;
+
+		this.__resolveUpdate = Object.assign(resolve, { stamp });
 	}
 
-	private __performUpdate(): void {
-		if (this.__resolveUpdate)
-			throw new Error('Cannot force update while another update is pending.');
-
+	private __performUpdate(stamp: number): void {
 		const base = this.constructor as any as typeof AdapterElement;
 		const metadata = base.metadata;
 
@@ -317,19 +327,26 @@ export class AdapterElement implements ReactiveControllerHost {
 			this.renderOptions ?? { host: this },
 		);
 
-		// We need to wait for the next frame to ensure the DOM has been updated.
-		setTimeout(() => {
-			this.afterUpdate(metadata.changedProps);
-			metadata.changedProps.clear();
+		// Only if update was called without a pending update
+		// do we initiate the afterUpdate call.
+		if (this.__resolveUpdate?.stamp === stamp) {
+			// We need to wait for the next frame to ensure the DOM has been updated.
 
-			if (!this.hasUpdated) {
-				(this.hasUpdated as boolean) = true;
-				this.afterConnected();
-			}
+			// TODO, make use of a timeout version that allows running immediatly when
+			// we use it with an explicit perform update call, to bypass the timeout.
+			setTimeout(() => {
+				this.afterUpdate(metadata.changedProps);
+				metadata.changedProps.clear();
 
-			// Resolve the promise and clear the resolve function.
-			this.__resolveUpdate = void this.__resolveUpdate?.(true);
-		});
+				if (!this.hasUpdated) {
+					(this.hasUpdated as boolean) = true;
+					this.afterConnected();
+				}
+
+				// Resolve the promise and clear the resolve function.
+				this.__resolveUpdate = void this.__resolveUpdate?.(true);
+			});
+		}
 	}
 
 	static styles: CSSStyle;
@@ -337,18 +354,10 @@ export class AdapterElement implements ReactiveControllerHost {
 
 	//#region consumer-api
 	/** Retrieves a bound value from the dependency injection container. */
-	inject(identifier: Identifier): unknown {
-		return;
-	}
+	get inject(): PluginContainer {
+		const element = this.element;
 
-	/** Retrieves a named bound value from the dependency injection container. */
-	injectNamed(identifier: Identifier, name: Identifier): unknown {
-		return;
-	}
-
-	/** Retrieves a named and tagged bound value from the dependency injection container. */
-	injectTagged(identifier: Identifier, name: Identifier, tag: Identifier): unknown {
-		return;
+		return element.pluginContainer;
 	}
 
 	addController(controller: ReactiveController): void {
@@ -369,9 +378,10 @@ export class AdapterElement implements ReactiveControllerHost {
 		if (this.__resolveUpdate)
 			return this.updateComplete;
 
-		this.__setPendingUpdate();
+		const stamp = performance.now();
+		this.__setPendingUpdate(stamp);
 
-		queueMicrotask(() => this.__performUpdate());
+		queueMicrotask(() => this.__performUpdate(stamp));
 
 		return this.updateComplete;
 	}
@@ -383,8 +393,9 @@ export class AdapterElement implements ReactiveControllerHost {
 		if (this.__resolveUpdate)
 			return this.updateComplete;
 
-		this.__setPendingUpdate();
-		this.__performUpdate();
+		const stamp = performance.now();
+		this.__setPendingUpdate(stamp);
+		this.__performUpdate(stamp);
 
 		return this.updateComplete;
 	}

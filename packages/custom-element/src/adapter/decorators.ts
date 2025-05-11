@@ -1,8 +1,23 @@
+/* eslint-disable @typescript-eslint/unified-signatures */
 import type { Interface, Writeable } from '@roenlie/core/types';
+import { PluginContainer } from '@roenlie/injector';
 import { Signal } from 'signal-polyfill';
 
 import type { AdapterBase, AdapterElement } from './adapter-element.ts';
 import type { AdapterMetadata, PropertyType } from './types.ts';
+
+
+export interface ClassDecorator {
+	// legacy decorator signature
+	<Class extends abstract new (...args: any) => any>(
+		target: Class,
+	): Class | void;
+	// decorator signature
+	<Class extends abstract new (...args: any) => any>(
+		target: Class,
+		context: ClassDecoratorContext<NoInfer<Class>>,
+	): Class | void;
+}
 
 
 export interface PropertyDecorator {
@@ -32,9 +47,15 @@ export interface PropertyDecorator {
 
 export const customElement = (
 	tagName: string,
-) => <C extends typeof AdapterElement>(base: C): void => {
-	(base as Writeable<C>).tagName = tagName;
-	base.register();
+): ClassDecorator => <C extends { tagName: string; register: (...args: any[]) => void; }>(
+	base: C,
+): void => {
+	const writeable = (base as Writeable<C>);
+	if (writeable.tagName)
+		return;
+
+	writeable.tagName = tagName;
+	queueMicrotask(() => base.register());
 };
 
 
@@ -53,7 +74,7 @@ const legacyState = (
 	property: string,
 ): any => {
 	const hasOwnProperty = target.hasOwnProperty(property);
-	const metadata = (target.constructor as any)[Symbol.metadata] ??= {} as AdapterMetadata;
+	const metadata = ((target.constructor as any)[Symbol.metadata] ??= {}) as AdapterMetadata;
 	const propName = property;
 
 	createStateMetadata(metadata, propName);
@@ -163,7 +184,7 @@ const legacyProperty = (
 	property: string,
 ): any => {
 	const hasOwnProperty = target.hasOwnProperty(property);
-	const metadata = (target.constructor as any)[Symbol.metadata] ??= {} as AdapterMetadata;
+	const metadata = ((target.constructor as any)[Symbol.metadata] ??= {}) as AdapterMetadata;
 	const propName = property;
 	const attrName = createPropertyMetadata(type, options, metadata, propName);
 
@@ -276,9 +297,6 @@ const legacyQuery = (
 				me['__cached' + propName] = el;
 
 			return el;
-
-
-			//return (this as Interface<AdapterElement>).query(selector);
 		},
 		set(v: any) {},
 	};
@@ -338,4 +356,19 @@ export const query = (
 		protoOrTarget as ClassAccessorDecoratorTarget<C, V>,
 		nameOrContext as ClassAccessorDecoratorContext<C, V>,
 	);
+};
+
+
+export const provider = (
+): ClassDecorator => <C extends typeof AdapterElement>(
+	base: C,
+	context?: ClassDecoratorContext<NoInfer<C>>,
+): any => {
+	const metadata = context
+		? (context.metadata as any) as AdapterMetadata
+		: ((base.constructor as any)[Symbol.metadata] ??= {}) as AdapterMetadata;
+
+	metadata.pluginContainer = new PluginContainer();
+
+	return base;
 };

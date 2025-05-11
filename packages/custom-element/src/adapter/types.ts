@@ -1,3 +1,5 @@
+import type { PluginContainer } from '@roenlie/injector';
+
 export type PropertyType =
 	| StringConstructor
 	| ObjectConstructor
@@ -6,6 +8,7 @@ export type PropertyType =
 
 export interface AdapterMetadata {
 	styles?:            CSSStyleSheet[];
+	pluginContainer?:   PluginContainer;
 	observedAttributes: string[];
 	signalProps:        string[];
 	changedProps:       Set<string | symbol>;

@@ -172,6 +172,12 @@ export class PluginContainer {
 	/** Loads all bindings for a module(s) */
 	load(...modules: PluginModule[]): void {
 		for (const module of modules) {
+			const alreadyLoaded = this.moduleIdToIdentifier.has(module.id);
+			if (alreadyLoaded)
+				continue;
+
+			this.moduleIdToIdentifier.set(module.id, []);
+
 			module.registrator({
 				bind:     identifier => this.createBind(identifier, 'last', module.id),
 				bindOnce: identifier => {
@@ -205,6 +211,8 @@ export class PluginContainer {
 				for (let i = bindings.length - 1; i >= 0; i--)
 					bindings[i]!.moduleId === module.id && bindings.splice(i, 1);
 			}
+
+			this.moduleIdToIdentifier.delete(module.id);
 		}
 	}
 
@@ -409,9 +417,7 @@ export class PluginContainer {
 		bindings.push(binding);
 
 		if (moduleId) {
-			const moduleIdentifiers = this.moduleIdToIdentifier.get(moduleId)
-				?? this.moduleIdToIdentifier.set(moduleId, []).get(moduleId);
-
+			const moduleIdentifiers = this.moduleIdToIdentifier.get(moduleId)!;
 			moduleIdentifiers?.push(identifier);
 		}
 
