@@ -32,6 +32,7 @@ export interface BaseBinding {
 	named?:      Identifier;
 	tagged?:     Identifier;
 	moduleId?:   Identifier;
+	activator?:  (instance: any, container: PluginContainer) => any;
 }
 export interface ClassBinding extends BaseBinding {
 	type:        'class';
@@ -59,7 +60,7 @@ export class RegisterInitializer {
 	constructor(protected binding: Binding) { }
 
 	/** Binds a value as a constant. */
-	constant(value: ConstantBinding['initializer']): RegisterSpecifier {
+	constant<T extends ConstantBinding['initializer']>(value: T): RegisterSpecifier<T> {
 		this.binding.type = 'constant';
 		this.binding.initializer = value;
 
@@ -67,7 +68,7 @@ export class RegisterInitializer {
 	}
 
 	/** Binds a value as a class, initializing it whenever it is first resolved. */
-	class(ctor: ClassBinding['initializer']): RegisterSpecifierWithLifetime {
+	class<T extends ClassBinding['initializer']>(ctor: T): RegisterSpecifierWithLifetime<T> {
 		this.binding.type = 'class';
 		this.binding.initializer = ctor;
 
@@ -75,7 +76,7 @@ export class RegisterInitializer {
 	}
 
 	/** Binds a value as a factory, supplying the container for use when constructing your value. */
-	factory<T>(factory: FactoryBinding<T>['initializer']): RegisterSpecifierWithLifetime {
+	factory<T>(factory: FactoryBinding<T>['initializer']): RegisterSpecifierWithLifetime<T> {
 		this.binding.type = 'factory';
 		this.binding.initializer = factory;
 
@@ -107,41 +108,66 @@ export class RegisterLifetime {
 	}
 
 }
-export class RegisterSpecifier {
+export class RegisterSpecifier<T> {
 
 	constructor(protected binding: Binding) { }
 
 	/** Registers the binding with a name, allowing for additional granularity when resolving. */
-	named(name: string): RegisterLifetime {
+	named(name: string): RegisterLifetimeWithActivator<T> {
 		this.binding.named = name;
 
-		return new RegisterLifetime(this.binding);
+		return new RegisterLifetimeWithActivator(this.binding);
 	}
 
 	/** Registers the binding with a name and tag, allowing for additional granularity when resolving.  */
-	tagged(name: string, tag: string): RegisterLifetime {
+	tagged(name: string, tag: string): RegisterLifetimeWithActivator<T> {
 		this.binding.named = name;
 		this.binding.tagged = tag;
+
+		return new RegisterLifetimeWithActivator(this.binding);
+	}
+
+	/**
+	 * Registers an activator function that will be called when the binding is resolved.\
+	 * This allows for additional processing or modification of the instance before it is returned.
+	 */
+	onActivation(activator: (instance: T, container: PluginContainer) => T): RegisterLifetime {
+		this.binding.activator = activator;
 
 		return new RegisterLifetime(this.binding);
 	}
 
 }
-export class RegisterSpecifierWithLifetime extends RegisterLifetime {
 
-	/** Registers the binding with a name, allowing for additional granularity when resolving. */
-	named(name: string): RegisterLifetime {
-		this.binding.named = name;
+export class RegisterLifetimeWithActivator<T> extends RegisterLifetime {
+
+	/**
+	 * Registers an activator function that will be called when the binding is resolved.\
+	 * This allows for additional processing or modification of the instance before it is returned.
+	 */
+	onActivation(activator: (instance: T, container: PluginContainer) => T): RegisterLifetime {
+		this.binding.activator = activator;
 
 		return new RegisterLifetime(this.binding);
 	}
 
+}
+
+export class RegisterSpecifierWithLifetime<T> extends RegisterLifetimeWithActivator<T> {
+
+	/** Registers the binding with a name, allowing for additional granularity when resolving. */
+	named(name: string): RegisterLifetimeWithActivator<T> {
+		this.binding.named = name;
+
+		return new RegisterLifetimeWithActivator(this.binding);
+	}
+
 	/** Registers the binding with a name and tag, allowing for additional granularity when resolving.  */
-	tagged(name: string, tag: string): RegisterLifetime {
+	tagged(name: string, tag: string): RegisterLifetimeWithActivator<T> {
 		this.binding.named = name;
 		this.binding.tagged = tag;
 
-		return new RegisterLifetime(this.binding);
+		return new RegisterLifetimeWithActivator(this.binding);
 	}
 
 }
@@ -417,7 +443,7 @@ export class PluginContainer {
 		bindings.push(binding);
 
 		if (moduleId) {
-			const moduleIdentifiers = this.moduleIdToIdentifier.get(moduleId)!;
+			const moduleIdentifiers = this.moduleIdToIdentifier.get(moduleId);
 			moduleIdentifiers?.push(identifier);
 		}
 
@@ -496,14 +522,22 @@ export class PluginContainer {
 	}
 
 	protected resolveBinding(binding: Binding): any {
-		if (isConstantBinding(binding))
-			return binding.initializer;
-		if (isClassBinding(binding))
-			return new binding.initializer(this);
-		if (isFactoryBinding(binding))
-			return binding.initializer(this);
+		let instance: any;
 
-		throw new Error('Unsupported binding type: ' + (binding as any).type);
+		if (isConstantBinding(binding))
+			instance = binding.initializer;
+		else if (isClassBinding(binding))
+			instance = new binding.initializer(this);
+		else if (isFactoryBinding(binding))
+			instance = binding.initializer(this);
+		else
+			throw new Error('Unsupported binding type: ' + (binding as Binding).type);
+
+		// Apply activation if defined
+		if (binding.activator)
+			instance = binding.activator(instance, this);
+
+		return instance;
 	}
 
 }
