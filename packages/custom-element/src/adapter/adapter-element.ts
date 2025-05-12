@@ -143,7 +143,7 @@ export class AdapterBase extends HTMLElement {
 
 		const propMeta = metadata.propertyMetadata?.[name];
 		if (!propMeta)
-			return console.warn(`Unknown attribute: ${ name }`);
+			return void console.warn(`Unknown attribute: ${ name }`);
 
 		const adapter = this.adapter;
 		if (!adapter)
@@ -153,7 +153,7 @@ export class AdapterBase extends HTMLElement {
 		let convertedValue: any;
 
 		if (type === Boolean)
-			convertedValue = value === 'true' || value === '' || false;
+			convertedValue = value === 'true' || value === '';
 		else if (type === String)
 			convertedValue = value || '';
 		else if (type === Number)
@@ -231,7 +231,7 @@ export class AdapterElement implements ReactiveControllerHost {
 	get element(): AdapterBase {
 		const element = this.__element.deref();
 		if (!element)
-			throw new Error('Element is not defined.');
+			throw new Error('Element reference has been lost...');
 
 		return element;
 	}
@@ -244,7 +244,7 @@ export class AdapterElement implements ReactiveControllerHost {
 		(this.hasConnected as boolean) = true;
 	}
 
-	/** Called everytime this instnace of the element is connected to the DOM. */
+	/** Called everytime this instance of the element is connected to the DOM. */
 	connected(): void {
 		// We utilize a WeakRef to avoid a potential leak from
 		// locking a direct reference to the instance in this scope.
@@ -301,10 +301,10 @@ export class AdapterElement implements ReactiveControllerHost {
 		for (const prop of metadata.signalProps ?? []) {
 			const value = this[prop as keyof typeof this];
 
-			if (metadata.previousProps.get(prop) !== value)
+			if (metadata.previousProps.get(prop) !== value) {
+				metadata.previousProps.set(prop, value);
 				metadata.changedProps.add(prop);
-
-			metadata.previousProps.set(prop, value);
+			}
 		}
 	}
 
@@ -316,37 +316,37 @@ export class AdapterElement implements ReactiveControllerHost {
 	}
 
 	private __performUpdate(stamp: number): void {
+		if (this.__resolveUpdate?.stamp !== stamp)
+			return;
+
 		const base = this.constructor as any as typeof AdapterElement;
 		const metadata = base.metadata;
 
 		this.beforeUpdate(metadata.changedProps);
 
+		const element = this.__element.deref();
+		if (!element)
+			return console.warn('Element reference has been lost.');
+
 		render(
 			this.render(),
-			this.__element.deref()!.renderRoot,
+			element.renderRoot,
 			this.renderOptions ?? { host: this },
 		);
 
-		// Only if update was called without a pending update
-		// do we initiate the afterUpdate call.
-		if (this.__resolveUpdate?.stamp === stamp) {
-			// We need to wait for the next frame to ensure the DOM has been updated.
+		// We need to wait for the next frame to ensure the DOM has been updated.
+		setTimeout(() => {
+			this.afterUpdate(metadata.changedProps);
+			metadata.changedProps.clear();
 
-			// TODO, make use of a timeout version that allows running immediatly when
-			// we use it with an explicit perform update call, to bypass the timeout.
-			setTimeout(() => {
-				this.afterUpdate(metadata.changedProps);
-				metadata.changedProps.clear();
+			if (!this.hasUpdated) {
+				(this.hasUpdated as boolean) = true;
+				this.afterConnected();
+			}
 
-				if (!this.hasUpdated) {
-					(this.hasUpdated as boolean) = true;
-					this.afterConnected();
-				}
-
-				// Resolve the promise and clear the resolve function.
-				this.__resolveUpdate = void this.__resolveUpdate?.(true);
-			});
-		}
+			// Resolve the promise and clear the resolve function.
+			this.__resolveUpdate = void this.__resolveUpdate?.(true);
+		});
 	}
 
 	static styles: CSSStyle;
@@ -386,28 +386,34 @@ export class AdapterElement implements ReactiveControllerHost {
 		return this.updateComplete;
 	}
 
-	/** Immediatly performs a render as long as there is not a render already pending. */
+	/**
+	 * Immediately resolves the queued render if there is one,
+	 * or queues a new render and immediately resolves it.
+	 */
 	performUpdate(): Promise<boolean> {
 		this.__populateChangedProps();
 
-		if (this.__resolveUpdate)
-			return this.updateComplete;
-
-		const stamp = performance.now();
-		this.__setPendingUpdate(stamp);
-		this.__performUpdate(stamp);
+		if (this.__resolveUpdate) {
+			this.__resolveUpdate.stamp = performance.now();
+			this.__performUpdate(this.__resolveUpdate.stamp);
+		}
+		else {
+			const stamp = performance.now();
+			this.__setPendingUpdate(stamp);
+			this.__performUpdate(stamp);
+		}
 
 		return this.updateComplete;
 	}
 
 	query<T extends HTMLElement>(selector: string): T | undefined {
-		const root = this.__element.deref()?.renderRoot;
+		const root = this.element.renderRoot;
 
-		return root?.querySelector(selector) ?? undefined;
+		return root.querySelector<T>(selector) ?? undefined;
 	}
 
 	queryAll<T extends HTMLElement>(selector: string): T[] {
-		const root = this.__element.deref()?.renderRoot;
+		const root = this.element.renderRoot;
 		if (!root)
 			return [];
 
@@ -418,42 +424,26 @@ export class AdapterElement implements ReactiveControllerHost {
 
 	//#region HTMLElement-interfaces
 	get classList(): HTMLElement['classList'] {
-		const element = this.__element.deref();
-		if (!element)
-			throw new Error('Element is not defined.');
-
-		return element.classList;
+		return this.element.classList;
 	}
 
 	get querySelector(): HTMLElement['querySelector'] {
-		const element = this.__element.deref();
-		if (!element)
-			throw new Error('Element is not defined.');
+		const element = this.element;
 
 		return element.querySelector.bind(element);
 	}
 
 	get dispatchEvent(): HTMLElement['dispatchEvent'] {
-		const element = this.__element.deref();
-		if (!element)
-			throw new Error('Element is not defined.');
+		const element = this.element;
 
 		return element.dispatchEvent.bind(element);
 	}
 
 	get addEventListener(): HTMLElement['addEventListener'] {
-		const element = this.__element.deref();
-		if (!element)
-			throw new Error('Element is not defined.');
-
 		return this.__addEventListener.bind(this);
 	}
 
 	get removeEventListener(): HTMLElement['removeEventListener'] {
-		const element = this.__element.deref();
-		if (!element)
-			throw new Error('Element is not defined.');
-
 		return this.__removeEventListener.bind(this);
 	}
 
@@ -462,11 +452,7 @@ export class AdapterElement implements ReactiveControllerHost {
 		listener: EventListenerOrEventListenerObject,
 		options?: boolean | AddEventListenerOptions,
 	): void {
-		const element = this.__element.deref();
-		if (!element)
-			throw new Error('Element is not defined.');
-
-		element.addEventListener(type, listener, options);
+		this.element.addEventListener(type, listener, options);
 
 		if (!this.__eventListeners)
 			this.__eventListeners = new Map();
@@ -482,19 +468,16 @@ export class AdapterElement implements ReactiveControllerHost {
 		listener: EventListenerOrEventListenerObject,
 		options?: boolean | EventListenerOptions,
 	): void {
-		const element = this.__element.deref();
-		if (!element)
-			throw new Error('Element is not defined.');
-
-		element.removeEventListener(type, listener, options);
+		this.element.removeEventListener(type, listener, options);
 
 		const listeners = this.__eventListeners?.get(type);
 		if (!listeners)
 			return;
 
-		for (const { type: t, listener: l, options: o } of listeners) {
+		for (const lst of listeners) {
+			const { type: t, listener: l, options: o } = lst;
 			if (t === type && l === listener && o === options)
-				listeners.delete({ type: t, listener: l, options: o });
+				listeners.delete(lst);
 		}
 	}
 	//#endregion HTMLElement-interfaces

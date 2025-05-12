@@ -1,7 +1,5 @@
-import { AdapterElement, customElement, provider } from '@roenlie/custom-element/adapter';
+import { AdapterElement, customElement, PluginModule, provider } from '@roenlie/custom-element/adapter';
 import { Router } from '@roenlie/custom-element/router';
-
-import { PluginModule } from '../../../../../../packages/injector/dist/lib/injector';
 
 
 @provider()
@@ -10,7 +8,13 @@ export class RouterCmp extends AdapterElement {
 
 	static override modules: readonly PluginModule[] = [
 		new PluginModule(({ bind }) => {
-			bind('test').constant('Hello world');
+			bind('test')
+				.constant('Hello world')
+				.onActivation(instance => {
+					console.log('test', instance);
+
+					return instance;
+				});
 		}),
 	];
 
