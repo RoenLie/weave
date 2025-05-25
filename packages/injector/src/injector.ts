@@ -108,6 +108,8 @@ export class RegisterLifetime {
 	}
 
 }
+
+
 export class RegisterSpecifier<T> {
 
 	constructor(protected binding: Binding) { }
@@ -454,7 +456,7 @@ export class PluginContainer {
 		identifier: Identifier,
 		filter?: (binding: Binding) => boolean,
 	): readonly [PluginContainer | undefined, Binding[]] {
-		let container: PluginContainer | undefined = getFirstContainerWithBindings(this);
+		let container: PluginContainer | undefined = this.getFirstContainerWithBindings(identifier, this);
 		let bindings: Binding[] = container?.bindings.get(identifier) ?? [];
 
 		// Here we have the bindings and the container that holds them.
@@ -465,7 +467,7 @@ export class PluginContainer {
 
 		const resolution = bindings[0]?.resolution;
 		if (resolution === 'first') {
-			const newContainer = getLastContainerWithBindings(container);
+			const newContainer = this.getLastContainerWithBindings(identifier, container);
 			if (newContainer && container !== newContainer) {
 				container = newContainer;
 				bindings = container.bindings.get(identifier)!;
@@ -478,27 +480,31 @@ export class PluginContainer {
 		return bindings.length
 			? [ container, bindings ] as const
 			: [ undefined, bindings ] as const;
+	}
 
-		function getFirstContainerWithBindings(container?: PluginContainer): PluginContainer | undefined {
-			while (container) {
-				if (container.bindings.has(identifier))
-					return container;
+	protected getFirstContainerWithBindings(
+		identifier: Identifier, container?: PluginContainer,
+	): PluginContainer | undefined {
+		while (container) {
+			if (container.bindings.has(identifier))
+				return container;
 
-				container = container.parent;
-			}
+			container = container.parent;
+		}
+	}
+
+	protected getLastContainerWithBindings(
+		identifier: Identifier, container?: PluginContainer,
+	): PluginContainer | undefined {
+		let lastContainer: PluginContainer | undefined = undefined;
+		while (container) {
+			if (container.bindings.has(identifier))
+				lastContainer = container;
+
+			container = container.parent;
 		}
 
-		function getLastContainerWithBindings(container?: PluginContainer): PluginContainer | undefined {
-			let lastContainer: PluginContainer | undefined = undefined;
-			while (container) {
-				if (container.bindings.has(identifier))
-					lastContainer = container;
-
-				container = container.parent;
-			}
-
-			return lastContainer;
-		}
+		return lastContainer;
 	}
 
 	protected resolveSingleBinding(container: PluginContainer, binding: Binding): any {

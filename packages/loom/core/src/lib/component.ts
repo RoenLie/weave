@@ -1,16 +1,16 @@
-import { resolvablePromise, type ResolvablePromise } from '@roenlie/core/async';
-
+import { type ResolvablePromise, resolvablePromise } from '@roenlie/core/async';
 import { domId, traverseDomUp } from '@roenlie/core/dom';
 import { LitElement, type PropertyValues } from 'lit';
 import { keyed } from 'lit/directives/keyed.js';
+
 import type { Resolver } from './module.ts';
 
 
 export class Component extends LitElement {
 
-	public static adapter: typeof Adapter;
-	public static tagName: string;
-	public static register() {
+	static adapter: typeof Adapter;
+	static tagName: string;
+	static register() {
 		if (!this.tagName)
 			throw new Error('Must define static tagName property on component');
 
@@ -18,7 +18,7 @@ export class Component extends LitElement {
 			customElements.define(this.tagName, this);
 	}
 
-	public static create(resolver: Resolver) {
+	static create(resolver: Resolver) {
 		this.register();
 
 		const el = document.createElement(this.tagName) as Component;
@@ -27,12 +27,12 @@ export class Component extends LitElement {
 		return el;
 	}
 
-	public resolver:               Resolver;
+	resolver:                      Resolver;
 	protected _moduleConnecting?:  ResolvablePromise;
 	protected _adapterConnecting?: ResolvablePromise;
 	protected adapter:             Adapter;
 
-	public override connectedCallback(): void {
+	override connectedCallback(): void {
 		super.connectedCallback();
 
 		console.log('|connectedCallback|');
@@ -46,7 +46,7 @@ export class Component extends LitElement {
 		}
 	}
 
-	public override disconnectedCallback(): void {
+	override disconnectedCallback(): void {
 		super.disconnectedCallback();
 
 		this._moduleConnecting?.reject();
@@ -77,7 +77,7 @@ export class Component extends LitElement {
 		console.log('|firstUpdated|');
 	}
 
-	public async moduleConnectedCallback(): Promise<void> {
+	async moduleConnectedCallback(): Promise<void> {
 		console.log('|moduleConnectedCallback|');
 
 		traverseDomUp(this, (node, stop) => {
@@ -94,7 +94,7 @@ export class Component extends LitElement {
 		this._moduleConnecting?.resolve();
 	}
 
-	public adapterConnectedCallback() {
+	adapterConnectedCallback() {
 		console.log('|adapterConnectedCallback|');
 
 		const adapter = this.resolver.get<typeof Adapter>(this.localName);
@@ -127,9 +127,9 @@ export class Adapter {
 		public element: Component,
 	) {}
 
-	public key = domId();
+	key = domId();
 
-	public render(): unknown {
+	render(): unknown {
 		return;
 	}
 

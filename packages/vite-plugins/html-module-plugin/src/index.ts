@@ -3,7 +3,7 @@ import { basename } from 'node:path';
 
 import { isElementNode, isParentNode } from '@parse5/tools';
 import { type DefaultTreeAdapterMap, parse } from 'parse5';
-import type { Plugin } from 'vite';
+import type { PluginOption } from 'vite';
 
 
 interface Options {
@@ -19,8 +19,8 @@ interface Options {
  * that are imported with a `{type: 'html'}` attribute into JavaScript modules
  * that export DOM nodes.
  */
-export const htmlModules = (options?: Options): Plugin => {
-	const virtualModules = new Map<string, string>();
+export const htmlModules = (options?: Options): PluginOption => {
+	const virtualModules: Map<string, string> = new Map();
 	const validImporter = [ '.ts', '.mts', '.js', '.mjs' ] as const;
 	const illegalChars: Record<string, string> = {
 		'\\': '\\\\', // Preserve any escape sequences in the source:
@@ -77,7 +77,7 @@ export const htmlModules = (options?: Options): Plugin => {
 				const ast = parse(code);
 
 				// Walk the parse5 AST to find all elements with id attributes.
-				const exportedIds = new Set<string>();
+				const exportedIds: Set<string> = new Set();
 
 				(function traverse(node: DefaultTreeAdapterMap['node']) {
 					if (isElementNode(node)) {

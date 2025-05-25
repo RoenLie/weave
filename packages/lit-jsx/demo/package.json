@@ -1,0 +1,19 @@
+{
+	"name": "@roenlie/lit-jsx-demo",
+	"description": "demo project for @roenlie/lit-jsx",
+	"contributors": [
+		"Kristoffer Roen-Lie"
+	],
+	"type": "module",
+	"version": "1.0.0",
+	"main": "pathToMain",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build"
+	},
+	"dependencies": {
+		"@roenlie/lit-jsx": "workspace:^",
+		"lit": "^3.3.0",
+		"vite": "^6.0.6"
+	}
+}

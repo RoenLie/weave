@@ -1,4 +1,5 @@
 import { domId } from '@roenlie/core/dom';
+
 import type { Adapter } from './component.ts';
 
 
@@ -23,7 +24,7 @@ export class Resolver {
 
 	constructor(protected module: Module) {}
 
-	public get<T>(identifier: Identifier): T {
+	get<T>(identifier: Identifier): T {
 		const bindings = this.module.moduleRegistry.get(identifier);
 		if (!bindings?.length)
 			throw new Error('No binding found for identifier: ' + identifier);
@@ -42,26 +43,26 @@ export class Module {
 
 	constructor(protected scope = '') {}
 
-	public parent:     Module;
-	public entrypoint: ModuleEntrypoint;
+	parent:     Module;
+	entrypoint: ModuleEntrypoint;
 
-	public readonly segments: {
+	readonly segments: {
 		scope:          string;
 		order:          number;
 		segmentResult?: Segment;
 		segmentPromise: () => Promise<Segment>;
 	}[] = [];
 
-	public readonly routes: {
+	readonly routes: {
 		pattern:       string;
 		modulePromise: () => Promise<Module>;
 		moduleResult?: Module;
 	}[] = [];
 
-	public readonly moduleRegistry:  Map<Identifier, Registration[]> = new Map();
-	public readonly segmentRegistry: Map<string, Registration[]> = new Map();
+	readonly moduleRegistry:  Map<Identifier, Registration[]> = new Map();
+	readonly segmentRegistry: Map<string, Registration[]> = new Map();
 
-	public addSegment(segment: {
+	addSegment(segment: {
 		scope?:  string;
 		order?:  number;
 		segment: () => Promise<Segment>;
@@ -75,7 +76,7 @@ export class Module {
 		return this;
 	}
 
-	public addEntrypoint(
+	addEntrypoint(
 		...entrypoint: ConstructorParameters<typeof ModuleEntrypoint>
 	): this {
 		this.entrypoint = new ModuleEntrypoint(...entrypoint);
@@ -83,7 +84,7 @@ export class Module {
 		return this;
 	}
 
-	public addRoutes(routes: {
+	addRoutes(routes: {
 		pattern: string;
 		module:  () => Promise<Module>;
 	}[]): this {
@@ -95,7 +96,7 @@ export class Module {
 		return this;
 	}
 
-	public async load() {
+	async load() {
 		this.moduleRegistry.clear();
 		this.segmentRegistry.clear();
 
@@ -129,9 +130,9 @@ export class ModuleEntrypoint {
 export class Segment {
 
 	constructor(protected registrator: (registrator: Registrator) => void) {}
-	public readonly id: string = domId();
+	readonly id: string = domId();
 
-	public load(module: Module) {
+	load(module: Module) {
 		this.registrator(new Registrator(module, this));
 	}
 
@@ -159,7 +160,7 @@ class Registrator {
 		segmentId:  this.segment.id,
 	} as Registration;
 
-	public bind(identifier: Identifier): RegisterBinding {
+	bind(identifier: Identifier): RegisterBinding {
 		const bindings = this.module.moduleRegistry.get(identifier) ??
 			this.module.moduleRegistry.set(identifier, []).get(identifier)!;
 
@@ -182,28 +183,28 @@ class RegisterBinding {
 		protected binding: Registration,
 	) {}
 
-	public to<T extends new () => any>(value: T): RegisterLifetime {
+	to<T extends new () => any>(value: T): RegisterLifetime {
 		this.binding.value = value;
 		this.binding.type = 'class';
 
 		return new RegisterLifetime(this.module, this.segment, this.binding);
 	}
 
-	public toFunction<T extends (...args: any) => any>(value: T): RegisterLifetime {
+	toFunction<T extends (...args: any) => any>(value: T): RegisterLifetime {
 		this.binding.value = value;
 		this.binding.type = 'function';
 
 		return new RegisterLifetime(this.module, this.segment, this.binding);
 	}
 
-	public toConstant<T>(value: T): Segment {
+	toConstant<T>(value: T): Segment {
 		this.binding.value = value;
 		this.binding.type = 'constant';
 
 		return this.segment;
 	}
 
-	public toAdapter<T extends typeof Adapter>(value: T): Segment {
+	toAdapter<T extends typeof Adapter>(value: T): Segment {
 		this.binding.value = value;
 		this.binding.type = 'constant';
 
@@ -221,26 +222,26 @@ class RegisterLifetime {
 		protected binding: Registration,
 	) {}
 
-	public named(name: Identifier): this {
+	named(name: Identifier): this {
 		this.binding.name = name;
 
 		return this;
 	}
 
-	public tagged(name: Identifier, tag: Identifier): this {
+	tagged(name: Identifier, tag: Identifier): this {
 		this.binding.name = name;
 		this.binding.tag = tag;
 
 		return this;
 	}
 
-	public singleton(): Segment {
+	singleton(): Segment {
 		this.binding.lifetime = 'singleton';
 
 		return this.segment;
 	}
 
-	public transient(): Segment {
+	transient(): Segment {
 		this.binding.lifetime = 'transient';
 
 		return this.segment;

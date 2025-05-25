@@ -18,6 +18,14 @@ export default defineWorkspace([
 			setupFiles: [],
 		},
 	},
+	{
+		extends: './packages/injector/vite.config.ts',
+		test:    {
+			name:       'injector',
+			include:    [ 'packages/injector/**/*.{spec,test,bench}.ts' ],
+			setupFiles: [],
+		},
+	},
 	//{
 	//	extends: './packages/bootstrap-clone/vite.config.ts',
 	//	test:    {

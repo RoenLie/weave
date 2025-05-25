@@ -66,7 +66,7 @@ export class AdapterBase extends HTMLElement {
 			if (!(node instanceof AdapterBase))
 				return;
 
-			const base = this.constructor as any as typeof AdapterBase;
+			const base = node.constructor as any as typeof AdapterBase;
 			const metadata = base.adapter.metadata;
 
 			const container = metadata.pluginContainer;

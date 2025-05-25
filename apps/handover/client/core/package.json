@@ -1,9 +1,13 @@
 {
-	"name": "@roenlie/handover",
+	"name": "@roenlie/handover-core",
 	"description": "description",
 	"authors": "author",
 	"version": "1.0.0",
-	"main": "pathToMain",
+	"type": "module",
+	"main": "./src/index.ts",
+	"exports": {
+		"./*": "./src/*"
+	},
 	"dependencies": {
 		"@roenlie/core": "workspace:^",
 		"@roenlie/custom-element": "workspace:^"

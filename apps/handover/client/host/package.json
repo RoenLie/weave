@@ -3,12 +3,14 @@
 	"description": "description",
 	"authors": "author",
 	"version": "1.0.0",
+	"type": "module",
 	"main": "pathToMain",
 	"scripts": {
 		"dev": "vite"
 	},
 	"dependencies": {
 		"@roenlie/core": "workspace:^",
-		"@roenlie/custom-element": "workspace:^"
+		"@roenlie/custom-element": "workspace:^",
+		"@roenlie/handover-core": "workspace:^"
 	}
 }

@@ -1,12 +1,13 @@
 import { render } from 'lit';
-import { Resolver, type Module } from './module.ts';
 import { URLPattern } from 'urlpattern-polyfill/urlpattern';
+
+import { type Module, Resolver } from './module.ts';
 
 
 export interface Route {
-	pattern:    URLPattern,
-	rawPattern: string,
-	module?:    Module,
+	pattern:    URLPattern;
+	rawPattern: string;
+	module?:    Module;
 }
 
 

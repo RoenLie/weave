@@ -1,0 +1,47 @@
+{
+	"name": "@roenlie/lit-jsx",
+	"description": "A JSX runtime that transforms JSX into Lit templates.",
+	"license": "Apache-2.0",
+	"contributors": [
+		"Kristoffer Roen-Lie"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/sanguinejs/sanguinejs.git"
+	},
+	"version": "0.0.1",
+	"files": [
+		"dist",
+		"src"
+	],
+	"type": "module",
+	"main": "./dist/jsx-runtime.js",
+	"types": "./dist/jsx-types.d.ts",
+	"exports": {
+		".": "./dist/jsx-utils.js",
+		"./jsx-runtime": {
+			"types": "./dist/jsx-types.d.ts",
+			"default": "./dist/jsx-runtime.js"
+		},
+		"./jsx-dev-runtime": {
+			"types": "./dist/jsx-types.d.ts",
+			"default": "./dist/jsx-runtime.js"
+		},
+		"./vite": "./dist/vite-plugin.js"
+	},
+	"sideEffects": false,
+	"scripts": {
+		"build": "pnpm run --sequential \"/^build::.?/\"",
+		"build::js": "vite build",
+		"build::types": "tsc --project ./src/tsconfig.json --noEmit false"
+	},
+	"peerDependencies": {
+		"lit-html": "^3.3.0"
+	},
+	"dependencies": {
+		"csstype": "^3.1.3"
+	},
+	"devDependencies": {
+		"lit-html": "^3.3.0"
+	}
+}
