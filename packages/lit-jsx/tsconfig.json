@@ -1,11 +1,4 @@
 {
 	"extends": "@roenlie/tsconfig",
 	"compilerOptions": {},
-	"include": [
-		"./**/*.ts",
-		"./**/*.mts",
-		"./**/*.js",
-		"./**/*.mjs",
-	],
-	"exclude": []
 }

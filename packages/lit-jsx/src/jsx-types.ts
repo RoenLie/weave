@@ -4,11 +4,12 @@ import type { DirectiveResult } from 'lit-html/async-directive.js';
 import type { RefOrCallback } from 'lit-html/directives/ref.js';
 
 
-/**
+/*
  * Based on SolidJS JSX types
  *
  * Changed to support Lit-html
  */
+
 type DOMElement = Element;
 
 declare global {
@@ -32,19 +33,25 @@ declare global {
 		interface ElementClass { /* empty, libs can define requirements downstream */ }
 		interface ElementAttributesProperty { /* empty, libs can define requirements downstream */ }
 		interface ElementChildrenAttribute { children: {}; }
+
 		type EventHandler<T, E extends Event> = (e: E & {
 			currentTarget: T;
 			target:        DOMElement;
 		}) => void;
-		interface BoundEventHandler<T, E extends Event, EHandler extends EventHandler<T, any> = EventHandler<T, E>> {
+		interface BoundEventHandler<
+			T, E extends Event, EHandler extends EventHandler<T, any> = EventHandler<T, E>,
+		> {
 			0: (data: any, ...e: Parameters<EHandler>) => void;
 			1: any;
 		}
 		type EventHandlerUnion<T, E extends Event, EHandler extends EventHandler<T, any> = EventHandler<T, E>> =
 			EHandler | BoundEventHandler<T, E, EHandler>;
 
-		interface EventHandlerWithOptions<T, E extends Event, EHandler = EventHandler<T, E>>
-			extends AddEventListenerOptions { handleEvent: EHandler; }
+		interface EventHandlerWithOptions<
+			T, E extends Event, EHandler = EventHandler<T, E>,
+		> extends AddEventListenerOptions {
+			handleEvent: EHandler;
+		}
 		type EventHandlerWithOptionsUnion<
 			T, E extends Event, EHandler extends EventHandler<T, any> = EventHandler<T, E>,
 		> = EHandler | EventHandlerWithOptions<T, E, EHandler>;
@@ -62,8 +69,7 @@ declare global {
 			currentTarget: T;
 			target:        T extends HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement ? T : DOMElement;
 		}) => void;
-		type FocusEventHandlerUnion<T, E extends FocusEvent> =
-			EventHandlerUnion< T, E, FocusEventHandler<T, E>>;
+		type FocusEventHandlerUnion<T, E extends FocusEvent> = EventHandlerUnion< T, E, FocusEventHandler<T, E>>;
 
 		const SERIALIZABLE: unique symbol;
 		interface SerializableAttributeValue {
@@ -78,7 +84,8 @@ declare global {
 		type OnAttributes<T> = {
 			[Key in keyof CustomEvents as `on-${ Key }`]?: EventHandlerWithOptionsUnion<T, CustomEvents[Key]>;
 		};
-		interface DOMAttributes<T> extends CustomAttributes<T>,
+		interface DOMAttributes<T> extends
+			CustomAttributes<T>,
 			OnAttributes<T>,
 			CustomEventHandlersCamelCase<T>,
 			CustomEventHandlersNamespaced<T>,
@@ -827,12 +834,12 @@ declare global {
 			span:  number | string;
 			width: number | string;
 		}> {}
-		interface ColgroupHTMLAttributes<T> extends HTMLAttributes<T> {
-			span?: number | string | undefined;
-		}
-		interface DataHTMLAttributes<T> extends HTMLAttributes<T> {
-			value?: string | string[] | number | undefined;
-		}
+		interface ColgroupHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
+			span: number | string;
+		}> {}
+		interface DataHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
+			value: string | string[] | number;
+		}> {}
 		interface DetailsHtmlAttributes<T> extends HTMLAttributes<T>, Partial<{
 			open: boolean;
 		}> {}
@@ -1160,65 +1167,67 @@ declare global {
 			width?:                   number | string | undefined;
 			disablepictureinpicture?: boolean;
 		}
-		type SVGPreserveAspectRatio =
-			| 'none'
-			| 'xMinYMin'
-			| 'xMidYMin'
-			| 'xMaxYMin'
-			| 'xMinYMid'
-			| 'xMidYMid'
-			| 'xMaxYMid'
-			| 'xMinYMax'
-			| 'xMidYMax'
-			| 'xMaxYMax'
-			| 'xMinYMin meet'
-			| 'xMidYMin meet'
-			| 'xMaxYMin meet'
-			| 'xMinYMid meet'
-			| 'xMidYMid meet'
-			| 'xMaxYMid meet'
-			| 'xMinYMax meet'
-			| 'xMidYMax meet'
-			| 'xMaxYMax meet'
-			| 'xMinYMin slice'
-			| 'xMidYMin slice'
-			| 'xMaxYMin slice'
-			| 'xMinYMid slice'
-			| 'xMidYMid slice'
-			| 'xMaxYMid slice'
-			| 'xMinYMax slice'
-			| 'xMidYMax slice'
-			| 'xMaxYMax slice';
-		type ImagePreserveAspectRatio =
-			| SVGPreserveAspectRatio
-			| 'defer none'
-			| 'defer xMinYMin'
-			| 'defer xMidYMin'
-			| 'defer xMaxYMin'
-			| 'defer xMinYMid'
-			| 'defer xMidYMid'
-			| 'defer xMaxYMid'
-			| 'defer xMinYMax'
-			| 'defer xMidYMax'
-			| 'defer xMaxYMax'
-			| 'defer xMinYMin meet'
-			| 'defer xMidYMin meet'
-			| 'defer xMaxYMin meet'
-			| 'defer xMinYMid meet'
-			| 'defer xMidYMid meet'
-			| 'defer xMaxYMid meet'
-			| 'defer xMinYMax meet'
-			| 'defer xMidYMax meet'
-			| 'defer xMaxYMax meet'
-			| 'defer xMinYMin slice'
-			| 'defer xMidYMin slice'
-			| 'defer xMaxYMin slice'
-			| 'defer xMinYMid slice'
-			| 'defer xMidYMid slice'
-			| 'defer xMaxYMid slice'
-			| 'defer xMinYMax slice'
-			| 'defer xMidYMax slice'
-			| 'defer xMaxYMax slice';
+		type SVGPreserveAspectRatio = [
+			'none',
+			'xMinYMin',
+			'xMidYMin',
+			'xMaxYMin',
+			'xMinYMid',
+			'xMidYMid',
+			'xMaxYMid',
+			'xMinYMax',
+			'xMidYMax',
+			'xMaxYMax',
+			'xMinYMin meet',
+			'xMidYMin meet',
+			'xMaxYMin meet',
+			'xMinYMid meet',
+			'xMidYMid meet',
+			'xMaxYMid meet',
+			'xMinYMax meet',
+			'xMidYMax meet',
+			'xMaxYMax meet',
+			'xMinYMin slice',
+			'xMidYMin slice',
+			'xMaxYMin slice',
+			'xMinYMid slice',
+			'xMidYMid slice',
+			'xMaxYMid slice',
+			'xMinYMax slice',
+			'xMidYMax slice',
+			'xMaxYMax slice',
+		][number];
+		type ImagePreserveAspectRatio = [
+			SVGPreserveAspectRatio,
+			'defer none',
+			'defer xMinYMin',
+			'defer xMidYMin',
+			'defer xMaxYMin',
+			'defer xMinYMid',
+			'defer xMidYMid',
+			'defer xMaxYMid',
+			'defer xMinYMax',
+			'defer xMidYMax',
+			'defer xMaxYMax',
+			'defer xMinYMin meet',
+			'defer xMidYMin meet',
+			'defer xMaxYMin meet',
+			'defer xMinYMid meet',
+			'defer xMidYMid meet',
+			'defer xMaxYMid meet',
+			'defer xMinYMax meet',
+			'defer xMidYMax meet',
+			'defer xMaxYMax meet',
+			'defer xMinYMin slice',
+			'defer xMidYMin slice',
+			'defer xMaxYMin slice',
+			'defer xMinYMid slice',
+			'defer xMidYMid slice',
+			'defer xMaxYMid slice',
+			'defer xMinYMax slice',
+			'defer xMidYMax slice',
+			'defer xMaxYMax slice',
+		][number];
 		type SVGUnits = 'userSpaceOnUse' | 'objectBoundingBox';
 		interface CoreSVGAttributes<T> extends AriaAttributes, DOMAttributes<T> {
 			id?:       string | undefined;
@@ -1271,21 +1280,22 @@ declare global {
 			attributeType?: 'CSS' | 'XML' | 'auto' | undefined;
 		}
 		interface PresentationSVGAttributes {
-			'alignment-baseline'?:
-				| 'auto'
-				| 'baseline'
-				| 'before-edge'
-				| 'text-before-edge'
-				| 'middle'
-				| 'central'
-				| 'after-edge'
-				| 'text-after-edge'
-				| 'ideographic'
-				| 'alphabetic'
-				| 'hanging'
-				| 'mathematical'
-				| 'inherit'
-				| undefined;
+			'alignment-baseline'?: [
+				'auto',
+				'baseline',
+				'before-edge',
+				'text-before-edge',
+				'middle',
+				'central',
+				'after-edge',
+				'text-after-edge',
+				'ideographic',
+				'alphabetic',
+				'hanging',
+				'mathematical',
+				'inherit',
+				undefined,
+			][number];
 			'baseline-shift'?:              number | string | undefined;
 			clip?:                          string | undefined;
 			'clip-path'?:                   string | undefined;
@@ -1298,18 +1308,19 @@ declare global {
 			cursor?:                        string | undefined;
 			direction?:                     'ltr' | 'rtl' | 'inherit' | undefined;
 			display?:                       string | undefined;
-			'dominant-baseline'?:
-				| 'auto'
-				| 'text-bottom'
-				| 'alphabetic'
-				| 'ideographic'
-				| 'middle'
-				| 'central'
-				| 'mathematical'
-				| 'hanging'
-				| 'text-top'
-				| 'inherit'
-				| undefined;
+			'dominant-baseline'?: [
+				'auto',
+				'text-bottom',
+				'alphabetic',
+				'ideographic',
+				'middle',
+				'central',
+				'mathematical',
+				'hanging',
+				'text-top',
+				'inherit',
+				undefined,
+			][number];
 			'enable-background'?:            string | undefined;
 			fill?:                           string | undefined;
 			'fill-opacity'?:                 number | string | 'inherit' | undefined;
@@ -1337,20 +1348,21 @@ declare global {
 			opacity?:                        number | string | 'inherit' | undefined;
 			overflow?:                       'visible' | 'hidden' | 'scroll' | 'auto' | 'inherit' | undefined;
 			pathLength?:                     string | number | undefined;
-			'pointer-events'?:
-				| 'bounding-box'
-				| 'visiblePainted'
-				| 'visibleFill'
-				| 'visibleStroke'
-				| 'visible'
-				| 'painted'
-				| 'color'
-				| 'fill'
-				| 'stroke'
-				| 'all'
-				| 'none'
-				| 'inherit'
-				| undefined;
+			'pointer-events'?: [
+				'bounding-box',
+				'visiblePainted',
+				'visibleFill',
+				'visibleStroke',
+				'visible',
+				'painted',
+				'color',
+				'fill',
+				'stroke',
+				'all',
+				'none',
+				'inherit',
+				undefined,
+			][number];
 			'shape-rendering'?:
 				| 'auto'
 				| 'optimizeSpeed'
@@ -1459,57 +1471,55 @@ declare global {
 		}
 		interface ShapeElementSVGAttributes<T>
 			extends CoreSVGAttributes<T>,
-			Pick<
-				PresentationSVGAttributes,
-				| 'color'
-				| 'fill'
-				| 'fill-rule'
-				| 'fill-opacity'
-				| 'stroke'
-				| 'stroke-width'
-				| 'stroke-linecap'
-				| 'stroke-linejoin'
-				| 'stroke-miterlimit'
-				| 'stroke-dasharray'
-				| 'stroke-dashoffset'
-				| 'stroke-opacity'
-				| 'shape-rendering'
-				| 'pathLength'
-			> {}
+			Pick<PresentationSVGAttributes, [
+				'color',
+				'fill',
+				'fill-rule',
+				'fill-opacity',
+				'stroke',
+				'stroke-width',
+				'stroke-linecap',
+				'stroke-linejoin',
+				'stroke-miterlimit',
+				'stroke-dasharray',
+				'stroke-dashoffset',
+				'stroke-opacity',
+				'shape-rendering',
+				'pathLength',
+			][number]> {}
 		interface TextContentElementSVGAttributes<T>
 			extends CoreSVGAttributes<T>,
-			Pick<
-				PresentationSVGAttributes,
-				| 'font-family'
-				| 'font-style'
-				| 'font-variant'
-				| 'font-weight'
-				| 'font-stretch'
-				| 'font-size'
-				| 'font-size-adjust'
-				| 'kerning'
-				| 'letter-spacing'
-				| 'word-spacing'
-				| 'text-decoration'
-				| 'glyph-orientation-horizontal'
-				| 'glyph-orientation-vertical'
-				| 'direction'
-				| 'unicode-bidi'
-				| 'text-anchor'
-				| 'dominant-baseline'
-				| 'color'
-				| 'fill'
-				| 'fill-rule'
-				| 'fill-opacity'
-				| 'stroke'
-				| 'stroke-width'
-				| 'stroke-linecap'
-				| 'stroke-linejoin'
-				| 'stroke-miterlimit'
-				| 'stroke-dasharray'
-				| 'stroke-dashoffset'
-				| 'stroke-opacity'
-			> {}
+			Pick<PresentationSVGAttributes, [
+				'font-family',
+				'font-style',
+				'font-variant',
+				'font-weight',
+				'font-stretch',
+				'font-size',
+				'font-size-adjust',
+				'kerning',
+				'letter-spacing',
+				'word-spacing',
+				'text-decoration',
+				'glyph-orientation-horizontal',
+				'glyph-orientation-vertical',
+				'direction',
+				'unicode-bidi',
+				'text-anchor',
+				'dominant-baseline',
+				'color',
+				'fill',
+				'fill-rule',
+				'fill-opacity',
+				'stroke',
+				'stroke-width',
+				'stroke-linecap',
+				'stroke-linejoin',
+				'stroke-miterlimit',
+				'stroke-dasharray',
+				'stroke-dashoffset',
+				'stroke-opacity',
+			][number]> {}
 		interface ZoomAndPanSVGAttributes {
 			zoomAndPan?: 'disable' | 'magnify' | undefined;
 		}
@@ -1762,123 +1772,150 @@ declare global {
 			StylableSVGAttributes,
 			TransformableSVGAttributes,
 			Pick<PresentationSVGAttributes, 'display' | 'visibility'> {}
-		interface ImageSVGAttributes<T>
-			extends NewViewportSVGAttributes<T>,
+		interface ImageSVGAttributes<T> extends
+			NewViewportSVGAttributes<T>,
 			GraphicsElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			StylableSVGAttributes,
 			TransformableSVGAttributes,
-			Pick<PresentationSVGAttributes, 'color-profile' | 'image-rendering'> {
-			x?:                   number | string | undefined;
-			y?:                   number | string | undefined;
-			width?:               number | string | undefined;
-			height?:              number | string | undefined;
-			preserveAspectRatio?: ImagePreserveAspectRatio | undefined;
-			href?:                string | undefined;
-		}
-		interface LineSVGAttributes<T>
-			extends GraphicsElementSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, 'color-profile' | 'image-rendering'>,
+			Partial<{
+				x:                   number | string;
+				y:                   number | string;
+				width:               number | string;
+				height:              number | string;
+				preserveAspectRatio: ImagePreserveAspectRatio;
+				href:                string;
+			}> {}
+		interface LineSVGAttributes<T> extends
+			GraphicsElementSVGAttributes<T>,
 			ShapeElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			TransformableSVGAttributes,
-			Pick<PresentationSVGAttributes, 'marker-start' | 'marker-mid' | 'marker-end'> {
-			x1?: number | string | undefined;
-			y1?: number | string | undefined;
-			x2?: number | string | undefined;
-			y2?: number | string | undefined;
-		}
-		interface LinearGradientSVGAttributes<T> extends GradientElementSVGAttributes<T> {
-			x1?: number | string | undefined;
-			x2?: number | string | undefined;
-			y1?: number | string | undefined;
-			y2?: number | string | undefined;
-		}
-		interface MarkerSVGAttributes<T>
-			extends ContainerElementSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, [
+				'marker-start',
+				'marker-mid',
+				'marker-end',
+			][number]>,
+			Partial<{
+				x1: number | string;
+				y1: number | string;
+				x2: number | string;
+				y2: number | string;
+			}> {}
+		interface LinearGradientSVGAttributes<T> extends
+			GradientElementSVGAttributes<T>,
+			Partial<{
+				x1: number | string;
+				x2: number | string;
+				y1: number | string;
+				y2: number | string;
+			}> {}
+		interface MarkerSVGAttributes<T> extends
+			ContainerElementSVGAttributes<T>,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			FitToViewBoxSVGAttributes,
-			Pick<PresentationSVGAttributes, 'overflow' | 'clip'> {
-			markerUnits?:  'strokeWidth' | 'userSpaceOnUse' | undefined;
-			refX?:         number | string | undefined;
-			refY?:         number | string | undefined;
-			markerWidth?:  number | string | undefined;
-			markerHeight?: number | string | undefined;
-			orient?:       string | undefined;
-		}
-		interface MaskSVGAttributes<T>
-			extends Omit<ContainerElementSVGAttributes<T>, 'opacity' | 'filter'>,
+			Pick<PresentationSVGAttributes, 'overflow' | 'clip'>,
+			Partial<{
+				markerUnits:  'strokeWidth' | 'userSpaceOnUse';
+				refX:         number | string;
+				refY:         number | string;
+				markerWidth:  number | string;
+				markerHeight: number | string;
+				orient:       string;
+			}> {}
+		interface MaskSVGAttributes<T> extends
+			Omit<ContainerElementSVGAttributes<T>, 'opacity' | 'filter'>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
-			StylableSVGAttributes {
-			maskUnits?:        SVGUnits | undefined;
-			maskContentUnits?: SVGUnits | undefined;
-			x?:                number | string | undefined;
-			y?:                number | string | undefined;
-			width?:            number | string | undefined;
-			height?:           number | string | undefined;
-		}
+			StylableSVGAttributes,
+			Partial<{
+				maskUnits:        SVGUnits;
+				maskContentUnits: SVGUnits;
+				x:                number | string;
+				y:                number | string;
+				width:            number | string;
+				height:           number | string;
+			}> {}
 		interface MetadataSVGAttributes<T> extends CoreSVGAttributes<T> {}
 		interface MPathSVGAttributes<T> extends CoreSVGAttributes<T> {}
-		interface PathSVGAttributes<T>
-			extends GraphicsElementSVGAttributes<T>,
+		interface PathSVGAttributes<T> extends
+			GraphicsElementSVGAttributes<T>,
 			ShapeElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			TransformableSVGAttributes,
-			Pick<PresentationSVGAttributes, 'marker-start' | 'marker-mid' | 'marker-end'> {
-			d?:          string | undefined;
-			pathLength?: number | string | undefined;
-		}
-		interface PatternSVGAttributes<T>
-			extends ContainerElementSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, [
+				'marker-start',
+				'marker-mid',
+				'marker-end',
+			][number]>,
+			Partial<{
+				d:          string;
+				pathLength: number | string;
+			}> {}
+		interface PatternSVGAttributes<T> extends
+			ContainerElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			FitToViewBoxSVGAttributes,
-			Pick<PresentationSVGAttributes, 'overflow' | 'clip'> {
-			x?:                   number | string | undefined;
-			y?:                   number | string | undefined;
-			width?:               number | string | undefined;
-			height?:              number | string | undefined;
-			patternUnits?:        SVGUnits | undefined;
-			patternContentUnits?: SVGUnits | undefined;
-			patternTransform?:    string | undefined;
-			href?:                string | undefined;
-		}
-		interface PolygonSVGAttributes<T>
-			extends GraphicsElementSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, 'overflow' | 'clip'>,
+			Partial<{
+				x:                   number | string;
+				y:                   number | string;
+				width:               number | string;
+				height:              number | string;
+				patternUnits:        SVGUnits;
+				patternContentUnits: SVGUnits;
+				patternTransform:    string;
+				href:                string;
+			}> {}
+		interface PolygonSVGAttributes<T> extends
+			GraphicsElementSVGAttributes<T>,
 			ShapeElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			TransformableSVGAttributes,
-			Pick<PresentationSVGAttributes, 'marker-start' | 'marker-mid' | 'marker-end'> {
-			points?: string | undefined;
-		}
-		interface PolylineSVGAttributes<T>
-			extends GraphicsElementSVGAttributes<T>,
-			ShapeElementSVGAttributes<T>,
-			ConditionalProcessingSVGAttributes,
-			ExternalResourceSVGAttributes,
-			StylableSVGAttributes,
-			TransformableSVGAttributes,
-			Pick<PresentationSVGAttributes, 'marker-start' | 'marker-mid' | 'marker-end'>,
+			Pick<PresentationSVGAttributes, [
+				'marker-start',
+				'marker-mid',
+				'marker-end',
+			][number]>,
 			Partial<{
 				points: string;
 			}> {}
-		interface RadialGradientSVGAttributes<T> extends GradientElementSVGAttributes<T>, Partial<{
-			cx: number | string;
-			cy: number | string;
-			r:  number | string;
-			fx: number | string;
-			fy: number | string;
-		}> {}
-		interface RectSVGAttributes<T>
-			extends GraphicsElementSVGAttributes<T>,
+		interface PolylineSVGAttributes<T> extends
+			GraphicsElementSVGAttributes<T>,
+			ShapeElementSVGAttributes<T>,
+			ConditionalProcessingSVGAttributes,
+			ExternalResourceSVGAttributes,
+			StylableSVGAttributes,
+			TransformableSVGAttributes,
+			Pick<PresentationSVGAttributes, [
+				'marker-start',
+				'marker-mid',
+				'marker-end',
+			][number]>,
+			Partial<{
+				points: string;
+			}> {}
+		interface RadialGradientSVGAttributes<T> extends
+			GradientElementSVGAttributes<T>,
+			Partial<{
+				cx: number | string;
+				cy: number | string;
+				r:  number | string;
+				fx: number | string;
+				fy: number | string;
+			}> {}
+		interface RectSVGAttributes<T> extends
+			GraphicsElementSVGAttributes<T>,
 			ShapeElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
@@ -1892,19 +1929,23 @@ declare global {
 				rx:     number | string;
 				ry:     number | string;
 			}> {}
-		interface SetSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+		interface SetSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			StylableSVGAttributes,
 			AnimationTimingSVGAttributes {}
-		interface StopSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+		interface StopSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			StylableSVGAttributes,
-			Pick<PresentationSVGAttributes, 'color' | 'stop-color' | 'stop-opacity'>,
+			Pick<PresentationSVGAttributes, [
+				'color',
+				'stop-color',
+				'stop-opacity',
+			][number]>,
 			Partial<{
 				offset: number | string;
 			}> {}
-		interface SvgSVGAttributes<T>
-			extends ContainerElementSVGAttributes<T>,
+		interface SvgSVGAttributes<T> extends
+			ContainerElementSVGAttributes<T>,
 			NewViewportSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
@@ -1964,29 +2005,34 @@ declare global {
 				textLength:   number | string;
 				lengthAdjust: 'spacing' | 'spacingAndGlyphs';
 			}> {}
-		interface TextPathSVGAttributes<T>
-			extends TextContentElementSVGAttributes<T>,
+		interface TextPathSVGAttributes<T> extends
+			TextContentElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
-			Pick<
-				PresentationSVGAttributes,
-				'alignment-baseline' | 'baseline-shift' | 'display' | 'visibility'
-			>, Partial<{
+			Pick<PresentationSVGAttributes, [
+				'alignment-baseline',
+				'baseline-shift',
+				'display',
+				'visibility',
+			][number]>,
+			Partial<{
 				startOffset: number | string;
 				method:      'align' | 'stretch';
 				spacing:     'auto' | 'exact';
 				href:        string;
 			}> {}
-		interface TSpanSVGAttributes<T>
-			extends TextContentElementSVGAttributes<T>,
+		interface TSpanSVGAttributes<T> extends
+			TextContentElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
-			Pick<
-				PresentationSVGAttributes,
-				'alignment-baseline' | 'baseline-shift' | 'display' | 'visibility'
-			>,
+			Pick<PresentationSVGAttributes, [
+				'alignment-baseline',
+				'baseline-shift',
+				'display',
+				'visibility',
+			][number]>,
 			Partial<{
 				x:            number | string;
 				y:            number | string;
@@ -1997,25 +2043,27 @@ declare global {
 				lengthAdjust: 'spacing' | 'spacingAndGlyphs';
 			}> {}
 		/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use */
-		interface UseSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+		interface UseSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			StylableSVGAttributes,
 			ConditionalProcessingSVGAttributes,
 			GraphicsElementSVGAttributes<T>,
 			PresentationSVGAttributes,
 			ExternalResourceSVGAttributes,
-			TransformableSVGAttributes, Partial<{
+			TransformableSVGAttributes,
+			Partial<{
 				x:      number | string;
 				y:      number | string;
 				width:  number | string;
 				height: number | string;
 				href:   string;
 			}> {}
-		interface ViewSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+		interface ViewSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			ExternalResourceSVGAttributes,
 			FitToViewBoxSVGAttributes,
-			ZoomAndPanSVGAttributes, Partial<{
+			ZoomAndPanSVGAttributes,
+			Partial<{
 				viewTarget: string;
 			}> {}
 		/** @type {HTMLElementTagNameMap} */

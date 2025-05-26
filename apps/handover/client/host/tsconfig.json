@@ -1,6 +1,9 @@
 {
 	"extends": "@roenlie/tsconfig",
 	"compilerOptions": {
+		"types": [],
+		"jsx": "react-jsx",
+		"jsxImportSource": "@roenlie/lit-jsx",
 		"rootDir": ".",
 		"emitDecoratorMetadata": false,
 		"experimentalDecorators": false,

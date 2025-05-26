@@ -44,5 +44,14 @@
 		"strictNullChecks": true,
 		"useDefineForClassFields": false,
 		"verbatimModuleSyntax": true
-	}
+	},
+	"exclude": [
+		"${configDir}/dist"
+	],
+	"include": [
+		"${configDir}/**/*.ts",
+		"${configDir}/**/*.dts",
+		"${configDir}/**/*.tsx",
+		"${configDir}/**/*.js",
+	]
 }

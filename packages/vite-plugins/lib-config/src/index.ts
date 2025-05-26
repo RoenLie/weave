@@ -39,7 +39,7 @@ export const libConfig = (
 		} = options?.externalImport ?? {};
 
 		const entryPatterns = options?.entry?.patterns
-			?? [ './src/**/!(*.(test|demo|types)).ts' ];
+			?? [ './src/**/!(*.(test|demo|types)).(ts|tsx)' ];
 
 		const cfg: UserConfig = {
 			/** Do not include the public directory in the package output. */

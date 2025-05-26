@@ -17,6 +17,8 @@ import type { AdapterMetadata } from './types.ts';
 
 export class AdapterBase extends HTMLElement {
 
+	declare ['constructor']: typeof AdapterBase;
+
 	protected static adapter: typeof AdapterElement;
 
 	constructor() {

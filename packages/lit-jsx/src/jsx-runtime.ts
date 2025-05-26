@@ -1,5 +1,5 @@
 import { createCompiledTemplate } from './create-compiled.js';
-import type { Config, JSXType } from './runtime-types.js';
+import type { Config, FakeCompiledTemplateResult, JSXType } from './runtime-types.js';
 
 
 // When the fragment only has one child, children is the child object.
@@ -27,7 +27,15 @@ const isHTMLElement = (ctor: unknown): ctor is typeof HTMLElement & { tagName?: 
 //})();
 
 
-const jsx = (cacheKey: TemplateStringsArray, type: JSXType, config: Config): JSX.JSXElement | JSX.JSXElement[] => {
+const jsx = (
+	cacheKey: TemplateStringsArray,
+	type: JSXType,
+	config: Config,
+): JSX.JSXElement | JSX.JSXElement[] => {
+	//const start = performance.now();
+
+	let result: JSX.JSXElement | JSX.JSXElement[] | FakeCompiledTemplateResult;
+
 	// Either a fragment, functional component or a component class.
 	if (typeof type === 'function') {
 		if (isHTMLElement(type)) {
@@ -36,20 +44,20 @@ const jsx = (cacheKey: TemplateStringsArray, type: JSXType, config: Config): JSX
 				type.tagName = element.localName;
 			}
 
-			return createCompiledTemplate(cacheKey, type.tagName, config);
+			result = createCompiledTemplate(cacheKey, type.tagName, config);
 		}
-
-		return type(config);
+		else {
+			result = type(config);
+		}
+	}
+	else {
+		// Simple JSX tags (<div>, <button>, etc).
+		result = createCompiledTemplate(cacheKey, type, config);
 	}
 
-	// Performance measurement.
-	//const start = performance.now();
-	//const result = createCompiledTemplate(cacheKey, type, config);
 	//logAverage(performance.now() - start);
-	//return result;
 
-	// Simple JSX tags (<div>, <button>, etc).
-	return createCompiledTemplate(cacheKey, type, config);
+	return result;
 };
 
 

@@ -19,14 +19,10 @@ const ctor = getLitParts();
 export const createCompiledTemplate = (
 	cacheKey: TemplateStringsArray,
 	type: string,
-	{
-		children,
-		ref,
-		style,
-		classList,
-		...props
-	}: Config,
+	config: Config,
 ): FakeCompiledTemplateResult => {
+	const { children, ref, style, classList, ...props } = config;
+
 	const values = [] as unknown[];
 	const result: FakeCompiledTemplateResult = { _$litType$: compiledCache.get(cacheKey)!, values };
 

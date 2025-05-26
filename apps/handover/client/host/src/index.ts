@@ -1,3 +1,3 @@
-import { RouterCmp } from './pages/router.ts';
+import { RouterCmp } from './pages/router.tsx';
 
 RouterCmp.register();

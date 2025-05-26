@@ -1,4 +1,4 @@
-import type { AttributePart, BooleanAttributePart, ChildPart, EventPart, PropertyPart } from 'lit-html';
+import type { AttributePart, BooleanAttributePart, ChildPart, ElementPart, EventPart, PropertyPart } from 'lit-html';
 import { html, render } from 'lit-html';
 import type { PartInfo } from 'lit-html/directive.js';
 import { Directive, directive, PartType } from 'lit-html/directive.js';
@@ -43,7 +43,9 @@ export type JSXProps<T extends HTMLElement> = Partial<ExcludeHTML<T>>
 export const toJSX = <T extends { new(...args: any): any; tagName: string; }>(
 	element: T,
 ): (props: JSXProps<InstanceType<T>>) => string => {
-	if (!customElements.get(element.tagName))
+	if ('register' in element && typeof element.register === 'function')
+		element.register();
+	else if (!customElements.get(element.tagName))
 		customElements.define(element.tagName, element);
 
 	return element.tagName as any;
@@ -62,6 +64,7 @@ export const getLitParts: () => LitPartConstructors = (() => {
 		BooleanPart:   undefined,
 		EventPart:     undefined,
 		ChildPart:     undefined,
+		ElementPart:   undefined,
 	} satisfies Record<keyof LitPartConstructors, undefined> as
 		any as LitPartConstructors;
 
@@ -70,12 +73,14 @@ export const getLitParts: () => LitPartConstructors = (() => {
 		constructor(part: PartInfo) {
 			super(part);
 
-			if (part.type === PartType.ATTRIBUTE)
+			if (part.type === PartType.BOOLEAN_ATTRIBUTE)
+				constructors.BooleanPart = part.constructor as typeof BooleanAttributePart;
+			else if (part.type === PartType.ATTRIBUTE)
 				constructors.AttributePart = part.constructor as typeof AttributePart;
 			else if (part.type === PartType.PROPERTY)
 				constructors.PropertyPart = part.constructor as typeof PropertyPart;
-			else if (part.type === PartType.BOOLEAN_ATTRIBUTE)
-				constructors.BooleanPart = part.constructor as typeof BooleanAttributePart;
+			else if (part.type === PartType.ELEMENT)
+				constructors.ElementPart = part.constructor as typeof ElementPart;
 			else if (part.type === PartType.EVENT)
 				constructors.EventPart = part.constructor as typeof EventPart;
 			else if (part.type === PartType.CHILD)
@@ -90,7 +95,7 @@ export const getLitParts: () => LitPartConstructors = (() => {
 		if (!hasRun) {
 			const g = partCtorGrabber;
 			hasRun = !!render(
-				html`<div prop=${ g() } .prop=${ g() } ?prop=${ g() } @prop=${ g() }>${ g() }</div>`,
+				html`<div ${ g() } prop=${ g() } .prop=${ g() } ?prop=${ g() } @prop=${ g() }>${ g() }</div>`,
 				document.createElement('div'),
 			);
 		}

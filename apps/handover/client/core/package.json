@@ -8,8 +8,16 @@
 	"exports": {
 		"./*": "./src/*"
 	},
+	"scripts": {
+		"build": "vite build"
+	},
 	"dependencies": {
 		"@roenlie/core": "workspace:^",
-		"@roenlie/custom-element": "workspace:^"
+		"@roenlie/custom-element": "workspace:^",
+		"@roenlie/lit-jsx": "workspace:^",
+		"tslib": "^2.8.1"
+	},
+	"devDependencies": {
+		"@roenlie/vite-lib-config": "workspace:^"
 	}
 }

@@ -18,14 +18,11 @@ const templateCache: WeakMap<TemplateStringsArray, FakeTemplateStringsArray> = n
 
 export const createTemplateResult = (
 	cacheKey: TemplateStringsArray,
-	type: string, {
-		children,
-		ref,
-		style,
-		classList,
-		...props
-	}: Config,
+	type: string,
+	config: Config,
 ): TemplateResult => {
+	const { children, ref, style, classList, ...props } = config;
+
 	const result = {
 		_$litType$: 1,
 		strings:    templateCache.get(cacheKey),

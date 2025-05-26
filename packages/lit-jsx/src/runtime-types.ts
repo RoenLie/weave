@@ -1,4 +1,4 @@
-import type { CompiledTemplate, TemplateResult } from 'lit-html';
+import type { CompiledTemplate, ElementPart, TemplateResult } from 'lit-html';
 import type { AttributePart, BooleanAttributePart, ChildPart, EventPart, PropertyPart } from 'lit-html';
 import type { RefOrCallback } from 'lit-html/directives/ref.js';
 
@@ -23,6 +23,7 @@ export interface LitPartConstructors {
 	BooleanPart:   typeof BooleanAttributePart;
 	EventPart:     typeof EventPart;
 	ChildPart:     typeof ChildPart;
+	ElementPart:   typeof ElementPart;
 }
 
 
