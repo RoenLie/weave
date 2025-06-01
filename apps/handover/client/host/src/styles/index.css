@@ -111,6 +111,12 @@
 	--base_secondary-foreground: oklch(0.205 0 0);
 
 	--base_destructive: oklch(0.577 0.245 27.325);
+	--base_destructive_10: color-mix(in oklch, var(--base_destructive) 10%, transparent);
+	--base_destructive_20: color-mix(in oklch, var(--base_destructive) 20%, transparent);
+	--base_destructive_30: color-mix(in oklch, var(--base_destructive) 30%, transparent);
+	--base_destructive_40: color-mix(in oklch, var(--base_destructive) 40%, transparent);
+	--base_destructive_50: color-mix(in oklch, var(--base_destructive) 50%, transparent);
+	--base_destructive_60: color-mix(in oklch, var(--base_destructive) 60%, transparent);
 	--base_destructive_70: color-mix(in oklch, var(--base_destructive) 70%, transparent);
 	--base_destructive_80: color-mix(in oklch, var(--base_destructive) 80%, transparent);
 	--base_destructive_90: color-mix(in oklch, var(--base_destructive) 90%, transparent);

@@ -2,7 +2,7 @@ import { AdapterElement, css, type CSSStyle, customElement, PluginModule, provid
 import { Router } from '@roenlie/custom-element/router';
 
 import { Badge } from '../components/badge.cmp.tsx';
-import { cssreset } from '../css-reset.ts';
+import { cssreset } from '../styles/css-reset.ts';
 
 
 @provider()

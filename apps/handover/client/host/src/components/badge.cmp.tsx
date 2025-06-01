@@ -5,8 +5,8 @@ import { ifDefined, type ReactiveController, when } from '@roenlie/custom-elemen
 import { toJSX } from '@roenlie/lit-jsx';
 import { cva, type VariantProps } from 'class-variance-authority';
 
-import { cssreset } from '../css-reset.ts';
-import { typography } from '../typography.ts';
+import { cssreset } from '../styles/css-reset.ts';
+import { typography } from '../styles/typography.ts';
 
 
 const badgeVariants = cva(
@@ -87,7 +87,7 @@ export class BadgeElement extends AdapterElement {
 			border-color: var(--base_border);
 		}
 		:host([variant='destructive']) #base {
-			background-color: var(--base_destructive_70);
+			background-color: var(--base_destructive);
 			color: var(--base_destructive-foreground);
 
 			&:hover {
