@@ -1,7 +1,7 @@
 import type { TemplateResult } from 'lit-html';
-import { classMap } from 'lit-html/directives/class-map.js';
+import { type ClassInfo, classMap } from 'lit-html/directives/class-map.js';
 import { ref as litRef } from 'lit-html/directives/ref.js';
-import { styleMap } from 'lit-html/directives/style-map.js';
+import { type StyleInfo, styleMap } from 'lit-html/directives/style-map.js';
 
 import { eventNameCache } from './event-names.js';
 import type { Config, FakeTemplateResult, FakeTemplateStringsArray } from './runtime-types.js';
@@ -33,9 +33,9 @@ export const createTemplateResult = (
 		if (ref)
 			result.values.push(litRef(ref));
 		if (style)
-			result.values.push(styleMap(style));
+			result.values.push(styleMap(style as StyleInfo));
 		if (classList)
-			result.values.push(classMap(classList));
+			result.values.push(classMap(classList as ClassInfo));
 
 		for (const propName in props) {
 			if (Object.hasOwn(props, propName))
@@ -56,11 +56,11 @@ export const createTemplateResult = (
 	}
 	if (style) {
 		result.strings.push(' style=');
-		result.values.push(styleMap(style));
+		result.values.push(styleMap(style as StyleInfo));
 	}
 	if (classList) {
 		result.strings.push(' class=');
-		result.values.push(classMap(classList));
+		result.values.push(classMap(classList as ClassInfo));
 	}
 
 	for (const propName in props) {

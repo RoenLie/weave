@@ -13,7 +13,7 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-export type stringliteral = string & Record<never, never>;
+type stringliteral = string & Record<never, never>;
 export type Identifier = string | symbol;
 export type Lifetimes = 'singleton' | 'transient';
 export type PureRecord<T> = T extends CallableFunction ? never : T;

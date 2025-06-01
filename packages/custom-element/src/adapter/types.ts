@@ -11,8 +11,8 @@ export interface AdapterMetadata {
 	pluginContainer?:   PluginContainer;
 	observedAttributes: string[];
 	signalProps:        string[];
-	changedProps:       Set<string | symbol>;
-	previousProps:      Map<string | symbol, any>;
+	changedProps:       Map<keyof any, any>;
+	previousProps:      Map<keyof any, any>;
 	propertyMetadata:   Record<string, {
 		propName: string;
 		type:     PropertyType;

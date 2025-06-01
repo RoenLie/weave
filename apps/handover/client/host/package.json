@@ -12,6 +12,13 @@
 		"@roenlie/core": "workspace:^",
 		"@roenlie/custom-element": "workspace:^",
 		"@roenlie/handover-core": "workspace:^",
-		"@roenlie/lit-jsx": "workspace:^"
+		"@roenlie/lit-jsx": "workspace:^",
+		"@roenlie/vite-plugin-import-css-sheet": "workspace:^",
+		"@tailwindcss/vite": "^4.1.7",
+		"tailwindcss": "^4.1.7",
+		"class-variance-authority": "^0.7.1",
+		"clsx": "^2.1.1",
+		"tailwind-merge": "^3.3.0",
+		"tw-animate-css": "^1.3.0"
 	}
 }

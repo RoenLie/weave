@@ -1,7 +1,9 @@
 {
 	"extends": "@roenlie/tsconfig",
 	"compilerOptions": {
-		"types": [],
+		"types": [
+			"@roenlie/vite-plugin-import-css-sheet/client"
+		],
 		"jsx": "react-jsx",
 		"jsxImportSource": "@roenlie/lit-jsx",
 		"rootDir": ".",

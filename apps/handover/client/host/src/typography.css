@@ -1,0 +1,7 @@
+.text-xs_leading-normal_semibold {
+	font-family: var(--font_font-sans);
+	font-weight: var(--font-weight_semibold);
+	font-size:   var(--text_xs_font-size);
+	line-height: var(--text_xs_line-height);
+	letter-spacing: 0px;
+}

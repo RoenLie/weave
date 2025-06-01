@@ -1,13 +1,12 @@
 import type { CompiledTemplate, ElementPart, TemplateResult } from 'lit-html';
 import type { AttributePart, BooleanAttributePart, ChildPart, EventPart, PropertyPart } from 'lit-html';
-import type { RefOrCallback } from 'lit-html/directives/ref.js';
 
 
 export type Config = {
-	children:  JSX.JSXElement | JSX.JSXElement[];
-	ref:       RefOrCallback;
-	style:     Record<string, string>;
-	classList: Record<string, boolean>;
+	children:  JSX.JSXElement;
+	ref:       JSX.CustomAttributes<any>['ref'];
+	style:     JSX.HTMLAttributes<any>['style'];
+	classList: JSX.CustomAttributes<any>['classList'];
 } & Record<string, any>;
 
 
@@ -36,7 +35,8 @@ export interface FakeTemplateResult extends TemplateResult {
 
 
 export interface FakeCompiledTemplate extends CompiledTemplate {
-	h: FakeTemplateStringsArray;
+	el?: HTMLTemplateElement;
+	h:   FakeTemplateStringsArray;
 }
 
 

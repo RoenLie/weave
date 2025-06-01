@@ -1,6 +1,8 @@
 import { AdapterElement, css, type CSSStyle, customElement, PluginModule, provider } from '@roenlie/custom-element/adapter';
 import { Router } from '@roenlie/custom-element/router';
-import { Badge } from '@roenlie/handover-core/badge.cmp.tsx';
+
+import { Badge } from '../components/badge.cmp.tsx';
+import { cssreset } from '../css-reset.ts';
 
 
 @provider()
@@ -32,13 +34,30 @@ export class RouterCmp extends AdapterElement {
 	protected override render(): unknown {
 		return (
 			<>
-				<div>Hello</div>
-				<Badge />
+				<Badge variant="default" role="link">
+					Badge
+				</Badge>
+				<Badge variant="secondary" role="link">
+					Badge
+				</Badge>
+				<Badge variant="outline" role="link">
+					Badge
+				</Badge>
+				<Badge variant="destructive" role="link">
+					Badge
+				</Badge>
 			</>
 		);
 	}
 
-	static override styles: CSSStyle = css`
-	`;
+	static override styles: CSSStyle = [
+		cssreset,
+		css`
+		:host {
+			display: grid;
+			height: 100%;
+		}
+		`,
+	];
 
 }

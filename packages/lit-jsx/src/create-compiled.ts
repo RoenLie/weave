@@ -1,7 +1,7 @@
 import { PartType } from 'lit-html/directive.js';
-import { classMap } from 'lit-html/directives/class-map.js';
+import { type ClassInfo, classMap } from 'lit-html/directives/class-map.js';
 import { ref as litRef } from 'lit-html/directives/ref.js';
-import { styleMap } from 'lit-html/directives/style-map.js';
+import { type StyleInfo, styleMap } from 'lit-html/directives/style-map.js';
 
 import { eventNameCache } from './event-names.js';
 import { getLitParts } from './jsx-utils.js';
@@ -12,7 +12,11 @@ import type { Config, FakeCompiledTemplate, FakeCompiledTemplateResult, FakeTemp
 // This reference is supplied through a build processor that adds a TTL function call to the
 // JSX factory functions as the first parameter.
 // This is the same caching mechanism that lit-html uses internally.
-const compiledCache: WeakMap<TemplateStringsArray, FakeCompiledTemplate> = new WeakMap();
+const compiledCache: WeakMap<
+	TemplateStringsArray,
+	Record<string, FakeCompiledTemplate>
+> = new WeakMap();
+
 const ctor = getLitParts();
 
 
@@ -24,17 +28,30 @@ export const createCompiledTemplate = (
 	const { children, ref, style, classList, ...props } = config;
 
 	const values = [] as unknown[];
-	const result: FakeCompiledTemplateResult = { _$litType$: compiledCache.get(cacheKey)!, values };
+
+	let cacheObject = compiledCache.get(cacheKey);
+	if (!cacheObject)
+		compiledCache.set(cacheKey, cacheObject = {});
+
+
+	const result: FakeCompiledTemplateResult = {
+		_$litType$: cacheObject[type]!,
+		values,
+	};
 
 	// If it's been compiled before and cached.
 	// Simply add the new values and return.
 	if (result._$litType$) {
 		if (ref)
 			result.values.push(litRef(ref));
-		if (style)
-			result.values.push(styleMap(style));
+		if (style) {
+			if (typeof style === 'string')
+				result.values.push(style);
+			else
+				result.values.push(styleMap(style as StyleInfo));
+		}
 		if (classList)
-			result.values.push(classMap(classList));
+			result.values.push(classMap(classList as ClassInfo));
 
 		for (const propName in props) {
 			if (Object.hasOwn(props, propName))
@@ -49,7 +66,7 @@ export const createCompiledTemplate = (
 
 	// This is the first time this template is being used.
 	// Create a new compiled template and cache before returning it.
-	const stringTemplate = '<' + type + '>' + '<!---->' + '</' + type + '>';
+	const stringTemplate = '<' + type + '>' + '<!-- lit-jsx -->' + '</' + type + '>';
 	const h = [ stringTemplate ] as FakeTemplateStringsArray;
 	h.raw = h;
 
@@ -57,9 +74,10 @@ export const createCompiledTemplate = (
 	Object.freeze(h);
 
 	result._$litType$ = { h, parts: [] };
-	compiledCache.set(cacheKey, result._$litType$);
+	cacheObject[type] = result._$litType$;
 
 	const parts = result._$litType$.parts;
+	const strings = [ '', '' ] as const;
 
 	if (ref) {
 		result.values.push(litRef(ref));
@@ -69,23 +87,27 @@ export const createCompiledTemplate = (
 		});
 	}
 	if (style) {
-		result.values.push(styleMap(style));
+		if (typeof style === 'string')
+			result.values.push(style);
+		else
+			result.values.push(styleMap(style as StyleInfo));
+
 		parts.push({
-			type:    PartType.ATTRIBUTE,
-			index:   0,
-			name:    'style',
-			strings: [ '', '' ],
-			ctor:    ctor.AttributePart,
+			type:  PartType.ATTRIBUTE,
+			index: 0,
+			name:  'style',
+			strings,
+			ctor:  ctor.AttributePart,
 		});
 	}
 	if (classList) {
-		result.values.push(classMap(classList));
+		result.values.push(classMap(classList as ClassInfo));
 		parts.push({
-			type:    PartType.ATTRIBUTE,
-			index:   0,
-			name:    'class',
-			strings: [ '', '' ],
-			ctor:    ctor.AttributePart,
+			type:  PartType.ATTRIBUTE,
+			index: 0,
+			name:  'class',
+			strings,
+			ctor:  ctor.AttributePart,
 		});
 	}
 
@@ -103,11 +125,11 @@ export const createCompiledTemplate = (
 		if (eventName) {
 			// Use the cached event name.
 			parts.push({
-				type:    PartType.ATTRIBUTE,
-				index:   0,
-				name:    eventName,
-				strings: [ '', '' ],
-				ctor:    ctor.EventPart,
+				type:  PartType.ATTRIBUTE,
+				index: 0,
+				name:  eventName,
+				strings,
+				ctor:  ctor.EventPart,
 			});
 		}
 		else if (key.startsWith('on')) {
@@ -118,41 +140,41 @@ export const createCompiledTemplate = (
 
 			eventNameCache.set(key, eventName);
 			parts.push({
-				type:    PartType.ATTRIBUTE,
-				index:   0,
-				name:    eventName,
-				strings: [ '', '' ],
-				ctor:    ctor.EventPart,
+				type:  PartType.ATTRIBUTE,
+				index: 0,
+				name:  eventName,
+				strings,
+				ctor:  ctor.EventPart,
 			});
 		}
 		else if (type === 'boolean') {
 			// Use the boolean attribute syntax.
 			parts.push({
-				type:    PartType.ATTRIBUTE,
-				index:   0,
-				name:    key,
-				strings: [ '', '' ],
-				ctor:    ctor.BooleanPart,
+				type:  PartType.ATTRIBUTE,
+				index: 0,
+				name:  key,
+				strings,
+				ctor:  ctor.BooleanPart,
 			});
 		}
 		else if (type === 'string' || type === 'number') {
 			// Set the attribute on the element for strings and numbers.
 			parts.push({
-				type:    PartType.ATTRIBUTE,
-				index:   0,
-				name:    key,
-				strings: [ '', '' ],
-				ctor:    ctor.AttributePart,
+				type:  PartType.ATTRIBUTE,
+				index: 0,
+				name:  key,
+				strings,
+				ctor:  ctor.AttributePart,
 			});
 		}
 		else {
 			// Forward anything that is not one of the primitives covered above.
 			parts.push({
-				type:    PartType.ATTRIBUTE,
-				index:   0,
-				name:    key,
-				strings: [ '', '' ],
-				ctor:    ctor.PropertyPart,
+				type:  PartType.ATTRIBUTE,
+				index: 0,
+				name:  key,
+				strings,
+				ctor:  ctor.PropertyPart,
 			});
 		}
 	}

@@ -12,6 +12,16 @@ import type { RefOrCallback } from 'lit-html/directives/ref.js';
 
 type DOMElement = Element;
 
+type IfEquals<X, Y, A = X> =
+  (<T>() => T extends X ? 1 : 2) extends
+  (<T>() => T extends Y ? 1 : 2) ? A : never;
+type WritableKeys<T> = {
+	[P in keyof T]-?: IfEquals<{ [Q in P]: T[P] }, { -readonly [Q in P]: T[P] }, P>
+}[keyof T];
+type TrimReadonly<T> = Pick<T, WritableKeys<T>>;
+type ExcludeHTML<T extends object> = TrimReadonly<Omit<T, keyof HTMLElement | 'constructor'>>;
+
+
 declare global {
 	namespace JSX {
 		type JSXElement = [
@@ -33,6 +43,14 @@ declare global {
 		interface ElementClass { /* empty, libs can define requirements downstream */ }
 		interface ElementAttributesProperty { /* empty, libs can define requirements downstream */ }
 		interface ElementChildrenAttribute { children: {}; }
+
+		type CanBeNothing<T extends object> = {
+			[K in keyof T]?: T[K] | typeof nothing;
+		};
+
+		type JSXProps<T extends object> = CanBeNothing<ExcludeHTML<T>>
+			& JSX.HTMLAttributes<T>
+			& {};
 
 		type EventHandler<T, E extends Event> = (e: E & {
 			currentTarget: T;
@@ -89,7 +107,7 @@ declare global {
 			OnAttributes<T>,
 			CustomEventHandlersCamelCase<T>,
 			CustomEventHandlersNamespaced<T>,
-			Partial<{
+			CanBeNothing<{
 				children:               JSXElement;
 				innerHTML:              string;
 				innerText:              string | number;
@@ -117,172 +135,172 @@ declare global {
 				'on-encrypted':         EventHandlerWithOptionsUnion<T, Event>;
 				'on-dragexit':          EventHandlerWithOptionsUnion<T, DragEvent>;
 			}> {}
-		interface CustomEventHandlersCamelCase<T> extends Partial<{
-			onAbort:              EventHandlerUnion<T, Event>;
-			onAnimationEnd:       EventHandlerUnion<T, AnimationEvent>;
-			onAnimationIteration: EventHandlerUnion<T, AnimationEvent>;
-			onAnimationStart:     EventHandlerUnion<T, AnimationEvent>;
-			onAuxClick:           EventHandlerUnion<T, MouseEvent>;
-			onBeforeInput:        InputEventHandlerUnion<T, InputEvent>;
-			onBeforeToggle:       EventHandlerUnion<T, ToggleEvent>;
-			onBlur:               FocusEventHandlerUnion<T, FocusEvent>;
-			onCanPlay:            EventHandlerUnion<T, Event>;
-			onCanPlayThrough:     EventHandlerUnion<T, Event>;
-			onChange:             ChangeEventHandlerUnion<T, Event>;
-			onClick:              EventHandlerUnion<T, MouseEvent>;
-			onContextMenu:        EventHandlerUnion<T, MouseEvent>;
-			onDblClick:           EventHandlerUnion<T, MouseEvent>;
-			onDrag:               EventHandlerUnion<T, DragEvent>;
-			onDragEnd:            EventHandlerUnion<T, DragEvent>;
-			onDragEnter:          EventHandlerUnion<T, DragEvent>;
-			onDragLeave:          EventHandlerUnion<T, DragEvent>;
-			onDragOver:           EventHandlerUnion<T, DragEvent>;
-			onDragStart:          EventHandlerUnion<T, DragEvent>;
-			onDrop:               EventHandlerUnion<T, DragEvent>;
-			onDurationChange:     EventHandlerUnion<T, Event>;
-			onEmptied:            EventHandlerUnion<T, Event>;
-			onEnded:              EventHandlerUnion<T, Event>;
-			onError:              EventHandlerUnion<T, Event>;
-			onFocus:              FocusEventHandlerUnion<T, FocusEvent>;
-			onGotPointerCapture:  EventHandlerUnion<T, PointerEvent>;
-			onInput:              InputEventHandlerUnion<T, InputEvent>;
-			onInvalid:            EventHandlerUnion<T, Event>;
-			onKeyDown:            EventHandlerUnion<T, KeyboardEvent>;
-			onKeyPress:           EventHandlerUnion<T, KeyboardEvent>;
-			onKeyUp:              EventHandlerUnion<T, KeyboardEvent>;
-			onLoad:               EventHandlerUnion<T, Event>;
-			onLoadedData:         EventHandlerUnion<T, Event>;
-			onLoadedMetadata:     EventHandlerUnion<T, Event>;
-			onLoadStart:          EventHandlerUnion<T, Event>;
-			onLostPointerCapture: EventHandlerUnion<T, PointerEvent>;
-			onMouseDown:          EventHandlerUnion<T, MouseEvent>;
-			onMouseEnter:         EventHandlerUnion<T, MouseEvent>;
-			onMouseLeave:         EventHandlerUnion<T, MouseEvent>;
-			onMouseMove:          EventHandlerUnion<T, MouseEvent>;
-			onMouseOut:           EventHandlerUnion<T, MouseEvent>;
-			onMouseOver:          EventHandlerUnion<T, MouseEvent>;
-			onMouseUp:            EventHandlerUnion<T, MouseEvent>;
-			onPause:              EventHandlerUnion<T, Event>;
-			onPlay:               EventHandlerUnion<T, Event>;
-			onPlaying:            EventHandlerUnion<T, Event>;
-			onPointerCancel:      EventHandlerUnion<T, PointerEvent>;
-			onPointerDown:        EventHandlerUnion<T, PointerEvent>;
-			onPointerEnter:       EventHandlerUnion<T, PointerEvent>;
-			onPointerLeave:       EventHandlerUnion<T, PointerEvent>;
-			onPointerMove:        EventHandlerUnion<T, PointerEvent>;
-			onPointerOut:         EventHandlerUnion<T, PointerEvent>;
-			onPointerOver:        EventHandlerUnion<T, PointerEvent>;
-			onPointerUp:          EventHandlerUnion<T, PointerEvent>;
-			onProgress:           EventHandlerUnion<T, ProgressEvent>;
-			onRateChange:         EventHandlerUnion<T, Event>;
-			onReset:              EventHandlerUnion<T, Event>;
-			onScroll:             EventHandlerUnion<T, Event>;
-			onScrollEnd:          EventHandlerUnion<T, Event>;
-			onSeeked:             EventHandlerUnion<T, Event>;
-			onSeeking:            EventHandlerUnion<T, Event>;
-			onSelect:             EventHandlerUnion<T, Event>;
-			onStalled:            EventHandlerUnion<T, Event>;
-			onSubmit:             EventHandlerUnion<T, SubmitEvent>;
-			onSuspend:            EventHandlerUnion<T, Event>;
-			onTimeUpdate:         EventHandlerUnion<T, Event>;
-			onToggle:             EventHandlerUnion<T, ToggleEvent>;
-			onTouchCancel:        EventHandlerUnion<T, TouchEvent>;
-			onTouchEnd:           EventHandlerUnion<T, TouchEvent>;
-			onTouchMove:          EventHandlerUnion<T, TouchEvent>;
-			onTouchStart:         EventHandlerUnion<T, TouchEvent>;
-			onTransitionStart:    EventHandlerUnion<T, TransitionEvent>;
-			onTransitionEnd:      EventHandlerUnion<T, TransitionEvent>;
-			onTransitionRun:      EventHandlerUnion<T, TransitionEvent>;
-			onTransitionCancel:   EventHandlerUnion<T, TransitionEvent>;
-			onVolumeChange:       EventHandlerUnion<T, Event>;
-			onWaiting:            EventHandlerUnion<T, Event>;
-			onWheel:              EventHandlerUnion<T, WheelEvent>;
-		}> {}
-		interface CustomEventHandlersNamespaced<T> extends Partial<{
-			'on-abort':              EventHandlerWithOptionsUnion<T, Event>;
-			'on-animationend':       EventHandlerWithOptionsUnion<T, AnimationEvent>;
-			'on-animationiteration': EventHandlerWithOptionsUnion<T, AnimationEvent>;
-			'on-animationstart':     EventHandlerWithOptionsUnion<T, AnimationEvent>;
-			'on-auxclick':           EventHandlerWithOptionsUnion<T, MouseEvent>;
-			'on-beforeinput':        EventHandlerWithOptionsUnion<T, InputEvent, InputEventHandler<T, InputEvent>>;
-			'on-beforetoggle':       EventHandlerWithOptionsUnion<T, ToggleEvent>;
-			'on-blur':               EventHandlerWithOptionsUnion<T, FocusEvent, FocusEventHandler<T, FocusEvent>>;
-			'on-canplay':            EventHandlerWithOptionsUnion<T, Event>;
-			'on-canplaythrough':     EventHandlerWithOptionsUnion<T, Event>;
-			'on-change':             EventHandlerWithOptionsUnion<T, Event, ChangeEventHandler<T, Event>>;
-			'on-click':              EventHandlerWithOptionsUnion<T, MouseEvent>;
-			'on-contextmenu':        EventHandlerWithOptionsUnion<T, MouseEvent>;
-			'on-dblclick':           EventHandlerWithOptionsUnion<T, MouseEvent>;
-			'on-drag':               EventHandlerWithOptionsUnion<T, DragEvent>;
-			'on-dragend':            EventHandlerWithOptionsUnion<T, DragEvent>;
-			'on-dragenter':          EventHandlerWithOptionsUnion<T, DragEvent>;
-			'on-dragleave':          EventHandlerWithOptionsUnion<T, DragEvent>;
-			'on-dragover':           EventHandlerWithOptionsUnion<T, DragEvent>;
-			'on-dragstart':          EventHandlerWithOptionsUnion<T, DragEvent>;
-			'on-drop':               EventHandlerWithOptionsUnion<T, DragEvent>;
-			'on-durationchange':     EventHandlerWithOptionsUnion<T, Event>;
-			'on-emptied':            EventHandlerWithOptionsUnion<T, Event>;
-			'on-ended':              EventHandlerWithOptionsUnion<T, Event>;
-			'on-error':              EventHandlerWithOptionsUnion<T, Event>;
-			'on-focus':              EventHandlerWithOptionsUnion<T, FocusEvent, FocusEventHandler<T, FocusEvent>>;
-			'on-gotpointercapture':  EventHandlerWithOptionsUnion<T, PointerEvent>;
-			'on-input':              EventHandlerWithOptionsUnion<T, InputEvent, InputEventHandler<T, InputEvent>>;
-			'on-invalid':            EventHandlerWithOptionsUnion<T, Event>;
-			'on-keydown':            EventHandlerWithOptionsUnion<T, KeyboardEvent>;
-			'on-keypress':           EventHandlerWithOptionsUnion<T, KeyboardEvent>;
-			'on-keyup':              EventHandlerWithOptionsUnion<T, KeyboardEvent>;
-			'on-load':               EventHandlerWithOptionsUnion<T, Event>;
-			'on-loadeddata':         EventHandlerWithOptionsUnion<T, Event>;
-			'on-loadedmetadata':     EventHandlerWithOptionsUnion<T, Event>;
-			'on-loadstart':          EventHandlerWithOptionsUnion<T, Event>;
-			'on-lostpointercapture': EventHandlerWithOptionsUnion<T, PointerEvent>;
-			'on-mousedown':          EventHandlerWithOptionsUnion<T, MouseEvent>;
-			'on-mouseenter':         EventHandlerWithOptionsUnion<T, MouseEvent>;
-			'on-mouseleave':         EventHandlerWithOptionsUnion<T, MouseEvent>;
-			'on-mousemove':          EventHandlerWithOptionsUnion<T, MouseEvent>;
-			'on-mouseout':           EventHandlerWithOptionsUnion<T, MouseEvent>;
-			'on-mouseover':          EventHandlerWithOptionsUnion<T, MouseEvent>;
-			'on-mouseup':            EventHandlerWithOptionsUnion<T, MouseEvent>;
-			'on-pause':              EventHandlerWithOptionsUnion<T, Event>;
-			'on-play':               EventHandlerWithOptionsUnion<T, Event>;
-			'on-playing':            EventHandlerWithOptionsUnion<T, Event>;
-			'on-pointercancel':      EventHandlerWithOptionsUnion<T, PointerEvent>;
-			'on-pointerdown':        EventHandlerWithOptionsUnion<T, PointerEvent>;
-			'on-pointerenter':       EventHandlerWithOptionsUnion<T, PointerEvent>;
-			'on-pointerleave':       EventHandlerWithOptionsUnion<T, PointerEvent>;
-			'on-pointermove':        EventHandlerWithOptionsUnion<T, PointerEvent>;
-			'on-pointerout':         EventHandlerWithOptionsUnion<T, PointerEvent>;
-			'on-pointerover':        EventHandlerWithOptionsUnion<T, PointerEvent>;
-			'on-pointerup':          EventHandlerWithOptionsUnion<T, PointerEvent>;
-			'on-progress':           EventHandlerWithOptionsUnion<T, ProgressEvent>;
-			'on-ratechange':         EventHandlerWithOptionsUnion<T, Event>;
-			'on-reset':              EventHandlerWithOptionsUnion<T, Event>;
-			'on-scroll':             EventHandlerWithOptionsUnion<T, Event>;
-			'on-scrollend':          EventHandlerWithOptionsUnion<T, Event>;
-			'on-seeked':             EventHandlerWithOptionsUnion<T, Event>;
-			'on-seeking':            EventHandlerWithOptionsUnion<T, Event>;
-			'on-select':             EventHandlerWithOptionsUnion<T, Event>;
-			'on-stalled':            EventHandlerWithOptionsUnion<T, Event>;
-			'on-submit':             EventHandlerWithOptionsUnion<T, SubmitEvent>;
-			'on-suspend':            EventHandlerWithOptionsUnion<T, Event>;
-			'on-timeupdate':         EventHandlerWithOptionsUnion<T, Event>;
-			'on-toggle':             EventHandlerWithOptionsUnion<T, ToggleEvent>;
-			'on-touchcancel':        EventHandlerWithOptionsUnion<T, TouchEvent>;
-			'on-touchend':           EventHandlerWithOptionsUnion<T, TouchEvent>;
-			'on-touchmove':          EventHandlerWithOptionsUnion<T, TouchEvent>;
-			'on-touchstart':         EventHandlerWithOptionsUnion<T, TouchEvent>;
-			'on-transitionstart':    EventHandlerWithOptionsUnion<T, TransitionEvent>;
-			'on-transitionend':      EventHandlerWithOptionsUnion<T, TransitionEvent>;
-			'on-transitionrun':      EventHandlerWithOptionsUnion<T, TransitionEvent>;
-			'on-transitioncancel':   EventHandlerWithOptionsUnion<T, TransitionEvent>;
-			'on-volumechange':       EventHandlerWithOptionsUnion<T, Event>;
-			'on-waiting':            EventHandlerWithOptionsUnion<T, Event>;
-			'on-wheel':              EventHandlerWithOptionsUnion<T, WheelEvent>;
-		}> {}
-		interface CSSProperties extends csstype.PropertiesHyphen {
-			// Override
-			[key: `-${ string }`]: string | number | undefined;
-		}
+		interface CustomEventHandlersCamelCase<T> extends
+			CanBeNothing<{
+				onAbort:              EventHandlerUnion<T, Event>;
+				onAnimationEnd:       EventHandlerUnion<T, AnimationEvent>;
+				onAnimationIteration: EventHandlerUnion<T, AnimationEvent>;
+				onAnimationStart:     EventHandlerUnion<T, AnimationEvent>;
+				onAuxClick:           EventHandlerUnion<T, MouseEvent>;
+				onBeforeInput:        InputEventHandlerUnion<T, InputEvent>;
+				onBeforeToggle:       EventHandlerUnion<T, ToggleEvent>;
+				onBlur:               FocusEventHandlerUnion<T, FocusEvent>;
+				onCanPlay:            EventHandlerUnion<T, Event>;
+				onCanPlayThrough:     EventHandlerUnion<T, Event>;
+				onChange:             ChangeEventHandlerUnion<T, Event>;
+				onClick:              EventHandlerUnion<T, MouseEvent>;
+				onContextMenu:        EventHandlerUnion<T, MouseEvent>;
+				onDblClick:           EventHandlerUnion<T, MouseEvent>;
+				onDrag:               EventHandlerUnion<T, DragEvent>;
+				onDragEnd:            EventHandlerUnion<T, DragEvent>;
+				onDragEnter:          EventHandlerUnion<T, DragEvent>;
+				onDragLeave:          EventHandlerUnion<T, DragEvent>;
+				onDragOver:           EventHandlerUnion<T, DragEvent>;
+				onDragStart:          EventHandlerUnion<T, DragEvent>;
+				onDrop:               EventHandlerUnion<T, DragEvent>;
+				onDurationChange:     EventHandlerUnion<T, Event>;
+				onEmptied:            EventHandlerUnion<T, Event>;
+				onEnded:              EventHandlerUnion<T, Event>;
+				onError:              EventHandlerUnion<T, Event>;
+				onFocus:              FocusEventHandlerUnion<T, FocusEvent>;
+				onGotPointerCapture:  EventHandlerUnion<T, PointerEvent>;
+				onInput:              InputEventHandlerUnion<T, InputEvent>;
+				onInvalid:            EventHandlerUnion<T, Event>;
+				onKeyDown:            EventHandlerUnion<T, KeyboardEvent>;
+				onKeyPress:           EventHandlerUnion<T, KeyboardEvent>;
+				onKeyUp:              EventHandlerUnion<T, KeyboardEvent>;
+				onLoad:               EventHandlerUnion<T, Event>;
+				onLoadedData:         EventHandlerUnion<T, Event>;
+				onLoadedMetadata:     EventHandlerUnion<T, Event>;
+				onLoadStart:          EventHandlerUnion<T, Event>;
+				onLostPointerCapture: EventHandlerUnion<T, PointerEvent>;
+				onMouseDown:          EventHandlerUnion<T, MouseEvent>;
+				onMouseEnter:         EventHandlerUnion<T, MouseEvent>;
+				onMouseLeave:         EventHandlerUnion<T, MouseEvent>;
+				onMouseMove:          EventHandlerUnion<T, MouseEvent>;
+				onMouseOut:           EventHandlerUnion<T, MouseEvent>;
+				onMouseOver:          EventHandlerUnion<T, MouseEvent>;
+				onMouseUp:            EventHandlerUnion<T, MouseEvent>;
+				onPause:              EventHandlerUnion<T, Event>;
+				onPlay:               EventHandlerUnion<T, Event>;
+				onPlaying:            EventHandlerUnion<T, Event>;
+				onPointerCancel:      EventHandlerUnion<T, PointerEvent>;
+				onPointerDown:        EventHandlerUnion<T, PointerEvent>;
+				onPointerEnter:       EventHandlerUnion<T, PointerEvent>;
+				onPointerLeave:       EventHandlerUnion<T, PointerEvent>;
+				onPointerMove:        EventHandlerUnion<T, PointerEvent>;
+				onPointerOut:         EventHandlerUnion<T, PointerEvent>;
+				onPointerOver:        EventHandlerUnion<T, PointerEvent>;
+				onPointerUp:          EventHandlerUnion<T, PointerEvent>;
+				onProgress:           EventHandlerUnion<T, ProgressEvent>;
+				onRateChange:         EventHandlerUnion<T, Event>;
+				onReset:              EventHandlerUnion<T, Event>;
+				onScroll:             EventHandlerUnion<T, Event>;
+				onScrollEnd:          EventHandlerUnion<T, Event>;
+				onSeeked:             EventHandlerUnion<T, Event>;
+				onSeeking:            EventHandlerUnion<T, Event>;
+				onSelect:             EventHandlerUnion<T, Event>;
+				onStalled:            EventHandlerUnion<T, Event>;
+				onSubmit:             EventHandlerUnion<T, SubmitEvent>;
+				onSuspend:            EventHandlerUnion<T, Event>;
+				onTimeUpdate:         EventHandlerUnion<T, Event>;
+				onToggle:             EventHandlerUnion<T, ToggleEvent>;
+				onTouchCancel:        EventHandlerUnion<T, TouchEvent>;
+				onTouchEnd:           EventHandlerUnion<T, TouchEvent>;
+				onTouchMove:          EventHandlerUnion<T, TouchEvent>;
+				onTouchStart:         EventHandlerUnion<T, TouchEvent>;
+				onTransitionStart:    EventHandlerUnion<T, TransitionEvent>;
+				onTransitionEnd:      EventHandlerUnion<T, TransitionEvent>;
+				onTransitionRun:      EventHandlerUnion<T, TransitionEvent>;
+				onTransitionCancel:   EventHandlerUnion<T, TransitionEvent>;
+				onVolumeChange:       EventHandlerUnion<T, Event>;
+				onWaiting:            EventHandlerUnion<T, Event>;
+				onWheel:              EventHandlerUnion<T, WheelEvent>;
+			}> {}
+		interface CustomEventHandlersNamespaced<T> extends
+			CanBeNothing<{
+				'on-abort':              EventHandlerWithOptionsUnion<T, Event>;
+				'on-animationend':       EventHandlerWithOptionsUnion<T, AnimationEvent>;
+				'on-animationiteration': EventHandlerWithOptionsUnion<T, AnimationEvent>;
+				'on-animationstart':     EventHandlerWithOptionsUnion<T, AnimationEvent>;
+				'on-auxclick':           EventHandlerWithOptionsUnion<T, MouseEvent>;
+				'on-beforeinput':        EventHandlerWithOptionsUnion<T, InputEvent, InputEventHandler<T, InputEvent>>;
+				'on-beforetoggle':       EventHandlerWithOptionsUnion<T, ToggleEvent>;
+				'on-blur':               EventHandlerWithOptionsUnion<T, FocusEvent, FocusEventHandler<T, FocusEvent>>;
+				'on-canplay':            EventHandlerWithOptionsUnion<T, Event>;
+				'on-canplaythrough':     EventHandlerWithOptionsUnion<T, Event>;
+				'on-change':             EventHandlerWithOptionsUnion<T, Event, ChangeEventHandler<T, Event>>;
+				'on-click':              EventHandlerWithOptionsUnion<T, MouseEvent>;
+				'on-contextmenu':        EventHandlerWithOptionsUnion<T, MouseEvent>;
+				'on-dblclick':           EventHandlerWithOptionsUnion<T, MouseEvent>;
+				'on-drag':               EventHandlerWithOptionsUnion<T, DragEvent>;
+				'on-dragend':            EventHandlerWithOptionsUnion<T, DragEvent>;
+				'on-dragenter':          EventHandlerWithOptionsUnion<T, DragEvent>;
+				'on-dragleave':          EventHandlerWithOptionsUnion<T, DragEvent>;
+				'on-dragover':           EventHandlerWithOptionsUnion<T, DragEvent>;
+				'on-dragstart':          EventHandlerWithOptionsUnion<T, DragEvent>;
+				'on-drop':               EventHandlerWithOptionsUnion<T, DragEvent>;
+				'on-durationchange':     EventHandlerWithOptionsUnion<T, Event>;
+				'on-emptied':            EventHandlerWithOptionsUnion<T, Event>;
+				'on-ended':              EventHandlerWithOptionsUnion<T, Event>;
+				'on-error':              EventHandlerWithOptionsUnion<T, Event>;
+				'on-focus':              EventHandlerWithOptionsUnion<T, FocusEvent, FocusEventHandler<T, FocusEvent>>;
+				'on-gotpointercapture':  EventHandlerWithOptionsUnion<T, PointerEvent>;
+				'on-input':              EventHandlerWithOptionsUnion<T, InputEvent, InputEventHandler<T, InputEvent>>;
+				'on-invalid':            EventHandlerWithOptionsUnion<T, Event>;
+				'on-keydown':            EventHandlerWithOptionsUnion<T, KeyboardEvent>;
+				'on-keypress':           EventHandlerWithOptionsUnion<T, KeyboardEvent>;
+				'on-keyup':              EventHandlerWithOptionsUnion<T, KeyboardEvent>;
+				'on-load':               EventHandlerWithOptionsUnion<T, Event>;
+				'on-loadeddata':         EventHandlerWithOptionsUnion<T, Event>;
+				'on-loadedmetadata':     EventHandlerWithOptionsUnion<T, Event>;
+				'on-loadstart':          EventHandlerWithOptionsUnion<T, Event>;
+				'on-lostpointercapture': EventHandlerWithOptionsUnion<T, PointerEvent>;
+				'on-mousedown':          EventHandlerWithOptionsUnion<T, MouseEvent>;
+				'on-mouseenter':         EventHandlerWithOptionsUnion<T, MouseEvent>;
+				'on-mouseleave':         EventHandlerWithOptionsUnion<T, MouseEvent>;
+				'on-mousemove':          EventHandlerWithOptionsUnion<T, MouseEvent>;
+				'on-mouseout':           EventHandlerWithOptionsUnion<T, MouseEvent>;
+				'on-mouseover':          EventHandlerWithOptionsUnion<T, MouseEvent>;
+				'on-mouseup':            EventHandlerWithOptionsUnion<T, MouseEvent>;
+				'on-pause':              EventHandlerWithOptionsUnion<T, Event>;
+				'on-play':               EventHandlerWithOptionsUnion<T, Event>;
+				'on-playing':            EventHandlerWithOptionsUnion<T, Event>;
+				'on-pointercancel':      EventHandlerWithOptionsUnion<T, PointerEvent>;
+				'on-pointerdown':        EventHandlerWithOptionsUnion<T, PointerEvent>;
+				'on-pointerenter':       EventHandlerWithOptionsUnion<T, PointerEvent>;
+				'on-pointerleave':       EventHandlerWithOptionsUnion<T, PointerEvent>;
+				'on-pointermove':        EventHandlerWithOptionsUnion<T, PointerEvent>;
+				'on-pointerout':         EventHandlerWithOptionsUnion<T, PointerEvent>;
+				'on-pointerover':        EventHandlerWithOptionsUnion<T, PointerEvent>;
+				'on-pointerup':          EventHandlerWithOptionsUnion<T, PointerEvent>;
+				'on-progress':           EventHandlerWithOptionsUnion<T, ProgressEvent>;
+				'on-ratechange':         EventHandlerWithOptionsUnion<T, Event>;
+				'on-reset':              EventHandlerWithOptionsUnion<T, Event>;
+				'on-scroll':             EventHandlerWithOptionsUnion<T, Event>;
+				'on-scrollend':          EventHandlerWithOptionsUnion<T, Event>;
+				'on-seeked':             EventHandlerWithOptionsUnion<T, Event>;
+				'on-seeking':            EventHandlerWithOptionsUnion<T, Event>;
+				'on-select':             EventHandlerWithOptionsUnion<T, Event>;
+				'on-stalled':            EventHandlerWithOptionsUnion<T, Event>;
+				'on-submit':             EventHandlerWithOptionsUnion<T, SubmitEvent>;
+				'on-suspend':            EventHandlerWithOptionsUnion<T, Event>;
+				'on-timeupdate':         EventHandlerWithOptionsUnion<T, Event>;
+				'on-toggle':             EventHandlerWithOptionsUnion<T, ToggleEvent>;
+				'on-touchcancel':        EventHandlerWithOptionsUnion<T, TouchEvent>;
+				'on-touchend':           EventHandlerWithOptionsUnion<T, TouchEvent>;
+				'on-touchmove':          EventHandlerWithOptionsUnion<T, TouchEvent>;
+				'on-touchstart':         EventHandlerWithOptionsUnion<T, TouchEvent>;
+				'on-transitionstart':    EventHandlerWithOptionsUnion<T, TransitionEvent>;
+				'on-transitionend':      EventHandlerWithOptionsUnion<T, TransitionEvent>;
+				'on-transitionrun':      EventHandlerWithOptionsUnion<T, TransitionEvent>;
+				'on-transitioncancel':   EventHandlerWithOptionsUnion<T, TransitionEvent>;
+				'on-volumechange':       EventHandlerWithOptionsUnion<T, Event>;
+				'on-waiting':            EventHandlerWithOptionsUnion<T, Event>;
+				'on-wheel':              EventHandlerWithOptionsUnion<T, WheelEvent>;
+			}> {}
+		interface CSSProperties extends
+			csstype.Properties { }
 		type HTMLAutocapitalize = [
 			'off',
 			'none',
@@ -354,66 +372,67 @@ declare global {
 		][number];
 
 		// All the WAI-ARIA 1.1 attributes from https://www.w3.org/TR/wai-aria-1.1/
-		interface AriaAttributes extends Partial<{
+		interface AriaAttributes extends
+			CanBeNothing<{
 			/**
 			 * Identifies the currently active element when DOM focus is on a composite widget, textbox,
 			 * group, or application.
 			 */
-			'aria-activedescendant': string;
-			/**
+				'aria-activedescendant': string;
+				/**
 			 * Indicates whether assistive technologies will present all, or only parts of, the changed
 			 * region based on the change notifications defined by the aria-relevant attribute.
 			 */
-			'aria-atomic':           boolean | 'false' | 'true';
-			/**
+				'aria-atomic':           boolean | 'false' | 'true';
+				/**
 			* Indicates whether inputting text could trigger display of one or more predictions of the
 			* user's intended value for an input and specifies how predictions would be presented if they
 			* are made.
 			*/
-			'aria-autocomplete':     'none' | 'inline' | 'list' | 'both';
-			/**
+				'aria-autocomplete':     'none' | 'inline' | 'list' | 'both';
+				/**
 			* Indicates an element is being modified and that assistive technologies MAY want to wait until
 			* the modifications are complete before exposing them to the user.
 			*/
-			'aria-busy':             boolean | 'false' | 'true';
-			/**
+				'aria-busy':             boolean | 'false' | 'true';
+				/**
 			* Indicates the current "checked" state of checkboxes, radio buttons, and other widgets.
 			*
 			* @see aria-pressed @see aria-selected.
 			*/
-			'aria-checked':          boolean | 'false' | 'mixed' | 'true';
-			/**
+				'aria-checked':          boolean | 'false' | 'mixed' | 'true';
+				/**
 			* Defines the total number of columns in a table, grid, or treegrid.
 			*
 			* @see aria-colindex.
 			*/
-			'aria-colcount':         number | string;
-			/**
+				'aria-colcount':         number | string;
+				/**
 			* Defines an element's column index or position with respect to the total number of columns
 			* within a table, grid, or treegrid.
 			*
 			* @see aria-colcount @see aria-colspan.
 			*/
-			'aria-colindex':         number | string;
-			/**
+				'aria-colindex':         number | string;
+				/**
 			* Defines the number of columns spanned by a cell or gridcell within a table, grid, or
 			* treegrid.
 			*
 			* @see aria-colindex @see aria-rowspan.
 			*/
-			'aria-colspan':          number | string;
-			/**
+				'aria-colspan':          number | string;
+				/**
 			* Identifies the element (or elements) whose contents or presence are controlled by the current
 			* element.
 			*
 			* @see aria-owns.
 			*/
-			'aria-controls':         string;
-			/**
+				'aria-controls':         string;
+				/**
 			* Indicates the element that represents the current item within a container or set of related
 			* elements.
 			*/
-			'aria-current':
+				'aria-current':
 			| boolean
 			| 'false'
 			| 'true'
@@ -423,60 +442,60 @@ declare global {
 			| 'date'
 			| 'time'
 			| undefined;
-			/**
+				/**
 			* Identifies the element (or elements) that describes the object.
 			*
 			* @see aria-labelledby
 			*/
-			'aria-describedby':  string;
-			/**
+				'aria-describedby':  string;
+				/**
 			* Identifies the element that provides a detailed, extended description for the object.
 			*
 			* @see aria-describedby.
 			*/
-			'aria-details':      string;
-			/**
+				'aria-details':      string;
+				/**
 			* Indicates that the element is perceivable but disabled, so it is not editable or otherwise
 			* operable.
 			*
 			* @see aria-hidden @see aria-readonly.
 			*/
-			'aria-disabled':     boolean | 'false' | 'true';
-			/**
+				'aria-disabled':     boolean | 'false' | 'true';
+				/**
 			* Indicates what functions can be performed when a dragged object is released on the drop
 			* target.
 			*
 			* @deprecated In ARIA 1.1
 			*/
-			'aria-dropeffect':   'none' | 'copy' | 'execute' | 'link' | 'move' | 'popup';
-			/**
+				'aria-dropeffect':   'none' | 'copy' | 'execute' | 'link' | 'move' | 'popup';
+				/**
 			* Identifies the element that provides an error message for the object.
 			*
 			* @see aria-invalid @see aria-describedby.
 			*/
-			'aria-errormessage': string;
-			/**
+				'aria-errormessage': string;
+				/**
 			* Indicates whether the element, or another grouping element it controls, is currently expanded
 			* or collapsed.
 			*/
-			'aria-expanded':     boolean | 'false' | 'true';
-			/**
+				'aria-expanded':     boolean | 'false' | 'true';
+				/**
 			* Identifies the next element (or elements) in an alternate reading order of content which, at
 			* the user's discretion, allows assistive technology to override the general default of reading
 			* in document source order.
 			*/
-			'aria-flowto':       string;
-			/**
+				'aria-flowto':       string;
+				/**
 			* Indicates an element's "grabbed" state in a drag-and-drop operation.
 			*
 			* @deprecated In ARIA 1.1
 			*/
-			'aria-grabbed':      boolean | 'false' | 'true';
-			/**
+				'aria-grabbed':      boolean | 'false' | 'true';
+				/**
 			* Indicates the availability and type of interactive popup element, such as menu or dialog,
 			* that can be triggered by an element.
 			*/
-			'aria-haspopup':
+				'aria-haspopup':
 			| boolean
 			| 'false'
 			| 'true'
@@ -486,93 +505,93 @@ declare global {
 			| 'grid'
 			| 'dialog'
 			| undefined;
-			/**
+				/**
 			* Indicates whether the element is exposed to an accessibility API.
 			*
 			* @see aria-disabled.
 			*/
-			'aria-hidden':          boolean | 'false' | 'true';
-			/**
+				'aria-hidden':          boolean | 'false' | 'true';
+				/**
 			* Indicates the entered value does not conform to the format expected by the application.
 			*
 			* @see aria-errormessage.
 			*/
-			'aria-invalid':         boolean | 'false' | 'true' | 'grammar' | 'spelling';
-			/**
+				'aria-invalid':         boolean | 'false' | 'true' | 'grammar' | 'spelling';
+				/**
 			* Indicates keyboard shortcuts that an author has implemented to activate or give focus to an
 			* element.
 			*/
-			'aria-keyshortcuts':    string;
-			/**
+				'aria-keyshortcuts':    string;
+				/**
 			* Defines a string value that labels the current element.
 			*
 			* @see aria-labelledby.
 			*/
-			'aria-label':           string;
-			/**
+				'aria-label':           string;
+				/**
 			* Identifies the element (or elements) that labels the current element.
 			*
 			* @see aria-describedby.
 			*/
-			'aria-labelledby':      string;
-			/** Defines the hierarchical level of an element within a structure. */
-			'aria-level':           number | string;
-			/**
+				'aria-labelledby':      string;
+				/** Defines the hierarchical level of an element within a structure. */
+				'aria-level':           number | string;
+				/**
 			* Indicates that an element will be updated, and describes the types of updates the user
 			* agents, assistive technologies, and user can expect from the live region.
 			*/
-			'aria-live':            'off' | 'assertive' | 'polite';
-			/** Indicates whether an element is modal when displayed. */
-			'aria-modal':           boolean | 'false' | 'true';
-			/** Indicates whether a text box accepts multiple lines of input or only a single line. */
-			'aria-multiline':       boolean | 'false' | 'true';
-			/**
+				'aria-live':            'off' | 'assertive' | 'polite';
+				/** Indicates whether an element is modal when displayed. */
+				'aria-modal':           boolean | 'false' | 'true';
+				/** Indicates whether a text box accepts multiple lines of input or only a single line. */
+				'aria-multiline':       boolean | 'false' | 'true';
+				/**
 			* Indicates that the user may select more than one item from the current selectable
 			* descendants.
 			*/
-			'aria-multiselectable': boolean | 'false' | 'true';
-			/** Indicates whether the element's orientation is horizontal, vertical, or unknown/ambiguous. */
-			'aria-orientation':     'horizontal' | 'vertical';
-			/**
+				'aria-multiselectable': boolean | 'false' | 'true';
+				/** Indicates whether the element's orientation is horizontal, vertical, or unknown/ambiguous. */
+				'aria-orientation':     'horizontal' | 'vertical';
+				/**
 			* Identifies an element (or elements) in order to define a visual, functional, or contextual
 			* parent/child relationship between DOM elements where the DOM hierarchy cannot be used to
 			* represent the relationship.
 			*
 			* @see aria-controls.
 			*/
-			'aria-owns':            string;
-			/**
+				'aria-owns':            string;
+				/**
 			* Defines a short hint (a word or short phrase) intended to aid the user with data entry when
 			* the control has no value. A hint could be a sample value or a brief description of the
 			* expected format.
 			*/
-			'aria-placeholder':     string;
-			/**
+				'aria-placeholder':     string;
+				/**
 			* Defines an element's number or position in the current set of listitems or treeitems. Not
 			* required if all elements in the set are present in the DOM.
 			*
 			* @see aria-setsize.
 			*/
-			'aria-posinset':        number | string;
-			/**
+				'aria-posinset':        number | string;
+				/**
 			* Indicates the current "pressed" state of toggle buttons.
 			*
 			* @see aria-checked @see aria-selected.
 			*/
-			'aria-pressed':         boolean | 'false' | 'mixed' | 'true';
-			/**
+				'aria-pressed':         boolean | 'false' | 'mixed' | 'true';
+				/**
 			* Indicates that the element is not editable, but is otherwise operable.
 			*
 			* @see aria-disabled.
 			*/
-			'aria-readonly':        boolean | 'false' | 'true';
-			/**
+				'aria-readonly':        boolean | 'false' | 'true';
+				/**
 			* Indicates what notifications the user agent will trigger when the accessibility tree within a
 			* live region is modified.
 			*
 			* @see aria-atomic.
 			*/
-			'aria-relevant':
+				'aria-relevant':
 			| 'additions'
 			| 'additions removals'
 			| 'additions text'
@@ -584,57 +603,57 @@ declare global {
 			| 'text additions'
 			| 'text removals'
 			| undefined;
-			/** Indicates that user input is required on the element before a form may be submitted. */
-			'aria-required':        boolean | 'false' | 'true';
-			/** Defines a human-readable, author-localized description for the role of an element. */
-			'aria-roledescription': string;
-			/**
+				/** Indicates that user input is required on the element before a form may be submitted. */
+				'aria-required':        boolean | 'false' | 'true';
+				/** Defines a human-readable, author-localized description for the role of an element. */
+				'aria-roledescription': string;
+				/**
 			* Defines the total number of rows in a table, grid, or treegrid.
 			*
 			* @see aria-rowindex.
 			*/
-			'aria-rowcount':        number | string;
-			/**
+				'aria-rowcount':        number | string;
+				/**
 			* Defines an element's row index or position with respect to the total number of rows within a
 			* table, grid, or treegrid.
 			*
 			* @see aria-rowcount @see aria-rowspan.
 			*/
-			'aria-rowindex':        number | string;
-			/**
+				'aria-rowindex':        number | string;
+				/**
 			* Defines the number of rows spanned by a cell or gridcell within a table, grid, or treegrid.
 			*
 			* @see aria-rowindex @see aria-colspan.
 			*/
-			'aria-rowspan':         number | string;
-			/**
+				'aria-rowspan':         number | string;
+				/**
 			* Indicates the current "selected" state of various widgets.
 			*
 			* @see aria-checked @see aria-pressed.
 			*/
-			'aria-selected':        boolean | 'false' | 'true';
-			/**
+				'aria-selected':        boolean | 'false' | 'true';
+				/**
 			* Defines the number of items in the current set of listitems or treeitems. Not required if all
 			* elements in the set are present in the DOM.
 			*
 			* @see aria-posinset.
 			*/
-			'aria-setsize':         number | string;
-			/** Indicates if items in a table or grid are sorted in ascending or descending order. */
-			'aria-sort':            'none' | 'ascending' | 'descending' | 'other';
-			/** Defines the maximum allowed value for a range widget. */
-			'aria-valuemax':        number | string;
-			/** Defines the minimum allowed value for a range widget. */
-			'aria-valuemin':        number | string;
-			/**
+				'aria-setsize':         number | string;
+				/** Indicates if items in a table or grid are sorted in ascending or descending order. */
+				'aria-sort':            'none' | 'ascending' | 'descending' | 'other';
+				/** Defines the maximum allowed value for a range widget. */
+				'aria-valuemax':        number | string;
+				/** Defines the minimum allowed value for a range widget. */
+				'aria-valuemin':        number | string;
+				/**
 			* Defines the current value for a range widget.
 			*
 			* @see aria-valuetext.
 			*/
-			'aria-valuenow':        number | string;
-			/** Defines the human readable text alternative of aria-valuenow for a range widget. */
-			'aria-valuetext':       string;
-			role:
+				'aria-valuenow':        number | string;
+				/** Defines the human readable text alternative of aria-valuenow for a range widget. */
+				'aria-valuetext':       string;
+				role:
 			| 'alert'
 			| 'alertdialog'
 			| 'application'
@@ -705,44 +724,47 @@ declare global {
 			| 'tree'
 			| 'treegrid'
 			| 'treeitem';
-		}> {}
-		interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T>, Partial<{
-			accessKey:       string;
-			class:           string;
-			contenteditable: boolean | 'plaintext-only' | 'inherit';
-			contextmenu:     string;
-			dir:             HTMLDir;
-			draggable:       boolean | 'false' | 'true';
-			hidden:          boolean | 'hidden' | 'until-found';
-			id:              string;
-			is:              string;
-			inert:           boolean;
-			lang:            string;
-			spellcheck:      boolean;
-			style:           CSSProperties | string;
-			tabindex:        number | string;
-			title:           string;
-			translate:       'yes' | 'no';
-			about:           string;
-			datatype:        string;
-			inlist:          any;
-			popover:         boolean | 'manual' | 'auto';
-			prefix:          string;
-			property:        string;
-			resource:        string;
-			typeof:          string;
-			vocab:           string;
-			autocapitalize:  HTMLAutocapitalize;
-			slot:            string;
-			color:           string;
-			itemprop:        string;
-			itemscope:       boolean;
-			itemtype:        string;
-			itemid:          string;
-			itemref:         string;
-			part:            string;
-			exportparts:     string;
-			inputmode:
+			}> {}
+		interface HTMLAttributes<T> extends
+			AriaAttributes,
+			DOMAttributes<T>,
+			CanBeNothing<{
+				accessKey:       string;
+				class:           string;
+				contenteditable: boolean | 'plaintext-only' | 'inherit';
+				contextmenu:     string;
+				dir:             HTMLDir;
+				draggable:       boolean | 'false' | 'true';
+				hidden:          boolean | 'hidden' | 'until-found';
+				id:              string;
+				is:              string;
+				inert:           boolean;
+				lang:            string;
+				spellcheck:      boolean;
+				style:           CSSProperties | string;
+				tabindex:        number | string;
+				title:           string;
+				translate:       'yes' | 'no';
+				about:           string;
+				datatype:        string;
+				inlist:          any;
+				popover:         boolean | 'manual' | 'auto';
+				prefix:          string;
+				property:        string;
+				resource:        string;
+				typeof:          string;
+				vocab:           string;
+				autocapitalize:  HTMLAutocapitalize;
+				slot:            string;
+				color:           string;
+				itemprop:        string;
+				itemscope:       boolean;
+				itemtype:        string;
+				itemid:          string;
+				itemref:         string;
+				part:            string;
+				exportparts:     string;
+				inputmode:
 			| 'none'
 			| 'text'
 			| 'tel'
@@ -751,17 +773,17 @@ declare global {
 			| 'numeric'
 			| 'decimal'
 			| 'search';
-			contentEditable: boolean | 'plaintext-only' | 'inherit';
-			contextMenu:     string;
-			tabIndex:        number | string;
-			autoCapitalize:  HTMLAutocapitalize;
-			itemProp:        string;
-			itemScope:       boolean;
-			itemType:        string;
-			itemId:          string;
-			itemRef:         string;
-			exportParts:     string;
-			inputMode:
+				contentEditable: boolean | 'plaintext-only' | 'inherit';
+				contextMenu:     string;
+				tabIndex:        number | string;
+				autoCapitalize:  HTMLAutocapitalize;
+				itemProp:        string;
+				itemScope:       boolean;
+				itemType:        string;
+				itemId:          string;
+				itemRef:         string;
+				exportParts:     string;
+				inputMode:
 			| 'none'
 			| 'text'
 			| 'tel'
@@ -770,403 +792,498 @@ declare global {
 			| 'numeric'
 			| 'decimal'
 			| 'search';
-		}> {}
-		interface AnchorHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			download:       any;
-			href:           string;
-			hreflang:       string;
-			media:          string;
-			ping:           string;
-			referrerpolicy: HTMLReferrerPolicy;
-			rel:            string;
-			target:         string;
-			type:           string;
-			referrerPolicy: HTMLReferrerPolicy;
-		}> {}
-		interface AudioHTMLAttributes<T> extends MediaHTMLAttributes<T> {}
-		interface AreaHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			alt:            string;
-			coords:         string;
-			download:       any;
-			href:           string;
-			hreflang:       string;
-			ping:           string;
-			referrerpolicy: HTMLReferrerPolicy;
-			rel:            string;
-			shape:          'rect' | 'circle' | 'poly' | 'default';
-			target:         string;
-			referrerPolicy: HTMLReferrerPolicy;
-		}> {}
-		interface BaseHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			href:   string;
-			target: string;
-		}> {}
-		interface BlockquoteHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			cite: string;
-		}> {}
-		interface ButtonHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			autofocus:           boolean;
-			disabled:            boolean;
-			form:                string;
-			formaction:          string | SerializableAttributeValue;
-			formenctype:         HTMLFormEncType;
-			formmethod:          HTMLFormMethod;
-			formnovalidate:      boolean;
-			formtarget:          string;
-			popovertarget:       string;
-			popovertargetaction: 'hide' | 'show' | 'toggle';
-			name:                string;
-			type:                'submit' | 'reset' | 'button';
-			value:               string;
-			formAction:          string | SerializableAttributeValue;
-			formEnctype:         HTMLFormEncType;
-			formMethod:          HTMLFormMethod;
-			formNoValidate:      boolean;
-			formTarget:          string;
-			popoverTarget:       string;
-			popoverTargetAction: 'hide' | 'show' | 'toggle';
-		}> {}
-		interface CanvasHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			width:  number | string;
-			height: number | string;
-		}> {}
-		interface ColHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			span:  number | string;
-			width: number | string;
-		}> {}
-		interface ColgroupHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			span: number | string;
-		}> {}
-		interface DataHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			value: string | string[] | number;
-		}> {}
-		interface DetailsHtmlAttributes<T> extends HTMLAttributes<T>, Partial<{
-			open: boolean;
-		}> {}
-		interface DialogHtmlAttributes<T> extends HTMLAttributes<T> {
-			open?:     boolean | undefined;
-			onClose?:  EventHandlerUnion<T, Event> | undefined;
-			onCancel?: EventHandlerUnion<T, Event> | undefined;
-		}
-		interface EmbedHTMLAttributes<T> extends HTMLAttributes<T> {
-			height?: number | string | undefined;
-			src?:    string | undefined;
-			type?:   string | undefined;
-			width?:  number | string | undefined;
-		}
-		interface FieldsetHTMLAttributes<T> extends HTMLAttributes<T> {
-			disabled?: boolean | undefined;
-			form?:     string | undefined;
-			name?:     string | undefined;
-		}
-		interface FormHTMLAttributes<T> extends HTMLAttributes<T> {
-			'accept-charset'?: string | undefined;
-			action?:           string | SerializableAttributeValue | undefined;
-			autocomplete?:     string | undefined;
-			encoding?:         HTMLFormEncType | undefined;
-			enctype?:          HTMLFormEncType | undefined;
-			method?:           HTMLFormMethod | undefined;
-			name?:             string | undefined;
-			novalidate?:       boolean | undefined;
-			target?:           string | undefined;
-			noValidate?:       boolean | undefined;
-		}
-		interface IframeHTMLAttributes<T> extends HTMLAttributes<T> {
-			allow?:           string | undefined;
-			allowfullscreen?: boolean | undefined;
-			height?:          number | string | undefined;
-			loading?:         'eager' | 'lazy' | undefined;
-			name?:            string | undefined;
-			referrerpolicy?:  HTMLReferrerPolicy | undefined;
-			sandbox?:         HTMLIframeSandbox | string | undefined;
-			src?:             string | undefined;
-			srcdoc?:          string | undefined;
-			width?:           number | string | undefined;
-			referrerPolicy?:  HTMLReferrerPolicy | undefined;
-		}
-		interface ImgHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			alt:            string;
-			crossorigin:    HTMLCrossorigin;
-			decoding:       'sync' | 'async' | 'auto';
-			height:         number | string;
-			ismap:          boolean;
-			isMap:          boolean;
-			loading:        'eager' | 'lazy';
-			referrerpolicy: HTMLReferrerPolicy;
-			referrerPolicy: HTMLReferrerPolicy;
-			sizes:          string;
-			src:            string;
-			srcset:         string;
-			srcSet:         string;
-			usemap:         string;
-			useMap:         string;
-			width:          number | string;
-			crossOrigin:    HTMLCrossorigin;
-			elementtiming:  string;
-			fetchpriority:  'high' | 'low' | 'auto';
-		}> {}
-		interface InputHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			accept:         string;
-			alt:            string;
-			autocomplete:   string;
-			autocorrect:    'on' | 'off';
-			autofocus:      boolean;
-			capture:        boolean | string;
-			checked:        boolean;
-			crossorigin:    HTMLCrossorigin;
-			disabled:       boolean;
-			enterkeyhint:   'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
-			form:           string;
-			formaction:     string | SerializableAttributeValue;
-			formenctype:    HTMLFormEncType;
-			formmethod:     HTMLFormMethod;
-			formnovalidate: boolean;
-			formtarget:     string;
-			height:         number | string;
-			incremental:    boolean;
-			list:           string;
-			max:            number | string;
-			maxlength:      number | string;
-			min:            number | string;
-			minlength:      number | string;
-			multiple:       boolean;
-			name:           string;
-			pattern:        string;
-			placeholder:    string;
-			readonly:       boolean;
-			results:        number;
-			required:       boolean;
-			size:           number | string;
-			src:            string;
-			step:           number | string;
-			type:           string;
-			value:          string | string[] | number;
-			width:          number | string;
-			crossOrigin:    HTMLCrossorigin;
-			formAction:     string | SerializableAttributeValue;
-			formEnctype:    HTMLFormEncType;
-			formMethod:     HTMLFormMethod;
-			formNoValidate: boolean;
-			formTarget:     string;
-			maxLength:      number | string;
-			minLength:      number | string;
-			readOnly:       boolean;
-		}> {}
-		interface InsHTMLAttributes<T> extends HTMLAttributes<T>, Partial<{
-			cite:     string;
-			dateTime: string;
-		}> {}
-		interface KeygenHTMLAttributes<T> extends HTMLAttributes<T> {
-			autofocus?: boolean | undefined;
-			challenge?: string | undefined;
-			disabled?:  boolean | undefined;
-			form?:      string | undefined;
-			keytype?:   string | undefined;
-			keyparams?: string | undefined;
-			name?:      string | undefined;
-		}
-		interface LabelHTMLAttributes<T> extends HTMLAttributes<T> {
-			for?:  string | undefined;
-			form?: string | undefined;
-		}
-		interface LiHTMLAttributes<T> extends HTMLAttributes<T> {
-			value?: number | string | undefined;
-		}
-		interface LinkHTMLAttributes<T> extends HTMLAttributes<T> {
-			as?:             HTMLLinkAs | undefined;
-			crossorigin?:    HTMLCrossorigin | undefined;
-			disabled?:       boolean | undefined;
-			fetchpriority?:  'high' | 'low' | 'auto' | undefined;
-			href?:           string | undefined;
-			hreflang?:       string | undefined;
-			imagesizes?:     string | undefined;
-			imagesrcset?:    string | undefined;
-			integrity?:      string | undefined;
-			media?:          string | undefined;
-			referrerpolicy?: HTMLReferrerPolicy | undefined;
-			rel?:            string | undefined;
-			sizes?:          string | undefined;
-			type?:           string | undefined;
-			crossOrigin?:    HTMLCrossorigin | undefined;
-			referrerPolicy?: HTMLReferrerPolicy | undefined;
-		}
-		interface MapHTMLAttributes<T> extends HTMLAttributes<T> {
-			name?: string | undefined;
-		}
-		interface MediaHTMLAttributes<T> extends HTMLAttributes<T> {
-			autoplay?:    boolean | undefined;
-			controls?:    boolean | undefined;
-			crossorigin?: HTMLCrossorigin | undefined;
-			loop?:        boolean | undefined;
-			mediagroup?:  string | undefined;
-			muted?:       boolean | undefined;
-			preload?:     'none' | 'metadata' | 'auto' | '' | undefined;
-			src?:         string | undefined;
-			crossOrigin?: HTMLCrossorigin | undefined;
-			mediaGroup?:  string | undefined;
-		}
-		interface MenuHTMLAttributes<T> extends HTMLAttributes<T> {
-			label?: string | undefined;
-			type?:  'context' | 'toolbar' | undefined;
-		}
-		interface MetaHTMLAttributes<T> extends HTMLAttributes<T> {
-			charset?:      string | undefined;
-			content?:      string | undefined;
-			'http-equiv'?: string | undefined;
-			name?:         string | undefined;
-			media?:        string | undefined;
-		}
-		interface MeterHTMLAttributes<T> extends HTMLAttributes<T> {
-			form?:    string | undefined;
-			high?:    number | string | undefined;
-			low?:     number | string | undefined;
-			max?:     number | string | undefined;
-			min?:     number | string | undefined;
-			optimum?: number | string | undefined;
-			value?:   string | string[] | number | undefined;
-		}
-		interface QuoteHTMLAttributes<T> extends HTMLAttributes<T> {
-			cite?: string | undefined;
-		}
-		interface ObjectHTMLAttributes<T> extends HTMLAttributes<T> {
-			data?:   string | undefined;
-			form?:   string | undefined;
-			height?: number | string | undefined;
-			name?:   string | undefined;
-			type?:   string | undefined;
-			usemap?: string | undefined;
-			width?:  number | string | undefined;
-			useMap?: string | undefined;
-		}
-		interface OlHTMLAttributes<T> extends HTMLAttributes<T> {
-			reversed?: boolean | undefined;
-			start?:    number | string | undefined;
-			type?:     '1' | 'a' | 'A' | 'i' | 'I' | undefined;
-		}
-		interface OptgroupHTMLAttributes<T> extends HTMLAttributes<T> {
-			disabled?: boolean | undefined;
-			label?:    string | undefined;
-		}
-		interface OptionHTMLAttributes<T> extends HTMLAttributes<T> {
-			disabled?: boolean | undefined;
-			label?:    string | undefined;
-			selected?: boolean | undefined;
-			value?:    string | string[] | number | undefined;
-		}
-		interface OutputHTMLAttributes<T> extends HTMLAttributes<T> {
-			form?: string | undefined;
-			for?:  string | undefined;
-			name?: string | undefined;
-		}
-		interface ParamHTMLAttributes<T> extends HTMLAttributes<T> {
-			name?:  string | undefined;
-			value?: string | string[] | number | undefined;
-		}
-		interface ProgressHTMLAttributes<T> extends HTMLAttributes<T> {
-			max?:   number | string | undefined;
-			value?: string | string[] | number | undefined;
-		}
-		interface ScriptHTMLAttributes<T> extends HTMLAttributes<T> {
-			async?:          boolean | undefined;
-			charset?:        string | undefined;
-			crossorigin?:    HTMLCrossorigin | undefined;
-			defer?:          boolean | undefined;
-			integrity?:      string | undefined;
-			nomodule?:       boolean | undefined;
-			nonce?:          string | undefined;
-			referrerpolicy?: HTMLReferrerPolicy | undefined;
-			src?:            string | undefined;
-			type?:           string | undefined;
-			crossOrigin?:    HTMLCrossorigin | undefined;
-			noModule?:       boolean | undefined;
-			referrerPolicy?: HTMLReferrerPolicy | undefined;
-		}
-		interface SelectHTMLAttributes<T> extends HTMLAttributes<T> {
-			autocomplete?: string | undefined;
-			autofocus?:    boolean | undefined;
-			disabled?:     boolean | undefined;
-			form?:         string | undefined;
-			multiple?:     boolean | undefined;
-			name?:         string | undefined;
-			required?:     boolean | undefined;
-			size?:         number | string | undefined;
-			value?:        string | string[] | number | undefined;
-		}
-		interface HTMLSlotElementAttributes<T = HTMLSlotElement> extends HTMLAttributes<T> {
-			name?: string | undefined;
-		}
-		interface SourceHTMLAttributes<T> extends HTMLAttributes<T> {
-			media?:  string | undefined;
-			sizes?:  string | undefined;
-			src?:    string | undefined;
-			srcset?: string | undefined;
-			type?:   string | undefined;
-			width?:  number | string | undefined;
-			height?: number | string | undefined;
-		}
-		interface StyleHTMLAttributes<T> extends HTMLAttributes<T> {
-			media?:  string | undefined;
-			nonce?:  string | undefined;
-			scoped?: boolean | undefined;
-			type?:   string | undefined;
-		}
-		interface TdHTMLAttributes<T> extends HTMLAttributes<T> {
-			colspan?: number | string | undefined;
-			headers?: string | undefined;
-			rowspan?: number | string | undefined;
-			colSpan?: number | string | undefined;
-			rowSpan?: number | string | undefined;
-		}
-		interface TemplateHTMLAttributes<T extends HTMLTemplateElement> extends HTMLAttributes<T> {
-			content?: DocumentFragment | undefined;
-		}
-		interface TextareaHTMLAttributes<T> extends HTMLAttributes<T> {
-			autocomplete?: string | undefined;
-			autofocus?:    boolean | undefined;
-			cols?:         number | string | undefined;
-			dirname?:      string | undefined;
-			disabled?:     boolean | undefined;
-			enterkeyhint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send' | undefined;
-			form?:         string | undefined;
-			maxlength?:    number | string | undefined;
-			minlength?:    number | string | undefined;
-			name?:         string | undefined;
-			placeholder?:  string | undefined;
-			readonly?:     boolean | undefined;
-			required?:     boolean | undefined;
-			rows?:         number | string | undefined;
-			value?:        string | string[] | number | undefined;
-			wrap?:         'hard' | 'soft' | 'off' | undefined;
-			maxLength?:    number | string | undefined;
-			minLength?:    number | string | undefined;
-			readOnly?:     boolean | undefined;
-		}
-		interface ThHTMLAttributes<T> extends HTMLAttributes<T> {
-			colspan?: number | string | undefined;
-			headers?: string | undefined;
-			rowspan?: number | string | undefined;
-			colSpan?: number | string | undefined;
-			rowSpan?: number | string | undefined;
-			scope?:   'col' | 'row' | 'rowgroup' | 'colgroup' | undefined;
-		}
-		interface TimeHTMLAttributes<T> extends HTMLAttributes<T> {
-			datetime?: string | undefined;
-			dateTime?: string | undefined;
-		}
-		interface TrackHTMLAttributes<T> extends HTMLAttributes<T> {
-			default?: boolean | undefined;
-			kind?:    'subtitles' | 'captions' | 'descriptions' | 'chapters' | 'metadata' | undefined;
-			label?:   string | undefined;
-			src?:     string | undefined;
-			srclang?: string | undefined;
-		}
-		interface VideoHTMLAttributes<T> extends MediaHTMLAttributes<T> {
-			height?:                  number | string | undefined;
-			playsinline?:             boolean | undefined;
-			poster?:                  string | undefined;
-			width?:                   number | string | undefined;
-			disablepictureinpicture?: boolean;
-		}
+			}> {}
+		interface AnchorHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				download:       any;
+				href:           string;
+				hreflang:       string;
+				media:          string;
+				ping:           string;
+				referrerpolicy: HTMLReferrerPolicy;
+				rel:            string;
+				target:         string;
+				type:           string;
+				referrerPolicy: HTMLReferrerPolicy;
+			}> {}
+		interface AudioHTMLAttributes<T> extends
+			MediaHTMLAttributes<T> {}
+		interface AreaHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				alt:            string;
+				coords:         string;
+				download:       any;
+				href:           string;
+				hreflang:       string;
+				ping:           string;
+				referrerpolicy: HTMLReferrerPolicy;
+				rel:            string;
+				shape:          'rect' | 'circle' | 'poly' | 'default';
+				target:         string;
+				referrerPolicy: HTMLReferrerPolicy;
+			}> {}
+		interface BaseHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				href:   string;
+				target: string;
+			}> {}
+		interface BlockquoteHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				cite: string;
+			}> {}
+		interface ButtonHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				autofocus:           boolean;
+				disabled:            boolean;
+				form:                string;
+				formaction:          string | SerializableAttributeValue;
+				formenctype:         HTMLFormEncType;
+				formmethod:          HTMLFormMethod;
+				formnovalidate:      boolean;
+				formtarget:          string;
+				popovertarget:       string;
+				popovertargetaction: 'hide' | 'show' | 'toggle';
+				name:                string;
+				type:                'submit' | 'reset' | 'button';
+				value:               string;
+				formAction:          string | SerializableAttributeValue;
+				formEnctype:         HTMLFormEncType;
+				formMethod:          HTMLFormMethod;
+				formNoValidate:      boolean;
+				formTarget:          string;
+				popoverTarget:       string;
+				popoverTargetAction: 'hide' | 'show' | 'toggle';
+			}> {}
+		interface CanvasHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				width:  number | string;
+				height: number | string;
+			}> {}
+		interface ColHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				span:  number | string;
+				width: number | string;
+			}> {}
+		interface ColgroupHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				span: number | string;
+			}> {}
+		interface DataHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				value: string | string[] | number;
+			}> {}
+		interface DetailsHtmlAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				open: boolean;
+			}> {}
+		interface DialogHtmlAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				open:     boolean;
+				onClose:  EventHandlerUnion<T, Event>;
+				onCancel: EventHandlerUnion<T, Event>;
+			}> {}
+		interface EmbedHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				height: number | string;
+				width:  number | string;
+				src:    string;
+				type:   string;
+			}> {}
+		interface FieldsetHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				disabled: boolean;
+				form:     string;
+				name:     string;
+			}> {}
+		interface FormHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				'accept-charset': string;
+				action:           string | SerializableAttributeValue;
+				autocomplete:     string;
+				encoding:         HTMLFormEncType;
+				enctype:          HTMLFormEncType;
+				method:           HTMLFormMethod;
+				name:             string;
+				novalidate:       boolean;
+				target:           string;
+				noValidate:       boolean;
+			}> {}
+		interface IframeHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				allow:           string;
+				allowfullscreen: boolean;
+				height:          number | string;
+				loading:         'eager' | 'lazy';
+				name:            string;
+				referrerpolicy:  HTMLReferrerPolicy;
+				sandbox:         HTMLIframeSandbox | string;
+				src:             string;
+				srcdoc:          string;
+				width:           number | string;
+				referrerPolicy:  HTMLReferrerPolicy;
+			}> {}
+		interface ImgHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				alt:            string;
+				crossorigin:    HTMLCrossorigin;
+				decoding:       'sync' | 'async' | 'auto';
+				height:         number | string;
+				ismap:          boolean;
+				isMap:          boolean;
+				loading:        'eager' | 'lazy';
+				referrerpolicy: HTMLReferrerPolicy;
+				referrerPolicy: HTMLReferrerPolicy;
+				sizes:          string;
+				src:            string;
+				srcset:         string;
+				srcSet:         string;
+				usemap:         string;
+				useMap:         string;
+				width:          number | string;
+				crossOrigin:    HTMLCrossorigin;
+				elementtiming:  string;
+				fetchpriority:  'high' | 'low' | 'auto';
+			}> {}
+		interface InputHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				accept:         string;
+				alt:            string;
+				autocomplete:   string;
+				autocorrect:    'on' | 'off';
+				autofocus:      boolean;
+				capture:        boolean | string;
+				checked:        boolean;
+				crossorigin:    HTMLCrossorigin;
+				disabled:       boolean;
+				enterkeyhint:   'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
+				form:           string;
+				formaction:     string | SerializableAttributeValue;
+				formenctype:    HTMLFormEncType;
+				formmethod:     HTMLFormMethod;
+				formnovalidate: boolean;
+				formtarget:     string;
+				height:         number | string;
+				incremental:    boolean;
+				list:           string;
+				max:            number | string;
+				maxlength:      number | string;
+				min:            number | string;
+				minlength:      number | string;
+				multiple:       boolean;
+				name:           string;
+				pattern:        string;
+				placeholder:    string;
+				readonly:       boolean;
+				results:        number;
+				required:       boolean;
+				size:           number | string;
+				src:            string;
+				step:           number | string;
+				type:           string;
+				value:          string | string[] | number;
+				width:          number | string;
+				crossOrigin:    HTMLCrossorigin;
+				formAction:     string | SerializableAttributeValue;
+				formEnctype:    HTMLFormEncType;
+				formMethod:     HTMLFormMethod;
+				formNoValidate: boolean;
+				formTarget:     string;
+				maxLength:      number | string;
+				minLength:      number | string;
+				readOnly:       boolean;
+			}> {}
+		interface InsHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				cite:     string;
+				dateTime: string;
+			}> {}
+		interface KeygenHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				autofocus: boolean;
+				challenge: string;
+				disabled:  boolean;
+				form:      string;
+				keytype:   string;
+				keyparams: string;
+				name:      string;
+			}> {}
+		interface LabelHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				for:  string;
+				form: string;
+			}> {}
+		interface LiHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				value: number | string;
+			}> {}
+		interface LinkHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				as:             HTMLLinkAs;
+				crossorigin:    HTMLCrossorigin;
+				disabled:       boolean;
+				fetchpriority:  'high' | 'low' | 'auto';
+				href:           string;
+				hreflang:       string;
+				imagesizes:     string;
+				imagesrcset:    string;
+				integrity:      string;
+				media:          string;
+				referrerpolicy: HTMLReferrerPolicy;
+				rel:            string;
+				sizes:          string;
+				type:           string;
+				crossOrigin:    HTMLCrossorigin;
+				referrerPolicy: HTMLReferrerPolicy;
+			}> {}
+		interface MapHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				name: string;
+			}> {}
+		interface MediaHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				autoplay:    boolean;
+				controls:    boolean;
+				crossorigin: HTMLCrossorigin;
+				loop:        boolean;
+				mediagroup:  string;
+				muted:       boolean;
+				preload:     'none' | 'metadata' | 'auto' | '';
+				src:         string;
+				crossOrigin: HTMLCrossorigin;
+				mediaGroup:  string;
+			}> {}
+		interface MenuHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				label: string;
+				type:  'context' | 'toolbar';
+			}> {}
+		interface MetaHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				charset:      string;
+				content:      string;
+				'http-equiv': string;
+				name:         string;
+				media:        string;
+			}> {}
+		interface MeterHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				form:    string;
+				high:    number | string;
+				low:     number | string;
+				max:     number | string;
+				min:     number | string;
+				optimum: number | string;
+				value:   string | string[] | number;
+			}> {}
+		interface QuoteHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				cite: string;
+			}> {}
+		interface ObjectHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				data:   string;
+				form:   string;
+				height: number | string;
+				name:   string;
+				type:   string;
+				usemap: string;
+				width:  number | string;
+				useMap: string;
+			}> {}
+		interface OlHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				reversed: boolean;
+				start:    number | string;
+				type:     '1' | 'a' | 'A' | 'i' | 'I';
+			}> {}
+		interface OptgroupHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				disabled: boolean;
+				label:    string;
+			}> {}
+		interface OptionHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				disabled: boolean;
+				label:    string;
+				selected: boolean;
+				value:    string | string[] | number;
+			}> {}
+		interface OutputHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				form: string;
+				for:  string;
+				name: string;
+			}> {}
+		interface ParamHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				name:  string;
+				value: string | string[] | number;
+			}> {}
+		interface ProgressHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				max:   number | string;
+				value: string | string[] | number;
+			}> {}
+		interface ScriptHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				async:          boolean;
+				charset:        string;
+				crossorigin:    HTMLCrossorigin;
+				defer:          boolean;
+				integrity:      string;
+				nomodule:       boolean;
+				nonce:          string;
+				referrerpolicy: HTMLReferrerPolicy;
+				src:            string;
+				type:           string;
+				crossOrigin:    HTMLCrossorigin;
+				noModule:       boolean;
+				referrerPolicy: HTMLReferrerPolicy;
+			}> {}
+		interface SelectHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				autocomplete: string;
+				autofocus:    boolean;
+				disabled:     boolean;
+				form:         string;
+				multiple:     boolean;
+				name:         string;
+				required:     boolean;
+				size:         number | string;
+				value:        string | string[] | number;
+			}> {}
+		interface HTMLSlotElementAttributes<T = HTMLSlotElement> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				name: string;
+			}> {}
+		interface SourceHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				media:  string;
+				sizes:  string;
+				src:    string;
+				srcset: string;
+				type:   string;
+				width:  number | string;
+				height: number | string;
+			}> {}
+		interface StyleHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				media:  string;
+				nonce:  string;
+				scoped: boolean;
+				type:   string;
+			}> {}
+		interface TdHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				colspan: number | string;
+				headers: string;
+				rowspan: number | string;
+				colSpan: number | string;
+				rowSpan: number | string;
+			}> {}
+		interface TemplateHTMLAttributes<T extends HTMLTemplateElement> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				content: DocumentFragment;
+			}> {}
+		interface TextareaHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				autocomplete: string;
+				autofocus:    boolean;
+				cols:         number | string;
+				dirname:      string;
+				disabled:     boolean;
+				enterkeyhint: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
+				form:         string;
+				maxlength:    number | string;
+				minlength:    number | string;
+				name:         string;
+				placeholder:  string;
+				readonly:     boolean;
+				required:     boolean;
+				rows:         number | string;
+				value:        string | string[] | number;
+				wrap:         'hard' | 'soft' | 'off';
+				maxLength:    number | string;
+				minLength:    number | string;
+				readOnly:     boolean;
+			}> {}
+		interface ThHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				colspan: number | string;
+				headers: string;
+				rowspan: number | string;
+				colSpan: number | string;
+				rowSpan: number | string;
+				scope:   'col' | 'row' | 'rowgroup' | 'colgroup';
+			}> {}
+		interface TimeHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				datetime: string;
+				dateTime: string;
+			}> {}
+		interface TrackHTMLAttributes<T> extends
+			HTMLAttributes<T>,
+			CanBeNothing<{
+				default: boolean;
+				kind:    'subtitles' | 'captions' | 'descriptions' | 'chapters' | 'metadata';
+				label:   string;
+				src:     string;
+				srclang: string;
+			}> {}
+		interface VideoHTMLAttributes<T> extends
+			MediaHTMLAttributes<T>,
+			CanBeNothing<{
+				height:                  number | string;
+				playsinline:             boolean;
+				poster:                  string;
+				width:                   number | string;
+				disablepictureinpicture: boolean;
+			}> {}
 		type SVGPreserveAspectRatio = [
 			'none',
 			'xMinYMin',
@@ -1229,248 +1346,262 @@ declare global {
 			'defer xMaxYMax slice',
 		][number];
 		type SVGUnits = 'userSpaceOnUse' | 'objectBoundingBox';
-		interface CoreSVGAttributes<T> extends AriaAttributes, DOMAttributes<T> {
-			id?:       string | undefined;
-			lang?:     string | undefined;
-			tabIndex?: number | string | undefined;
-			tabindex?: number | string | undefined;
-		}
-		interface StylableSVGAttributes {
-			class?: string | undefined;
-			style?: CSSProperties | string | undefined;
-		}
-		interface TransformableSVGAttributes {
-			transform?: string | undefined;
-		}
-		interface ConditionalProcessingSVGAttributes {
-			requiredExtensions?: string | undefined;
-			requiredFeatures?:   string | undefined;
-			systemLanguage?:     string | undefined;
-		}
-		interface ExternalResourceSVGAttributes {
-			externalResourcesRequired?: 'true' | 'false' | undefined;
-		}
-		interface AnimationTimingSVGAttributes {
-			begin?:       string | undefined;
-			dur?:         string | undefined;
-			end?:         string | undefined;
-			min?:         string | undefined;
-			max?:         string | undefined;
-			restart?:     'always' | 'whenNotActive' | 'never' | undefined;
-			repeatCount?: number | 'indefinite' | undefined;
-			repeatDur?:   string | undefined;
-			fill?:        'freeze' | 'remove' | undefined;
-		}
-		interface AnimationValueSVGAttributes {
-			calcMode?:   'discrete' | 'linear' | 'paced' | 'spline' | undefined;
-			values?:     string | undefined;
-			keyTimes?:   string | undefined;
-			keySplines?: string | undefined;
-			from?:       number | string | undefined;
-			to?:         number | string | undefined;
-			by?:         number | string | undefined;
-		}
-		interface AnimationAdditionSVGAttributes {
-			attributeName?: string | undefined;
-			additive?:      'replace' | 'sum' | undefined;
-			accumulate?:    'none' | 'sum' | undefined;
-		}
-		interface AnimationAttributeTargetSVGAttributes {
-			attributeName?: string | undefined;
-			attributeType?: 'CSS' | 'XML' | 'auto' | undefined;
-		}
-		interface PresentationSVGAttributes {
-			'alignment-baseline'?: [
-				'auto',
-				'baseline',
-				'before-edge',
-				'text-before-edge',
-				'middle',
-				'central',
-				'after-edge',
-				'text-after-edge',
-				'ideographic',
-				'alphabetic',
-				'hanging',
-				'mathematical',
-				'inherit',
-				undefined,
-			][number];
-			'baseline-shift'?:              number | string | undefined;
-			clip?:                          string | undefined;
-			'clip-path'?:                   string | undefined;
-			'clip-rule'?:                   'nonzero' | 'evenodd' | 'inherit' | undefined;
-			color?:                         string | undefined;
-			'color-interpolation'?:         'auto' | 'sRGB' | 'linearRGB' | 'inherit' | undefined;
-			'color-interpolation-filters'?: 'auto' | 'sRGB' | 'linearRGB' | 'inherit' | undefined;
-			'color-profile'?:               string | undefined;
-			'color-rendering'?:             'auto' | 'optimizeSpeed' | 'optimizeQuality' | 'inherit' | undefined;
-			cursor?:                        string | undefined;
-			direction?:                     'ltr' | 'rtl' | 'inherit' | undefined;
-			display?:                       string | undefined;
-			'dominant-baseline'?: [
-				'auto',
-				'text-bottom',
-				'alphabetic',
-				'ideographic',
-				'middle',
-				'central',
-				'mathematical',
-				'hanging',
-				'text-top',
-				'inherit',
-				undefined,
-			][number];
-			'enable-background'?:            string | undefined;
-			fill?:                           string | undefined;
-			'fill-opacity'?:                 number | string | 'inherit' | undefined;
-			'fill-rule'?:                    'nonzero' | 'evenodd' | 'inherit' | undefined;
-			filter?:                         string | undefined;
-			'flood-color'?:                  string | undefined;
-			'flood-opacity'?:                number | string | 'inherit' | undefined;
-			'font-family'?:                  string | undefined;
-			'font-size'?:                    string | undefined;
-			'font-size-adjust'?:             number | string | undefined;
-			'font-stretch'?:                 string | undefined;
-			'font-style'?:                   'normal' | 'italic' | 'oblique' | 'inherit' | undefined;
-			'font-variant'?:                 string | undefined;
-			'font-weight'?:                  number | string | undefined;
-			'glyph-orientation-horizontal'?: string | undefined;
-			'glyph-orientation-vertical'?:   string | undefined;
-			'image-rendering'?:              'auto' | 'optimizeQuality' | 'optimizeSpeed' | 'inherit' | undefined;
-			kerning?:                        string | undefined;
-			'letter-spacing'?:               number | string | undefined;
-			'lighting-color'?:               string | undefined;
-			'marker-end'?:                   string | undefined;
-			'marker-mid'?:                   string | undefined;
-			'marker-start'?:                 string | undefined;
-			mask?:                           string | undefined;
-			opacity?:                        number | string | 'inherit' | undefined;
-			overflow?:                       'visible' | 'hidden' | 'scroll' | 'auto' | 'inherit' | undefined;
-			pathLength?:                     string | number | undefined;
-			'pointer-events'?: [
-				'bounding-box',
-				'visiblePainted',
-				'visibleFill',
-				'visibleStroke',
-				'visible',
-				'painted',
-				'color',
-				'fill',
-				'stroke',
-				'all',
-				'none',
-				'inherit',
-				undefined,
-			][number];
-			'shape-rendering'?:
-				| 'auto'
-				| 'optimizeSpeed'
-				| 'crispEdges'
-				| 'geometricPrecision'
-				| 'inherit'
-				| undefined;
-			'stop-color'?:        string | undefined;
-			'stop-opacity'?:      number | string | 'inherit' | undefined;
-			stroke?:              string | undefined;
-			'stroke-dasharray'?:  string | undefined;
-			'stroke-dashoffset'?: number | string | undefined;
-			'stroke-linecap'?:    'butt' | 'round' | 'square' | 'inherit' | undefined;
-			'stroke-linejoin'?:   'arcs' | 'bevel' | 'miter' | 'miter-clip' | 'round' | 'inherit' | undefined;
-			'stroke-miterlimit'?: number | string | 'inherit' | undefined;
-			'stroke-opacity'?:    number | string | 'inherit' | undefined;
-			'stroke-width'?:      number | string | undefined;
-			'text-anchor'?:       'start' | 'middle' | 'end' | 'inherit' | undefined;
-			'text-decoration'?:
-				| 'none'
-				| 'underline'
-				| 'overline'
-				| 'line-through'
-				| 'blink'
-				| 'inherit'
-				| undefined;
-			'text-rendering'?:
-				| 'auto'
-				| 'optimizeSpeed'
-				| 'optimizeLegibility'
-				| 'geometricPrecision'
-				| 'inherit'
-				| undefined;
-			'unicode-bidi'?: string | undefined;
-			visibility?:     'visible' | 'hidden' | 'collapse' | 'inherit' | undefined;
-			'word-spacing'?: number | string | undefined;
-			'writing-mode'?: 'lr-tb' | 'rl-tb' | 'tb-rl' | 'lr' | 'rl' | 'tb' | 'inherit' | undefined;
-		}
-		interface AnimationElementSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+		interface CoreSVGAttributes<T> extends
+			AriaAttributes,
+			DOMAttributes<T>,
+			CanBeNothing<{
+				id:       string;
+				lang:     string;
+				tabIndex: number | string;
+				tabindex: number | string;
+			}> {}
+		interface StylableSVGAttributes extends
+			CanBeNothing<{
+				class: string;
+				style: CSSProperties | string;
+			}> {}
+		interface TransformableSVGAttributes extends
+			CanBeNothing<{
+				transform: string;
+			}> {}
+		interface ConditionalProcessingSVGAttributes extends
+			CanBeNothing<{
+				requiredExtensions: string;
+				requiredFeatures:   string;
+				systemLanguage:     string;
+			}> {}
+		interface ExternalResourceSVGAttributes extends
+			CanBeNothing<{
+				externalResourcesRequired: 'true' | 'false';
+			}> {}
+		interface AnimationTimingSVGAttributes extends
+			CanBeNothing<{
+				begin:       string;
+				dur:         string;
+				end:         string;
+				min:         string;
+				max:         string;
+				restart:     'always' | 'whenNotActive' | 'never';
+				repeatCount: number | 'indefinite';
+				repeatDur:   string;
+				fill:        'freeze' | 'remove';
+			}> {}
+		interface AnimationValueSVGAttributes extends
+			CanBeNothing<{
+				calcMode:   'discrete' | 'linear' | 'paced' | 'spline';
+				values:     string;
+				keyTimes:   string;
+				keySplines: string;
+				from:       number | string;
+				to:         number | string;
+				by:         number | string;
+			}> {}
+		interface AnimationAdditionSVGAttributes extends
+			CanBeNothing<{
+				attributeName: string;
+				additive:      'replace' | 'sum';
+				accumulate:    'none' | 'sum';
+			}> {}
+		interface AnimationAttributeTargetSVGAttributes extends
+			CanBeNothing<{
+				attributeName: string;
+				attributeType: 'CSS' | 'XML' | 'auto';
+			}> {}
+		interface PresentationSVGAttributes extends
+			CanBeNothing<{
+				'alignment-baseline': [
+					'auto',
+					'baseline',
+					'before-edge',
+					'text-before-edge',
+					'middle',
+					'central',
+					'after-edge',
+					'text-after-edge',
+					'ideographic',
+					'alphabetic',
+					'hanging',
+					'mathematical',
+					'inherit',
+				][number];
+				'baseline-shift':              number | string;
+				clip:                          string;
+				'clip-path':                   string;
+				'clip-rule':                   'nonzero' | 'evenodd' | 'inherit';
+				color:                         string;
+				'color-interpolation':         'auto' | 'sRGB' | 'linearRGB' | 'inherit';
+				'color-interpolation-filters': 'auto' | 'sRGB' | 'linearRGB' | 'inherit';
+				'color-profile':               string;
+				'color-rendering':             'auto' | 'optimizeSpeed' | 'optimizeQuality' | 'inherit';
+				cursor:                        string;
+				direction:                     'ltr' | 'rtl' | 'inherit';
+				display:                       string;
+				'dominant-baseline': [
+					'auto',
+					'text-bottom',
+					'alphabetic',
+					'ideographic',
+					'middle',
+					'central',
+					'mathematical',
+					'hanging',
+					'text-top',
+					'inherit',
+				][number];
+				'enable-background':            string;
+				fill:                           string;
+				'fill-opacity':                 number | string | 'inherit';
+				'fill-rule':                    'nonzero' | 'evenodd' | 'inherit';
+				filter:                         string;
+				'flood-color':                  string;
+				'flood-opacity':                number | string | 'inherit';
+				'font-family':                  string;
+				'font-size':                    string;
+				'font-size-adjust':             number | string;
+				'font-stretch':                 string;
+				'font-style':                   'normal' | 'italic' | 'oblique' | 'inherit';
+				'font-variant':                 string;
+				'font-weight':                  number | string;
+				'glyph-orientation-horizontal': string;
+				'glyph-orientation-vertical':   string;
+				'image-rendering':              'auto' | 'optimizeQuality' | 'optimizeSpeed' | 'inherit';
+				kerning:                        string;
+				'letter-spacing':               number | string;
+				'lighting-color':               string;
+				'marker-end':                   string;
+				'marker-mid':                   string;
+				'marker-start':                 string;
+				mask:                           string;
+				opacity:                        number | string | 'inherit';
+				overflow:                       'visible' | 'hidden' | 'scroll' | 'auto' | 'inherit';
+				pathLength:                     string | number;
+				'pointer-events': [
+					'bounding-box',
+					'visiblePainted',
+					'visibleFill',
+					'visibleStroke',
+					'visible',
+					'painted',
+					'color',
+					'fill',
+					'stroke',
+					'all',
+					'none',
+					'inherit',
+				][number];
+				'shape-rendering': [
+					'auto',
+					'optimizeSpeed',
+					'crispEdges',
+					'geometricPrecision',
+					'inherit',
+				][number];
+				'stop-color':        string;
+				'stop-opacity':      number | string | 'inherit';
+				stroke:              string;
+				'stroke-dasharray':  string;
+				'stroke-dashoffset': number | string;
+				'stroke-linecap':    'butt' | 'round' | 'square' | 'inherit';
+				'stroke-linejoin':   'arcs' | 'bevel' | 'miter' | 'miter-clip' | 'round' | 'inherit';
+				'stroke-miterlimit': number | string | 'inherit';
+				'stroke-opacity':    number | string | 'inherit';
+				'stroke-width':      number | string;
+				'text-anchor':       'start' | 'middle' | 'end' | 'inherit';
+				'text-decoration': [
+					'none',
+					'underline',
+					'overline',
+					'line-through',
+					'blink',
+					'inherit',
+				][number];
+				'text-rendering': [
+					'auto',
+					'optimizeSpeed',
+					'optimizeLegibility',
+					'geometricPrecision',
+					'inherit',
+				][number];
+				'unicode-bidi': string;
+				visibility:     'visible' | 'hidden' | 'collapse' | 'inherit';
+				'word-spacing': number | string;
+				'writing-mode': 'lr-tb' | 'rl-tb' | 'tb-rl' | 'lr' | 'rl' | 'tb' | 'inherit';
+			}> {}
+		interface AnimationElementSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			ExternalResourceSVGAttributes,
 			ConditionalProcessingSVGAttributes {}
-		interface ContainerElementSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+		interface ContainerElementSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			ShapeElementSVGAttributes<T>,
-			Pick<
-				PresentationSVGAttributes,
-				| 'clip-path'
-				| 'mask'
-				| 'cursor'
-				| 'opacity'
-				| 'filter'
-				| 'enable-background'
-				| 'color-interpolation'
-				| 'color-rendering'
-			> {}
-		interface FilterPrimitiveElementSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
-			Pick<PresentationSVGAttributes, 'color-interpolation-filters'> {
-			x?:      number | string | undefined;
-			y?:      number | string | undefined;
-			width?:  number | string | undefined;
-			height?: number | string | undefined;
-			result?: string | undefined;
-		}
-		interface SingleInputFilterSVGAttributes {
-			in?: string | undefined;
-		}
-		interface DoubleInputFilterSVGAttributes {
-			in?:  string | undefined;
-			in2?: string | undefined;
-		}
-		interface FitToViewBoxSVGAttributes {
-			viewBox?:             string | undefined;
-			preserveAspectRatio?: SVGPreserveAspectRatio | undefined;
-		}
-		interface GradientElementSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, [
+				'clip-path',
+				'mask',
+				'cursor',
+				'opacity',
+				'filter',
+				'enable-background',
+				'color-interpolation',
+				'color-rendering',
+			][number]> {}
+		interface FilterPrimitiveElementSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, 'color-interpolation-filters'>,
+			CanBeNothing<{
+				x:      number | string;
+				y:      number | string;
+				width:  number | string;
+				height: number | string;
+				result: string;
+			}> {}
+		interface SingleInputFilterSVGAttributes extends
+			CanBeNothing<{
+				in: string;
+			}> {}
+		interface DoubleInputFilterSVGAttributes extends
+			CanBeNothing<{
+				in:  string;
+				in2: string;
+			}> {}
+		interface FitToViewBoxSVGAttributes extends
+			CanBeNothing<{
+				viewBox:             string;
+				preserveAspectRatio: SVGPreserveAspectRatio;
+			}> {}
+		interface GradientElementSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			ExternalResourceSVGAttributes,
-			StylableSVGAttributes {
-			gradientUnits?:     SVGUnits | undefined;
-			gradientTransform?: string | undefined;
-			spreadMethod?:      'pad' | 'reflect' | 'repeat' | undefined;
-			href?:              string | undefined;
-		}
-		interface GraphicsElementSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
-			Pick<
-				PresentationSVGAttributes,
-				| 'clip-rule'
-				| 'mask'
-				| 'pointer-events'
-				| 'cursor'
-				| 'opacity'
-				| 'filter'
-				| 'display'
-				| 'visibility'
-				| 'color-interpolation'
-				| 'color-rendering'
-			> {}
-		interface LightSourceElementSVGAttributes<T> extends CoreSVGAttributes<T> {}
-		interface NewViewportSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
-			Pick<PresentationSVGAttributes, 'overflow' | 'clip'> {
-			viewBox?: string | undefined;
-		}
-		interface ShapeElementSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+			StylableSVGAttributes,
+			CanBeNothing<{
+				gradientUnits:     SVGUnits;
+				gradientTransform: string;
+				spreadMethod:      'pad' | 'reflect' | 'repeat';
+				href:              string;
+			}> {}
+		interface GraphicsElementSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, [
+				'clip-rule',
+				'mask',
+				'pointer-events',
+				'cursor',
+				'opacity',
+				'filter',
+				'display',
+				'visibility',
+				'color-interpolation',
+				'color-rendering',
+			][number]> {}
+		interface LightSourceElementSVGAttributes<T> extends
+			CoreSVGAttributes<T> {}
+		interface NewViewportSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, 'overflow' | 'clip'>,
+			CanBeNothing<{
+				viewBox: string;
+			}> {}
+		interface ShapeElementSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			Pick<PresentationSVGAttributes, [
 				'color',
 				'fill',
@@ -1487,8 +1618,8 @@ declare global {
 				'shape-rendering',
 				'pathLength',
 			][number]> {}
-		interface TextContentElementSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+		interface TextContentElementSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			Pick<PresentationSVGAttributes, [
 				'font-family',
 				'font-style',
@@ -1520,253 +1651,287 @@ declare global {
 				'stroke-dashoffset',
 				'stroke-opacity',
 			][number]> {}
-		interface ZoomAndPanSVGAttributes {
-			zoomAndPan?: 'disable' | 'magnify' | undefined;
-		}
-		interface AnimateSVGAttributes<T>
-			extends AnimationElementSVGAttributes<T>,
+		interface ZoomAndPanSVGAttributes extends
+			CanBeNothing<{
+				zoomAndPan: 'disable' | 'magnify';
+			}> {}
+		interface AnimateSVGAttributes<T> extends
+			AnimationElementSVGAttributes<T>,
 			AnimationAttributeTargetSVGAttributes,
 			AnimationTimingSVGAttributes,
 			AnimationValueSVGAttributes,
 			AnimationAdditionSVGAttributes,
-			Pick<PresentationSVGAttributes, 'color-interpolation' | 'color-rendering'> {}
-		interface AnimateMotionSVGAttributes<T>
-			extends AnimationElementSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, [
+				'color-interpolation',
+				'color-rendering',
+			][number]> {}
+		interface AnimateMotionSVGAttributes<T> extends
+			AnimationElementSVGAttributes<T>,
 			AnimationTimingSVGAttributes,
 			AnimationValueSVGAttributes,
-			AnimationAdditionSVGAttributes {
-			path?:      string | undefined;
-			keyPoints?: string | undefined;
-			rotate?:    number | string | 'auto' | 'auto-reverse' | undefined;
-			origin?:    'default' | undefined;
-		}
-		interface AnimateTransformSVGAttributes<T>
-			extends AnimationElementSVGAttributes<T>,
+			AnimationAdditionSVGAttributes,
+			CanBeNothing<{
+				path:      string;
+				keyPoints: string;
+				rotate:    number | string | 'auto' | 'auto-reverse';
+				origin:    'default';
+			}> {}
+		interface AnimateTransformSVGAttributes<T> extends
+			AnimationElementSVGAttributes<T>,
 			AnimationAttributeTargetSVGAttributes,
 			AnimationTimingSVGAttributes,
 			AnimationValueSVGAttributes,
-			AnimationAdditionSVGAttributes {
-			type?: 'translate' | 'scale' | 'rotate' | 'skewX' | 'skewY' | undefined;
-		}
-		interface CircleSVGAttributes<T>
-			extends GraphicsElementSVGAttributes<T>,
+			AnimationAdditionSVGAttributes,
+			CanBeNothing<{
+				type: 'translate' | 'scale' | 'rotate' | 'skewX' | 'skewY';
+			}> {}
+		interface CircleSVGAttributes<T> extends
+			GraphicsElementSVGAttributes<T>,
 			ShapeElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			StylableSVGAttributes,
-			TransformableSVGAttributes {
-			cx?: number | string | undefined;
-			cy?: number | string | undefined;
-			r?:  number | string | undefined;
-		}
-		interface ClipPathSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+			TransformableSVGAttributes,
+			CanBeNothing<{
+				cx: number | string;
+				cy: number | string;
+				r:  number | string;
+			}> {}
+		interface ClipPathSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			TransformableSVGAttributes,
-			Pick<PresentationSVGAttributes, 'clip-path'> {
-			clipPathUnits?: SVGUnits | undefined;
-		}
-		interface DefsSVGAttributes<T>
-			extends ContainerElementSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, 'clip-path'>,
+			CanBeNothing<{
+				clipPathUnits: SVGUnits;
+			}> {}
+		interface DefsSVGAttributes<T> extends
+			ContainerElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			TransformableSVGAttributes {}
-		interface DescSVGAttributes<T> extends CoreSVGAttributes<T>, StylableSVGAttributes {}
-		interface EllipseSVGAttributes<T>
-			extends GraphicsElementSVGAttributes<T>,
+		interface DescSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
+			StylableSVGAttributes {}
+		interface EllipseSVGAttributes<T> extends
+			GraphicsElementSVGAttributes<T>,
 			ShapeElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
-			TransformableSVGAttributes {
-			cx?: number | string | undefined;
-			cy?: number | string | undefined;
-			rx?: number | string | undefined;
-			ry?: number | string | undefined;
-		}
-		interface FeBlendSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
+			TransformableSVGAttributes,
+			CanBeNothing<{
+				cx: number | string;
+				cy: number | string;
+				rx: number | string;
+				ry: number | string;
+			}> {}
+		interface FeBlendSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
 			DoubleInputFilterSVGAttributes,
-			StylableSVGAttributes {
-			mode?: 'normal' | 'multiply' | 'screen' | 'darken' | 'lighten' | undefined;
-		}
-		interface FeColorMatrixSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
-			SingleInputFilterSVGAttributes,
-			StylableSVGAttributes {
-			type?:   'matrix' | 'saturate' | 'hueRotate' | 'luminanceToAlpha' | undefined;
-			values?: string | undefined;
-		}
-		interface FeComponentTransferSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
-			SingleInputFilterSVGAttributes,
-			StylableSVGAttributes {}
-		interface FeCompositeSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
-			DoubleInputFilterSVGAttributes,
-			StylableSVGAttributes {
-			operator?: 'over' | 'in' | 'out' | 'atop' | 'xor' | 'arithmetic' | undefined;
-			k1?:       number | string | undefined;
-			k2?:       number | string | undefined;
-			k3?:       number | string | undefined;
-			k4?:       number | string | undefined;
-		}
-		interface FeConvolveMatrixSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
-			SingleInputFilterSVGAttributes,
-			StylableSVGAttributes {
-			order?:            number | string | undefined;
-			kernelMatrix?:     string | undefined;
-			divisor?:          number | string | undefined;
-			bias?:             number | string | undefined;
-			targetX?:          number | string | undefined;
-			targetY?:          number | string | undefined;
-			edgeMode?:         'duplicate' | 'wrap' | 'none' | undefined;
-			kernelUnitLength?: number | string | undefined;
-			preserveAlpha?:    'true' | 'false' | undefined;
-		}
-		interface FeDiffuseLightingSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
+			StylableSVGAttributes,
+			CanBeNothing<{
+				mode: 'normal' | 'multiply' | 'screen' | 'darken' | 'lighten';
+			}> {}
+		interface FeColorMatrixSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
 			SingleInputFilterSVGAttributes,
 			StylableSVGAttributes,
-			Pick<PresentationSVGAttributes, 'color' | 'lighting-color'> {
-			surfaceScale?:     number | string | undefined;
-			diffuseConstant?:  number | string | undefined;
-			kernelUnitLength?: number | string | undefined;
-		}
-		interface FeDisplacementMapSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
+			CanBeNothing<{
+				type:   'matrix' | 'saturate' | 'hueRotate' | 'luminanceToAlpha';
+				values: string;
+			}> {}
+		interface FeComponentTransferSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
+			SingleInputFilterSVGAttributes,
+			StylableSVGAttributes {}
+		interface FeCompositeSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
 			DoubleInputFilterSVGAttributes,
-			StylableSVGAttributes {
-			scale?:            number | string | undefined;
-			xChannelSelector?: 'R' | 'G' | 'B' | 'A' | undefined;
-			yChannelSelector?: 'R' | 'G' | 'B' | 'A' | undefined;
-		}
-		interface FeDistantLightSVGAttributes<T> extends LightSourceElementSVGAttributes<T> {
-			azimuth?:   number | string | undefined;
-			elevation?: number | string | undefined;
-		}
-		interface FeDropShadowSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+			StylableSVGAttributes,
+			CanBeNothing<{
+				operator: 'over' | 'in' | 'out' | 'atop' | 'xor' | 'arithmetic';
+				k1:       number | string;
+				k2:       number | string;
+				k3:       number | string;
+				k4:       number | string;
+			}> {}
+		interface FeConvolveMatrixSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
+			SingleInputFilterSVGAttributes,
+			StylableSVGAttributes,
+			CanBeNothing<{
+				order:            number | string;
+				kernelMatrix:     string;
+				divisor:          number | string;
+				bias:             number | string;
+				targetX:          number | string;
+				targetY:          number | string;
+				edgeMode:         'duplicate' | 'wrap' | 'none';
+				kernelUnitLength: number | string;
+				preserveAlpha:    'true' | 'false';
+			}> {}
+		interface FeDiffuseLightingSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
+			SingleInputFilterSVGAttributes,
+			StylableSVGAttributes,
+			Pick<PresentationSVGAttributes, 'color' | 'lighting-color'>,
+			CanBeNothing<{
+				surfaceScale:     number | string;
+				diffuseConstant:  number | string;
+				kernelUnitLength: number | string;
+			}> {}
+		interface FeDisplacementMapSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
+			DoubleInputFilterSVGAttributes,
+			StylableSVGAttributes,
+			CanBeNothing<{
+				scale:            number | string;
+				xChannelSelector: 'R' | 'G' | 'B' | 'A';
+				yChannelSelector: 'R' | 'G' | 'B' | 'A';
+			}> {}
+		interface FeDistantLightSVGAttributes<T> extends
+			LightSourceElementSVGAttributes<T>,
+			CanBeNothing<{
+				azimuth:   number | string;
+				elevation: number | string;
+			}> {}
+		interface FeDropShadowSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			FilterPrimitiveElementSVGAttributes<T>,
 			StylableSVGAttributes,
-			Pick<PresentationSVGAttributes, 'color' | 'flood-color' | 'flood-opacity'> {
-			dx?:           number | string | undefined;
-			dy?:           number | string | undefined;
-			stdDeviation?: number | string | undefined;
-		}
-		interface FeFloodSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, 'color' | 'flood-color' | 'flood-opacity'>,
+			CanBeNothing<{
+				dx:           number | string;
+				dy:           number | string;
+				stdDeviation: number | string;
+			}> {}
+		interface FeFloodSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
 			StylableSVGAttributes,
 			Pick<PresentationSVGAttributes, 'color' | 'flood-color' | 'flood-opacity'> {}
-		interface FeFuncSVGAttributes<T> extends CoreSVGAttributes<T> {
-			type?:        'identity' | 'table' | 'discrete' | 'linear' | 'gamma' | undefined;
-			tableValues?: string | undefined;
-			slope?:       number | string | undefined;
-			intercept?:   number | string | undefined;
-			amplitude?:   number | string | undefined;
-			exponent?:    number | string | undefined;
-			offset?:      number | string | undefined;
-		}
-		interface FeGaussianBlurSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
-			SingleInputFilterSVGAttributes,
-			StylableSVGAttributes {
-			stdDeviation?: number | string | undefined;
-		}
-		interface FeImageSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
-			ExternalResourceSVGAttributes,
-			StylableSVGAttributes {
-			preserveAspectRatio?: SVGPreserveAspectRatio | undefined;
-			href?:                string | undefined;
-		}
-		interface FeMergeSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
-			StylableSVGAttributes {}
-		interface FeMergeNodeSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
-			SingleInputFilterSVGAttributes {}
-		interface FeMorphologySVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
-			SingleInputFilterSVGAttributes,
-			StylableSVGAttributes {
-			operator?: 'erode' | 'dilate' | undefined;
-			radius?:   number | string | undefined;
-		}
-		interface FeOffsetSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
-			SingleInputFilterSVGAttributes,
-			StylableSVGAttributes {
-			dx?: number | string | undefined;
-			dy?: number | string | undefined;
-		}
-		interface FePointLightSVGAttributes<T> extends LightSourceElementSVGAttributes<T> {
-			x?: number | string | undefined;
-			y?: number | string | undefined;
-			z?: number | string | undefined;
-		}
-		interface FeSpecularLightingSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
+		interface FeFuncSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
+			CanBeNothing<{
+				type:        'identity' | 'table' | 'discrete' | 'linear' | 'gamma';
+				tableValues: string;
+				slope:       number | string;
+				intercept:   number | string;
+				amplitude:   number | string;
+				exponent:    number | string;
+				offset:      number | string;
+			}> {}
+		interface FeGaussianBlurSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
 			SingleInputFilterSVGAttributes,
 			StylableSVGAttributes,
-			Pick<PresentationSVGAttributes, 'color' | 'lighting-color'> {
-			surfaceScale?:     string | undefined;
-			specularConstant?: string | undefined;
-			specularExponent?: string | undefined;
-			kernelUnitLength?: number | string | undefined;
-		}
-		interface FeSpotLightSVGAttributes<T> extends LightSourceElementSVGAttributes<T> {
-			x?:                 number | string | undefined;
-			y?:                 number | string | undefined;
-			z?:                 number | string | undefined;
-			pointsAtX?:         number | string | undefined;
-			pointsAtY?:         number | string | undefined;
-			pointsAtZ?:         number | string | undefined;
-			specularExponent?:  number | string | undefined;
-			limitingConeAngle?: number | string | undefined;
-		}
-		interface FeTileSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
+			CanBeNothing<{
+				stdDeviation: number | string;
+			}> {}
+		interface FeImageSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
+			ExternalResourceSVGAttributes,
+			StylableSVGAttributes,
+			CanBeNothing<{
+				preserveAspectRatio: SVGPreserveAspectRatio;
+				href:                string;
+			}> {}
+		interface FeMergeSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
+			StylableSVGAttributes {}
+		interface FeMergeNodeSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
+			SingleInputFilterSVGAttributes {}
+		interface FeMorphologySVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
+			SingleInputFilterSVGAttributes,
+			StylableSVGAttributes,
+			CanBeNothing<{
+				operator: 'erode' | 'dilate';
+				radius:   number | string;
+			}> {}
+		interface FeOffsetSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
+			SingleInputFilterSVGAttributes,
+			StylableSVGAttributes,
+			CanBeNothing<{
+				dx: number | string;
+				dy: number | string;
+			}> {}
+		interface FePointLightSVGAttributes<T> extends
+			LightSourceElementSVGAttributes<T>,
+			CanBeNothing<{
+				x: number | string;
+				y: number | string;
+				z: number | string;
+			}> {}
+		interface FeSpecularLightingSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
+			SingleInputFilterSVGAttributes,
+			StylableSVGAttributes,
+			Pick<PresentationSVGAttributes, 'color' | 'lighting-color'>,
+			CanBeNothing<{
+				surfaceScale:     string;
+				specularConstant: string;
+				specularExponent: string;
+				kernelUnitLength: number | string;
+			}> {}
+		interface FeSpotLightSVGAttributes<T> extends
+			LightSourceElementSVGAttributes<T>,
+			CanBeNothing<{
+				x:                 number | string;
+				y:                 number | string;
+				z:                 number | string;
+				pointsAtX:         number | string;
+				pointsAtY:         number | string;
+				pointsAtZ:         number | string;
+				specularExponent:  number | string;
+				limitingConeAngle: number | string;
+			}> {}
+		interface FeTileSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
 			SingleInputFilterSVGAttributes,
 			StylableSVGAttributes {}
-		interface FeTurbulanceSVGAttributes<T>
-			extends FilterPrimitiveElementSVGAttributes<T>,
-			StylableSVGAttributes {
-			baseFrequency?: number | string | undefined;
-			numOctaves?:    number | string | undefined;
-			seed?:          number | string | undefined;
-			stitchTiles?:   'stitch' | 'noStitch' | undefined;
-			type?:          'fractalNoise' | 'turbulence' | undefined;
-		}
-		interface FilterSVGAttributes<T>
-			extends CoreSVGAttributes<T>,
+		interface FeTurbulanceSVGAttributes<T> extends
+			FilterPrimitiveElementSVGAttributes<T>,
+			StylableSVGAttributes,
+			CanBeNothing<{
+				baseFrequency: number | string;
+				numOctaves:    number | string;
+				seed:          number | string;
+				stitchTiles:   'stitch' | 'noStitch';
+				type:          'fractalNoise' | 'turbulence';
+			}> {}
+		interface FilterSVGAttributes<T> extends
+			CoreSVGAttributes<T>,
 			ExternalResourceSVGAttributes,
-			StylableSVGAttributes {
-			filterUnits?:    SVGUnits | undefined;
-			primitiveUnits?: SVGUnits | undefined;
-			x?:              number | string | undefined;
-			y?:              number | string | undefined;
-			width?:          number | string | undefined;
-			height?:         number | string | undefined;
-			filterRes?:      number | string | undefined;
-		}
-		interface ForeignObjectSVGAttributes<T>
-			extends NewViewportSVGAttributes<T>,
+			StylableSVGAttributes,
+			CanBeNothing<{
+				filterUnits:    SVGUnits;
+				primitiveUnits: SVGUnits;
+				x:              number | string;
+				y:              number | string;
+				width:          number | string;
+				height:         number | string;
+				filterRes:      number | string;
+			}> {}
+		interface ForeignObjectSVGAttributes<T> extends
+			NewViewportSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			TransformableSVGAttributes,
-			Pick<PresentationSVGAttributes, 'display' | 'visibility'> {
-			x?:      number | string | undefined;
-			y?:      number | string | undefined;
-			width?:  number | string | undefined;
-			height?: number | string | undefined;
-		}
-		interface GSVGAttributes<T>
-			extends ContainerElementSVGAttributes<T>,
+			Pick<PresentationSVGAttributes, 'display' | 'visibility'>,
+			CanBeNothing<{
+				x:      number | string;
+				y:      number | string;
+				width:  number | string;
+				height: number | string;
+			}> {}
+		interface GSVGAttributes<T> extends
+			ContainerElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
@@ -1779,7 +1944,7 @@ declare global {
 			StylableSVGAttributes,
 			TransformableSVGAttributes,
 			Pick<PresentationSVGAttributes, 'color-profile' | 'image-rendering'>,
-			Partial<{
+			CanBeNothing<{
 				x:                   number | string;
 				y:                   number | string;
 				width:               number | string;
@@ -1799,7 +1964,7 @@ declare global {
 				'marker-mid',
 				'marker-end',
 			][number]>,
-			Partial<{
+			CanBeNothing<{
 				x1: number | string;
 				y1: number | string;
 				x2: number | string;
@@ -1807,7 +1972,7 @@ declare global {
 			}> {}
 		interface LinearGradientSVGAttributes<T> extends
 			GradientElementSVGAttributes<T>,
-			Partial<{
+			CanBeNothing<{
 				x1: number | string;
 				x2: number | string;
 				y1: number | string;
@@ -1819,7 +1984,7 @@ declare global {
 			StylableSVGAttributes,
 			FitToViewBoxSVGAttributes,
 			Pick<PresentationSVGAttributes, 'overflow' | 'clip'>,
-			Partial<{
+			CanBeNothing<{
 				markerUnits:  'strokeWidth' | 'userSpaceOnUse';
 				refX:         number | string;
 				refY:         number | string;
@@ -1832,7 +1997,7 @@ declare global {
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
-			Partial<{
+			CanBeNothing<{
 				maskUnits:        SVGUnits;
 				maskContentUnits: SVGUnits;
 				x:                number | string;
@@ -1854,7 +2019,7 @@ declare global {
 				'marker-mid',
 				'marker-end',
 			][number]>,
-			Partial<{
+			CanBeNothing<{
 				d:          string;
 				pathLength: number | string;
 			}> {}
@@ -1865,7 +2030,7 @@ declare global {
 			StylableSVGAttributes,
 			FitToViewBoxSVGAttributes,
 			Pick<PresentationSVGAttributes, 'overflow' | 'clip'>,
-			Partial<{
+			CanBeNothing<{
 				x:                   number | string;
 				y:                   number | string;
 				width:               number | string;
@@ -1887,7 +2052,7 @@ declare global {
 				'marker-mid',
 				'marker-end',
 			][number]>,
-			Partial<{
+			CanBeNothing<{
 				points: string;
 			}> {}
 		interface PolylineSVGAttributes<T> extends
@@ -1902,12 +2067,12 @@ declare global {
 				'marker-mid',
 				'marker-end',
 			][number]>,
-			Partial<{
+			CanBeNothing<{
 				points: string;
 			}> {}
 		interface RadialGradientSVGAttributes<T> extends
 			GradientElementSVGAttributes<T>,
-			Partial<{
+			CanBeNothing<{
 				cx: number | string;
 				cy: number | string;
 				r:  number | string;
@@ -1921,7 +2086,7 @@ declare global {
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			TransformableSVGAttributes,
-			Partial<{
+			CanBeNothing<{
 				x:      number | string;
 				y:      number | string;
 				width:  number | string;
@@ -1941,7 +2106,7 @@ declare global {
 				'stop-color',
 				'stop-opacity',
 			][number]>,
-			Partial<{
+			CanBeNothing<{
 				offset: number | string;
 			}> {}
 		interface SvgSVGAttributes<T> extends
@@ -1953,7 +2118,7 @@ declare global {
 			FitToViewBoxSVGAttributes,
 			ZoomAndPanSVGAttributes,
 			PresentationSVGAttributes,
-			Partial<{
+			CanBeNothing<{
 				version:           string;
 				baseProfile:       string;
 				x:                 number | string;
@@ -1965,20 +2130,20 @@ declare global {
 				xmlns:             string;
 				'xmlns:xlink':     string;
 			}> {}
-		interface SwitchSVGAttributes<T>
-			extends ContainerElementSVGAttributes<T>,
+		interface SwitchSVGAttributes<T> extends
+			ContainerElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			TransformableSVGAttributes,
 			Pick<PresentationSVGAttributes, 'display' | 'visibility'> {}
-		interface SymbolSVGAttributes<T>
-			extends ContainerElementSVGAttributes<T>,
+		interface SymbolSVGAttributes<T> extends
+			ContainerElementSVGAttributes<T>,
 			NewViewportSVGAttributes<T>,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			FitToViewBoxSVGAttributes,
-			Partial<{
+			CanBeNothing<{
 				width:               number | string;
 				height:              number | string;
 				preserveAspectRatio: SVGPreserveAspectRatio;
@@ -1988,15 +2153,15 @@ declare global {
 				x:                   number | string;
 				y:                   number | string;
 			}> {}
-		interface TextSVGAttributes<T>
-			extends TextContentElementSVGAttributes<T>,
+		interface TextSVGAttributes<T> extends
+			TextContentElementSVGAttributes<T>,
 			GraphicsElementSVGAttributes<T>,
 			ConditionalProcessingSVGAttributes,
 			ExternalResourceSVGAttributes,
 			StylableSVGAttributes,
 			TransformableSVGAttributes,
 			Pick<PresentationSVGAttributes, 'writing-mode' | 'text-rendering'>,
-			Partial<{
+			CanBeNothing<{
 				x:            number | string;
 				y:            number | string;
 				dx:           number | string;
@@ -2016,7 +2181,7 @@ declare global {
 				'display',
 				'visibility',
 			][number]>,
-			Partial<{
+			CanBeNothing<{
 				startOffset: number | string;
 				method:      'align' | 'stretch';
 				spacing:     'auto' | 'exact';
@@ -2033,7 +2198,7 @@ declare global {
 				'display',
 				'visibility',
 			][number]>,
-			Partial<{
+			CanBeNothing<{
 				x:            number | string;
 				y:            number | string;
 				dx:           number | string;
@@ -2051,7 +2216,7 @@ declare global {
 			PresentationSVGAttributes,
 			ExternalResourceSVGAttributes,
 			TransformableSVGAttributes,
-			Partial<{
+			CanBeNothing<{
 				x:      number | string;
 				y:      number | string;
 				width:  number | string;
@@ -2063,7 +2228,7 @@ declare global {
 			ExternalResourceSVGAttributes,
 			FitToViewBoxSVGAttributes,
 			ZoomAndPanSVGAttributes,
-			Partial<{
+			CanBeNothing<{
 				viewTarget: string;
 			}> {}
 		/** @type {HTMLElementTagNameMap} */

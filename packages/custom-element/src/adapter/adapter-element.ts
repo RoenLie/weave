@@ -26,6 +26,9 @@ export class AdapterBase extends HTMLElement {
 
 		this.attachShadow({ mode: 'open' });
 		this.renderRoot = this.shadowRoot ?? this;
+		// Marks this as a web component.
+		// Can be used to identify a wc from a regular HTMLElement.
+		this.setAttribute('data-wc', '');
 
 		const base = this.constructor as any as typeof AdapterBase;
 		const metadata = base.adapter.metadata;
@@ -45,7 +48,8 @@ export class AdapterBase extends HTMLElement {
 		const protoChain = getPrototypeChain(base.adapter);
 		metadata.styles = getFlatStyles('styles', protoChain);
 
-		this.shadowRoot!.adoptedStyleSheets = metadata.styles;
+		if (this.shadowRoot)
+			this.shadowRoot.adoptedStyleSheets = metadata.styles;
 
 		if (metadata.observedAttributes)
 			this.__attrCtrl = new MutationObserver(this.observeAttributes.bind(this));
@@ -185,6 +189,10 @@ export class AdapterElement implements ReactiveControllerHost {
 			return;
 
 		const adapter = this;
+
+		// We create a new class that extends the base element class.
+		// We then set the adapter property to the adapter class.
+		// During initialization of the element class, it will use this adapter.
 		const cls = class extends adapterBase.value {
 
 			protected static override adapter = adapter;
@@ -204,7 +212,7 @@ export class AdapterElement implements ReactiveControllerHost {
 		metadata.observedAttributes ??= [];
 		metadata.propertyMetadata   ??= {};
 		metadata.signalProps        ??= [];
-		metadata.changedProps       ??= new Set();
+		metadata.changedProps       ??= new Map();
 		metadata.previousProps      ??= new Map();
 
 		return metadata;
@@ -281,7 +289,7 @@ export class AdapterElement implements ReactiveControllerHost {
 			controller.hostDisconnected?.();
 	}
 
-	protected beforeUpdate(changedProps: Set<string | symbol>): void {
+	protected beforeUpdate(changedProps: Map<keyof any, any>): void {
 		for (const controller of this.__controllers)
 			controller.hostUpdate?.();
 	}
@@ -290,7 +298,7 @@ export class AdapterElement implements ReactiveControllerHost {
 		return;
 	};
 
-	protected afterUpdate(changedProps: Set<string | symbol>): void {
+	protected afterUpdate(changedProps: Map<keyof any, any>): void {
 		for (const controller of this.__controllers)
 			controller.hostUpdated?.();
 	}
@@ -302,10 +310,11 @@ export class AdapterElement implements ReactiveControllerHost {
 
 		for (const prop of metadata.signalProps ?? []) {
 			const value = this[prop as keyof typeof this];
+			const previous = metadata.previousProps.get(prop);
 
-			if (metadata.previousProps.get(prop) !== value) {
+			if (previous !== value) {
+				metadata.changedProps.set(prop, previous);
 				metadata.previousProps.set(prop, value);
-				metadata.changedProps.add(prop);
 			}
 		}
 	}
@@ -337,7 +346,7 @@ export class AdapterElement implements ReactiveControllerHost {
 		);
 
 		// We need to wait for the next frame to ensure the DOM has been updated.
-		setTimeout(() => {
+		queueMicrotask(() => {
 			this.afterUpdate(metadata.changedProps);
 			metadata.changedProps.clear();
 
@@ -345,14 +354,13 @@ export class AdapterElement implements ReactiveControllerHost {
 				(this.hasUpdated as boolean) = true;
 				this.afterConnected();
 			}
-
-			// Resolve the promise and clear the resolve function.
-			this.__resolveUpdate = void this.__resolveUpdate?.(true);
 		});
+
+		// Resolve the promise and clear the resolve function.
+		this.__resolveUpdate = void this.__resolveUpdate?.(true);
 	}
 
 	static styles: CSSStyle;
-
 
 	//#region consumer-api
 	/** Retrieves a bound value from the dependency injection container. */
@@ -379,6 +387,7 @@ export class AdapterElement implements ReactiveControllerHost {
 
 		if (this.__resolveUpdate)
 			return this.updateComplete;
+
 
 		const stamp = performance.now();
 		this.__setPendingUpdate(stamp);
@@ -449,7 +458,7 @@ export class AdapterElement implements ReactiveControllerHost {
 		return this.__removeEventListener.bind(this);
 	}
 
-	__addEventListener(
+	protected __addEventListener(
 		type: string,
 		listener: EventListenerOrEventListenerObject,
 		options?: boolean | AddEventListenerOptions,
@@ -465,7 +474,7 @@ export class AdapterElement implements ReactiveControllerHost {
 		listeners.add({ type, listener, options });
 	}
 
-	__removeEventListener(
+	protected __removeEventListener(
 		type: string,
 		listener: EventListenerOrEventListenerObject,
 		options?: boolean | EventListenerOptions,
