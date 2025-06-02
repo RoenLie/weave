@@ -1,8 +1,8 @@
 import { AdapterElement, css, type CSSStyle, customElement, PluginModule, provider } from '@roenlie/custom-element/adapter';
 import { Router } from '@roenlie/custom-element/router';
 
-import { Badge } from '../components/badge.cmp.tsx';
 import { cssreset } from '../styles/css-reset.ts';
+import { BadgePage } from './badge-page.tsx';
 
 
 @provider()
@@ -21,7 +21,16 @@ export class RouterCmp extends AdapterElement {
 		}),
 	];
 
-	protected routes = new Router(this, []);
+	protected routes = new Router(this, [
+		{
+			path:   '/',
+			render: () => (<></>),
+		},
+		{
+			path:   '/badge',
+			render: () => (<BadgePage />),
+		},
+	]);
 
 	override connected(): void {
 		super.connected();
@@ -32,22 +41,7 @@ export class RouterCmp extends AdapterElement {
 	}
 
 	protected override render(): unknown {
-		return (
-			<>
-				<Badge variant="default" role="link">
-					Badge
-				</Badge>
-				<Badge variant="secondary" role="link">
-					Badge
-				</Badge>
-				<Badge variant="outline" role="link">
-					Badge
-				</Badge>
-				<Badge variant="destructive" role="link">
-					Badge
-				</Badge>
-			</>
-		);
+		return this.routes.outlet();
 	}
 
 	static override styles: CSSStyle = [
@@ -55,7 +49,7 @@ export class RouterCmp extends AdapterElement {
 		css`
 		:host {
 			display: grid;
-			height: 100%;
+			height: 100dvh;
 		}
 		`,
 	];

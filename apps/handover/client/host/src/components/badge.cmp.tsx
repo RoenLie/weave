@@ -1,34 +1,9 @@
-import { sleep } from '@roenlie/core/async';
-import type { stringliteral } from '@roenlie/core/types';
-import { AdapterElement, css, customElement, property, SlotController, state } from '@roenlie/custom-element/adapter';
-import { ifDefined, type ReactiveController, when } from '@roenlie/custom-element/shared';
+import { AdapterElement, css, customElement, property } from '@roenlie/custom-element/adapter';
+import { ifDefined } from '@roenlie/custom-element/shared';
 import { toJSX } from '@roenlie/lit-jsx';
-import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cssreset } from '../styles/css-reset.ts';
-import { typography } from '../styles/typography.ts';
-
-
-const badgeVariants = cva(
-	'inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden',
-	{
-		variants: {
-			variant: {
-				default:
-          'border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
-				secondary:
-          'border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
-				destructive:
-          'border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
-				outline:
-          'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
-			},
-		},
-		defaultVariants: {
-			variant: 'default',
-		},
-	},
-);
+import { properties } from '../styles/properties.ts';
 
 
 @customElement('ho-badge')
@@ -37,22 +12,13 @@ export class BadgeElement extends AdapterElement {
 	@property(String) accessor variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'default';
 	@property(String) accessor href: string | undefined;
 
-	protected slotCtrl = new SlotController(this);
-
-	override connected(): void {
-		super.connected();
-	}
-
 	protected override render(): unknown {
 		const Tag = this.href ? 'a' : 'span';
-
-		console.log('logged');
 
 		return (
 			<Tag
 				id="base"
 				tabindex="0"
-				class="text-xs_leading-normal_semibold"
 				href={ ifDefined(this.href) }
 			>
 				<slot></slot>
@@ -62,36 +28,78 @@ export class BadgeElement extends AdapterElement {
 
 	static override styles = [
 		cssreset,
-		typography,
 		css`
 		:host {
-			display: inline-flex;
+			display: contents;
 		}
 		#base {
-			border: var(--border-width_border) solid var(--base_transparent);
-			border-radius: var(--border-radius_rounded-md);
-			padding-block: var(--spacing_0-5);
-			padding-inline: var(--spacing_2);
+			overflow: hidden;
+			display: inline-flex;
+			width: fit-content;
+			flex-shrink: 0;
+			align-items: center;
+			justify-content: center;
+			gap: var(--gap-1);
+
+			border: 1px solid transparent;
+			border-radius: var(--rounded-md);
+			padding-block: var(--padding-0_5);
+			padding-inline: var(--padding-2);
+
+			font-size: var(--text-xs);
+    		line-height: var(--text-xs--line-height);
+			font-weight: var(--font-weight-medium);
+			white-space: nowrap;
+
+			transition-property: color, box-shadow;
+			transition-timing-function: var(--default-transition-timing-function);
+			transition-duration: var(--default-transition-duration);
+
+			--tw-ring-color: color-mix(in oklab, var(--ring) 50%, transparent);
+			--tw-ring-shadow: 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+
+			&:focus-visible {
+        		box-shadow:
+					var(--tw-inset-shadow),
+					var(--tw-inset-ring-shadow),
+					var(--tw-ring-offset-shadow),
+					var(--tw-ring-shadow),
+					var(--tw-shadow);
+				border-color: var(--ring);
+			}
 		}
 		:host([variant='default']) #base {
-			background-color: var(--base_primary);
-			color: var(--base_primary-foreground);
-		}
-		:host([variant='secondary']) #base {
-			background-color: var(--base_secondary);
-			color: var(--base_secondary-foreground);
-		}
-		:host([variant='outline']) #base {
-			background-color: var(--base_background);
-			color: var(--base_foreground);
-			border-color: var(--base_border);
-		}
-		:host([variant='destructive']) #base {
-			background-color: var(--base_destructive);
-			color: var(--base_destructive-foreground);
+			background-color: var(--primary);
+			color: var(--primary-foreground);
 
 			&:hover {
-				background-color: var(--base_destructive_90);
+				background-color: var(--primary_90);
+			}
+		}
+		:host([variant='secondary']) #base {
+			background-color: var(--secondary);
+			color: var(--secondary-foreground);
+
+			&:hover {
+				background-color: var(--secondary_90);
+			}
+		}
+		:host([variant='outline']) #base {
+			background-color: var(--background);
+			color: var(--foreground);
+			border-color: var(--border);
+
+			&:hover {
+				background-color: var(--accent);
+				color: var(--accent-foreground);
+			}
+		}
+		:host([variant='destructive']) #base {
+			background-color: var(--destructive);
+			color: var(--destructive-foreground);
+
+			&:hover {
+				background-color: var(--destructive_90);
 			}
 		}
 		`,
