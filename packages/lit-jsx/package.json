@@ -9,7 +9,7 @@
 		"type": "git",
 		"url": "git+https://github.com/sanguinejs/sanguinejs.git"
 	},
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"files": [
 		"dist",
 		"src"
@@ -35,11 +35,11 @@
 		"build::js": "vite build",
 		"build::types": "tsc --project ./src/tsconfig.json --noEmit false"
 	},
-	"peerDependencies": {
-		"lit-html": "^3.3.0"
-	},
 	"dependencies": {
 		"csstype": "^3.1.3"
+	},
+	"peerDependencies": {
+		"lit-html": "^3.3.0"
 	},
 	"devDependencies": {
 		"lit-html": "^3.3.0"
