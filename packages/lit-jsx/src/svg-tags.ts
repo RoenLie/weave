@@ -93,18 +93,6 @@ export const svgTags: Set<string> = new Set([
 	'hkern', // deprecated
 	'vkern', // deprecated
 	'missing-glyph', // deprecated
-
-	// Descriptive Elements
-	'desc',
-	'title',
-	'metadata',
-
-	// Other Elements
-	'style',
-	'script',
-	'view',
-	'cursor', // deprecated
-	'a',
 ]);
 
 
@@ -113,6 +101,4 @@ export const svgTags: Set<string> = new Set([
  * @param tagName - The tag name to check
  * @returns true if the tag is an SVG tag, false otherwise
  */
-export const isSvgTag = (tagName: string): boolean => {
-	return svgTags.has(tagName);
-};
+export const isSvgTag = (tagName: string): boolean => svgTags.has(tagName);
