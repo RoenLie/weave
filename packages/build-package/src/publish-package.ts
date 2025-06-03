@@ -1,3 +1,4 @@
+import { execPromise } from './exec-promise.ts';
 import { incrementVersion } from './increment-version.ts';
 import { mergeTSConfigInPackage } from './merge-tsconfig.ts';
 
@@ -19,9 +20,10 @@ export const publishPackage = async (packageDir: string, verbose: boolean, dryRu
 	}
 
 	if (!dryRun) {
-		//console.log('Publishing package...');
-		//[ _, err ] = await execPromise(`cd ${ packageDir } && pnpm publish --access public --no-git-checks`, handleStdout);
-		//if (err)
-		//	throw err;
+		console.log('Publishing package...');
+		const handleStdout = (data: any) => verbose && process.stdout.write(data);
+		const [ _, err ] = await execPromise(`cd ${ packageDir } && pnpm publish --access public --no-git-checks`, handleStdout);
+		if (err)
+			throw err;
 	}
 };
