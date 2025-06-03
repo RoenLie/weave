@@ -1,53 +1,20 @@
-import { existsSync } from 'node:fs';
-
-import type { ReleaseType } from 'semver';
-
 import { copy } from '../filesystem/copy-files.js';
 import { indexBuilder as buildIndex } from '../index-builder/index-builder.js';
-import { mergeTSConfig } from '../merge-tsconfig/merge-tsconfig.js';
 import { createPackageExports, createTypePath, type ExportEntry } from '../package-exports/package-exports.js';
-import { incrementVersion } from '../versioning/increment-version.js';
 import { loadConfig } from './config.js';
 
 
-export interface PartialToolbox {
-	type:             'partial';
-	mergeTSConfig:    (config: string, outFile: string) => void;
-	incrementVersion: (release?: ReleaseType) => void;
-}
-
 export interface Toolbox {
-	type:             'full';
-	mergeTSConfig:    (config: string, outFile: string) => void;
-	incrementVersion: (release?: ReleaseType) => void;
-	indexBuilder:     () => Promise<void>;
-	exportsBuilder:   () => Promise<void>;
-	copy:             (profile: string) => Promise<void>;
+	indexBuilder:   () => Promise<void>;
+	exportsBuilder: () => Promise<void>;
+	copy:           (profile: string) => Promise<void>;
 }
 
 
-export const toolbox = async (filePath = './pkg-toolbox.ts'): Promise<PartialToolbox | Toolbox> => {
-	const partialToolbox = {
-		type:          'partial',
-		mergeTSConfig: (config: string, outFile: string) => {
-			mergeTSConfig(config, outFile);
-		},
-		incrementVersion: (release: ReleaseType | undefined) => {
-			incrementVersion({ release });
-		},
-	} satisfies PartialToolbox;
-
-	if (!existsSync(filePath)) {
-		console.warn('No pkg-toolbox.ts file found. Only certain actions available.');
-
-		return partialToolbox;
-	}
-
+export const toolbox = async (filePath = './pkg-toolbox.ts'): Promise<Toolbox> => {
 	const config = await loadConfig(filePath);
 
 	return {
-		...partialToolbox,
-		type:         'full',
 		indexBuilder: async () => {
 			if (!config.indexBuilder)
 				throw ('No index builder config supplied.');

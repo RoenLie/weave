@@ -8,5 +8,8 @@
 	"bin": {
 		"build-package": "./bin/index.ts"
 	},
-	"dependencies": {}
+	"dependencies": {
+		"semver": "^7.7.2",
+		"@types/semver": "^7.7.0"
+	}
 }

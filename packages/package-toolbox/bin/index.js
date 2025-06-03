@@ -11,25 +11,6 @@ import { toolbox } from '../dist/toolbox/toolbox.js';
 * @typedef { import('yargs').ArgumentsCamelCase<T> } Args
 */
 
-/**
-* @typedef { Args<{
-* 	config: string,
-* 	outFile?: string,
-* }> } MergeTSConfig
-*/
-
-/**
-* @typedef { Args<{
-* 	release: import('semver').ReleaseType
-* }> } IncrementVersion
-*/
-
-/**
-* @typedef { Args<
-* 	import('../src/build-package/build-package.ts').BuildPackageOptions
-* > } BuildIndexes
-*/
-
 
 const cmds = await toolbox();
 const noop = () => { /*  */ };
@@ -38,54 +19,30 @@ const noop = () => { /*  */ };
 let cli = yargs(hideBin(process.argv)).demandCommand(1);
 
 cli = cli.command(
-	'merge-tsconfig',
-	'Merges tsconfig inheritance chain into a single tsconfig.',
+	'build-indexes',
+	'build indexes at configured locations.',
 	noop,
-	async (args) => {
-		const { config, outFile } = /** @type {MergeTSConfig} */ (args);
-		if (typeof config !== 'string')
-			throw new Error('Missing config argument.');
-
-		cmds.mergeTSConfig(config, outFile ?? config);
+	async () => {
+		cmds.indexBuilder();
 	},
 ).command(
-	'increment-version',
-	'increment the package.json version.',
+	'build-exports',
+	'build package.json exports as defined in config.',
 	noop,
-	args => {
-		const { release } = /** @type {IncrementVersion} */ (args);
+	async () => {
+		cmds.exportsBuilder();
+	},
+).command(
+	'copy',
+	'Copies files base on the profile key supplied.',
+	noop,
+	async (args) => {
+		const { profile } = args;
+		if (typeof profile !== 'string')
+			throw ('Invalid profile arguments: ' + JSON.stringify(args));
 
-		cmds.incrementVersion(release);
+		cmds.copy(profile);
 	},
 );
-
-if (cmds.type === 'full') {
-	cli = cli.command(
-		'build-indexes',
-		'build indexes at configured locations.',
-		noop,
-		async () => {
-			cmds.indexBuilder();
-		},
-	).command(
-		'build-exports',
-		'build package.json exports as defined in config.',
-		noop,
-		async () => {
-			cmds.exportsBuilder();
-		},
-	).command(
-		'copy',
-		'Copies files base on the profile key supplied.',
-		noop,
-		async (args) => {
-			const { profile } = args;
-			if (typeof profile !== 'string')
-				throw ('Invalid profile arguments: ' + JSON.stringify(args));
-
-			cmds.copy(profile);
-		},
-	);
-}
 
 cli.parse();

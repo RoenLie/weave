@@ -959,7 +959,14 @@ importers:
         specifier: ^3.3.0
         version: 3.3.0
 
-  packages/build-package: {}
+  packages/build-package:
+    dependencies:
+      '@types/semver':
+        specifier: ^7.7.0
+        version: 7.7.0
+      semver:
+        specifier: ^7.7.2
+        version: 7.7.2
 
   packages/core:
     dependencies:

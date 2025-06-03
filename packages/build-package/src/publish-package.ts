@@ -1,4 +1,5 @@
 import { execPromise } from './exec-promise.ts';
+import { incrementVersion } from './increment-version.ts';
 
 
 export const publishPackage = async (packageDir: string, verbose: boolean, dryRun: boolean): Promise<void> => {
@@ -9,9 +10,12 @@ export const publishPackage = async (packageDir: string, verbose: boolean, dryRu
 	[ _, err ] = await execPromise(`cd ${ packageDir } && pnpm merge-tsconfig`, handleStdout);
 
 	console.log('Incrementing package version...');
-	[ _, err ] = await execPromise(`cd ${ packageDir } && pkg-toolbox increment-version`, handleStdout);
-	if (err)
-		throw err;
+	try {
+		incrementVersion(packageDir, { release: 'patch' });
+	}
+	catch (err) {
+		return void (verbose && console.error(err));
+	}
 
 	if (!dryRun) {
 		//console.log('Publishing package...');

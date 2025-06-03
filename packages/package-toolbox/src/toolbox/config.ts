@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url';
 
 import { build } from 'vite';
 
-import { type ToolboxConfig } from './define-toolbox.js';
+import type { ToolboxConfig } from './define-toolbox.js';
 
 
 export const loadConfig = async (filePath: string): Promise<ToolboxConfig> => {
