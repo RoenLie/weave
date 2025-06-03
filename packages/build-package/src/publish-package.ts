@@ -1,20 +1,21 @@
-import { execPromise } from './exec-promise.ts';
 import { incrementVersion } from './increment-version.ts';
+import { mergeTSConfigInPackage } from './merge-tsconfig.ts';
 
 
 export const publishPackage = async (packageDir: string, verbose: boolean, dryRun: boolean): Promise<void> => {
-	const handleStdout = (data: any) => verbose && process.stdout.write(data);
-	let [ _, err ]: Awaited<ReturnType<typeof execPromise>> = [ undefined, undefined ] as any;
-
-	console.log('Merging tsconfig.json files...');
-	[ _, err ] = await execPromise(`cd ${ packageDir } && pnpm merge-tsconfig`, handleStdout);
-
-	console.log('Incrementing package version...');
 	try {
+		console.log('Merging tsconfig.json files...');
+		await mergeTSConfigInPackage(packageDir);
+	}
+	catch (err) {
+		return console.error('Error merging tsconfig.json files:', err);
+	}
+	try {
+		console.log('Incrementing package version...');
 		incrementVersion(packageDir, { release: 'patch' });
 	}
 	catch (err) {
-		return void (verbose && console.error(err));
+		return console.error('Error incrementing package version:', err);
 	}
 
 	if (!dryRun) {

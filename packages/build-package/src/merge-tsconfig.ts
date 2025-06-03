@@ -1,20 +1,17 @@
 import { writeFileSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import { glob } from 'node:fs/promises';
+import { join as joinPosix } from 'node:path/posix';
 
 import {
 	getTSConfigFromModule, getTSConfigFromPath,
 	mergeJson, type TSConfig,
-} from './merge-tsconfig-utils.js';
+} from './merge-tsconfig-utils.ts';
 
 
-export const mergeTSConfig = (config: string, outFile: string): void => {
-	const localDir = process.cwd();
-
-	const entrypointPath = join(resolve(localDir, dirname(config)), basename(config));
-
-	const tsConfig = getTSConfigFromPath(entrypointPath);
+export const mergeTSConfig = (tsconfigPath: string): void => {
+	const tsConfig = getTSConfigFromPath(tsconfigPath);
 	if (!tsConfig)
-		return console.error('Could not get initial tsconfig. ' + entrypointPath);
+		return console.error('Could not get initial tsconfig. ' + tsconfigPath);
 
 	const tsConfigChain: TSConfig[] = [ tsConfig ];
 
@@ -30,7 +27,12 @@ export const mergeTSConfig = (config: string, outFile: string): void => {
 	const merged = mergeJson(...tsConfigChain);
 	delete merged.extends;
 
-	const outPath = join(resolve(localDir, dirname(outFile), basename(outFile)));
+	writeFileSync(tsconfigPath, JSON.stringify(merged, undefined, 3));
+};
 
-	writeFileSync(outPath, JSON.stringify(merged, undefined, 3));
+
+export const mergeTSConfigInPackage = async (packageDir: string): Promise<void> => {
+	const tsConfigGlob = glob(joinPosix(packageDir, '/**/tsconfig.json'));
+	for await (const tsConfigPath of tsConfigGlob)
+		mergeTSConfig(tsConfigPath);
 };
