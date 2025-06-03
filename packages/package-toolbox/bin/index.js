@@ -57,23 +57,6 @@ cli = cli.command(
 
 		cmds.incrementVersion(release);
 	},
-).command(
-	'build-package [name]',
-	'Builds and optionally publishes a package.',
-	noop,
-	async (args) => {
-		const { name, verbose, publish, dryRun } = /** @type {BuildIndexes} */ (args);
-
-		if (typeof name !== 'string')
-			throw new Error('Missing name argument.');
-
-		cmds.buildPackage({
-			name,
-			verbose,
-			publish,
-			dryRun,
-		});
-	},
 );
 
 if (cmds.type === 'full') {

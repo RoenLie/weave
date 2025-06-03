@@ -1,0 +1,12 @@
+{
+	"name": "@roenlie/build-package",
+	"description": "description",
+	"authors": "author",
+	"version": "1.0.0",
+	"type": "module",
+	"main": "pathToMain",
+	"bin": {
+		"build-package": "./bin/index.ts"
+	},
+	"dependencies": {}
+}

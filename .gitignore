@@ -38,4 +38,5 @@ yarn-error.log*
 *.pem
 
 obj
-bin
+**/bin/Debug/**
+**/bin/Publish/**

@@ -2,7 +2,6 @@ import { existsSync } from 'node:fs';
 
 import type { ReleaseType } from 'semver';
 
-import { buildPackage, type BuildPackageOptions } from '../build-package/build-package.js';
 import { copy } from '../filesystem/copy-files.js';
 import { indexBuilder as buildIndex } from '../index-builder/index-builder.js';
 import { mergeTSConfig } from '../merge-tsconfig/merge-tsconfig.js';
@@ -15,14 +14,12 @@ export interface PartialToolbox {
 	type:             'partial';
 	mergeTSConfig:    (config: string, outFile: string) => void;
 	incrementVersion: (release?: ReleaseType) => void;
-	buildPackage:     (options: BuildPackageOptions) => Promise<void>;
 }
 
 export interface Toolbox {
 	type:             'full';
 	mergeTSConfig:    (config: string, outFile: string) => void;
 	incrementVersion: (release?: ReleaseType) => void;
-	buildPackage:     (options: BuildPackageOptions) => Promise<void>;
 	indexBuilder:     () => Promise<void>;
 	exportsBuilder:   () => Promise<void>;
 	copy:             (profile: string) => Promise<void>;
@@ -37,9 +34,6 @@ export const toolbox = async (filePath = './pkg-toolbox.ts'): Promise<PartialToo
 		},
 		incrementVersion: (release: ReleaseType | undefined) => {
 			incrementVersion({ release });
-		},
-		buildPackage: async (options) => {
-			await buildPackage(options);
 		},
 	} satisfies PartialToolbox;
 
