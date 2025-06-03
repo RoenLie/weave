@@ -1,11 +1,16 @@
+import type { TemplateResult } from 'lit-html';
 import { PartType } from 'lit-html/directive.js';
-import { type ClassInfo, classMap } from 'lit-html/directives/class-map.js';
+import type { ClassInfo } from 'lit-html/directives/class-map.js';
+import { classMap } from 'lit-html/directives/class-map.js';
 import { ref as litRef } from 'lit-html/directives/ref.js';
-import { type StyleInfo, styleMap } from 'lit-html/directives/style-map.js';
+import type { StyleInfo } from 'lit-html/directives/style-map.js';
+import { styleMap } from 'lit-html/directives/style-map.js';
 
+import { createUnCompiledTemplate } from './create-uncompiled.js';
 import { eventNameCache } from './event-names.js';
 import { getLitParts } from './jsx-utils.js';
 import type { Config, FakeCompiledTemplate, FakeCompiledTemplateResult, FakeTemplateStringsArray } from './runtime-types.js';
+import { isSvgTag } from './svg-tags.js';
 
 
 // These are cached by way of TemplateStringsArray reference, which is unique per call site.
@@ -24,15 +29,17 @@ export const createCompiledTemplate = (
 	cacheKey: TemplateStringsArray,
 	type: string,
 	config: Config,
-): FakeCompiledTemplateResult => {
+): FakeCompiledTemplateResult | TemplateResult => {
 	const { children, ref, style, classList, ...props } = config;
+
+	if (isSvgTag(type))
+		return createUnCompiledTemplate(cacheKey, type, config);
 
 	const values = [] as unknown[];
 
 	let cacheObject = compiledCache.get(cacheKey);
 	if (!cacheObject)
 		compiledCache.set(cacheKey, cacheObject = {});
-
 
 	const result: FakeCompiledTemplateResult = {
 		_$litType$: cacheObject[type]!,
@@ -66,7 +73,7 @@ export const createCompiledTemplate = (
 
 	// This is the first time this template is being used.
 	// Create a new compiled template and cache before returning it.
-	const stringTemplate = '<' + type + '>' + '<!-- lit-jsx -->' + '</' + type + '>';
+	const stringTemplate = '<' + type + '>' + '<?>' + '</' + type + '>';
 	const h = [ stringTemplate ] as FakeTemplateStringsArray;
 	h.raw = h;
 

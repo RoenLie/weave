@@ -1,10 +1,13 @@
 import type { TemplateResult } from 'lit-html';
-import { type ClassInfo, classMap } from 'lit-html/directives/class-map.js';
+import type { ClassInfo } from 'lit-html/directives/class-map.js';
+import { classMap } from 'lit-html/directives/class-map.js';
 import { ref as litRef } from 'lit-html/directives/ref.js';
-import { type StyleInfo, styleMap } from 'lit-html/directives/style-map.js';
+import type { StyleInfo } from 'lit-html/directives/style-map.js';
+import { styleMap } from 'lit-html/directives/style-map.js';
 
 import { eventNameCache } from './event-names.js';
 import type { Config, FakeTemplateResult, FakeTemplateStringsArray } from './runtime-types.js';
+import { isSvgTag } from './svg-tags.js';
 
 
 // Lit wants to receive the same template strings array for the same template.
@@ -16,7 +19,7 @@ import type { Config, FakeTemplateResult, FakeTemplateStringsArray } from './run
 const templateCache: WeakMap<TemplateStringsArray, FakeTemplateStringsArray> = new WeakMap();
 
 
-export const createTemplateResult = (
+export const createUnCompiledTemplate = (
 	cacheKey: TemplateStringsArray,
 	type: string,
 	config: Config,
@@ -24,7 +27,7 @@ export const createTemplateResult = (
 	const { children, ref, style, classList, ...props } = config;
 
 	const result = {
-		_$litType$: 1,
+		_$litType$: isSvgTag(type) ? 2 : 1,
 		strings:    templateCache.get(cacheKey),
 		values:     [ '' ],
 	} as FakeTemplateResult;

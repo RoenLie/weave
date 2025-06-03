@@ -3,7 +3,6 @@ import { ifDefined } from '@roenlie/custom-element/shared';
 import { toJSX } from '@roenlie/lit-jsx';
 
 import { cssreset } from '../styles/css-reset.ts';
-import { properties } from '../styles/properties.ts';
 
 
 @customElement('ho-badge')
@@ -109,3 +108,12 @@ export class BadgeElement extends AdapterElement {
 
 
 export const Badge = toJSX(BadgeElement);
+
+
+declare global {
+	namespace JSX {
+		interface IntrinsicElements {
+			'ho-badge': JSXProps<BadgeElement>;
+		}
+	}
+}
