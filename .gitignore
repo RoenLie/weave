@@ -40,3 +40,4 @@ yarn-error.log*
 obj
 **/bin/Debug/**
 **/bin/Publish/**
+**/bin/Release/**

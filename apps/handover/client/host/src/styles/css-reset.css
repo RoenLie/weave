@@ -1,6 +1,5 @@
 @layer theme, base, components, utilities, properties;
 
-
 @layer base {
 	/* Reset everything except web components */
 	*:not([data-wc]),
@@ -228,8 +227,11 @@
 	}
 
 	body {
+		font-synthesis: none;
 		font-synthesis-weight: none;
-		text-rendering: optimizeLegibility
+		text-rendering: optimizeLegibility;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
 	}
 
 	@supports (font: -apple-system-body) and (appearance:none) {

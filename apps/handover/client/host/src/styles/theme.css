@@ -1,5 +1,3 @@
-@layer theme, base, components, utilities, properties;
-
 @layer theme {
 	:root {
 		--font-sans: var(--font-sans);

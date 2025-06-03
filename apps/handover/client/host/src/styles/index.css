@@ -3,21 +3,20 @@
 @import './properties.css';
 
 
-:root {
-  font-family: "Geist", system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: var(--base_foreground);
-  background-color: var(--base_background);
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+html {
+	--scheme: dark;
 }
 
+body {
+	color: var(--foreground);
+	background-color: var(--background);
+}
+
+:root {
+  font-family: "Geist", system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+}
 
 :root {
 	--radius: .625rem;
@@ -92,7 +91,7 @@
 	--destructive_90: color-mix(in oklch, var(--destructive) 90%, transparent);
 }
 
-.dark {
+html.dark {
 	--background: oklch(.145 0 0);
 	--foreground: oklch(.985 0 0);
 	--card: oklch(.205 0 0);
@@ -133,4 +132,3 @@
 	--selection: oklch(.922 0 0);
 	--selection-foreground: oklch(.205 0 0);
 }
-

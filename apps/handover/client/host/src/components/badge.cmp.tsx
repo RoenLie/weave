@@ -29,13 +29,13 @@ export class BadgeElement extends AdapterElement {
 		cssreset,
 		css`
 		:host {
-			display: contents;
+			flex-shrink: 0;
+			display: inline-flex;
+			width: fit-content;
 		}
 		#base {
 			overflow: hidden;
-			display: inline-flex;
-			width: fit-content;
-			flex-shrink: 0;
+			display: grid;
 			align-items: center;
 			justify-content: center;
 			gap: var(--gap-1);
@@ -58,13 +58,13 @@ export class BadgeElement extends AdapterElement {
 			--tw-ring-shadow: 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
 
 			&:focus-visible {
+				border-color: var(--ring);
         		box-shadow:
 					var(--tw-inset-shadow),
 					var(--tw-inset-ring-shadow),
 					var(--tw-ring-offset-shadow),
 					var(--tw-ring-shadow),
 					var(--tw-shadow);
-				border-color: var(--ring);
 			}
 		}
 		:host([variant='default']) #base {
@@ -95,10 +95,21 @@ export class BadgeElement extends AdapterElement {
 		}
 		:host([variant='destructive']) #base {
 			background-color: var(--destructive);
-			color: var(--destructive-foreground);
+			color: var(--color-white);
 
 			&:hover {
 				background-color: var(--destructive_90);
+			}
+			&:focus-visible {
+				--tw-ring-color: var(--destructive_20);
+			}
+
+			@container style(--scheme: dark) {
+				background-color: var(--destructive_60);
+
+				&:focus-visible {
+					--tw-ring-color: var(--destructive_40);
+				}
 			}
 		}
 		`,
