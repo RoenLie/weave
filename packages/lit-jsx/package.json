@@ -15,22 +15,23 @@
 		"src"
 	],
 	"type": "module",
-	"main": "./dist/jsx-runtime.js",
-	"types": "./dist/jsx-types.d.ts",
+	"main": "./dist/standard/jsx-runtime.js",
+	"types": "./dist/standard/jsx-types.d.ts",
 	"exports": {
-		".": "./dist/jsx-utils.js",
+		".": "./dist/standard/jsx-utils.js",
 		"./jsx-runtime": {
-			"types": "./dist/jsx-types.d.ts",
-			"default": "./dist/jsx-runtime.js"
+			"types": "./dist/standard/jsx-types.d.ts",
+			"default": "./dist/standard/jsx-runtime.js"
 		},
 		"./jsx-dev-runtime": {
-			"types": "./dist/jsx-types.d.ts",
-			"default": "./dist/jsx-runtime.js"
+			"types": "./dist/standard/jsx-types.d.ts",
+			"default": "./dist/standard/jsx-runtime.js"
 		},
-		"./vite": "./dist/vite-plugin.js"
+		"./vite": "./dist/compiler/index.js"
 	},
 	"sideEffects": false,
 	"scripts": {
+		"dev": "vite build --watch --mode=development",
 		"build": "pnpm run --sequential \"/^build::.?/\"",
 		"build::js": "vite build",
 		"build::types": "tsc --project ./src/tsconfig.json --noEmit false"

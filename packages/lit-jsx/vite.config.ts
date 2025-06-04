@@ -10,17 +10,18 @@ Matches strings that look like package names\
 const expression = /^(?!\w+:[/\\])@?[\w]+[\w\-/.:]+$/;
 
 
-export default defineConfig(async () => {
+export default defineConfig(async (cmd) => {
 	const pkgDir = resolve();
 
 	const result = fs.glob(joinPosix(pkgDir, 'src/**/*.ts'));
 	const files = await Array.fromAsync(result);
+	const isWatchMode = process.argv.includes('--watch') || process.argv.includes('-w');
 
 	return {
 		publicDir: false,
 		build:     {
 			outDir:      './dist',
-			emptyOutDir: false,
+			emptyOutDir: !isWatchMode,
 			sourcemap:   true,
 			lib:         {
 				entry:   files,

@@ -2,7 +2,7 @@
 	"extends": "@roenlie/tsconfig",
 	"compilerOptions": {
 		"types": [],
-		"jsx": "react-jsx",
+		"jsx": "preserve",
 		"jsxImportSource": "@roenlie/lit-jsx"
 	},
 	"exclude": [

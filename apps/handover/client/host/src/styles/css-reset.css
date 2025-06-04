@@ -104,7 +104,6 @@
 	}
 
 	audio, canvas, embed, iframe, img, object, svg, video {
-		vertical-align: middle;
 		display: block
 	}
 

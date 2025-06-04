@@ -15,20 +15,6 @@ export class RootElement extends LitElement {
 	protected buttonEl = createRef<ButtonElementCmp>();
 
 	protected override render(): unknown {
-		const lit = html`
-		<svg height="100" width="1000" class="text-line">
-			${ svg`
-				<text
-					x=${ '50%' }
-					y=${ '50%' }
-					dominant-baseline=${ 'middle' }
-				>
-					${ 'Flex-Visual' }
-				</text>
-			` }
-		</svg>
-		`;
-
 		const jsx = <>
 			{/*<div on-click={() => { console.log('hei'); }}>Hello there, yay it works</div>
 				<ButtonElement ref={this.buttonEl}>

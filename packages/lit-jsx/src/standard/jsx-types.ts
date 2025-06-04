@@ -36,6 +36,7 @@ declare global {
 			boolean,
 			null,
 			undefined,
+			unknown,
 		][number];
 
 		type Element = TemplateResult; // This is the return type of a JSX template
