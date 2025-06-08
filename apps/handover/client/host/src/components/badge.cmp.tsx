@@ -18,7 +18,7 @@ export class BadgeElement extends AdapterElement {
 			<Tag
 				id="base"
 				tabindex="0"
-				href={ this.href }
+				href={ ifDefined(this.href) }
 				classList={{ [this.variant]: true }}
 			>
 				<slot></slot>

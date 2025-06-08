@@ -4,7 +4,7 @@ import { isJSXElement, isJSXIdentifier, type Program } from '@babel/types';
 import { isValidHTMLNesting } from 'validate-html-nesting';
 
 import { defaultConfig } from './config.ts';
-import { type CustomNodePath, isComponent } from './utils.ts';
+import { type CustomNodePath, isComponent } from './compiler-utils.ts';
 
 
 // From https://github.com/MananTank/babel-plugin-validate-jsx-nesting/blob/main/src/index.js

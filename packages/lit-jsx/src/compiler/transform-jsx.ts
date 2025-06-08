@@ -2,7 +2,7 @@ import type { PluginPass } from '@babel/core';
 import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 
-import { isComponent } from './utils.ts';
+import { isComponent } from './compiler-utils.ts';
 
 
 export const transformJSX: VisitNode<
@@ -87,9 +87,31 @@ const wrapJSXElementInTTL = (
 			}
 
 			const attributes = path.node.openingElement.attributes;
-			attributes.forEach(attr => {
-				if (t.isJSXSpreadAttribute(attr))
+			attributes.forEach((attr, index) => {
+				if (t.isJSXSpreadAttribute(attr)) {
+					// If it's a spread attribute, we wrap it in our custom
+					// `rest` directive.
+					// This will allow us to handle the spread attribute correctly.
+					// We also need to ensure that the `rest` directive is imported.
+					ensure.restImport(program, path);
+
+					const attrPath = path
+						.get(`openingElement.attributes.${ index }.argument`);
+
+					const newExpression = t.callExpression(
+						t.identifier('rest'),
+						[ attr.argument ],
+					);
+					attrPath.replaceWith(newExpression);
+
+					builder.addText(' ');
+					builder.addExpression(newExpression);
+
+					console.log(attr);
+
+
 					return;
+				}
 
 				const name = attr.name.name.toString();
 				if (attr.value) {
@@ -147,7 +169,9 @@ const wrapJSXElementInTTL = (
 			}
 			else if (t.isJSXElement(child)) {
 				// Recursively process child elements
-				const childPath = path.get(`children.${ index }`) as NodePath<t.JSXElement>;
+				const childPath = path
+					.get(`children.${ index }`) as NodePath<t.JSXElement>;
+
 				process(childPath);
 			}
 			else if (t.isJSXExpressionContainer(child)) {
@@ -179,12 +203,12 @@ const wrapJSXElementInTTL = (
 	let identifier: string = '';
 
 	if (isStatic) {
-		identifier = TEMPLATE_ID.HTML_STATIC;
+		identifier = VARIABLES.HTML_STATIC;
 		ensure.htmlStaticImport(program, initialPath);
 		ensure.unsafeStaticImport(program, initialPath);
 	}
 	else {
-		identifier = TEMPLATE_ID.HTML;
+		identifier = VARIABLES.HTML;
 		ensure.htmlImport(program, initialPath);
 	}
 
@@ -201,9 +225,23 @@ const ATTRIBUTES = {
 	STYLE:        'style',
 	EVENT_PREFIX: 'on-',
 };
-const TEMPLATE_ID = {
+const VARIABLES = {
 	HTML_STATIC: 'htmlStatic',
 	HTML:        'html',
+	CLASS_MAP:   'classMap',
+	STYLE_MAP:   'styleMap',
+	REF:         'ref',
+	REST:        '__$rest',
+	LITERAL_MAP: '__$literalMap',
+};
+const SOURCES = {
+	HTML:        'lit-html',
+	HTML_STATIC: 'lit-html/static.js',
+	REF:         'lit-html/directives/ref.js',
+	CLASS_MAP:   'lit-html/directives/class-map.js',
+	STYLE_MAP:   'lit-html/directives/style-map.js',
+	REST:        '@roenlie/lit-jsx/utils',
+	LITERAL_MAP: '@roenlie/lit-jsx/utils',
 };
 
 
@@ -236,7 +274,7 @@ const attributeProcessors = {
 
 		// add a ref call around the expression.
 		params.attr.value.expression = t.callExpression(
-			t.identifier('ref'),
+			t.identifier(VARIABLES.REF),
 			[ params.attr.value.expression ],
 		);
 
@@ -248,7 +286,7 @@ const attributeProcessors = {
 
 		// add a classMap call around the expression.
 		params.attr.value.expression = t.callExpression(
-			t.identifier('classMap'),
+			t.identifier(VARIABLES.CLASS_MAP),
 			[ params.attr.value.expression ],
 		);
 
@@ -259,7 +297,7 @@ const attributeProcessors = {
 
 		// add a styleMap call around the expression.
 		params.attr.value.expression = t.callExpression(
-			t.identifier('styleMap'),
+			t.identifier(VARIABLES.STYLE_MAP),
 			[ params.attr.value.expression ],
 		);
 
@@ -342,9 +380,9 @@ const ensure = {
 	htmlImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === 'lit' || source === 'lit-html',
-			(name) => name === TEMPLATE_ID.HTML,
+			(name) => name === VARIABLES.HTML,
 			() => t.importDeclaration(
-				[ t.importSpecifier(t.identifier(TEMPLATE_ID.HTML), t.identifier(TEMPLATE_ID.HTML)) ],
+				[ t.importSpecifier(t.identifier(VARIABLES.HTML), t.identifier(VARIABLES.HTML)) ],
 				t.stringLiteral('lit-html'),
 			),
 			program,
@@ -354,9 +392,9 @@ const ensure = {
 	htmlStaticImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === 'lit/static-html.js' || source === 'lit-html/static.js',
-			(name) => name === TEMPLATE_ID.HTML,
+			(name) => name === VARIABLES.HTML,
 			() => t.importDeclaration(
-				[ t.importSpecifier(t.identifier(TEMPLATE_ID.HTML_STATIC), t.identifier(TEMPLATE_ID.HTML)) ],
+				[ t.importSpecifier(t.identifier(VARIABLES.HTML_STATIC), t.identifier(VARIABLES.HTML)) ],
 				t.stringLiteral('lit-html/static.js'),
 			),
 			program,
@@ -381,9 +419,9 @@ const ensure = {
 	createRefImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === 'lit/directives/ref.js' || source === 'lit-html/directives/ref.js',
-			(name) => name === 'unsafeStatic',
+			(name) => name === VARIABLES.REF,
 			() => t.importDeclaration(
-				[ t.importSpecifier(t.identifier('ref'), t.identifier('ref')) ],
+				[ t.importSpecifier(t.identifier(VARIABLES.REF), t.identifier(VARIABLES.REF)) ],
 				t.stringLiteral('lit-html/directives/ref.js'),
 			),
 			program,
@@ -393,9 +431,9 @@ const ensure = {
 	styleMapImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === 'lit/directives/style-map.js' || source === 'lit-html/directives/style-map.js',
-			(name) => name === 'styleMap',
+			(name) => name === VARIABLES.STYLE_MAP,
 			() => t.importDeclaration(
-				[ t.importSpecifier(t.identifier('styleMap'), t.identifier('styleMap')) ],
+				[ t.importSpecifier(t.identifier(VARIABLES.STYLE_MAP), t.identifier(VARIABLES.STYLE_MAP)) ],
 				t.stringLiteral('lit-html/directives/style-map.js'),
 			),
 			program,
@@ -405,25 +443,44 @@ const ensure = {
 	classMapImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === 'lit/directives/class-map.js' || source === 'lit-html/directives/class-map.js',
-			(name) => name === 'classMap',
+			(name) => name === VARIABLES.CLASS_MAP,
 			() => t.importDeclaration(
-				[ t.importSpecifier(t.identifier('classMap'), t.identifier('classMap')) ],
+				[ t.importSpecifier(t.identifier(VARIABLES.CLASS_MAP), t.identifier(VARIABLES.CLASS_MAP)) ],
 				t.stringLiteral('lit-html/directives/class-map.js'),
 			),
 			program,
 			path,
 		);
 	},
-	componentLiteralMapImport(program: t.Program, path: NodePath): void {
-		const sourceName = '@roenlie/lit-jsx/literals';
-		const identifierName = 'componentLiteralMap';
-
+	restImport(program: t.Program, path: NodePath): void {
 		this.import(
-			(source) => source === sourceName,
-			(name) => name === identifierName,
+			(source) => source === '@roenlie/lit-jsx/utils',
+			(name) => name === VARIABLES.REST,
 			() => t.importDeclaration(
-				[ t.importSpecifier(t.identifier(identifierName), t.identifier(identifierName)) ],
-				t.stringLiteral(sourceName),
+				[
+					t.importSpecifier(
+						t.identifier(VARIABLES.REST),
+						t.identifier(VARIABLES.REST),
+					),
+				],
+				t.stringLiteral('@roenlie/lit-jsx/utils'),
+			),
+			program,
+			path,
+		);
+	},
+	literalMapImport(program: t.Program, path: NodePath): void {
+		this.import(
+			(source) => source === '@roenlie/lit-jsx/utils',
+			(name) => name === VARIABLES.LITERAL_MAP,
+			() => t.importDeclaration(
+				[
+					t.importSpecifier(
+						t.identifier(VARIABLES.LITERAL_MAP),
+						t.identifier(VARIABLES.LITERAL_MAP),
+					),
+				],
+				t.stringLiteral('@roenlie/lit-jsx/utils'),
 			),
 			program,
 			path,
@@ -482,7 +539,7 @@ const ensure = {
 		path: NodePath,
 		program: t.Program,
 	): t.Identifier {
-		this.componentLiteralMapImport(program, path);
+		this.literalMapImport(program, path);
 
 		return this.componentTagDeclaration(
 			path,
@@ -492,7 +549,7 @@ const ensure = {
 				t.identifier(variableName),
 				t.callExpression(
 					t.memberExpression(
-						t.identifier('componentLiteralMap'),
+						t.identifier(VARIABLES.LITERAL_MAP),
 						t.identifier('get'),
 					),
 					[ t.identifier(tagName) ],

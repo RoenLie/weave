@@ -65,10 +65,10 @@ describe('Transform JSX', (context) => {
 
 		expected += `import { unsafeStatic } from "lit-html/static.js";
 import { html as htmlStatic } from "lit-html/static.js";
-import { componentLiteralMap } from "@roenlie/lit-jsx/literals";
+import { __$literalMap } from "@roenlie/lit-jsx/utils";
 import { html } from "lit-html";
 import { SpecialElement } from './special-element.ts';
-const __$SpecialElement = componentLiteralMap.get(SpecialElement);
+const __$SpecialElement = __$literalMap.get(SpecialElement);
 `;
 
 		expected += `const basicTemplate = html\`

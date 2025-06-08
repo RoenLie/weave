@@ -27,12 +27,9 @@
 			"types": "./dist/standard/jsx-types.d.ts",
 			"default": "./dist/standard/jsx-runtime.js"
 		},
+		"./utils": "./dist/utils.js",
 		"./vite-jsx-react": "./dist/compiler/vite-plugin-standard.js",
-		"./vite-jsx-preserve": "./dist/compiler/vite-plugin-custom.js",
-		"./literals": {
-			"types": "./dist/compiler/literals.d.ts",
-			"default": "./dist/compiler/literals.js"
-		}
+		"./vite-jsx-preserve": "./dist/compiler/vite-plugin-custom.js"
 	},
 	"sideEffects": false,
 	"scripts": {
