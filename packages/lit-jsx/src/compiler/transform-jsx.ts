@@ -43,9 +43,7 @@ const wrapJSXElementInTTL = (
 	if (!program)
 		throw new Error('No program found for JSX transformation.');
 
-	const quasis: t.TemplateElement[] = [];
-	const expressions: (t.Expression | t.TSType)[] = [];
-	let currentQuasi: string = '';
+	const builder = new TemplateBuilder();
 
 	let isStatic = false;
 
@@ -76,21 +74,16 @@ const wrapJSXElementInTTL = (
 
 				// Inject the unsafeStatic variable at the top of the file.
 				const literalIdentifier = ensure.componentLiteral(
-					tagName, '__$' + tagName, path, program,
+					tagName, COMPONENT_LITERAL_PREFIX + tagName, path, program,
 				);
 
 				literalName = literalIdentifier.name;
 
-				currentQuasi += ' <';
-				// Commit the current quasi to the quasis array
-				quasis.push(t.templateElement({ raw: currentQuasi, cooked: '' }));
-				currentQuasi = ''; // Reset current quasi.
-
-				// add the literal to the template
-				expressions.push(literalIdentifier);
+				builder.addText(' <');
+				builder.addExpression(literalIdentifier);
 			}
 			else {
-				currentQuasi += ' <' + tagName;
+				builder.addText(' <' + tagName);
 			}
 
 			const attributes = path.node.openingElement.attributes;
@@ -101,114 +94,67 @@ const wrapJSXElementInTTL = (
 				const name = attr.name.name.toString();
 				if (attr.value) {
 					if (t.isJSXExpressionContainer(attr.value)) {
-						// If the expression is empty, we can skip it
+						// If the expression is empty, we can skip it.
+						// This should not happen in valid JSX.
 						if (t.isJSXEmptyExpression(attr.value.expression))
-							return;
+							throw new Error('Empty JSX expression found.');
 
-						if (name === ATTRIBUTES.REF) {
-							// add a space to keep correct spacing in the template.
-							currentQuasi += ' ';
+						const params: AttrExpressionParams = {
+							builder,
+							attr: attr as AttrExpressionParams['attr'],
+							path,
+							program,
+						};
 
-							// add a ref call around the expression.
-							attr.value.expression = t.callExpression(
-								t.identifier('ref'),
-								[ attr.value.expression ],
-							);
+						if (name === ATTRIBUTES.REF)
+							attributeProcessors.ref(params);
+						else if (name === ATTRIBUTES.CLASS_LIST)
+							attributeProcessors.classList(params);
+						else if (name === ATTRIBUTES.STYLE)
+							attributeProcessors.style(params);
+						else if (name.startsWith(ATTRIBUTES.EVENT_PREFIX))
+							attributeProcessors.event(params);
+						else
+							attributeProcessors.expression(params);
 
-							ensure.createRefImport(program, path);
-						}
-						else if (name === ATTRIBUTES.CLASS_LIST) {
-							// add classlist without the . to the quasi.
-							currentQuasi += ' class=';
-
-							// add a classMap call around the expression.
-							attr.value.expression = t.callExpression(
-								t.identifier('classMap'),
-								[ attr.value.expression ],
-							);
-
-							ensure.classMapImport(program, path);
-						}
-						else if (name === ATTRIBUTES.STYLE) {
-							// add style without the . to the quasi.
-							currentQuasi += ' style=';
-
-							// add a styleMap call around the expression.
-							attr.value.expression = t.callExpression(
-								t.identifier('styleMap'),
-								[ attr.value.expression ],
-							);
-
-							ensure.styleMapImport(program, path);
-						}
-						else if (name.startsWith(ATTRIBUTES.EVENT_PREFIX)) {
-							// If the attribute is an event handler,
-							// we need to convert it to a standard DOM event name.
-
-							attr.name = t.jSXIdentifier('@' + name.slice(3));
-							currentQuasi += ' ' + attr.name.name.toString() + '=';
-						}
-						else {
-							// Any other attribute which has an expression container value
-							// we convert to an object property.
-							// This is the easiest, as it supports all types.
-							// In the future, we might want to support more types, such as:
-							// - boolean attributes
-							// - number attributes
-							// - string attributes
-							// This requires compile time type checking,
-							// which is not supported by this plugin yet.
-
-							attr.name = t.jSXIdentifier('.' + name);
-							currentQuasi += ' ' + attr.name.name.toString() + '=';
-						}
-
-						// Commit the current quasi to the quasis array
-						quasis.push(t.templateElement({ raw: currentQuasi, cooked: '' }));
-						currentQuasi = ''; // Reset current quasi for the next attribute
-
-						// add the expression to the template
-						expressions.push(attr.value.expression);
+						builder.addExpression(attr.value.expression);
 					}
 					else {
-						// If the value is a string, we can use it directly
-						// Here we always bind the value as a string.
-						// In the future, we might want to also support numbers.
-						if (!t.isStringLiteral(attr.value))
-							throw new Error('Only string literals are supported for JSX attributes.');
-
-						currentQuasi += ' ' + name + '="' + attr.value.value + '"';
+						attributeProcessors.rest({
+							builder,
+							attr: attr as AttrNonExpressionParams['attr'],
+							path,
+							program,
+						});
 					}
 				}
 				else {
-					currentQuasi += ' ' + name;
+					// If the attribute has no value, we can add it as a boolean attribute.
+					builder.addText(' ' + name);
 				}
 			});
 
-			currentQuasi += '>'; // Close the opening tag
+			builder.addText('>'); // Close the opening tag
 		}
 
-		path.node.children.forEach(child => {
+		path.node.children.forEach((child, index) => {
 			if (t.isJSXText(child)) {
 				//  We only preserve whitespace in pre and textarea tags.
-				currentQuasi += WHITESPACE_TAGS.includes(tagName)
-					?  child.value
-					: child.value.trim();
+				if (WHITESPACE_TAGS.includes(tagName))
+					builder.addText(child.value);
+				else
+					builder.addText(child.value.trim());
 			}
 			else if (t.isJSXElement(child)) {
 				// Recursively process child elements
-				const childPath = path.get('children').find(p => p.node === child);
-				if (childPath && t.isJSXElement(childPath.node))
-					process(childPath as NodePath<t.JSXElement>);
+				const childPath = path.get(`children.${ index }`) as NodePath<t.JSXElement>;
+				process(childPath);
 			}
 			else if (t.isJSXExpressionContainer(child)) {
 				if (t.isJSXEmptyExpression(child.expression))
 					return;
 
-				quasis.push(t.templateElement({ raw: currentQuasi, cooked: '' }));
-				currentQuasi = '';
-
-				expressions.push(child.expression);
+				builder.addExpression(child.expression);
 			}
 		});
 
@@ -218,17 +164,12 @@ const wrapJSXElementInTTL = (
 		else {
 			// If it's a component tag, we need to close it with the static literal.
 			if (isComponentTag) {
-				currentQuasi += ' </';
-
-				// Commit the current quasi to the quasis array
-				quasis.push(t.templateElement({ raw: currentQuasi, cooked: '' }));
-				currentQuasi = '>'; // Reset and add the closing tag.
-
-				// add the literal to the template
-				expressions.push(t.identifier(literalName));
+				builder.addText(' </');
+				builder.addExpression(t.identifier(literalName));
+				builder.addText('>');
 			}
 			else {
-				currentQuasi += ' </' + tagName + '>';
+				builder.addText(' </' + tagName + '>');
 			}
 		}
 	};
@@ -238,44 +179,125 @@ const wrapJSXElementInTTL = (
 	let identifier: string = '';
 
 	if (isStatic) {
-		identifier = 'htmlStatic';
+		identifier = TEMPLATE_ID.HTML_STATIC;
 		ensure.htmlStaticImport(program, initialPath);
 		ensure.unsafeStaticImport(program, initialPath);
 	}
 	else {
-		identifier = 'html';
+		identifier = TEMPLATE_ID.HTML;
 		ensure.htmlImport(program, initialPath);
 	}
 
-	// If there is any remaining text in currentQuasi, we need to add it as a final quasi.
-	// template expressions require there to be exactly 1 more quasi than expressions.
-	quasis.push(t.templateElement({ raw: currentQuasi, cooked: '' }));
-
-	const template = t.taggedTemplateExpression(
-		t.identifier(identifier),
-		t.templateLiteral(quasis, expressions),
-	);
-
-	return template;
+	return builder.createTaggedTemplate(identifier);
 };
 
 
+const COMPONENT_LITERAL_PREFIX = '__$';
+const DISCARD_TAG = 'discard';
+const WHITESPACE_TAGS = [ 'pre', 'textarea' ];
 const ATTRIBUTES = {
 	REF:          'ref',
 	CLASS_LIST:   'classList',
 	STYLE:        'style',
 	EVENT_PREFIX: 'on-',
 };
+const TEMPLATE_ID = {
+	HTML_STATIC: 'htmlStatic',
+	HTML:        'html',
+};
 
-const DISCARD_TAG = 'discard';
-const WHITESPACE_TAGS = [ 'pre', 'textarea' ];
 
+interface AttrParams {
+	builder: TemplateBuilder;
+	attr:    unknown;
+	path:    NodePath<t.JSXElement>;
+	program: t.Program;
+}
+
+
+interface AttrExpressionParams extends AttrParams {
+	attr:    t.JSXAttribute & {
+		value: t.JSXExpressionContainer & {
+			expression: t.Expression;
+		};
+	};
+}
+
+interface AttrNonExpressionParams extends AttrParams {
+	attr:    t.JSXAttribute & {
+		value: Exclude<t.JSXAttribute['value'], t.JSXExpressionContainer>;
+	};
+}
 
 const attributeProcessors = {
-	//ref:       (attr, context) => processRefAttribute(attr, context),
-	//classList: (attr, context) => processClassListAttribute(attr, context),
-	//style:     (attr, context) => processStyleAttribute(attr, context),
-	// ...
+	ref(params: AttrExpressionParams): void {
+		// add a space to keep correct spacing in the template.
+		params.builder.addText(' ');
+
+		// add a ref call around the expression.
+		params.attr.value.expression = t.callExpression(
+			t.identifier('ref'),
+			[ params.attr.value.expression ],
+		);
+
+		ensure.createRefImport(params.program, params.path);
+	},
+	classList(params: AttrExpressionParams): void {
+		// add classlist without the . to the quasi.
+		params.builder.addText(' class=');
+
+		// add a classMap call around the expression.
+		params.attr.value.expression = t.callExpression(
+			t.identifier('classMap'),
+			[ params.attr.value.expression ],
+		);
+
+		ensure.classMapImport(params.program, params.path);
+	},
+	style(params: AttrExpressionParams): void {
+		params.builder.addText(' ' + params.attr.name.name.toString() + '=');
+
+		// add a styleMap call around the expression.
+		params.attr.value.expression = t.callExpression(
+			t.identifier('styleMap'),
+			[ params.attr.value.expression ],
+		);
+
+		ensure.styleMapImport(params.program, params.path);
+	},
+	event(params: AttrExpressionParams): void {
+		// If the attribute is an event handler,
+		// we need to convert it to a standard DOM event name.
+		const oldName = params.attr.name.name.toString();
+		const newName = '@' + oldName.slice(3);
+		params.attr.name = t.jSXIdentifier(newName);
+		params.builder.addText(' ' + newName + '=');
+	},
+	expression(params: AttrExpressionParams): void {
+		// Any other attribute which has an expression container value
+		// we convert to an object property.
+		// This is the easiest, as it supports all types.
+		// In the future, we might want to support more types, such as:
+		// - boolean attributes
+		// - number attributes
+		// - string attributes
+		// This requires compile time type checking,
+		// which is not supported by this plugin yet.
+		const oldName = params.attr.name.name.toString();
+		const newName = '.' + oldName;
+		params.attr.name = t.jSXIdentifier(newName);
+		params.builder.addText(' ' + newName + '=');
+	},
+	rest(params: AttrNonExpressionParams): void {
+		// If the value is a string, we can use it directly
+		// Here we always bind the value as a string.
+		// In the future, we might want to also support numbers.
+		if (!t.isStringLiteral(params.attr.value))
+			throw new Error('Only string literals are supported for JSX attributes.');
+
+		const name = params.attr.name.name.toString();
+		params.builder.addText(' ' + name + '="' + params.attr.value.value + '"');
+	},
 };
 
 
@@ -320,9 +342,9 @@ const ensure = {
 	htmlImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === 'lit' || source === 'lit-html',
-			(name) => name === 'html',
+			(name) => name === TEMPLATE_ID.HTML,
 			() => t.importDeclaration(
-				[ t.importSpecifier(t.identifier('html'), t.identifier('html')) ],
+				[ t.importSpecifier(t.identifier(TEMPLATE_ID.HTML), t.identifier(TEMPLATE_ID.HTML)) ],
 				t.stringLiteral('lit-html'),
 			),
 			program,
@@ -332,9 +354,9 @@ const ensure = {
 	htmlStaticImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === 'lit/static-html.js' || source === 'lit-html/static.js',
-			(name) => name === 'html',
+			(name) => name === TEMPLATE_ID.HTML,
 			() => t.importDeclaration(
-				[ t.importSpecifier(t.identifier('htmlStatic'), t.identifier('html')) ],
+				[ t.importSpecifier(t.identifier(TEMPLATE_ID.HTML_STATIC), t.identifier(TEMPLATE_ID.HTML)) ],
 				t.stringLiteral('lit-html/static.js'),
 			),
 			program,
@@ -460,10 +482,8 @@ const ensure = {
 		path: NodePath,
 		program: t.Program,
 	): t.Identifier {
-		// Ensure the componentLiteralMap is imported
 		this.componentLiteralMapImport(program, path);
 
-		// Create the variable declaration using the WeakMap
 		return this.componentTagDeclaration(
 			path,
 			tagName,
@@ -485,11 +505,11 @@ const ensure = {
 
 class TemplateBuilder {
 
-	private currentQuasi = '';
-	private quasis:      t.TemplateElement[] = [];
-	private expressions: (t.Expression | t.TSType)[] = [];
+	protected currentQuasi = '';
+	protected quasis:      t.TemplateElement[] = [];
+	protected expressions: (t.Expression | t.TSType)[] = [];
 
-	commitQuasi(): void {
+	protected commitQuasi(): void {
 		this.quasis.push(t.templateElement({ raw: this.currentQuasi, cooked: '' }));
 		this.currentQuasi = '';
 	}
@@ -498,9 +518,24 @@ class TemplateBuilder {
 		this.currentQuasi += text;
 	}
 
-	addExpression(expression: t.Expression | t.TSType): void {
+	addExpression(expression: t.Expression): void {
 		this.commitQuasi();
 		this.expressions.push(expression);
+	}
+
+	createTaggedTemplate(identifier: string): t.TaggedTemplateExpression {
+		if (this.currentQuasi)
+			this.commitQuasi();
+
+		const ttl = t.taggedTemplateExpression(
+			t.identifier(identifier),
+			t.templateLiteral(this.quasis, this.expressions),
+		);
+
+		this.quasis = [];
+		this.expressions = [];
+
+		return ttl;
 	}
 
 }

@@ -102,4 +102,22 @@ name="kakemann">
 
 		expect(code).to.be.eq(expected);
 	});
+	test('should handle spread attributes', async ({ expect }) => {
+		const source = `
+		import { SpecialElement } from './special-element.ts';
+		const template = (
+			<SpecialElement
+				name="kakemann"
+				{...{
+					foo: 'bar',
+					baz: 'qux',
+				}}
+			/>
+		);
+		`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+		console.log(code);
+	});
 });
