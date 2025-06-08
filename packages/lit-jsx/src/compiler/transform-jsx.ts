@@ -12,11 +12,11 @@ export const transformJSX: VisitNode<
 	// and replace it with a JSX element that will be handled later.
 	if (t.isJSXFragment(path.node)) {
 		// If it's a JSX fragment, we replace it with a JSX element
-		// with a tag name 'discard', which will be handled later.
+		// with a `DISCARD_TAG`, which will be handled later.
 		// this lets us strip the fragment without losing its children.
 		const discardWrapper = t.jSXElement(
-			t.jSXOpeningElement(t.jSXIdentifier('discard'), [], false),
-			t.jSXClosingElement(t.jSXIdentifier('discard')),
+			t.jSXOpeningElement(t.jSXIdentifier(DISCARD_TAG), [], false),
+			t.jSXClosingElement(t.jSXIdentifier(DISCARD_TAG)),
 			path.node.children,
 			false,
 		);
@@ -61,9 +61,9 @@ const wrapJSXElementInTTL = (
 		let isComponentTag: boolean = false;
 		let literalName: string = '';
 
-		// If the tag name is 'discard', we skip it.
+		// If the tag name is `DISCARD_TAG`, we skip it.
 		// but we still need to process its children.
-		if (tagName !== 'discard') {
+		if (tagName !== DISCARD_TAG) {
 			isComponentTag = isComponent(tagName);
 
 			if (isComponentTag) {
@@ -75,7 +75,7 @@ const wrapJSXElementInTTL = (
 				isStatic = true;
 
 				// Inject the unsafeStatic variable at the top of the file.
-				const literalIdentifier = ensureComponentLiteral(
+				const literalIdentifier = ensure.componentLiteral(
 					tagName, '__$' + tagName, path, program,
 				);
 
@@ -105,7 +105,7 @@ const wrapJSXElementInTTL = (
 						if (t.isJSXEmptyExpression(attr.value.expression))
 							return;
 
-						if (name === 'ref') {
+						if (name === ATTRIBUTES.REF) {
 							// add a space to keep correct spacing in the template.
 							currentQuasi += ' ';
 
@@ -115,9 +115,9 @@ const wrapJSXElementInTTL = (
 								[ attr.value.expression ],
 							);
 
-							ensureCreateRefImport(program, path);
+							ensure.createRefImport(program, path);
 						}
-						else if (name === 'classList') {
+						else if (name === ATTRIBUTES.CLASS_LIST) {
 							// add classlist without the . to the quasi.
 							currentQuasi += ' class=';
 
@@ -127,9 +127,9 @@ const wrapJSXElementInTTL = (
 								[ attr.value.expression ],
 							);
 
-							ensureClassMapImport(program, path);
+							ensure.classMapImport(program, path);
 						}
-						else if (name === 'style') {
+						else if (name === ATTRIBUTES.STYLE) {
 							// add style without the . to the quasi.
 							currentQuasi += ' style=';
 
@@ -139,9 +139,9 @@ const wrapJSXElementInTTL = (
 								[ attr.value.expression ],
 							);
 
-							ensureStyleMapImport(program, path);
+							ensure.styleMapImport(program, path);
 						}
-						else if (name.startsWith('on-')) {
+						else if (name.startsWith(ATTRIBUTES.EVENT_PREFIX)) {
 							// If the attribute is an event handler,
 							// we need to convert it to a standard DOM event name.
 
@@ -191,7 +191,7 @@ const wrapJSXElementInTTL = (
 		path.node.children.forEach(child => {
 			if (t.isJSXText(child)) {
 				//  We only preserve whitespace in pre and textarea tags.
-				currentQuasi += tagName === 'pre' || tagName === 'textarea'
+				currentQuasi += WHITESPACE_TAGS.includes(tagName)
 					?  child.value
 					: child.value.trim();
 			}
@@ -212,8 +212,8 @@ const wrapJSXElementInTTL = (
 			}
 		});
 
-		// If the tag is 'discard' we skip, as we did not add the opening tag.
-		if (tagName === 'discard') { /*  */ }
+		// If the tag is `DISCARD_TAG` we skip, as we did not add the opening tag.
+		if (tagName === DISCARD_TAG) { /*  */ }
 		// Add closing tag.
 		else {
 			// If it's a component tag, we need to close it with the static literal.
@@ -239,12 +239,12 @@ const wrapJSXElementInTTL = (
 
 	if (isStatic) {
 		identifier = 'htmlStatic';
-		ensureHtmlStaticImport(program, initialPath);
-		ensureUnsafeStaticImport(program, initialPath);
+		ensure.htmlStaticImport(program, initialPath);
+		ensure.unsafeStaticImport(program, initialPath);
 	}
 	else {
 		identifier = 'html';
-		ensureHtmlImport(program, initialPath);
+		ensure.htmlImport(program, initialPath);
 	}
 
 	// If there is any remaining text in currentQuasi, we need to add it as a final quasi.
@@ -260,212 +260,247 @@ const wrapJSXElementInTTL = (
 };
 
 
-const ensureHtmlImport = (program: t.Program, path: NodePath): void => {
-	ensureImport(
-		(source) => source === 'lit' || source === 'lit-html',
-		(name) => name === 'html',
-		() => t.importDeclaration(
-			[ t.importSpecifier(t.identifier('html'), t.identifier('html')) ],
-			t.stringLiteral('lit-html'),
-		),
-		program,
-		path,
-	);
+const ATTRIBUTES = {
+	REF:          'ref',
+	CLASS_LIST:   'classList',
+	STYLE:        'style',
+	EVENT_PREFIX: 'on-',
 };
 
-const ensureHtmlStaticImport = (program: t.Program, path: NodePath): void => {
-	ensureImport(
-		(source) => source === 'lit/static-html.js' || source === 'lit-html/static.js',
-		(name) => name === 'html',
-		() => t.importDeclaration(
-			[ t.importSpecifier(t.identifier('htmlStatic'), t.identifier('html')) ],
-			t.stringLiteral('lit-html/static.js'),
-		),
-		program,
-		path,
-	);
+const DISCARD_TAG = 'discard';
+const WHITESPACE_TAGS = [ 'pre', 'textarea' ];
+
+
+const attributeProcessors = {
+	//ref:       (attr, context) => processRefAttribute(attr, context),
+	//classList: (attr, context) => processClassListAttribute(attr, context),
+	//style:     (attr, context) => processStyleAttribute(attr, context),
+	// ...
 };
 
-const ensureUnsafeStaticImport = (program: t.Program, path: NodePath): void => {
-	const sourceName = 'lit-html/static.js';
-	const identifierName = 'unsafeStatic';
 
-	ensureImport(
-		(source) => source === 'lit/static-html.js' || source === sourceName,
-		(name) => name === 'unsafeStatic',
-		() => t.importDeclaration(
-			[ t.importSpecifier(t.identifier(identifierName), t.identifier(identifierName)) ],
-			t.stringLiteral(sourceName),
-		),
-		program,
-		path,
-	);
-};
+const ensure = {
+	import(
+		importSource: (value: string) => boolean,
+		importName: (value: string) => boolean,
+		createImport: () => t.ImportDeclaration,
+		program: t.Program,
+		path: NodePath,
+	): void {
+		// Check if the import already exists
+		const hasImport = program.body.some(node => {
+			if (!t.isImportDeclaration(node))
+				return false;
 
-const ensureCreateRefImport = (program: t.Program, path: NodePath): void => {
-	ensureImport(
-		(source) => source === 'lit/directives/ref.js' || source === 'lit-html/directives/ref.js',
-		(name) => name === 'unsafeStatic',
-		() => t.importDeclaration(
-			[ t.importSpecifier(t.identifier('ref'), t.identifier('ref')) ],
-			t.stringLiteral('lit-html/directives/ref.js'),
-		),
-		program,
-		path,
-	);
-};
+			// Check if the import source matches
+			const isCorrectImport = importSource(node.source.value);
+			if (!isCorrectImport)
+				return false;
 
-const ensureStyleMapImport = (program: t.Program, path: NodePath): void => {
-	ensureImport(
-		(source) => source === 'lit/directives/style-map.js' || source === 'lit-html/directives/style-map.js',
-		(name) => name === 'styleMap',
-		() => t.importDeclaration(
-			[ t.importSpecifier(t.identifier('styleMap'), t.identifier('styleMap')) ],
-			t.stringLiteral('lit-html/directives/style-map.js'),
-		),
-		program,
-		path,
-	);
-};
-
-const ensureClassMapImport = (program: t.Program, path: NodePath): void => {
-	ensureImport(
-		(source) => source === 'lit/directives/class-map.js' || source === 'lit-html/directives/class-map.js',
-		(name) => name === 'classMap',
-		() => t.importDeclaration(
-			[ t.importSpecifier(t.identifier('classMap'), t.identifier('classMap')) ],
-			t.stringLiteral('lit-html/directives/class-map.js'),
-		),
-		program,
-		path,
-	);
-};
-
-const ensureComponentLiteralMapImport = (program: t.Program, path: NodePath): void => {
-	const sourceName = '@roenlie/lit-jsx/literals';
-	const identifierName = 'componentLiteralMap';
-
-	ensureImport(
-		(source) => source === sourceName,
-		(name) => name === identifierName,
-		() => t.importDeclaration(
-			[ t.importSpecifier(t.identifier(identifierName), t.identifier(identifierName)) ],
-			t.stringLiteral(sourceName),
-		),
-		program,
-		path,
-	);
-};
-
-const ensureComponentLiteral = (
-	tagName: string,
-	variableName: string,
-	path: NodePath,
-	program: t.Program,
-): t.Identifier => {
-	// Ensure the componentLiteralMap is imported
-	ensureComponentLiteralMapImport(program, path);
-
-	// Create the variable declaration using the WeakMap
-	return ensureAvailableDeclaration(
-		path,
-		tagName,
-		variableName,
-		() => t.variableDeclarator(
-			t.identifier(variableName),
-			t.callExpression(
-				t.memberExpression(
-					t.identifier('componentLiteralMap'),
-					t.identifier('get'),
-				),
-				[ t.identifier(tagName) ],
-			),
-		),
-	);
-};
-
-const ensureImport = (
-	importSource: (value: string) => boolean,
-	importName: (value: string) => boolean,
-	createImport: () => t.ImportDeclaration,
-	program: t.Program,
-	path: NodePath,
-): void => {
-	// Check if the import already exists
-	const hasImport = program.body.some(node => {
-		if (!t.isImportDeclaration(node))
-			return false;
-
-		// Check if the import source matches
-		const isCorrectImport = importSource(node.source.value);
-		if (!isCorrectImport)
-			return false;
-
-		// Check if the import name matches
-		return node.specifiers.some(spec => {
-			return t.isImportSpecifier(spec)
-				? t.isIdentifier(spec.imported)
-					? importName(spec.imported.name)
-					: importName(spec.imported.value)
-				: false;
+			// Check if the import name matches
+			return node.specifiers.some(spec => {
+				return t.isImportSpecifier(spec)
+					? t.isIdentifier(spec.imported)
+						? importName(spec.imported.name)
+						: importName(spec.imported.value)
+					: false;
+			});
 		});
-	});
 
-	// If not found, add the import
-	if (!hasImport) {
-		const importDeclaration = createImport();
-		const programPath = path.findParent(p => t.isProgram(p.node)) as NodePath<t.Program>;
+		// If not found, add the import
+		if (!hasImport) {
+			const importDeclaration = createImport();
+			const programPath = path.findParent(p => t.isProgram(p.node)) as NodePath<t.Program>;
 
-		// Insert at the top of the file
-		const [ insertedPath ] = programPath.unshiftContainer('body', importDeclaration);
-		programPath.scope.registerDeclaration(insertedPath);
-	}
-};
+			// Insert at the top of the file
+			const [ insertedPath ] = programPath.unshiftContainer('body', importDeclaration);
+			programPath.scope.registerDeclaration(insertedPath);
+		}
+	},
+	htmlImport(program: t.Program, path: NodePath): void {
+		this.import(
+			(source) => source === 'lit' || source === 'lit-html',
+			(name) => name === 'html',
+			() => t.importDeclaration(
+				[ t.importSpecifier(t.identifier('html'), t.identifier('html')) ],
+				t.stringLiteral('lit-html'),
+			),
+			program,
+			path,
+		);
+	},
+	htmlStaticImport(program: t.Program, path: NodePath): void {
+		this.import(
+			(source) => source === 'lit/static-html.js' || source === 'lit-html/static.js',
+			(name) => name === 'html',
+			() => t.importDeclaration(
+				[ t.importSpecifier(t.identifier('htmlStatic'), t.identifier('html')) ],
+				t.stringLiteral('lit-html/static.js'),
+			),
+			program,
+			path,
+		);
+	},
+	unsafeStaticImport(program: t.Program, path: NodePath): void {
+		const sourceName = 'lit-html/static.js';
+		const identifierName = 'unsafeStatic';
 
-const ensureAvailableDeclaration = (
-	path: NodePath,
-	tagName: string,
-	variableName: string,
-	createDeclaration: () => t.VariableDeclarator,
-): t.Identifier => {
-	// Start from the current scope and work upward
-	let currentScope = path.scope;
+		this.import(
+			(source) => source === 'lit/static-html.js' || source === sourceName,
+			(name) => name === 'unsafeStatic',
+			() => t.importDeclaration(
+				[ t.importSpecifier(t.identifier(identifierName), t.identifier(identifierName)) ],
+				t.stringLiteral(sourceName),
+			),
+			program,
+			path,
+		);
+	},
+	createRefImport(program: t.Program, path: NodePath): void {
+		this.import(
+			(source) => source === 'lit/directives/ref.js' || source === 'lit-html/directives/ref.js',
+			(name) => name === 'unsafeStatic',
+			() => t.importDeclaration(
+				[ t.importSpecifier(t.identifier('ref'), t.identifier('ref')) ],
+				t.stringLiteral('lit-html/directives/ref.js'),
+			),
+			program,
+			path,
+		);
+	},
+	styleMapImport(program: t.Program, path: NodePath): void {
+		this.import(
+			(source) => source === 'lit/directives/style-map.js' || source === 'lit-html/directives/style-map.js',
+			(name) => name === 'styleMap',
+			() => t.importDeclaration(
+				[ t.importSpecifier(t.identifier('styleMap'), t.identifier('styleMap')) ],
+				t.stringLiteral('lit-html/directives/style-map.js'),
+			),
+			program,
+			path,
+		);
+	},
+	classMapImport(program: t.Program, path: NodePath): void {
+		this.import(
+			(source) => source === 'lit/directives/class-map.js' || source === 'lit-html/directives/class-map.js',
+			(name) => name === 'classMap',
+			() => t.importDeclaration(
+				[ t.importSpecifier(t.identifier('classMap'), t.identifier('classMap')) ],
+				t.stringLiteral('lit-html/directives/class-map.js'),
+			),
+			program,
+			path,
+		);
+	},
+	componentLiteralMapImport(program: t.Program, path: NodePath): void {
+		const sourceName = '@roenlie/lit-jsx/literals';
+		const identifierName = 'componentLiteralMap';
 
-	while (currentScope) {
-		// First check if the prefixed variable already exists
-		const prefixedBinding = currentScope.getBinding(variableName);
-		if (prefixedBinding)
-			return t.identifier(variableName);
+		this.import(
+			(source) => source === sourceName,
+			(name) => name === identifierName,
+			() => t.importDeclaration(
+				[ t.importSpecifier(t.identifier(identifierName), t.identifier(identifierName)) ],
+				t.stringLiteral(sourceName),
+			),
+			program,
+			path,
+		);
+	},
+	componentTagDeclaration(
+		path: NodePath,
+		tagName: string,
+		variableName: string,
+		createDeclaration: () => t.VariableDeclarator,
+	): t.Identifier {
+		// Start from the current scope and work upward
+		let currentScope = path.scope;
 
-		// Then check if the tagName exists
-		const tagNameBinding = currentScope.getBinding(tagName);
-		if (tagNameBinding) {
-			// Found the tagName binding, now insert the prefixed declaration just below it
-			const declarator = createDeclaration();
-			const variableDeclaration = t.variableDeclaration('const', [ declarator ]);
+		while (currentScope) {
+			// First check if the prefixed variable already exists
+			const prefixedBinding = currentScope.getBinding(variableName);
+			if (prefixedBinding)
+				return t.identifier(variableName);
 
-			// Find the statement-level path to insert after
-			// This handles cases where the binding might be an import specifier or variable declarator
-			let statementPath: NodePath<t.Node> | null = tagNameBinding.path;
-			while (statementPath && !statementPath.isStatement())
-				statementPath = statementPath.parentPath;
+			// Then check if the tagName exists
+			const tagNameBinding = currentScope.getBinding(tagName);
+			if (tagNameBinding) {
+				// Found the tagName binding, now insert the prefixed declaration just below it
+				const declarator = createDeclaration();
+				const variableDeclaration = t.variableDeclaration('const', [ declarator ]);
 
-			if (!statementPath)
-				throw new Error(`Could not find statement-level path for tagName: ${ tagName }`);
+				// Find the statement-level path to insert after
+				// This handles cases where the binding might be an import specifier or variable declarator
+				let statementPath: NodePath<t.Node> | null = tagNameBinding.path;
+				while (statementPath && !statementPath.isStatement())
+					statementPath = statementPath.parentPath;
 
-			// Insert the new declaration after the tagName declaration
-			const [ insertedPath ] = statementPath.insertAfter(variableDeclaration);
+				if (!statementPath)
+					throw new Error(`Could not find statement-level path for tagName: ${ tagName }`);
 
-			// Register the new declaration with the appropriate scope
-			statementPath.scope.registerDeclaration(insertedPath);
+				// Insert the new declaration after the tagName declaration
+				const [ insertedPath ] = statementPath.insertAfter(variableDeclaration);
 
-			return t.identifier(variableName);
+				// Register the new declaration with the appropriate scope
+				statementPath.scope.registerDeclaration(insertedPath);
+
+				return t.identifier(variableName);
+			}
+
+			// Move up to the parent scope
+			currentScope = currentScope.parent;
 		}
 
-		// Move up to the parent scope
-		currentScope = currentScope.parent;
+		// If tagName is not found in any scope, throw an error
+		throw new Error(`Tag name '${ tagName }' not found in any accessible scope`);
+	},
+	componentLiteral(
+		tagName: string,
+		variableName: string,
+		path: NodePath,
+		program: t.Program,
+	): t.Identifier {
+		// Ensure the componentLiteralMap is imported
+		this.componentLiteralMapImport(program, path);
+
+		// Create the variable declaration using the WeakMap
+		return this.componentTagDeclaration(
+			path,
+			tagName,
+			variableName,
+			() => t.variableDeclarator(
+				t.identifier(variableName),
+				t.callExpression(
+					t.memberExpression(
+						t.identifier('componentLiteralMap'),
+						t.identifier('get'),
+					),
+					[ t.identifier(tagName) ],
+				),
+			),
+		);
+	},
+};
+
+
+class TemplateBuilder {
+
+	private currentQuasi = '';
+	private quasis:      t.TemplateElement[] = [];
+	private expressions: (t.Expression | t.TSType)[] = [];
+
+	commitQuasi(): void {
+		this.quasis.push(t.templateElement({ raw: this.currentQuasi, cooked: '' }));
+		this.currentQuasi = '';
 	}
 
-	// If tagName is not found in any scope, throw an error
-	throw new Error(`Tag name '${ tagName }' not found in any accessible scope`);
-};
+	addText(text: string): void {
+		this.currentQuasi += text;
+	}
+
+	addExpression(expression: t.Expression | t.TSType): void {
+		this.commitQuasi();
+		this.expressions.push(expression);
+	}
+
+}
