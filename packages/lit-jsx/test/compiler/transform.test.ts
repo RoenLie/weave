@@ -1,7 +1,7 @@
 
 import * as babel from '@babel/core';
 import { mergeAndConcat } from 'merge-anything';
-import { beforeAll, describe, it, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { litJsxBabelPreset } from '../../src/compiler/lit-jsx-babel-preset.ts';
 
@@ -36,6 +36,38 @@ const babelOptions: babel.TransformOptions = {
 const opts = mergeAndConcat(babelUserOptions, babelOptions);
 
 describe('Transform JSX', (context) => {
+	test('should transform an empty JSX fragment', async ({ expect }) => {
+		const source = `
+		const template = <></>;
+		`;
+
+		const expected = `import { html } from "lit-html";
+const template = html\`\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+		console.log(code);
+
+		expect(code).to.be.eq(expected);
+	});
+
+
+	test('should transform a single JSX element', async ({ expect }) => {
+		const source = `
+		const template = <div class="test">Hello World</div>;
+		`;
+
+		const expected = `import { html } from "lit-html";
+const template = html\` <div class="test">Hello World </div>\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+		console.log(code);
+
+		expect(code).to.be.eq(expected);
+	});
+
+
 	test('should transform JSX code', async ({ expect }) => {
 		const source = `
 		import { SpecialElement } from './special-element.ts';
@@ -116,8 +148,21 @@ name="kakemann">
 		);
 		`;
 
+		const expected = `import { unsafeStatic } from "lit-html/static.js";
+import { html as htmlStatic } from "lit-html/static.js";
+import { __$rest } from "@roenlie/lit-jsx/utils";
+import { __$literalMap } from "@roenlie/lit-jsx/utils";
+import { SpecialElement } from './special-element.ts';
+const __$SpecialElement = __$literalMap.get(SpecialElement);
+const template = htmlStatic\` <\${__$SpecialElement} name="kakemann" \${rest({
+  foo: 'bar',
+  baz: 'qux'
+})}> </\${__$SpecialElement}>\`;`;
+
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
 		console.log(code);
+
+		expect(code).to.be.eq(expected);
 	});
 });

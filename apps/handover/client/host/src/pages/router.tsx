@@ -30,6 +30,11 @@ export class RouterCmp extends AdapterElement {
 			path:   '/badge',
 			render: () => (<BadgePage />),
 		},
+		{
+			path:   '/rest',
+			render: () => (<div {...{ name: '1', role: 'button' }} />),
+
+		},
 	]);
 
 	override connected(): void {
