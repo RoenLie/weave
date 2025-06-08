@@ -1,7 +1,7 @@
 import type { PluginOption } from 'vite';
 
 
-export const litJsxStandard = (): PluginOption => {
+export const litJsx = (): PluginOption => {
 	return {
 		name:    'lit-jsx',
 		enforce: 'post',

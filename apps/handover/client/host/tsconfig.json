@@ -4,7 +4,7 @@
 		"types": [
 			"@roenlie/vite-plugin-import-css-sheet/client"
 		],
-		"jsx": "react-jsx",
+		"jsx": "preserve",
 		"jsxImportSource": "@roenlie/lit-jsx",
 		"rootDir": ".",
 		"emitDecoratorMetadata": false,

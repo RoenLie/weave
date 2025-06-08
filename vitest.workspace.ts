@@ -19,6 +19,14 @@ export default defineWorkspace([
 		},
 	},
 	{
+		extends: './packages/lit-jsx/vite.config.ts',
+		test:    {
+			name:       'lit-jsx',
+			include:    [ 'packages/lit-jsx/**/*.{spec,test,bench}.ts' ],
+			setupFiles: [],
+		},
+	},
+	{
 		extends: './packages/injector/vite.config.ts',
 		test:    {
 			name:       'injector',

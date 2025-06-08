@@ -4,5 +4,4 @@ import type { Program } from '@babel/types';
 
 
 export const postprocess: VisitNodeFunction<PluginPass, Program> = (...args): void => {
-
 };

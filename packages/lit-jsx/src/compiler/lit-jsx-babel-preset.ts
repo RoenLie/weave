@@ -14,7 +14,7 @@ export const litJsxBabelPreset = (
 		plugins: [
 			[
 				{
-					name:     'JSX DOM Expressions',
+					name:     'lit-jsx-transform',
 					inherits: SyntaxJSX.default,
 					visitor:  {
 						JSXElement:  transformJSX,
@@ -26,46 +26,8 @@ export const litJsxBabelPreset = (
 					},
 				},
 				Object.assign({
-					//moduleName: 'solid-js/web',
-					//builtIns:   [
-					//	'For',
-					//	'Show',
-					//	'Switch',
-					//	'Match',
-					//	'Suspense',
-					//	'SuspenseList',
-					//	'Portal',
-					//	'Index',
-					//	'Dynamic',
-					//	'ErrorBoundary',
-					//],
-					//contextToCustomElements: true,
-					//wrapConditionals:        true,
-					//generate:                'dom',
 				}, options),
 			],
-			// Not sure what this is for yet.
-			//Object.assign(
-			//	{
-			//		moduleName: 'solid-js/web',
-			//		builtIns:   [
-			//			//'For',
-			//			//'Show',
-			//			//'Switch',
-			//			//'Match',
-			//			//'Suspense',
-			//			//'SuspenseList',
-			//			//'Portal',
-			//			//'Index',
-			//			//'Dynamic',
-			//			//'ErrorBoundary',
-			//		],
-			//		contextToCustomElements: true,
-			//		wrapConditionals:        true,
-			//		generate:                'dom',
-			//	},
-			//options,
-			//),
 		],
 	};
 };

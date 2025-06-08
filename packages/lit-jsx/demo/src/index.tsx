@@ -3,13 +3,35 @@ import { LitElement } from 'lit';
 
 export class RootElement extends LitElement {
 
-	protected override render(): unknown {
-		const jsx = <>
-			<h1>Welcome to the Demo</h1>
-		</>;
-
-		return jsx;
+	protected render1(): unknown {
+		return (
+			<div class={'test-class'}></div>
+		);
 	}
+
+
+	//protected immediateRender(): unknown {
+	//	return (
+	//		<div class="first-element">
+	//			<h1>Lit JSX Demo</h1>
+	//			<p>{'dynamic content goes here'}</p>
+	//			<span>{(<s-inner-span></s-inner-span>)}</span>
+	//		</div>
+	//	);
+	//}
+
+	//protected variableRender(): unknown {
+	//const jsx = (
+	//	<div class="first-element">
+	//		<h1>Lit JSX Demo</h1>
+	//		<p>{'dynamic content goes here'}</p>
+	//		<span>{(<s-inner-span></s-inner-span>)}</span>
+	//	</div>
+	//);
+
+	//return jsx;
+	//}
+
 
 	static { customElements.define('root-element', this); }
 

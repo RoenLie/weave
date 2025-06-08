@@ -9,7 +9,6 @@
 		"dist"
 	],
 	"include": [
-		"${configDir}/**/*.ts",
-		"index.tsx"
+		"${configDir}/**/*.tsx",
 	]
 }

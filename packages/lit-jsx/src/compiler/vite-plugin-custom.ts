@@ -5,7 +5,10 @@ import type { PluginOption } from 'vite';
 import { litJsxBabelPreset } from './lit-jsx-babel-preset.ts';
 
 
-export const litJsxCustom = (options: {
+type BabelPlugins = NonNullable<NonNullable<babel.TransformOptions['parserOpts']>['plugins']>;
+
+
+export const litJsx = (options: {
 	/** Options for the Babel transform */
 	babel?:
 		| babel.TransformOptions
@@ -28,8 +31,7 @@ export const litJsxCustom = (options: {
 			},
 			order: 'pre',
 			async handler(source, id) {
-				type BabelPlugins = NonNullable<NonNullable<babel.TransformOptions['parserOpts']>['plugins']>;
-				const plugins: BabelPlugins = [ 'jsx' ];
+				const plugins: BabelPlugins = [ 'jsx', 'decorators', 'decoratorAutoAccessors' ];
 				if (id.endsWith('.tsx'))
 					plugins.push('typescript');
 
@@ -70,8 +72,10 @@ export const litJsxCustom = (options: {
 				};
 
 				const opts = mergeAndConcat(babelUserOptions, babelOptions);
-				const result = await babel.transformAsync(source, opts);
-				console.log('Transformed code:', result?.code);
+				const result = await babel.transformAsync(source, opts)!;
+
+				if (result?.code)
+					return { code: result.code, map: result.map };
 			},
 		},
 	};

@@ -4,6 +4,7 @@ export * from 'lit-html/directive.js';
 export * from 'lit-html/directive-helpers.js';
 export * from 'lit-html/directives/class-map.js';
 export * from 'lit-html/directives/if-defined.js';
+export * from 'lit-html/directives/ref.js';
 export * from 'lit-html/directives/repeat.js';
 export * from 'lit-html/directives/unsafe-html.js';
 export * from 'lit-html/directives/when.js';

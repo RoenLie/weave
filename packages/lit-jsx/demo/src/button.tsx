@@ -53,12 +53,6 @@ declare global {
 			'button-element': HTMLAttributes<ButtonElementCmp> & {
 				specialThing?: string;
 			};
-
-			'if': {
-				/** A custom element! */
-				condition?: boolean;
-				children?:  JSX.JSXElement | JSX.JSXElement[];
-			};
 		}
 	}
 }
