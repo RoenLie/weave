@@ -7,9 +7,9 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/sanguinejs/sanguinejs.git"
+		"url": "git+https://github.com/RoenLie/weave.git"
 	},
-	"version": "1.0.0",
+	"version": "1.0.4",
 	"files": [
 		"dist",
 		"src"

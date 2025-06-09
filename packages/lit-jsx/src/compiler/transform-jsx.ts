@@ -8,7 +8,7 @@ import type { AttrExpressionParams, AttrNonExpressionParams, Values } from './co
 import { attributeProcessors, ensure, isComponent, TemplateBuilder } from './compiler-utils.ts';
 import {
 	ATTR_NAMES, ATTR_VALUES, COMPONENT_LITERAL_PREFIX, DISCARD_TAG,
-	ERROR_MESSAGES, VARIABLES, WHITESPACE_TAGS,
+	ERROR_MESSAGES, SPECIAL_TAGS, VARIABLES, WHITESPACE_TAGS,
 } from './config.ts';
 
 
@@ -167,19 +167,28 @@ transformTopLevelJSXElement.processOpeningTag = (
 	if (tagName !== DISCARD_TAG) {
 		// eslint-disable-next-line no-cond-assign
 		if (isStatic = isComponentTag = isComponent(tagName)) {
-			// If it's a component, we will use lit static html function to wrap this parent.
+			// We have a few special Component tags which are library level components.
+			// These we will need to do special handling dependant on which special component it is.
+
+			if (SPECIAL_TAGS.includes(tagName)) {
+				// For - should compile into a map() directive.
+				// If - should compile into a when() directive.
+			}
+			else {
+				// If it's a component, we will use lit static html function to wrap this parent.
 			// then we create a static literal for the tag name at the top of the file.
 			// and use that static literal in the template.
 			// This will allow us to use the component as a tag name.
 
-			const literalIdentifier = ensure.componentLiteral(
-				tagName, COMPONENT_LITERAL_PREFIX + tagName, path, program,
-			);
+				const literalIdentifier = ensure.componentLiteral(
+					tagName, COMPONENT_LITERAL_PREFIX + tagName, path, program,
+				);
 
-			literalName = literalIdentifier.name;
+				literalName = literalIdentifier.name;
 
-			builder.addText('<');
-			builder.addExpression(literalIdentifier);
+				builder.addText('<');
+				builder.addExpression(literalIdentifier);
+			}
 		}
 		else {
 			builder.addText('<' + tagName);

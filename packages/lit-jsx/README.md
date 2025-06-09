@@ -8,18 +8,20 @@ A JSX runtime and Vite plugin that transforms JSX into Lit templates at compile 
 function renderInput({ name, disabled, checked, value, ref }) {
   return (
     <input
-	 	id       ="input"            // static    assignment
-	 	name     ={asAttr(name)}     // attribute assignment
+      id       ="input"            // static    assignment
+      name     ={asAttr(name)}     // attribute assignment
       disabled ={asBool(disabled)} // boolean   assignment
       value    ={value}            // property  assignment
-		classList={{active: true}}   // classMap  assignment
-		styleList={{color: 'blue'}}  // styleMap  assignment
-		ref      ={ref}              // ref       assignment
-		{...{role: 'button'}}        // spread    assignment
+      classList={{active: true}}   // classMap  assignment
+      styleList={{color: 'blue'}}  // styleMap  assignment
+      ref      ={ref}              // ref       assignment
+      {...{role: 'button'}}        // spread    assignment
     />
   );
 }
-```transformation modes**: React JSX runtime and custom JSX compiler
+```
+
+## Transformation modes: React JSX runtime and custom JSX compiler
 - ⚡ **Compile-time transformation**: JSX is transformed to lit-html templates during build
 - 🎯 **Type-safe**: Full TypeScript support with proper JSX type definitions
 - 🔧 **Vite integration**: Easy setup with Vite plugins
@@ -68,6 +70,44 @@ export default defineConfig({
   plugins: [litJsx()],
 });
 ```
+
+## TypeScript Configuration
+
+The TypeScript configuration depends on which transformation mode you're using.
+
+### For Custom JSX Compiler (vite-jsx-preserve)
+
+When using the custom compiler, configure your `tsconfig.json` to preserve JSX:
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "jsx-lit",
+  }
+}
+```
+
+This configuration:
+- `"jsx": "preserve"` - Keeps JSX syntax intact for the custom compiler to transform
+- `"jsxImportSource": "jsx-lit"` - Tells TypeScript where to find JSX types
+
+### For React JSX Runtime (vite-jsx-react)
+
+When using the React JSX runtime mode, configure automatic JSX transformation:
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "jsx-lit",
+  }
+}
+```
+
+This configuration:
+- `"jsx": "react-jsx"` - Enables automatic JSX transformation
+- `"jsxImportSource": "jsx-lit"` - Tells TypeScript where to find JSX types
 
 ## Configuration
 
@@ -776,44 +816,6 @@ function renderForm({ useButton }) {
   return htmlStatic`<${__$SubmitComponent} type="submit">Submit</${__$SubmitComponent}>`;
 }
 ```
-
-## TypeScript Configuration
-
-The TypeScript configuration depends on which transformation mode you're using.
-
-### For Custom JSX Compiler (vite-jsx-preserve)
-
-When using the custom compiler, configure your `tsconfig.json` to preserve JSX:
-
-```json
-{
-  "compilerOptions": {
-    "jsx": "preserve",
-    "jsxImportSource": "jsx-lit",
-  }
-}
-```
-
-This configuration:
-- `"jsx": "preserve"` - Keeps JSX syntax intact for the custom compiler to transform
-- `"jsxImportSource": "jsx-lit"` - Tells TypeScript where to find JSX types
-
-### For React JSX Runtime (vite-jsx-react)
-
-When using the React JSX runtime mode, configure automatic JSX transformation:
-
-```json
-{
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "jsx-lit",
-  }
-}
-```
-
-This configuration:
-- `"jsx": "react-jsx"` - Enables automatic JSX transformation
-- `"jsxImportSource": "jsx-lit"` - Tells TypeScript where to find JSX types
 
 ## How jsx-lit Works
 
