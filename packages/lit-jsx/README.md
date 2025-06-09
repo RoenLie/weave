@@ -26,6 +26,8 @@ function renderInput({ name, disabled, checked, value, ref }) {
 - 📦 **Zero runtime overhead**: The custom compiler produces native lit-html code
 - 🎨 **Lit ecosystem compatibility**: Works seamlessly with Lit directives and features
 - 🎛️ **Flexible binding control**: Use `asAttr()` and `asBool()` functions to control how values are bound
+- 📦 **Custom element integration**: Use `toJSX()` function for type-safe custom element components
+- 🏷️ **Dynamic tag names**: Support for conditional and polymorphic element types
 
 ## Installation
 
@@ -542,6 +544,70 @@ export class TodoList extends LitElement {
 </my-component>
 ```
 
+### Dynamic Tag Names
+
+jsx-lit supports dynamic tag names through Component variables. When you use a variable that contains a tag name as a JSX element, jsx-lit will automatically handle it as a dynamic tag and compile it to use lit-html's static templates with `unsafeStatic`.
+
+```tsx
+// Dynamic tag name based on condition
+const Tag = this.href ? 'a' : 'span';
+
+return (
+  <Tag href={this.href} class="dynamic-element">
+    Content
+  </Tag>
+);
+```
+
+**Compiled Output:**
+```javascript
+import { html as htmlStatic } from 'lit-html/static.js';
+
+// jsx-lit automatically creates a literal map entry for the dynamic tag
+const __$Tag = __$literalMap.get(Tag);
+
+return htmlStatic`
+  <${__$Tag} href=${this.href} class="dynamic-element">
+    Content
+  </${__$Tag}>
+`;
+```
+
+**How It Works:**
+
+1. **Detection**: jsx-lit detects Component variables (PascalCase identifiers) and treats them as dynamic tags
+2. **Literal Map**: Creates an entry in `__$literalMap` using the variable name
+3. **Static Template**: Uses `htmlStatic` instead of regular `html` to allow for otherwise invalid templates.
+4. **Automatic Import**: Injects the necessary imports for static templates and the literal map
+
+**Use Cases:**
+
+```tsx
+// Conditional element types
+const linkOrSpan = ({ href, children }) => {
+  const Tag = href ? 'a' : 'span';
+  return <Tag href={href}>{children}</Tag>;
+};
+
+// Dynamic custom elements
+const renderWidget = ({ type, data }) => {
+  const WidgetTag = `my-${type}-widget`;
+  return <WidgetTag data={data} />;
+};
+
+// Polymorphic components
+const heading = ({ level, children }) => {
+  const Tag = `h${level}`;
+  return <Tag>{children}</Tag>;
+};
+```
+
+**Requirements:**
+
+- The variable must be in scope when the JSX is processed
+- The variable should contain a valid HTML tag name or custom element name
+- Component variable names should follow PascalCase convention to be detected properly
+
 ## Component Patterns
 
 ### ⚠️ Important Note on Components
@@ -585,6 +651,130 @@ customElements.define(MyButton.tagName, MyButton);
 // Use in JSX
 const ButtonTag = toJSX(MyButton);
 <ButtonTag>Click me</ButtonTag>
+```
+
+### The toJSX Function
+
+The `toJSX` function is a utility that creates JSX-compatible component variables from custom element classes. It provides type-safe integration between custom elements and jsx-lit's Component variable system.
+
+```tsx
+import { toJSX } from 'jsx-lit';
+```
+
+**Function Signature:**
+```tsx
+function toJSX<T extends { new(...args: any): any; tagName: string; }>(
+  element: T
+): (props: JSX.JSXProps<InstanceType<T>>) => string
+```
+
+**What it does:**
+
+1. **Automatic Registration**: Registers the custom element if not already defined
+2. **Component Variable Creation**: Returns the tag name string for use as a JSX Component variable
+3. **Type Safety**: Provides TypeScript intellisense and type checking for component properties
+4. **JSX Integration**: Enables using custom elements with jsx-lit's dynamic tag name syntax
+
+**Example Usage:**
+
+```tsx
+import { LitElement, html } from 'lit';
+import { property } from 'lit/decorators.js';
+import { toJSX } from 'jsx-lit';
+
+// Define a custom element with typed properties
+export class MyButton extends LitElement {
+  static tagName = 'my-button';
+
+  @property() variant: 'primary' | 'secondary' = 'primary';
+  @property() disabled = false;
+  @property() size: 'small' | 'medium' | 'large' = 'medium';
+
+  render() {
+    return html`
+      <button
+        ?disabled=${this.disabled}
+        class="btn btn-${this.variant} btn-${this.size}"
+      >
+        <slot></slot>
+      </button>
+    `;
+  }
+}
+
+// Create JSX component variable with type safety
+const Button = toJSX(MyButton);
+
+// Use in JSX with full TypeScript support
+function renderApp() {
+  return (
+    <div>
+      <Button variant="primary" size="large" on-click={handleClick}>
+        Click me!
+      </Button>
+
+      <Button
+        variant="secondary"
+        disabled={true}
+        on-click={handleSecondaryClick}
+      >
+        Secondary action
+      </Button>
+    </div>
+  );
+}
+```
+
+**Registration Behavior:**
+
+- If the element class has a `register()` method, it will be called
+- Otherwise, `customElements.define(element.tagName, element)` is called automatically
+- If already registered, no error is thrown (safe to call multiple times)
+
+**TypeScript Integration:**
+
+The `toJSX` function provides full TypeScript support by leveraging the `JSX.JSXProps<T>` interface:
+
+```tsx
+// TypeScript will provide intellisense for:
+// - variant: 'primary' | 'secondary'
+// - disabled: boolean
+// - size: 'small' | 'medium' | 'large'
+// - Standard HTML attributes (class, id, etc.)
+// - Event handlers (on-click, on-change, etc.)
+const Button = toJSX(MyButton);
+
+<Button
+  variant="primary"    // ✅ Type-safe property
+  disabled={false}     // ✅ Type-safe property
+  invalidProp="test"   // ❌ TypeScript error
+/>
+```
+
+**Relationship to Dynamic Tag Names:**
+
+The `toJSX` function creates Component variables that work seamlessly with jsx-lit's dynamic tag name system:
+
+```tsx
+const Button = toJSX(MyButton);        // Creates component variable
+const Input = toJSX(MyInput);          // Creates component variable
+
+// Both compile to efficient static templates using __$literalMap
+function renderForm({ useButton }) {
+  const SubmitComponent = useButton ? Button : Input;
+  return <SubmitComponent type="submit">Submit</SubmitComponent>;
+}
+```
+
+This compiles to:
+```javascript
+import { htmlStatic, __$literalMap } from 'jsx-lit';
+
+function renderForm({ useButton }) {
+  const SubmitComponent = useButton ? Button : Input;
+  const __$SubmitComponent = __$literalMap.get('SubmitComponent');
+  return htmlStatic`<${__$SubmitComponent} type="submit">Submit</${__$SubmitComponent}>`;
+}
 ```
 
 ## TypeScript Configuration
