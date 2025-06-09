@@ -3,7 +3,7 @@
 	"compilerOptions": {
 		"types": [],
 		"jsx": "preserve",
-		"jsxImportSource": "@roenlie/lit-jsx"
+		"jsxImportSource": "jsx-lit"
 	},
 	"exclude": [
 		"dist"

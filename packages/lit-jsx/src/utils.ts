@@ -76,7 +76,7 @@ export const __$rest: DirectiveResult<typeof RestDirective> = directive(RestDire
  *
  * @example
  * ```tsx
- * import { toJSX } from '@roenlie/lit-jsx';
+ * import { toJSX } from 'jsx-lit';
  *
  * const MyButton = toJSX(MyButtonCmp);
  * const jsx = (

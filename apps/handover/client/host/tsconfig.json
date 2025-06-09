@@ -5,7 +5,7 @@
 			"@roenlie/vite-plugin-import-css-sheet/client"
 		],
 		"jsx": "preserve",
-		"jsxImportSource": "@roenlie/lit-jsx",
+		"jsxImportSource": "jsx-lit",
 		"rootDir": ".",
 		"emitDecoratorMetadata": false,
 		"experimentalDecorators": false,

@@ -1,6 +1,6 @@
-import { litJsx } from '@roenlie/lit-jsx/vite-jsx-preserve';
 import { importCSSSheet } from '@roenlie/vite-plugin-import-css-sheet';
 import tailwindcss from '@tailwindcss/vite';
+import { litJsx } from 'jsx-lit/vite-jsx-preserve';
 import { defineConfig } from 'vite';
 
 

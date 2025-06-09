@@ -47,8 +47,8 @@ export const SOURCES = {
 	CLASS_MAP_ALT:     'lit/directives/class-map.js',
 	STYLE_MAP:         'lit-html/directives/style-map.js',
 	STYLE_MAP_ALT:     'lit/directives/style-map.js',
-	REST:              '@roenlie/lit-jsx',
-	LITERAL_MAP:       '@roenlie/lit-jsx',
+	REST:              'jsx-lit',
+	LITERAL_MAP:       'jsx-lit',
 } as const;
 export const ERROR_MESSAGES = {
 	NO_PROGRAM_FOUND:      'No program found for JSX transformation.',

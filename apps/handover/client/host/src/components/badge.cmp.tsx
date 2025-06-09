@@ -1,6 +1,6 @@
 import { AdapterElement, css, customElement, property } from '@roenlie/custom-element/adapter';
 import { ifDefined } from '@roenlie/custom-element/shared';
-import { toJSX } from '@roenlie/lit-jsx';
+import { toJSX } from 'jsx-lit';
 
 import { cssreset } from '../styles/css-reset.ts';
 

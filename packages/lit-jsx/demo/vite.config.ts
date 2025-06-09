@@ -1,4 +1,4 @@
-import { litJsx } from '@roenlie/lit-jsx/vite-jsx-preserve';
+import { litJsx } from 'jsx-lit/vite-jsx-preserve';
 import { defineConfig } from 'vite';
 
 

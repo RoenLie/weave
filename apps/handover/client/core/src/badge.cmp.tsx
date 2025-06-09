@@ -1,6 +1,6 @@
 import { AdapterElement, css, customElement, property } from '@roenlie/custom-element/adapter';
-import { toJSX } from '@roenlie/lit-jsx';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { toJSX } from 'jsx-lit';
 
 import { cn } from './utils.ts';
 

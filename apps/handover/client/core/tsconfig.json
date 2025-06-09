@@ -3,7 +3,7 @@
 	"compilerOptions": {
 		"types": [],
 		"jsx": "react-jsx",
-		"jsxImportSource": "@roenlie/lit-jsx",
+		"jsxImportSource": "jsx-lit",
 		"emitDecoratorMetadata": false,
 		"experimentalDecorators": false,
 	}

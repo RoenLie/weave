@@ -1,5 +1,5 @@
 import { AdapterElement, css, type CSSStyle, customElement } from '@roenlie/custom-element/adapter';
-import { toJSX } from '@roenlie/lit-jsx';
+import { toJSX } from 'jsx-lit';
 
 import { Badge } from '../components/badge.cmp.tsx';
 

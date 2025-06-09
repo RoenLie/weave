@@ -272,15 +272,15 @@ importers:
       '@roenlie/custom-element':
         specifier: workspace:^
         version: link:../../../../packages/custom-element
-      '@roenlie/lit-jsx':
-        specifier: workspace:^
-        version: link:../../../../packages/lit-jsx
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      jsx-lit:
+        specifier: workspace:^
+        version: link:../../../../packages/lit-jsx
       tailwind-merge:
         specifier: ^3.3.0
         version: 3.3.0
@@ -303,9 +303,6 @@ importers:
       '@roenlie/handover-core':
         specifier: workspace:^
         version: link:../core
-      '@roenlie/lit-jsx':
-        specifier: workspace:^
-        version: link:../../../../packages/lit-jsx
       '@roenlie/vite-plugin-import-css-sheet':
         specifier: workspace:^
         version: link:../../../../packages/vite-plugins/import-css-sheet
@@ -318,6 +315,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      jsx-lit:
+        specifier: workspace:^
+        version: link:../../../../packages/lit-jsx
       tailwind-merge:
         specifier: ^3.3.0
         version: 3.3.0
@@ -1124,7 +1124,7 @@ importers:
 
   packages/lit-jsx/demo:
     dependencies:
-      '@roenlie/lit-jsx':
+      jsx-lit:
         specifier: workspace:^
         version: link:..
       lit:

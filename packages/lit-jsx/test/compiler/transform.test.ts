@@ -90,7 +90,7 @@ describe('Transform JSX', (context) => {
 		`;
 
 		let expected = `import { html as htmlStatic } from "lit-html/static.js";`;
-		expected += `\nimport { __$literalMap } from "@roenlie/lit-jsx";`;
+		expected += `\nimport { __$literalMap } from "jsx-lit";`;
 		expected += `\nimport { html } from "lit-html";`;
 		expected += `\nimport { SpecialElement } from './special-element.ts';`;
 		expected += `\nconst __$SpecialElement = __$literalMap.get(SpecialElement);`;
@@ -118,8 +118,8 @@ describe('Transform JSX', (context) => {
 		`;
 
 		const expected = `import { html as htmlStatic } from "lit-html/static.js";
-import { __$rest } from "@roenlie/lit-jsx";
-import { __$literalMap } from "@roenlie/lit-jsx";
+import { __$rest } from "jsx-lit";
+import { __$literalMap } from "jsx-lit";
 import { SpecialElement } from './special-element.ts';
 const __$SpecialElement = __$literalMap.get(SpecialElement);
 const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({

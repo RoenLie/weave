@@ -9,7 +9,7 @@ export const litJsx = (): PluginOption => {
 			if (!id.endsWith('.tsx'))
 				return;
 
-			code = 'import { __ttl } from "@roenlie/lit-jsx";\n' + code;
+			code = 'import { __ttl } from "jsx-lit";\n' + code;
 			code = code.replaceAll('jsxDEV(', () => 'jsxDEV(__ttl``,');
 			code = code.replaceAll('jsxs(',   () => 'jsxs(__ttl``,');
 			code = code.replaceAll('jsx(',    () => 'jsx(__ttl``,');

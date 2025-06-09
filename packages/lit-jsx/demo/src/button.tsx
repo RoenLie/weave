@@ -1,4 +1,4 @@
-import { toJSX } from '@roenlie/lit-jsx';
+import { toJSX } from 'jsx-lit';
 import { LitElement } from 'lit';
 import { when } from 'lit-html/directives/when.js';
 
