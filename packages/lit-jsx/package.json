@@ -15,21 +15,20 @@
 		"src"
 	],
 	"type": "module",
-	"main": "./dist/standard/jsx-runtime.js",
-	"types": "./dist/standard/jsx-types.d.ts",
+	"main": "./dist/react-jsx/jsx-runtime.js",
+	"types": "./dist/shared/jsx-types.d.ts",
 	"exports": {
-		".": "./dist/standard/jsx-utils.js",
+		".": "./dist/utils.js",
 		"./jsx-runtime": {
-			"types": "./dist/standard/jsx-types.d.ts",
-			"default": "./dist/standard/jsx-runtime.js"
+			"import": "./dist/shared/jsx-types.d.ts",
+			"default": "./dist/react-jsx/jsx-runtime.js"
 		},
 		"./jsx-dev-runtime": {
-			"types": "./dist/standard/jsx-types.d.ts",
-			"default": "./dist/standard/jsx-runtime.js"
+			"import": "./dist/shared/jsx-types.d.ts",
+			"default": "./dist/react-jsx/jsx-runtime.js"
 		},
-		"./utils": "./dist/utils.js",
-		"./vite-jsx-react": "./dist/compiler/vite-plugin-standard.js",
-		"./vite-jsx-preserve": "./dist/compiler/vite-plugin-custom.js"
+		"./vite-jsx-react": "./dist/react-jsx/vite-plugin.js",
+		"./vite-jsx-preserve": "./dist/compiler/vite-plugin.js"
 	},
 	"sideEffects": false,
 	"scripts": {

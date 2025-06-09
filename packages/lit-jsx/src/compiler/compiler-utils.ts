@@ -210,6 +210,64 @@ export const ensure = {
 			path,
 		);
 	},
+	svgImport(program: t.Program, path: NodePath): void {
+		this.import(
+			(source) => source === SOURCES.SVG || source === SOURCES.SVG_ALT,
+			(name) => name === VARIABLES.SVG,
+			() => t.importDeclaration(
+				[ t.importSpecifier(t.identifier(VARIABLES.SVG), t.identifier(VARIABLES.SVG)) ],
+				t.stringLiteral(SOURCES.SVG),
+			),
+			program,
+			path,
+		);
+	},
+	svgStaticImport(program: t.Program, path: NodePath): void {
+		this.import(
+			(source) => source === SOURCES.SVG_STATIC || source === SOURCES.SVG_STATIC_ALT,
+			(name) => name === VARIABLES.SVG,
+			() => t.importDeclaration(
+				[
+					t.importSpecifier(
+						t.identifier(VARIABLES.SVG_STATIC),
+						t.identifier(VARIABLES.SVG),
+					),
+				],
+				t.stringLiteral(SOURCES.SVG_STATIC),
+			),
+			program,
+			path,
+		);
+	},
+	mathmlImport(program: t.Program, path: NodePath): void {
+		this.import(
+			(source) => source === SOURCES.MATHML || source === SOURCES.MATHML_ALT,
+			(name) => name === VARIABLES.MATHML,
+			() => t.importDeclaration(
+				[ t.importSpecifier(t.identifier(VARIABLES.MATHML), t.identifier(VARIABLES.MATHML)) ],
+				t.stringLiteral(SOURCES.MATHML),
+			),
+			program,
+			path,
+		);
+	},
+	mathmlStaticImport(program: t.Program, path: NodePath): void {
+		this.import(
+			(source) => source === SOURCES.MATHML_STATIC || source === SOURCES.MATHML_STATIC_ALT,
+			(name) => name === VARIABLES.MATHML,
+			() => t.importDeclaration(
+				[
+					t.importSpecifier(
+						t.identifier(VARIABLES.MATHML_STATIC),
+						t.identifier(VARIABLES.MATHML),
+					),
+				],
+				t.stringLiteral(SOURCES.MATHML_STATIC),
+			),
+			program,
+			path,
+		);
+	},
 	unsafeStaticImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.UNSAFE_STATIC || source === SOURCES.UNSAFE_STATIC_ALT,

@@ -1,5 +1,4 @@
-// cspell:words hkern mpath vkern
-
+/** cspell: disable */
 
 /**
  * A comprehensive set of all SVG tag names.

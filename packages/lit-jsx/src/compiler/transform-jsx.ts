@@ -1,7 +1,9 @@
-import type { PluginPass } from '@babel/core';
+import { type PluginPass } from '@babel/core';
 import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 
+import { isMathmlTag } from '../shared/mathml-tags.ts';
+import { isSvgTag } from '../shared/svg-tags.ts';
 import type { AttrExpressionParams, AttrNonExpressionParams } from './compiler-utils.ts';
 import { attributeProcessors, ensure, isComponent, TemplateBuilder } from './compiler-utils.ts';
 import {
@@ -49,7 +51,20 @@ const wrapJSXElementInTTL = (
 		throw new Error(ERROR_MESSAGES.NO_PROGRAM_FOUND);
 
 	const builder = new TemplateBuilder();
+	let templateType = 'html' as 'html' | 'svg' | 'mathml';
 	let isStatic = false;
+
+	const openingElementId = initialPath.node.openingElement.name;
+	if (!t.isJSXIdentifier(openingElementId))
+		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
+
+	// We can only check for SVG and MathML tags if the tag is not a component tag.
+	// As the component tag needs to be resolved at runtime.
+	const openingElementTagName = openingElementId.name;
+	if (isSvgTag(openingElementTagName))
+		templateType = VARIABLES.SVG;
+	else if (isMathmlTag(openingElementTagName))
+		templateType = VARIABLES.MATHML;
 
 	// We create a function to process the JSX element recursively.
 	// This will allow us to handle nested elements and attributes.
@@ -203,13 +218,40 @@ const wrapJSXElementInTTL = (
 	let identifier: string = '';
 
 	if (isStatic) {
-		identifier = VARIABLES.HTML_STATIC;
-		ensure.htmlStaticImport(program, initialPath);
-		ensure.unsafeStaticImport(program, initialPath);
+		if (templateType === VARIABLES.HTML) {
+			identifier = VARIABLES.HTML_STATIC;
+			ensure.htmlStaticImport(program, initialPath);
+		}
+		// This will not happen, as svg and mathml dynamic tags are not supported yet.
+		else if (templateType === VARIABLES.SVG) {
+			identifier = VARIABLES.SVG_STATIC;
+			ensure.svgStaticImport(program, initialPath);
+		}
+		// This will not happen, as svg and mathml dynamic tags are not supported yet.
+		else if (templateType === VARIABLES.MATHML) {
+			identifier = VARIABLES.MATHML_STATIC;
+			ensure.mathmlStaticImport(program, initialPath);
+		}
+		else {
+			throw new Error(ERROR_MESSAGES.UNKNOWN_TEMPLATE_TYPE(templateType));
+		}
 	}
 	else {
-		identifier = VARIABLES.HTML;
-		ensure.htmlImport(program, initialPath);
+		if (templateType === VARIABLES.HTML) {
+			identifier = VARIABLES.HTML;
+			ensure.htmlImport(program, initialPath);
+		}
+		else if (templateType === VARIABLES.SVG) {
+			identifier = VARIABLES.SVG;
+			ensure.svgImport(program, initialPath);
+		}
+		else if (templateType === VARIABLES.MATHML) {
+			identifier = VARIABLES.MATHML;
+			ensure.mathmlImport(program, initialPath);
+		}
+		else {
+			throw new Error(ERROR_MESSAGES.UNKNOWN_TEMPLATE_TYPE(templateType));
+		}
 	}
 
 	return builder.createTaggedTemplate(identifier);

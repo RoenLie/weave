@@ -3,7 +3,7 @@ import type { PluginOption } from 'vite';
 
 export const litJsx = (): PluginOption => {
 	return {
-		name:    'lit-jsx',
+		name:    'lit-jsx-react-jsx',
 		enforce: 'post',
 		transform(code, id) {
 			if (!id.endsWith('.tsx'))

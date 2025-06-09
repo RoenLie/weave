@@ -17,7 +17,7 @@ export const litJsx = (options: {
 	let projectRoot: string;
 
 	return {
-		name:   'lit-jsx-custom',
+		name:   'lit-jsx-preserve',
 		config: {
 			order: 'pre',
 			handler(userConfig, env) {
