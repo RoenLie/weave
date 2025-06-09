@@ -3,7 +3,7 @@ import SyntaxJSX from '@babel/plugin-syntax-jsx';
 
 import { postprocess } from './postprocess.ts';
 import { preprocess } from './preprocess.ts';
-import { transformJSX } from './transform-jsx.ts';
+import { transformJSXElement, transformJSXFragment } from './transform-jsx.ts';
 
 
 export const litJsxBabelPreset = (
@@ -17,8 +17,8 @@ export const litJsxBabelPreset = (
 					name:     'lit-jsx-transform',
 					inherits: SyntaxJSX.default,
 					visitor:  {
-						JSXElement:  transformJSX,
-						JSXFragment: transformJSX,
+						JSXElement:  transformJSXElement,
+						JSXFragment: transformJSXFragment,
 						Program:     {
 							enter: preprocess,
 							exit:  postprocess,

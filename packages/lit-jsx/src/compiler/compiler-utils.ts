@@ -3,11 +3,13 @@ import * as t from '@babel/types';
 
 import { ERROR_MESSAGES, SOURCES, VARIABLES } from './config.ts';
 
+export type Values<T> = T[keyof T];
+
 
 export const isComponent = (tagName: string): boolean => {
 	return (tagName[0] && tagName[0].toLowerCase() !== tagName[0])
 		|| tagName.includes('.')
-		|| /[^a-zA-Z]/.test(tagName[0]!);
+		|| /[^a-zA-Z]/.test(tagName[0] ?? '');
 };
 
 
@@ -55,7 +57,6 @@ interface AttrParams {
 	path:    NodePath<t.JSXElement>;
 	program: t.Program;
 }
-
 
 export interface AttrExpressionParams extends AttrParams {
 	attr:    t.JSXAttribute & {
@@ -130,7 +131,7 @@ export const attributeProcessors = {
 		params.attr.name = t.jSXIdentifier(newName);
 		params.builder.addText(' ' + newName + '=');
 	},
-	rest(params: AttrNonExpressionParams): void {
+	nonExpression(params: AttrNonExpressionParams): void {
 		// If the value is a string, we can use it directly
 		// Here we always bind the value as a string.
 		// In the future, we might want to also support numbers.
