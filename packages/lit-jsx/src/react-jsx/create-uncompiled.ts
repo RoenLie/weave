@@ -5,9 +5,9 @@ import { ref as litRef } from 'lit-html/directives/ref.js';
 import type { StyleInfo } from 'lit-html/directives/style-map.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
 
+import { isSvgTag } from '../shared/svg-tags.js';
 import { eventNameCache } from './event-names.js';
 import type { Config, FakeTemplateResult, FakeTemplateStringsArray } from './runtime-types.js';
-import { isSvgTag } from './svg-tags.js';
 
 
 // Lit wants to receive the same template strings array for the same template.

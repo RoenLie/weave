@@ -2234,195 +2234,390 @@ declare global {
 			}> {}
 		/** @type {HTMLElementTagNameMap} */
 		interface HTMLElementTags {
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a */
 			a:          AnchorHTMLAttributes<HTMLAnchorElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/abbr */
 			abbr:       HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/address */
 			address:    HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/area */
 			area:       AreaHTMLAttributes<HTMLAreaElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article */
 			article:    HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/aside */
 			aside:      HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio */
 			audio:      AudioHTMLAttributes<HTMLAudioElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/b */
 			b:          HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base */
 			base:       BaseHTMLAttributes<HTMLBaseElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/bdi */
 			bdi:        HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/bdo */
 			bdo:        HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/blockquote */
 			blockquote: BlockquoteHTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/body */
 			body:       HTMLAttributes<HTMLBodyElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/br */
 			br:         HTMLAttributes<HTMLBRElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button */
 			button:     ButtonHTMLAttributes<HTMLButtonElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas */
 			canvas:     CanvasHTMLAttributes<HTMLCanvasElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/caption */
 			caption:    HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite */
 			cite:       HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code */
 			code:       HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/col */
 			col:        ColHTMLAttributes<HTMLTableColElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/colgroup */
 			colgroup:   ColgroupHTMLAttributes<HTMLTableColElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/data */
 			data:       DataHTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/datalist */
 			datalist:   HTMLAttributes<HTMLDataListElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dd */
 			dd:         HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/del */
 			del:        HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/details */
 			details:    DetailsHtmlAttributes<HTMLDetailsElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dfn */
 			dfn:        HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog */
 			dialog:     DialogHtmlAttributes<HTMLDialogElement>;
-			/** DIV HTML element */
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/div */
 			div:        HTMLAttributes<HTMLDivElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dl */
 			dl:         HTMLAttributes<HTMLDListElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dt */
 			dt:         HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/em */
 			em:         HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/embed */
 			embed:      EmbedHTMLAttributes<HTMLEmbedElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/fieldset */
 			fieldset:   FieldsetHTMLAttributes<HTMLFieldSetElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/figcaption */
 			figcaption: HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/figure */
 			figure:     HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/footer */
 			footer:     HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form */
 			form:       FormHTMLAttributes<HTMLFormElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Heading_Elements */
 			h1:         HTMLAttributes<HTMLHeadingElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Heading_Elements */
 			h2:         HTMLAttributes<HTMLHeadingElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Heading_Elements */
 			h3:         HTMLAttributes<HTMLHeadingElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Heading_Elements */
 			h4:         HTMLAttributes<HTMLHeadingElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Heading_Elements */
 			h5:         HTMLAttributes<HTMLHeadingElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Heading_Elements */
 			h6:         HTMLAttributes<HTMLHeadingElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/head */
 			head:       HTMLAttributes<HTMLHeadElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/header */
 			header:     HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/hgroup */
 			hgroup:     HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/hr */
 			hr:         HTMLAttributes<HTMLHRElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/html */
 			html:       HTMLAttributes<HTMLHtmlElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/i */
 			i:          HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe */
 			iframe:     IframeHTMLAttributes<HTMLIFrameElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img */
 			img:        ImgHTMLAttributes<HTMLImageElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input */
 			input:      InputHTMLAttributes<HTMLInputElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ins */
 			ins:        InsHTMLAttributes<HTMLModElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/kbd */
 			kbd:        HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/label */
 			label:      LabelHTMLAttributes<HTMLLabelElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/legend */
 			legend:     HTMLAttributes<HTMLLegendElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/li */
 			li:         LiHTMLAttributes<HTMLLIElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link */
 			link:       LinkHTMLAttributes<HTMLLinkElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/main */
 			main:       HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/map */
 			map:        MapHTMLAttributes<HTMLMapElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/mark */
 			mark:       HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/menu */
 			menu:       MenuHTMLAttributes<HTMLMenuElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta */
 			meta:       MetaHTMLAttributes<HTMLMetaElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meter */
 			meter:      MeterHTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/nav */
 			nav:        HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/noscript */
 			noscript:   HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/object */
 			object:     ObjectHTMLAttributes<HTMLObjectElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ol */
 			ol:         OlHTMLAttributes<HTMLOListElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/optgroup */
 			optgroup:   OptgroupHTMLAttributes<HTMLOptGroupElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/option */
 			option:     OptionHTMLAttributes<HTMLOptionElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/output */
 			output:     OutputHTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/p */
 			p:          HTMLAttributes<HTMLParagraphElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/picture */
 			picture:    HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/pre */
 			pre:        HTMLAttributes<HTMLPreElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/progress */
 			progress:   ProgressHTMLAttributes<HTMLProgressElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/q */
 			q:          QuoteHTMLAttributes<HTMLQuoteElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/rp */
 			rp:         HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/rt */
 			rt:         HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ruby */
 			ruby:       HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/s */
 			s:          HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/samp */
 			samp:       HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script */
 			script:     ScriptHTMLAttributes<HTMLScriptElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/search */
 			search:     HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/section */
 			section:    HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select */
 			select:     SelectHTMLAttributes<HTMLSelectElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot */
 			slot:       HTMLSlotElementAttributes;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/small */
 			small:      HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/source */
 			source:     SourceHTMLAttributes<HTMLSourceElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/span */
 			span:       HTMLAttributes<HTMLSpanElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/strong */
 			strong:     HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/style */
 			style:      StyleHTMLAttributes<HTMLStyleElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/sub */
 			sub:        HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/summary */
 			summary:    HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/sup */
 			sup:        HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table */
 			table:      HTMLAttributes<HTMLTableElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tbody */
 			tbody:      HTMLAttributes<HTMLTableSectionElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/td */
 			td:         TdHTMLAttributes<HTMLTableCellElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template */
 			template:   TemplateHTMLAttributes<HTMLTemplateElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea */
 			textarea:   TextareaHTMLAttributes<HTMLTextAreaElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tfoot */
 			tfoot:      HTMLAttributes<HTMLTableSectionElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/th */
 			th:         ThHTMLAttributes<HTMLTableCellElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/thead */
 			thead:      HTMLAttributes<HTMLTableSectionElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/time */
 			time:       TimeHTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title */
 			title:      HTMLAttributes<HTMLTitleElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/tr */
 			tr:         HTMLAttributes<HTMLTableRowElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/track */
 			track:      TrackHTMLAttributes<HTMLTrackElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/u */
 			u:          HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ul */
 			ul:         HTMLAttributes<HTMLUListElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/var */
 			var:        HTMLAttributes<HTMLElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video */
 			video:      VideoHTMLAttributes<HTMLVideoElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/wbr */
 			wbr:        HTMLAttributes<HTMLElement>;
 		}
 		/** @type {HTMLElementDeprecatedTagNameMap} */
 		interface HTMLElementDeprecatedTags {
+			/**
+			 * @deprecated The `<big>` element is deprecated and should not be used.
+			 * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/big
+			 */
 			big:      HTMLAttributes<HTMLElement>;
+			/**
+			 * @deprecated The `<keygen>` element is deprecated and should not be used.
+			 * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/keygen
+			 */
 			keygen:   KeygenHTMLAttributes<HTMLElement>;
+			/**
+			 * @deprecated The `<menuitem>` element is deprecated and should not be used.
+			 * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/menuitem
+			 */
 			menuitem: HTMLAttributes<HTMLElement>;
+			/**
+			 * @deprecated The `<noindex>` element is deprecated and should not be used.
+			 * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/noindex
+			 */
 			noindex:  HTMLAttributes<HTMLElement>;
+			/**
+			 * @deprecated The `<param>` element is deprecated and should not be used.
+			 * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/param
+			 */
 			param:    ParamHTMLAttributes<HTMLParamElement>;
 		}
 		/** @type {SVGElementTagNameMap} */
 		interface SVGElementTags {
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/animate */
 			animate:             AnimateSVGAttributes<SVGAnimateElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/animateMotion */
 			animateMotion:       AnimateMotionSVGAttributes<SVGAnimateMotionElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/animateTransform */
 			animateTransform:    AnimateTransformSVGAttributes<SVGAnimateTransformElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/circle */
 			circle:              CircleSVGAttributes<SVGCircleElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/clipPath */
 			clipPath:            ClipPathSVGAttributes<SVGClipPathElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/defs */
 			defs:                DefsSVGAttributes<SVGDefsElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/desc */
 			desc:                DescSVGAttributes<SVGDescElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/ellipse */
 			ellipse:             EllipseSVGAttributes<SVGEllipseElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feBlend */
 			feBlend:             FeBlendSVGAttributes<SVGFEBlendElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feColorMatrix */
 			feColorMatrix:       FeColorMatrixSVGAttributes<SVGFEColorMatrixElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feComponentTransfer */
 			feComponentTransfer: FeComponentTransferSVGAttributes<SVGFEComponentTransferElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feComposite */
 			feComposite:         FeCompositeSVGAttributes<SVGFECompositeElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feConvolveMatrix */
 			feConvolveMatrix:    FeConvolveMatrixSVGAttributes<SVGFEConvolveMatrixElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feDiffuseLighting */
 			feDiffuseLighting:   FeDiffuseLightingSVGAttributes<SVGFEDiffuseLightingElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feDisplacementMap */
 			feDisplacementMap:   FeDisplacementMapSVGAttributes<SVGFEDisplacementMapElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feDistantLight */
 			feDistantLight:      FeDistantLightSVGAttributes<SVGFEDistantLightElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feDropShadow */
 			feDropShadow:        FeDropShadowSVGAttributes<SVGFEDropShadowElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feFlood */
 			feFlood:             FeFloodSVGAttributes<SVGFEFloodElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feFuncA */
 			feFuncA:             FeFuncSVGAttributes<SVGFEFuncAElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feFuncB */
 			feFuncB:             FeFuncSVGAttributes<SVGFEFuncBElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feFuncG */
 			feFuncG:             FeFuncSVGAttributes<SVGFEFuncGElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feFuncR */
 			feFuncR:             FeFuncSVGAttributes<SVGFEFuncRElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feGaussianBlur */
 			feGaussianBlur:      FeGaussianBlurSVGAttributes<SVGFEGaussianBlurElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feImage */
 			feImage:             FeImageSVGAttributes<SVGFEImageElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feMerge */
 			feMerge:             FeMergeSVGAttributes<SVGFEMergeElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feMergeNode */
 			feMergeNode:         FeMergeNodeSVGAttributes<SVGFEMergeNodeElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feMorphology */
 			feMorphology:        FeMorphologySVGAttributes<SVGFEMorphologyElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feOffset */
 			feOffset:            FeOffsetSVGAttributes<SVGFEOffsetElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/fePointLight */
 			fePointLight:        FePointLightSVGAttributes<SVGFEPointLightElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feSpecularLighting */
 			feSpecularLighting:  FeSpecularLightingSVGAttributes<SVGFESpecularLightingElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feSpotLight */
 			feSpotLight:         FeSpotLightSVGAttributes<SVGFESpotLightElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feTile */
 			feTile:              FeTileSVGAttributes<SVGFETileElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feTurbulence */
 			feTurbulence:        FeTurbulanceSVGAttributes<SVGFETurbulenceElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/filter */
 			filter:              FilterSVGAttributes<SVGFilterElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/foreignObject */
 			foreignObject:       ForeignObjectSVGAttributes<SVGForeignObjectElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/g */
 			g:                   GSVGAttributes<SVGGElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/image */
 			image:               ImageSVGAttributes<SVGImageElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/line */
 			line:                LineSVGAttributes<SVGLineElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/linearGradient */
 			linearGradient:      LinearGradientSVGAttributes<SVGLinearGradientElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker */
 			marker:              MarkerSVGAttributes<SVGMarkerElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/mask */
 			mask:                MaskSVGAttributes<SVGMaskElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/metadata */
 			metadata:            MetadataSVGAttributes<SVGMetadataElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/mpath */
 			mpath:               MPathSVGAttributes<SVGMPathElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/path */
 			path:                PathSVGAttributes<SVGPathElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/pattern */
 			pattern:             PatternSVGAttributes<SVGPatternElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polygon */
 			polygon:             PolygonSVGAttributes<SVGPolygonElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline */
 			polyline:            PolylineSVGAttributes<SVGPolylineElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/radialGradient */
 			radialGradient:      RadialGradientSVGAttributes<SVGRadialGradientElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect */
 			rect:                RectSVGAttributes<SVGRectElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/set */
 			set:                 SetSVGAttributes<SVGSetElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/stop */
 			stop:                StopSVGAttributes<SVGStopElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/svg */
 			svg:                 SvgSVGAttributes<SVGSVGElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/switch */
 			switch:              SwitchSVGAttributes<SVGSwitchElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/symbol */
 			symbol:              SymbolSVGAttributes<SVGSymbolElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text */
 			text:                TextSVGAttributes<SVGTextElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/textPath */
 			textPath:            TextPathSVGAttributes<SVGTextPathElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/tspan */
 			tspan:               TSpanSVGAttributes<SVGTSpanElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use */
 			use:                 UseSVGAttributes<SVGUseElement>;
+			/** @see https://developer.mozilla.org/en-US/docs/Web/SVG/Element/view */
 			view:                ViewSVGAttributes<SVGViewElement>;
 		}
+		/** Interface for semantic tags that start with "s-". */
 		interface SemanticTags { [key: `s-${ string }`]: HTMLAttributes<HTMLElement>; }
+		/** Interface for registering custom element tags. */
+		interface CustomElementTags {}
+
 		interface IntrinsicElements extends
 			HTMLElementTags,
 			HTMLElementDeprecatedTags,
 			SVGElementTags,
-			SemanticTags {}
+			SemanticTags,
+			CustomElementTags {}
 	}
 }

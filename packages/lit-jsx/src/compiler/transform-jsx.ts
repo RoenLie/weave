@@ -49,7 +49,6 @@ const wrapJSXElementInTTL = (
 		throw new Error(ERROR_MESSAGES.NO_PROGRAM_FOUND);
 
 	const builder = new TemplateBuilder();
-
 	let isStatic = false;
 
 	// We create a function to process the JSX element recursively.
@@ -84,11 +83,11 @@ const wrapJSXElementInTTL = (
 
 				literalName = literalIdentifier.name;
 
-				builder.addText(' <');
+				builder.addText('<');
 				builder.addExpression(literalIdentifier);
 			}
 			else {
-				builder.addText(' <' + tagName);
+				builder.addText('<' + tagName);
 			}
 
 			const attributes = path.node.openingElement.attributes;
@@ -160,9 +159,6 @@ const wrapJSXElementInTTL = (
 
 			builder.addText('>'); // Close the opening tag
 		}
-		else {
-			builder.addText('');
-		}
 
 		path.node.children.forEach((child, index) => {
 			if (t.isJSXText(child)) {
@@ -193,16 +189,15 @@ const wrapJSXElementInTTL = (
 		else {
 			// If it's a component tag, we need to close it with the static literal.
 			if (isComponentTag) {
-				builder.addText(' </');
+				builder.addText('</');
 				builder.addExpression(t.identifier(literalName));
 				builder.addText('>');
 			}
 			else {
-				builder.addText(' </' + tagName + '>');
+				builder.addText('</' + tagName + '>');
 			}
 		}
 	};
-
 	process(initialPath);
 
 	let identifier: string = '';

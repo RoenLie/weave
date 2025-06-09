@@ -124,7 +124,10 @@ export const Badge = toJSX(BadgeElement);
 
 declare global {
 	namespace JSX {
-		interface IntrinsicElements {
+		interface CustomElementTags {
+			/**
+			 * {@link BadgeElement}
+			 */
 			'ho-badge': JSXProps<BadgeElement>;
 		}
 	}

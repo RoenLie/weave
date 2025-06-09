@@ -6,11 +6,11 @@ import { ref as litRef } from 'lit-html/directives/ref.js';
 import type { StyleInfo } from 'lit-html/directives/style-map.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
 
+import { isSvgTag } from '../shared/svg-tags.js';
 import { createUnCompiledTemplate } from './create-uncompiled.js';
 import { eventNameCache } from './event-names.js';
 import { getLitParts } from './jsx-utils.js';
 import type { Config, FakeCompiledTemplate, FakeCompiledTemplateResult, FakeTemplateStringsArray } from './runtime-types.js';
-import { isSvgTag } from './svg-tags.js';
 
 
 // These are cached by way of TemplateStringsArray reference, which is unique per call site.

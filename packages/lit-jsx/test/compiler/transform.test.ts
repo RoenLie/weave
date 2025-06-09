@@ -1,3 +1,4 @@
+/* eslint-disable @stylistic/max-len */
 
 import * as babel from '@babel/core';
 import { mergeAndConcat } from 'merge-anything';
@@ -58,7 +59,7 @@ const template = html\`\`;`;
 		`;
 
 		const expected = `import { html } from "lit-html";
-const template = html\` <div class="test">Hello World </div>\`;`;
+const template = html\`<div class="test">Hello World</div>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -93,40 +94,14 @@ const template = html\` <div class="test">Hello World </div>\`;`;
 		</>);
 		`;
 
-		let expected = ``;
-
-		expected += `import { unsafeStatic } from "lit-html/static.js";
+		const expected = `import { unsafeStatic } from "lit-html/static.js";
 import { html as htmlStatic } from "lit-html/static.js";
 import { __$literalMap } from "@roenlie/lit-jsx/utils";
 import { html } from "lit-html";
 import { SpecialElement } from './special-element.ts';
 const __$SpecialElement = __$literalMap.get(SpecialElement);
-`;
-
-		expected += `const basicTemplate = html\`
-<div
-class="1"
-.value1=\${'first-value'}
-.value2=\${'second-value'}
-@click=\${() => console.log('clicked')}>
-<span>\${when(true, () => html\`
-<s-inner-span>
-</s-inner-span>\`)}
-</span>
-</div>
-<div
-class="2">
-</div>\`;`.replaceAll('\n', ' ');
-
-		expected += `\n`;
-
-		expected += `const template = htmlStatic\`
-<\${__$SpecialElement}
-name="kakemann">
-<\${__$SpecialElement}
-name="kakemann">
-</\${__$SpecialElement}>
-</\${__$SpecialElement}>\`;`.replaceAll('\n', ' ');
+const basicTemplate = html\`<div class="1" .value1=\${'first-value'} .value2=\${'second-value'} @click=\${() => console.log('clicked')}><span>\${when(true, () => html\`<s-inner-span></s-inner-span>\`)}</span></div><div class="2"></div>\`;
+const template = htmlStatic\`<\${__$SpecialElement} name="kakemann"><\${__$SpecialElement} name="kakemann"></\${__$SpecialElement}></\${__$SpecialElement}>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -154,10 +129,10 @@ import { __$rest } from "@roenlie/lit-jsx/utils";
 import { __$literalMap } from "@roenlie/lit-jsx/utils";
 import { SpecialElement } from './special-element.ts';
 const __$SpecialElement = __$literalMap.get(SpecialElement);
-const template = htmlStatic\` <\${__$SpecialElement} name="kakemann" \${rest({
+const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
   foo: 'bar',
   baz: 'qux'
-})}> </\${__$SpecialElement}>\`;`;
+})}></\${__$SpecialElement}>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;

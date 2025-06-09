@@ -6,34 +6,6 @@ import { Directive, directive, PartType } from 'lit-html/directive.js';
 import type { LitPartConstructors } from './runtime-types.js';
 
 
-/**
- * Creates a variable which can be used using the Component syntax in JSX.\
- * Also registers the custom element if it hasn't been registered yet.
- *
- * @example
- * ```tsx
- * import { toJSX } from '@roenlie/lit-jsx';
- *
- * const MyButton = toJSX(MyButtonCmp);
- * const jsx = (
- *  <MyButton
- *   class="my-button"
- *   on-click={() => { console.log('Clicked!'); }}
- *  />
- * ```
- */
-export const toJSX = <T extends { new(...args: any): any; tagName: string; }>(
-	element: T,
-): (props: JSX.JSXProps<InstanceType<T>>) => string => {
-	if ('register' in element && typeof element.register === 'function')
-		element.register();
-	else if (!customElements.get(element.tagName))
-		customElements.define(element.tagName, element);
-
-	return element.tagName as any;
-};
-
-
 export const __ttl: (strings: TemplateStringsArray) => TemplateStringsArray = s => s;
 
 

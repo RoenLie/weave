@@ -33,7 +33,6 @@ export class RouterCmp extends AdapterElement {
 		{
 			path:   '/rest',
 			render: () => (<div {...{ name: '1', role: 'button' }} />),
-
 		},
 	]);
 

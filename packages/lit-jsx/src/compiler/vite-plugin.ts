@@ -2,7 +2,7 @@ import * as babel from '@babel/core';
 import { mergeAndConcat } from 'merge-anything';
 import type { PluginOption } from 'vite';
 
-import { litJsxBabelPreset } from './lit-jsx-babel-preset.ts';
+import { litJsxBabelPreset } from './babel-preset.ts';
 
 
 type BabelPlugins = NonNullable<NonNullable<babel.TransformOptions['parserOpts']>['plugins']>;
@@ -72,7 +72,7 @@ export const litJsx = (options: {
 				};
 
 				const opts = mergeAndConcat(babelUserOptions, babelOptions);
-				const result = await babel.transformAsync(source, opts)!;
+				const result = await babel.transformAsync(source, opts);
 
 				if (result?.code)
 					return { code: result.code, map: result.map };
