@@ -7,7 +7,7 @@ import { isSvgTag } from '../shared/svg-tags.ts';
 import type { AttrExpressionParams, AttrNonExpressionParams, Values } from './compiler-utils.ts';
 import { attributeProcessors, ensure, isComponent, TemplateBuilder } from './compiler-utils.ts';
 import {
-	ATTRIBUTES, COMPONENT_LITERAL_PREFIX, DISCARD_TAG,
+	ATTR_NAMES, ATTR_VALUES, COMPONENT_LITERAL_PREFIX, DISCARD_TAG,
 	ERROR_MESSAGES, VARIABLES, WHITESPACE_TAGS,
 } from './config.ts';
 
@@ -231,6 +231,7 @@ transformTopLevelJSXElement.processAttributes = (
 				if (t.isJSXEmptyExpression(attr.value.expression))
 					throw new Error(ERROR_MESSAGES.EMPTY_JSX_EXPRESSION);
 
+				const expression = attr.value.expression;
 				const params: AttrExpressionParams = {
 					builder,
 					attr: attr as AttrExpressionParams['attr'],
@@ -238,16 +239,35 @@ transformTopLevelJSXElement.processAttributes = (
 					program,
 				};
 
-				if (name === ATTRIBUTES.REF)
-					attributeProcessors.ref(params);
-				else if (name === ATTRIBUTES.CLASS_LIST)
+				if (name === ATTR_NAMES.CLASS_LIST) {
 					attributeProcessors.classList(params);
-				else if (name === ATTRIBUTES.STYLE)
-					attributeProcessors.style(params);
-				else if (name.startsWith(ATTRIBUTES.EVENT_PREFIX))
+				}
+				else if (name === ATTR_NAMES.STYLE_LIST) {
+					attributeProcessors.styleList(params);
+				}
+				else if (name.startsWith(ATTR_NAMES.EVENT_PREFIX)) {
 					attributeProcessors.event(params);
-				else
+				}
+				else if (name === ATTR_NAMES.REF) {
+					attributeProcessors.ref(params);
+				}
+				// To support being able to set expression container values as attributes and booleans.
+				// we check to see if the expression is calling a predefined function.
+				// * `asAttr` for attributes.
+				// * `asBool` for booleans.
+				else if (t.isCallExpression(expression) && t.isIdentifier(expression.callee)) {
+					if (expression.callee.name === ATTR_VALUES.ATTR)
+						attributeProcessors.asAttr(params);
+					else if (expression.callee.name === ATTR_VALUES.BOOL)
+						attributeProcessors.asBool(params);
+					else if (expression.callee.name === ATTR_VALUES.DEFINED)
+						attributeProcessors.asAttr(params);
+					else
+						attributeProcessors.expression(params);
+				}
+				else {
 					attributeProcessors.expression(params);
+				}
 
 				builder.addExpression(attr.value.expression);
 

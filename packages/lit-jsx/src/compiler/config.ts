@@ -6,11 +6,16 @@ export const defaultConfig = {
 export const COMPONENT_LITERAL_PREFIX = '__$';
 export const DISCARD_TAG = 'discard';
 export const WHITESPACE_TAGS: string[] = [ 'pre', 'textarea' ];
-export const ATTRIBUTES = {
+export const ATTR_NAMES = {
 	REF:          'ref',
 	CLASS_LIST:   'classList',
-	STYLE:        'style',
+	STYLE_LIST:   'styleList',
 	EVENT_PREFIX: 'on-',
+} as const;
+export const ATTR_VALUES = {
+	BOOL:    'asBool',
+	ATTR:    'asAttr',
+	DEFINED: 'ifDefined',
 } as const;
 export const VARIABLES = {
 	HTML:          'html',

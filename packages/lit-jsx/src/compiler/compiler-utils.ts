@@ -73,6 +73,34 @@ export interface AttrNonExpressionParams extends AttrParams {
 }
 
 export const attributeProcessors = {
+	asAttr(params: AttrExpressionParams): void {
+		const name = params.attr.name.name.toString();
+		params.builder.addText(' ' + name + '=');
+
+		const expression = params.attr.value.expression;
+		if (!t.isCallExpression(expression))
+			return;
+
+		const argument = expression.arguments[0];
+		if (!t.isExpression(argument))
+			return;
+
+		params.attr.value.expression = argument;
+	},
+	asBool(params: AttrExpressionParams): void {
+		const name = params.attr.name.name.toString();
+		params.builder.addText(' ?' + name + '=');
+
+		const expression = params.attr.value.expression;
+		if (!t.isCallExpression(expression))
+			return;
+
+		const argument = expression.arguments[0];
+		if (!t.isExpression(argument))
+			return;
+
+		params.attr.value.expression = argument;
+	},
 	ref(params: AttrExpressionParams): void {
 		// add a space to keep correct spacing in the template.
 		params.builder.addText(' ');
@@ -97,8 +125,10 @@ export const attributeProcessors = {
 
 		ensure.classMapImport(params.program, params.path);
 	},
-	style(params: AttrExpressionParams): void {
-		params.builder.addText(' ' + params.attr.name.name.toString() + '=');
+	styleList(params: AttrExpressionParams): void {
+		const name = params.attr.name.name.toString();
+
+		params.builder.addText(' ' + name + '=');
 
 		// add a styleMap call around the expression.
 		params.attr.value.expression = t.callExpression(
@@ -139,7 +169,8 @@ export const attributeProcessors = {
 			throw new Error(ERROR_MESSAGES.ONLY_STRING_LITERALS);
 
 		const name = params.attr.name.name.toString();
-		params.builder.addText(' ' + name + '="' + params.attr.value.value + '"');
+		const value = params.attr.value.value;
+		params.builder.addText(' ' + name + '="' + value + '"');
 	},
 } as const;
 

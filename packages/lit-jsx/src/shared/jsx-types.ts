@@ -95,10 +95,12 @@ declare global {
 			toString(): string;
 			[SERIALIZABLE]: never;
 		}
-		interface CustomAttributes<T> {
-			ref?:       RefOrCallback<T>;
-			classList?: { [k: string]: boolean | undefined; } | undefined;
-		}
+		interface CustomAttributes<T> extends
+			Partial<{
+				ref:       RefOrCallback<T>;
+				classList: { [k: string]: boolean | undefined; };
+				styleList: CSSProperties;
+			}> {}
 		interface CustomEvents {}
 		type OnAttributes<T> = {
 			[Key in keyof CustomEvents as `on-${ Key }`]?: EventHandlerWithOptionsUnion<T, CustomEvents[Key]>;
@@ -106,120 +108,26 @@ declare global {
 		interface DOMAttributes<T> extends
 			CustomAttributes<T>,
 			OnAttributes<T>,
-			CustomEventHandlersCamelCase<T>,
 			CustomEventHandlersNamespaced<T>,
 			CanBeNothing<{
-				children:               JSXElement;
-				innerHTML:              string;
-				innerText:              string | number;
-				textContent:            string | number;
-				// camel case events
-				onCopy:                 EventHandlerUnion<T, ClipboardEvent>;
-				onCut:                  EventHandlerUnion<T, ClipboardEvent>;
-				onPaste:                EventHandlerUnion<T, ClipboardEvent>;
-				onCompositionEnd:       EventHandlerUnion<T, CompositionEvent>;
-				onCompositionStart:     EventHandlerUnion<T, CompositionEvent>;
-				onCompositionUpdate:    EventHandlerUnion<T, CompositionEvent>;
-				onFocusOut:             FocusEventHandlerUnion<T, FocusEvent>;
-				onFocusIn:              FocusEventHandlerUnion<T, FocusEvent>;
-				onEncrypted:            EventHandlerUnion<T, Event>;
-				onDragExit:             EventHandlerUnion<T, DragEvent>;
-				// kebab case events
-				'on-copy':              EventHandlerWithOptionsUnion<T, ClipboardEvent>;
-				'on-cut':               EventHandlerWithOptionsUnion<T, ClipboardEvent>;
-				'on-paste':             EventHandlerWithOptionsUnion<T, ClipboardEvent>;
-				'on-compositionend':    EventHandlerWithOptionsUnion<T, CompositionEvent>;
-				'on-compositionstart':  EventHandlerWithOptionsUnion<T, CompositionEvent>;
-				'on-compositionupdate': EventHandlerWithOptionsUnion<T, CompositionEvent>;
-				'on-focusout':          | EventHandlerWithOptionsUnion<T, FocusEvent, FocusEventHandler<T, FocusEvent>>;
-				'on-focusin':           EventHandlerWithOptionsUnion<T, FocusEvent, FocusEventHandler<T, FocusEvent>>;
-				'on-encrypted':         EventHandlerWithOptionsUnion<T, Event>;
-				'on-dragexit':          EventHandlerWithOptionsUnion<T, DragEvent>;
+				children:    JSXElement;
+				innerHTML:   string;
+				innerText:   string | number;
+				textContent: string | number;
 			}> {}
-		interface CustomEventHandlersCamelCase<T> extends
-			CanBeNothing<{
-				onAbort:              EventHandlerUnion<T, Event>;
-				onAnimationEnd:       EventHandlerUnion<T, AnimationEvent>;
-				onAnimationIteration: EventHandlerUnion<T, AnimationEvent>;
-				onAnimationStart:     EventHandlerUnion<T, AnimationEvent>;
-				onAuxClick:           EventHandlerUnion<T, MouseEvent>;
-				onBeforeInput:        InputEventHandlerUnion<T, InputEvent>;
-				onBeforeToggle:       EventHandlerUnion<T, ToggleEvent>;
-				onBlur:               FocusEventHandlerUnion<T, FocusEvent>;
-				onCanPlay:            EventHandlerUnion<T, Event>;
-				onCanPlayThrough:     EventHandlerUnion<T, Event>;
-				onChange:             ChangeEventHandlerUnion<T, Event>;
-				onClick:              EventHandlerUnion<T, MouseEvent>;
-				onContextMenu:        EventHandlerUnion<T, MouseEvent>;
-				onDblClick:           EventHandlerUnion<T, MouseEvent>;
-				onDrag:               EventHandlerUnion<T, DragEvent>;
-				onDragEnd:            EventHandlerUnion<T, DragEvent>;
-				onDragEnter:          EventHandlerUnion<T, DragEvent>;
-				onDragLeave:          EventHandlerUnion<T, DragEvent>;
-				onDragOver:           EventHandlerUnion<T, DragEvent>;
-				onDragStart:          EventHandlerUnion<T, DragEvent>;
-				onDrop:               EventHandlerUnion<T, DragEvent>;
-				onDurationChange:     EventHandlerUnion<T, Event>;
-				onEmptied:            EventHandlerUnion<T, Event>;
-				onEnded:              EventHandlerUnion<T, Event>;
-				onError:              EventHandlerUnion<T, Event>;
-				onFocus:              FocusEventHandlerUnion<T, FocusEvent>;
-				onGotPointerCapture:  EventHandlerUnion<T, PointerEvent>;
-				onInput:              InputEventHandlerUnion<T, InputEvent>;
-				onInvalid:            EventHandlerUnion<T, Event>;
-				onKeyDown:            EventHandlerUnion<T, KeyboardEvent>;
-				onKeyPress:           EventHandlerUnion<T, KeyboardEvent>;
-				onKeyUp:              EventHandlerUnion<T, KeyboardEvent>;
-				onLoad:               EventHandlerUnion<T, Event>;
-				onLoadedData:         EventHandlerUnion<T, Event>;
-				onLoadedMetadata:     EventHandlerUnion<T, Event>;
-				onLoadStart:          EventHandlerUnion<T, Event>;
-				onLostPointerCapture: EventHandlerUnion<T, PointerEvent>;
-				onMouseDown:          EventHandlerUnion<T, MouseEvent>;
-				onMouseEnter:         EventHandlerUnion<T, MouseEvent>;
-				onMouseLeave:         EventHandlerUnion<T, MouseEvent>;
-				onMouseMove:          EventHandlerUnion<T, MouseEvent>;
-				onMouseOut:           EventHandlerUnion<T, MouseEvent>;
-				onMouseOver:          EventHandlerUnion<T, MouseEvent>;
-				onMouseUp:            EventHandlerUnion<T, MouseEvent>;
-				onPause:              EventHandlerUnion<T, Event>;
-				onPlay:               EventHandlerUnion<T, Event>;
-				onPlaying:            EventHandlerUnion<T, Event>;
-				onPointerCancel:      EventHandlerUnion<T, PointerEvent>;
-				onPointerDown:        EventHandlerUnion<T, PointerEvent>;
-				onPointerEnter:       EventHandlerUnion<T, PointerEvent>;
-				onPointerLeave:       EventHandlerUnion<T, PointerEvent>;
-				onPointerMove:        EventHandlerUnion<T, PointerEvent>;
-				onPointerOut:         EventHandlerUnion<T, PointerEvent>;
-				onPointerOver:        EventHandlerUnion<T, PointerEvent>;
-				onPointerUp:          EventHandlerUnion<T, PointerEvent>;
-				onProgress:           EventHandlerUnion<T, ProgressEvent>;
-				onRateChange:         EventHandlerUnion<T, Event>;
-				onReset:              EventHandlerUnion<T, Event>;
-				onScroll:             EventHandlerUnion<T, Event>;
-				onScrollEnd:          EventHandlerUnion<T, Event>;
-				onSeeked:             EventHandlerUnion<T, Event>;
-				onSeeking:            EventHandlerUnion<T, Event>;
-				onSelect:             EventHandlerUnion<T, Event>;
-				onStalled:            EventHandlerUnion<T, Event>;
-				onSubmit:             EventHandlerUnion<T, SubmitEvent>;
-				onSuspend:            EventHandlerUnion<T, Event>;
-				onTimeUpdate:         EventHandlerUnion<T, Event>;
-				onToggle:             EventHandlerUnion<T, ToggleEvent>;
-				onTouchCancel:        EventHandlerUnion<T, TouchEvent>;
-				onTouchEnd:           EventHandlerUnion<T, TouchEvent>;
-				onTouchMove:          EventHandlerUnion<T, TouchEvent>;
-				onTouchStart:         EventHandlerUnion<T, TouchEvent>;
-				onTransitionStart:    EventHandlerUnion<T, TransitionEvent>;
-				onTransitionEnd:      EventHandlerUnion<T, TransitionEvent>;
-				onTransitionRun:      EventHandlerUnion<T, TransitionEvent>;
-				onTransitionCancel:   EventHandlerUnion<T, TransitionEvent>;
-				onVolumeChange:       EventHandlerUnion<T, Event>;
-				onWaiting:            EventHandlerUnion<T, Event>;
-				onWheel:              EventHandlerUnion<T, WheelEvent>;
-			}> {}
+
 		interface CustomEventHandlersNamespaced<T> extends
-			CanBeNothing<{
+			Partial<{
+				'on-copy':               EventHandlerWithOptionsUnion<T, ClipboardEvent>;
+				'on-cut':                EventHandlerWithOptionsUnion<T, ClipboardEvent>;
+				'on-paste':              EventHandlerWithOptionsUnion<T, ClipboardEvent>;
+				'on-compositionend':     EventHandlerWithOptionsUnion<T, CompositionEvent>;
+				'on-compositionstart':   EventHandlerWithOptionsUnion<T, CompositionEvent>;
+				'on-compositionupdate':  EventHandlerWithOptionsUnion<T, CompositionEvent>;
+				'on-focusout':           EventHandlerWithOptionsUnion<T, FocusEvent, FocusEventHandler<T, FocusEvent>>;
+				'on-focusin':            EventHandlerWithOptionsUnion<T, FocusEvent, FocusEventHandler<T, FocusEvent>>;
+				'on-encrypted':          EventHandlerWithOptionsUnion<T, Event>;
+				'on-dragexit':           EventHandlerWithOptionsUnion<T, DragEvent>;
 				'on-abort':              EventHandlerWithOptionsUnion<T, Event>;
 				'on-animationend':       EventHandlerWithOptionsUnion<T, AnimationEvent>;
 				'on-animationiteration': EventHandlerWithOptionsUnion<T, AnimationEvent>;
@@ -742,7 +650,7 @@ declare global {
 				inert:           boolean;
 				lang:            string;
 				spellcheck:      boolean;
-				style:           CSSProperties | string;
+				style:           string;
 				tabindex:        number | string;
 				title:           string;
 				translate:       'yes' | 'no';

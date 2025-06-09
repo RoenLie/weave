@@ -50,9 +50,9 @@ declare global {
 	namespace JSX {
 		interface HTMLElementTags {
 			/** A custom element! */
-			'button-element': HTMLAttributes<ButtonElementCmp> & {
-				specialThing?: string;
-			};
+			'button-element': HTMLAttributes<ButtonElementCmp & {
+				isActive?: boolean;
+			}>;
 		}
 	}
 }

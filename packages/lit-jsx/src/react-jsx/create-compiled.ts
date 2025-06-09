@@ -1,4 +1,4 @@
-import type { TemplateResult } from 'lit-html';
+import { type TemplateResult } from 'lit-html';
 import { PartType } from 'lit-html/directive.js';
 import type { ClassInfo } from 'lit-html/directives/class-map.js';
 import { classMap } from 'lit-html/directives/class-map.js';
@@ -30,7 +30,7 @@ export const createCompiledTemplate = (
 	type: string,
 	config: Config,
 ): FakeCompiledTemplateResult | TemplateResult => {
-	const { children, ref, style, classList, ...props } = config;
+	const { children, ref, styleList, classList, ...props } = config;
 
 	if (isSvgTag(type))
 		return createUnCompiledTemplate(cacheKey, type, config);
@@ -51,11 +51,11 @@ export const createCompiledTemplate = (
 	if (result._$litType$) {
 		if (ref)
 			result.values.push(litRef(ref));
-		if (style) {
-			if (typeof style === 'string')
-				result.values.push(style);
+		if (styleList) {
+			if (typeof styleList === 'string')
+				result.values.push(styleList);
 			else
-				result.values.push(styleMap(style as StyleInfo));
+				result.values.push(styleMap(styleList as StyleInfo));
 		}
 		if (classList)
 			result.values.push(classMap(classList as ClassInfo));
@@ -93,11 +93,11 @@ export const createCompiledTemplate = (
 			index: 0,
 		});
 	}
-	if (style) {
-		if (typeof style === 'string')
-			result.values.push(style);
+	if (styleList) {
+		if (typeof styleList === 'string')
+			result.values.push(styleList);
 		else
-			result.values.push(styleMap(style as StyleInfo));
+			result.values.push(styleMap(styleList as StyleInfo));
 
 		parts.push({
 			type:  PartType.ATTRIBUTE,

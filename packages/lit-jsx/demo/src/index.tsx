@@ -1,11 +1,15 @@
 import { LitElement } from 'lit';
 
+import { ButtonElement } from './button.tsx';
+
 
 export class RootElement extends LitElement {
 
 	protected render1(): unknown {
 		return (
-			<div class={'test-class'}></div>
+			<div class={'test-class'}>
+				<ButtonElement></ButtonElement>
+			</div>
 		);
 	}
 

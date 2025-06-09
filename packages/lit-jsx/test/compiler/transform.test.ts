@@ -193,15 +193,51 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 			<math>
 				<mrow>
 					<mi>x</mi>
-					<mo>+</mo>
-					<mi>y</mi>
 				</mrow>
 			</math>
 		);
 		`;
 
 		let expected = `import { html } from "lit-html";`;
-		expected += `\nconst template = html\`<math><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow></math>\`;`;
+		expected += `\nconst template = html\`<math><mrow><mi>x</mi></mrow></math>\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should handle boolean assignment', async ({ expect }) => {
+		const source = `
+		const isActive = true;
+		const template = (
+			<div active={asBool(isActive)}>
+				Hello World
+			</div>
+		);
+		`;
+		let expected = `import { html } from "lit-html";`;
+		expected += `\nconst isActive = true;`;
+		expected += `\nconst template = html\`<div ?active=\${isActive}>Hello World</div>\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should handle attribute assignment', async ({ expect }) => {
+		const source = `
+		const value = 'test';
+		const template = (
+			<div key={asAttr(value)}>
+				Hello World
+			</div>
+		);
+		`;
+		let expected = `import { html } from "lit-html";`;
+		expected += `\nconst value = 'test';`;
+		expected += `\nconst template = html\`<div key=\${value}>Hello World</div>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;

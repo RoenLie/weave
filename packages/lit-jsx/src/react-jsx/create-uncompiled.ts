@@ -1,4 +1,4 @@
-import type { TemplateResult } from 'lit-html';
+import { type TemplateResult } from 'lit-html';
 import type { ClassInfo } from 'lit-html/directives/class-map.js';
 import { classMap } from 'lit-html/directives/class-map.js';
 import { ref as litRef } from 'lit-html/directives/ref.js';
@@ -24,7 +24,7 @@ export const createUnCompiledTemplate = (
 	type: string,
 	config: Config,
 ): TemplateResult => {
-	const { children, ref, style, classList, ...props } = config;
+	const { children, ref, styleList, classList, ...props } = config;
 
 	const result = {
 		_$litType$: isSvgTag(type) ? 2 : 1,
@@ -35,8 +35,8 @@ export const createUnCompiledTemplate = (
 	if (result.strings) {
 		if (ref)
 			result.values.push(litRef(ref));
-		if (style)
-			result.values.push(styleMap(style as StyleInfo));
+		if (styleList)
+			result.values.push(styleMap(styleList as StyleInfo));
 		if (classList)
 			result.values.push(classMap(classList as ClassInfo));
 
@@ -57,9 +57,9 @@ export const createUnCompiledTemplate = (
 		result.strings.push(' ');
 		result.values.push(litRef(ref));
 	}
-	if (style) {
+	if (styleList) {
 		result.strings.push(' style=');
-		result.values.push(styleMap(style as StyleInfo));
+		result.values.push(styleMap(styleList as StyleInfo));
 	}
 	if (classList) {
 		result.strings.push(' class=');
