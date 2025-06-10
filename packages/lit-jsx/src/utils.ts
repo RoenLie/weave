@@ -96,19 +96,3 @@ export const toJSX = <T extends { new(...args: any): any; tagName: string; }>(
 
 	return element.tagName as any;
 };
-
-
-/**
- * Informs the compiler that the value should be bound as an attribute value.\
- * This binds the expression value as an attribute, e.g `key=${value}` instead of a property assignment.\
- * This function call is removed during compilation, therefore it has no runtime effect.
- */
-export const asAttr = <T>(value: T): T => value;
-
-
-/**
- * Informs the compiler that the value should be bound as a boolean attribute.\
- * This allows the template to bind the value using the `?` syntax, e.g. `?disabled=${true}`\
- * This function call is removed during compilation, therefore it has no runtime effect.
- */
-export const asBool = (value: boolean): boolean => value;

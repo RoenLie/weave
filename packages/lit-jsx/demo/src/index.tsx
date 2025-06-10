@@ -1,4 +1,6 @@
 import { LitElement } from 'lit';
+import type { Directive as kake1, Directive as kake2, DirectiveResult } from 'lit-html/directive.js';
+import { createRef, ref } from 'lit-html/directives/ref.js';
 
 import { ButtonElement } from './button.tsx';
 
@@ -23,9 +25,11 @@ export class RootElement extends LitElement {
 	protected render1(): unknown {
 		return (
 			<div class={'test-class'}>
-				<ButtonElement></ButtonElement>
+				<ButtonElement
+					{...asDire(ref(createRef()))}
+				></ButtonElement>
 
-				<For each={this.items} fallback={<span>Loading...</span>}>
+				<For each={this.items}>
 					{(item, index) => (
 						<div class="item" data-key={index}>
 							{item}

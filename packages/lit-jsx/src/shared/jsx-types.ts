@@ -2528,4 +2528,43 @@ declare global {
 			SemanticTags,
 			CustomElementTags {}
 	}
+
+	/**
+	 * Informs the compiler that the value should be bound as a directive.\
+	 * This allows using the spread syntax, and this function call to bind element directives.\
+	 * `jsx`
+	 * ```tsx
+	 * <div {...asEld(myDirective())} />
+	 * ```
+	 * `lit-html`
+	 * ```ts
+	 * html`<div ${myDirective()}></div>`
+	 * ```
+	 */
+	// eslint-disable-next-line no-var
+	var asEld: (directive: DirectiveResult) => ({});
+
+	/**
+	 * Informs the compiler that the value should be bound as a property value.\
+	 * This binds the expression value as a property, using the `.` syntax e.g `.key=${value}`\
+	 * This function call is removed during compilation, therefore it has no runtime effect.
+	 */
+	// eslint-disable-next-line no-var
+	var asProp: <T>(value: T) => T;
+
+	/**
+	 * Informs the compiler that the value should be bound as an attribute value.\
+	 * This binds the expression value as an attribute, e.g `key=${value}`\
+	 * This function call is removed during compilation, therefore it has no runtime effect.
+	 */
+	// eslint-disable-next-line no-var
+	var asAttr: <T>(value: T) => T;
+
+	/**
+	 * Informs the compiler that the value should be bound as a boolean attribute.\
+	 * This allows the template to bind the value using the `?` syntax, e.g. `?disabled=${true}`\
+	 * This function call is removed during compilation, therefore it has no runtime effect.
+	 */
+	// eslint-disable-next-line no-var
+	var asBool: (value: boolean) => boolean;
 }

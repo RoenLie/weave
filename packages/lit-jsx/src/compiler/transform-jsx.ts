@@ -159,6 +159,7 @@ transformTopLevelJSXElement.processOpeningTag = (
 
 	const tagName:      string  = openingElement.name.name;
 	let isComponentTag: boolean = false;
+	let isCustomElementTag: boolean = false;
 	let isStatic:       boolean = false;
 	let literalName:    string  = '';
 
@@ -166,7 +167,12 @@ transformTopLevelJSXElement.processOpeningTag = (
 	// but we still need to process its children.
 	if (tagName !== DISCARD_TAG) {
 		// eslint-disable-next-line no-cond-assign
-		if (isStatic = isComponentTag = isComponent(tagName)) {
+		if (isComponentTag = isComponent(tagName)) {
+			if (tagName.startsWith('CE')) {
+				isCustomElementTag = true;
+				isStatic = true; // Custom elements are always static.
+			}
+
 			// We have a few special Component tags which are library level components.
 			// These we will need to do special handling dependant on which special component it is.
 
@@ -176,9 +182,9 @@ transformTopLevelJSXElement.processOpeningTag = (
 			}
 			else {
 				// If it's a component, we will use lit static html function to wrap this parent.
-			// then we create a static literal for the tag name at the top of the file.
-			// and use that static literal in the template.
-			// This will allow us to use the component as a tag name.
+				// then we create a static literal for the tag name at the top of the file.
+				// and use that static literal in the template.
+				// This will allow us to use the component as a tag name.
 
 				const literalIdentifier = ensure.componentLiteral(
 					tagName, COMPONENT_LITERAL_PREFIX + tagName, path, program,
