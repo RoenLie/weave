@@ -2,7 +2,7 @@ import { LitElement } from 'lit';
 import type { Directive as kake1, Directive as kake2, DirectiveResult } from 'lit-html/directive.js';
 import { createRef, ref } from 'lit-html/directives/ref.js';
 
-import { ButtonElement } from './button.tsx';
+import { ButtonElement_ } from './button.tsx';
 
 
 function For<T, U extends JSX.Element>(props: {
@@ -25,9 +25,9 @@ export class RootElement extends LitElement {
 	protected render1(): unknown {
 		return (
 			<div class={'test-class'}>
-				<ButtonElement
+				<ButtonElement_
 					{...asDire(ref(createRef()))}
-				></ButtonElement>
+				></ButtonElement_>
 
 				<For each={this.items}>
 					{(item, index) => (

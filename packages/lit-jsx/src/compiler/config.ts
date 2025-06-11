@@ -16,6 +16,8 @@ export const ATTR_NAMES = {
 export const ATTR_VALUES = {
 	BOOL:    'asBool',
 	ATTR:    'asAttr',
+	PROP:	   'asProp',
+	DIRE:    'asDire',
 	DEFINED: 'ifDefined',
 } as const;
 export const VARIABLES = {

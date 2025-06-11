@@ -1,6 +1,8 @@
 import type { NodePath } from '@babel/traverse';
 import * as t from '@babel/types';
 
+import { isMathmlTag } from '../shared/mathml-tags.ts';
+import { isSvgTag } from '../shared/svg-tags.ts';
 import { ERROR_MESSAGES, SOURCES, VARIABLES } from './config.ts';
 
 export type Values<T> = T[keyof T];
@@ -10,6 +12,18 @@ export const isComponent = (tagName: string): boolean => {
 	return (tagName[0] && tagName[0].toLowerCase() !== tagName[0])
 		|| tagName.includes('.')
 		|| /[^a-zA-Z]/.test(tagName[0] ?? '');
+};
+
+export const determineTemplateType = (
+	tagName: string,
+): Values<Pick<typeof VARIABLES, 'HTML' | 'SVG' | 'MATHML'>> => {
+	if (isSvgTag(tagName))
+		return VARIABLES.SVG;
+
+	if (isMathmlTag(tagName))
+		return VARIABLES.MATHML;
+
+	return VARIABLES.HTML;
 };
 
 
@@ -53,7 +67,8 @@ export class TemplateBuilder {
 
 interface AttrParams {
 	builder: TemplateBuilder;
-	attr:    unknown;
+	attr:    any;
+	index:   number;
 	path:    NodePath<t.JSXElement>;
 	program: t.Program;
 }
@@ -66,6 +81,15 @@ export interface AttrExpressionParams extends AttrParams {
 	};
 }
 
+export interface AttrSpreadParams extends AttrParams {
+	attr: t.JSXSpreadAttribute & {
+		argument: t.CallExpression & {
+			callee:    t.Identifier;
+			arguments: [ t.Expression ];
+		};
+	};
+}
+
 export interface AttrNonExpressionParams extends AttrParams {
 	attr:    t.JSXAttribute & {
 		value: Exclude<t.JSXAttribute['value'], t.JSXExpressionContainer>;
@@ -74,9 +98,19 @@ export interface AttrNonExpressionParams extends AttrParams {
 
 export const attributeProcessors = {
 	asAttr(params: AttrExpressionParams): void {
+		const expression = params.attr.value.expression;
+		if (!t.isCallExpression(expression))
+			return;
+
+		const argument = expression.arguments[0];
+		if (!t.isExpression(argument))
+			return;
+
 		const name = params.attr.name.name.toString();
 		params.builder.addText(' ' + name + '=');
-
+		params.builder.addExpression(argument);
+	},
+	asProp(params: AttrExpressionParams): void {
 		const expression = params.attr.value.expression;
 		if (!t.isCallExpression(expression))
 			return;
@@ -85,12 +119,12 @@ export const attributeProcessors = {
 		if (!t.isExpression(argument))
 			return;
 
-		params.attr.value.expression = argument;
+		const oldName = params.attr.name.name.toString();
+		const newName = '.' + oldName;
+		params.builder.addText(' ' + newName + '=');
+		params.builder.addExpression(argument);
 	},
 	asBool(params: AttrExpressionParams): void {
-		const name = params.attr.name.name.toString();
-		params.builder.addText(' ?' + name + '=');
-
 		const expression = params.attr.value.expression;
 		if (!t.isCallExpression(expression))
 			return;
@@ -99,42 +133,52 @@ export const attributeProcessors = {
 		if (!t.isExpression(argument))
 			return;
 
-		params.attr.value.expression = argument;
+		const name = params.attr.name.name.toString();
+		params.builder.addText(' ?' + name + '=');
+		params.builder.addExpression(argument);
+	},
+	asDire(params: AttrSpreadParams): void {
+		// Replace the spread attribute with its argument, minus the compiler func.
+		params.builder.addText(' ');
+		params.builder.addExpression(params.attr.argument.arguments[0]);
 	},
 	ref(params: AttrExpressionParams): void {
-		// add a space to keep correct spacing in the template.
-		params.builder.addText(' ');
-
 		// add a ref call around the expression.
-		params.attr.value.expression = t.callExpression(
+		const expression = t.callExpression(
 			t.identifier(VARIABLES.REF),
 			[ params.attr.value.expression ],
 		);
 
+		// add a space to keep correct spacing in the template.
+		params.builder.addText(' ');
+		params.builder.addExpression(expression);
+
 		ensure.createRefImport(params.program, params.path);
 	},
 	classList(params: AttrExpressionParams): void {
-		// add classlist without the . to the quasi.
-		params.builder.addText(' class=');
-
 		// add a classMap call around the expression.
-		params.attr.value.expression = t.callExpression(
+		const expression = t.callExpression(
 			t.identifier(VARIABLES.CLASS_MAP),
 			[ params.attr.value.expression ],
 		);
+
+		// add classlist without the . to the quasi.
+		params.builder.addText(' class=');
+		params.builder.addExpression(expression);
 
 		ensure.classMapImport(params.program, params.path);
 	},
 	styleList(params: AttrExpressionParams): void {
 		const name = params.attr.name.name.toString();
 
-		params.builder.addText(' ' + name + '=');
-
 		// add a styleMap call around the expression.
-		params.attr.value.expression = t.callExpression(
+		const expression = t.callExpression(
 			t.identifier(VARIABLES.STYLE_MAP),
 			[ params.attr.value.expression ],
 		);
+
+		params.builder.addText(' ' + name + '=');
+		params.builder.addExpression(expression);
 
 		ensure.styleMapImport(params.program, params.path);
 	},
@@ -143,23 +187,13 @@ export const attributeProcessors = {
 		// we need to convert it to a standard DOM event name.
 		const oldName = params.attr.name.name.toString();
 		const newName = '@' + oldName.slice(3);
-		params.attr.name = t.jSXIdentifier(newName);
 		params.builder.addText(' ' + newName + '=');
 	},
 	expression(params: AttrExpressionParams): void {
 		// Any other attribute which has an expression container value
-		// we convert to an object property.
-		// This is the easiest, as it supports all types.
-		// In the future, we might want to support more types, such as:
-		// - boolean attributes
-		// - number attributes
-		// - string attributes
-		// This requires compile time type checking,
-		// which is not supported by this plugin yet.
-		const oldName = params.attr.name.name.toString();
-		const newName = '.' + oldName;
-		params.attr.name = t.jSXIdentifier(newName);
-		params.builder.addText(' ' + newName + '=');
+		const name = params.attr.name.name.toString();
+		params.builder.addText(' ' + name + '=');
+		params.builder.addExpression(params.attr.value.expression);
 	},
 	nonExpression(params: AttrNonExpressionParams): void {
 		// If the value is a string, we can use it directly

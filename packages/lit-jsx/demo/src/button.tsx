@@ -43,7 +43,7 @@ export class ButtonElementCmp extends LitElement {
 }
 
 /** This is a button element! */
-export const ButtonElement = toJSX(ButtonElementCmp);
+export const ButtonElement_ = toJSX(ButtonElementCmp);
 
 
 declare global {

@@ -64,50 +64,56 @@ describe('Transform JSX', (context) => {
 		expect(code).to.be.eq(expected);
 	});
 
-	test('should transform JSX code', async ({ expect }) => {
+	test('should transform a custom element Component', async ({ expect }) => {
 		const source = `
-		import { SpecialElement } from './special-element.ts';
-		const basicTemplate = <>
-			<div
-				class="1"
-				value1={'first-value'}
-				value2={'second-value'}
-				on-click={() => console.log('clicked')}
-			>
-				<span>{
-				when(true, () => <s-inner-span></s-inner-span>)
-				}</span>
-			</div>
-			<div class="2" />
-		</>
-
-		const template = (<>
-			<SpecialElement name="kakemann">
-				<SpecialElement name="kakemann">
-				</SpecialElement>
-			</SpecialElement>
-		</>);
+		import { SpecialElement_ } from './special-element.ts';
+		const template = <SpecialElement_ name="kakemann" />;
 		`;
-
 		let expected = `import { html as htmlStatic } from "lit-html/static.js";`;
 		expected += `\nimport { __$literalMap } from "jsx-lit";`;
-		expected += `\nimport { html } from "lit-html";`;
-		expected += `\nimport { SpecialElement } from './special-element.ts';`;
-		expected += `\nconst __$SpecialElement = __$literalMap.get(SpecialElement);`;
-		expected += `\nconst basicTemplate = html\`<div class="1" .value1=\${'first-value'} .value2=\${'second-value'} @click=\${() => console.log('clicked')}><span>\${when(true, () => html\`<s-inner-span></s-inner-span>\`)}</span></div><div class="2"></div>\`;`;
-		expected += `\nconst template = htmlStatic\`<\${__$SpecialElement} name="kakemann"><\${__$SpecialElement} name="kakemann"></\${__$SpecialElement}></\${__$SpecialElement}>\`;`;
+		expected += `\nimport { SpecialElement_ } from './special-element.ts';`;
+		expected += `\nconst __$SpecialElement_ = __$literalMap.get(SpecialElement_);`;
+		expected += `\nconst template = htmlStatic\`<\${__$SpecialElement_} name="kakemann"></\${__$SpecialElement_}>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
+		expect(code).to.be.eq(expected);
+	});
 
+	test('should transform an element with attributes', async ({ expect }) => {
+		const source = `
+		const template = <>
+			<div
+				static-attribute="value1"
+				dynamic-attribute={dynamicValue}
+				boolean={asBool(true)}
+				property={asProp('value2')}
+				{...asDire(ifDefined('value3'))}
+			>
+				Hello World
+			</div>
+		</>;
+		`;
+		let expected = `import { html } from "lit-html";`;
+		expected += `\nconst template = html\``;
+		expected += `<div static-attribute="value1"`;
+		expected += ` dynamic-attribute=\${dynamicValue}`;
+		expected += ` ?boolean=\${true}`;
+		expected += ` .property=\${'value2'}`;
+		expected += ` \${ifDefined('value3')}`;
+		expected += `>Hello World</div>\`;`;
+
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
 		expect(code).to.be.eq(expected);
 	});
 
 	test('should handle spread attributes', async ({ expect }) => {
 		const source = `
-		import { SpecialElement } from './special-element.ts';
+		import { SpecialElement_ } from './special-element.ts';
 		const template = (
-			<SpecialElement
+			<SpecialElement_
 				name="kakemann"
 				{...{
 					foo: 'bar',
@@ -120,12 +126,12 @@ describe('Transform JSX', (context) => {
 		const expected = `import { html as htmlStatic } from "lit-html/static.js";
 import { __$rest } from "jsx-lit";
 import { __$literalMap } from "jsx-lit";
-import { SpecialElement } from './special-element.ts';
-const __$SpecialElement = __$literalMap.get(SpecialElement);
-const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
+import { SpecialElement_ } from './special-element.ts';
+const __$SpecialElement_ = __$literalMap.get(SpecialElement_);
+const template = htmlStatic\`<\${__$SpecialElement_} name="kakemann" \${__$rest({
   foo: 'bar',
   baz: 'qux'
-})}></\${__$SpecialElement}>\`;`;
+})}></\${__$SpecialElement_}>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
