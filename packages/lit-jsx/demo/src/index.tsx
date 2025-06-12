@@ -35,7 +35,6 @@ export class RootElement extends LitElement {
 				<ButtonElement_
 					about       ={as.prop(about)}
 					aria-checked={as.bool(ariaChecked)}
-					aria-label  ={as.attr(ariaLabel)}
 					directive   ={ref(this.ref)}
 				></ButtonElement_>
 

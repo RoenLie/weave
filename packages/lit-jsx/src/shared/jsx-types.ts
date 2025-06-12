@@ -102,6 +102,10 @@ declare global {
 				ref:       RefOrCallback<T>;
 				classList: { [k: string]: boolean | undefined; };
 				styleList: CSSProperties;
+				/**
+				 * This property takes in one or more element directives.\
+				 * This is akin to applying a directive through `<div ${myDirective()}></div>`
+				 */
 				directive: DirectiveResult<any> | DirectiveResult<any>[];
 			}> {}
 		interface CustomEvents {}
