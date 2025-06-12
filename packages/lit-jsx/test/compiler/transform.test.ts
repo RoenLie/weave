@@ -69,11 +69,12 @@ describe('Transform JSX', (context) => {
 		import { SpecialElement_ } from './special-element.ts';
 		const template = <SpecialElement_ name="kakemann" />;
 		`;
-		let expected = `import { html as htmlStatic } from "lit-html/static.js";`;
-		expected += `\nimport { __$literalMap } from "jsx-lit";`;
-		expected += `\nimport { SpecialElement_ } from './special-element.ts';`;
-		expected += `\nconst __$SpecialElement_ = __$literalMap.get(SpecialElement_);`;
-		expected += `\nconst template = htmlStatic\`<\${__$SpecialElement_} name="kakemann"></\${__$SpecialElement_}>\`;`;
+		const expected =
+		+ `import { html as htmlStatic } from "lit-html/static.js";`
+		+ `\nimport { __$literalMap } from "jsx-lit";`;
+		+ `\nimport { SpecialElement_ } from './special-element.ts';`;
+		+ `\nconst __$SpecialElement_ = __$literalMap.get(SpecialElement_);`;
+		+ `\nconst template = htmlStatic\`<\${__$SpecialElement_} name="kakemann"></\${__$SpecialElement_}>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;

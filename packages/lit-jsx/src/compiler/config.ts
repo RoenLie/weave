@@ -14,11 +14,10 @@ export const ATTR_NAMES = {
 	EVENT_PREFIX: 'on-',
 } as const;
 export const ATTR_VALUES = {
-	BOOL:    'asBool',
-	ATTR:    'asAttr',
-	PROP:	   'asProp',
-	DIRE:    'asDire',
-	DEFINED: 'ifDefined',
+	BOOL: 'bool',
+	ATTR: 'attr',
+	PROP:	'prop',
+	DIR:  'dir',
 } as const;
 export const VARIABLES = {
 	HTML:          'html',

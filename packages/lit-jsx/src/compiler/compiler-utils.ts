@@ -137,7 +137,7 @@ export const attributeProcessors = {
 		params.builder.addText(' ?' + name + '=');
 		params.builder.addExpression(argument);
 	},
-	asDire(params: AttrSpreadParams): void {
+	asDir(params: AttrSpreadParams): void {
 		// Replace the spread attribute with its argument, minus the compiler func.
 		params.builder.addText(' ');
 		params.builder.addExpression(params.attr.argument.arguments[0]);

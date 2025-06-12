@@ -1,5 +1,6 @@
 import { LitElement } from 'lit';
 import type { Directive as kake1, Directive as kake2, DirectiveResult } from 'lit-html/directive.js';
+import { ifDefined } from 'lit-html/directives/if-defined.js';
 import { createRef, ref } from 'lit-html/directives/ref.js';
 
 import { ButtonElement_ } from './button.tsx';
@@ -22,11 +23,26 @@ export class RootElement extends LitElement {
 		'Item 3',
 	];
 
+	protected ref = createRef<HTMLElement>();
+
 	protected render1(): unknown {
+		const about = 'This is a test element';
+		const ariaChecked = true;
+		const ariaLabel = 'Click me!';
+
 		return (
 			<div class={'test-class'}>
 				<ButtonElement_
-					{...asDire(ref(createRef()))}
+					about       ={as.prop(about)}
+					aria-checked={as.bool(ariaChecked)}
+					aria-label  ={as.attr(ariaLabel)}
+					directive   ={ref(this.ref)}
+				></ButtonElement_>
+
+				<ButtonElement_
+					about       ={prop => about}
+					aria-checked={bool => ariaChecked}
+					directive   ={[ ref(this.ref) ]}
 				></ButtonElement_>
 
 				<For each={this.items}>

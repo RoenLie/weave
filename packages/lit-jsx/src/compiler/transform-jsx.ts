@@ -232,7 +232,7 @@ transformTopLevelJSXElement.processAttributes = (context: JSXElementContext): vo
 			if (
 				t.isCallExpression(expression)
 				&& t.isIdentifier(expression.callee)
-				&& expression.callee.name === ATTR_VALUES.DIRE
+				&& expression.callee.name === ATTR_VALUES.DIR
 			) {
 				const params: AttrSpreadParams = {
 					builder: context.builder,
@@ -242,7 +242,7 @@ transformTopLevelJSXElement.processAttributes = (context: JSXElementContext): vo
 					program: context.program,
 				};
 
-				attributeProcessors.asDire(params);
+				attributeProcessors.asDir(params);
 			}
 			else {
 				// If it's a spread attribute, we wrap it in our custom
@@ -305,8 +305,6 @@ transformTopLevelJSXElement.processAttributes = (context: JSXElementContext): vo
 						attributeProcessors.asAttr(params);
 					else if (expression.callee.name === ATTR_VALUES.BOOL)
 						attributeProcessors.asBool(params);
-					else if (expression.callee.name === ATTR_VALUES.DEFINED)
-						attributeProcessors.asAttr(params);
 					else
 						attributeProcessors.expression(params);
 				}
