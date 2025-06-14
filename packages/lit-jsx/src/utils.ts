@@ -72,16 +72,15 @@ export const __$rest: DirectiveResult<typeof RestDirective> = directive(RestDire
 
 /**
  * Creates a variable which can be used using the Component syntax in JSX.\
- * Also registers the custom element if it hasn't been registered yet.\
- * Variable name must end with an underscore (`_`) to be used as a JSX element.
+ * Also registers the custom element if it hasn't been registered yet.
  *
  * @example
  * ```tsx
  * import { toJSX } from 'jsx-lit';
  *
- * const MyButton_ = toJSX(MyButtonCmp);
+ * const MyButton = toJSX(MyButtonCmp);
  * const jsx = (
- *  <MyButton_
+ *  <MyButton
  *   class="my-button"
  *   on-click={() => { console.log('Clicked!'); }}
  *  />

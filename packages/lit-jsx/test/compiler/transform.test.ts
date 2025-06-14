@@ -35,6 +35,7 @@ const babelOptions: babel.TransformOptions = {
 
 const opts = mergeAndConcat(babelUserOptions, babelOptions);
 
+
 describe('Transform JSX', (context) => {
 	test('should transform an empty JSX fragment', async ({ expect }) => {
 		const source = `
@@ -338,14 +339,16 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 	test('should correct convert a Component function', async ({ expect }) => {
 		const source = `
 		const obj = {each: this.items};
-		<For
-			{...{obj}}
-			each={this.items}
-			key={item => item}
-			separator={<hr />}
-		>
-		{item => <div>{item}</div>}
-		</For>
+		<div>
+			<For
+				{...{obj}}
+				each={this.items}
+				key={item => item}
+				separator={<hr />}
+			>
+			{item => <div>{item}</div>}
+			</For>
+		</div>
 		`;
 
 		const expected = ''
@@ -353,7 +356,7 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 		+ '\nconst obj = {'
 		+ '\n  each: this.items'
 		+ '\n};'
-		+ '\nhtml`${For({'
+		+ '\nhtml`<div>${For({'
 		+ '\n  ...{'
 		+ '\n    obj'
 		+ '\n  },'
@@ -361,6 +364,63 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 		+ '\n  key: item => item,'
 		+ '\n  separator: html`<hr></hr>`,'
 		+ '\n  children: item => html`<div>${item}</div>`'
+		+ '\n})}</div>`;';
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should handle function component with multiple JSX children', async ({ expect }) => {
+		const source = `
+		<MyComponent prop1="value" prop2={expression}>
+			<div>First child</div>
+			{someExpression}
+			<span>Second child</span>
+			Text content
+		</MyComponent>
+		`;
+
+		const expected = ''
+		+ `import { html } from "lit-html";`
+		+ '\nhtml`${MyComponent({'
+		+ '\n  prop1: "value",'
+		+ '\n  prop2: expression,'
+		+ '\n  children: [html`<div>First child</div>`, someExpression, html`<span>Second child</span>`, "Text content"]'
+		+ '\n})}`;';
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should handle function component with single JSX child', async ({ expect }) => {
+		const source = `
+		<MyComponent>
+			<div>Single child</div>
+		</MyComponent>
+		`;
+
+		const expected = ''
+		+ `import { html } from "lit-html";`
+		+ '\nhtml`${MyComponent({'
+		+ '\n  children: html`<div>Single child</div>`'
+		+ '\n})}`;';
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should handle function component with no children', async ({ expect }) => {
+		const source = `
+		<MyComponent prop1="value" />
+		`;
+
+		const expected = ''
+		+ `import { html } from "lit-html";`
+		+ '\nhtml`${MyComponent({'
+		+ '\n  prop1: "value"'
 		+ '\n})}`;';
 
 		const result = await babel.transformAsync(source, opts);

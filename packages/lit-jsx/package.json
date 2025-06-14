@@ -9,7 +9,7 @@
 		"type": "git",
 		"url": "git+https://github.com/RoenLie/weave.git"
 	},
-	"version": "1.0.4",
+	"version": "1.1.0",
 	"files": [
 		"dist",
 		"src"
@@ -33,6 +33,7 @@
 	"sideEffects": false,
 	"scripts": {
 		"dev": "vite build --watch --mode=development",
+		"test": "pnpm vitest run",
 		"build": "pnpm run --sequential \"/^build::.?/\"",
 		"build::js": "vite build",
 		"build::types": "tsc --project ./src/tsconfig.json --noEmit false"

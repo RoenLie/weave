@@ -2,10 +2,17 @@ import { type PluginPass } from '@babel/core';
 import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 
-import type { AttrArrowExpressionParams, AttrExpressionParams, AttrMemberExpressionParams, AttrNonExpressionParams, Values } from './compiler-utils.ts';
-import { attributeProcessors, determineTemplateType, ensure, isArrowFunctionBinding, isCallExpressionBinding, isComponent, TemplateBuilder } from './compiler-utils.ts';
+import type {
+	AttrArrowExpressionParams, AttrExpressionParams, AttrMemberExpressionParams,
+	AttrNonExpressionParams, ValidJSXElement, Values,
+} from './compiler-utils.ts';
 import {
-	ATTR_NAMES,  COMPONENT_LITERAL_PREFIX, COMPONENT_POSTFIX, DISCARD_TAG,
+	attributeProcessors, determineTemplateType, ensure, getJSXElementName,
+	isArrowFunctionBinding, isCallExpressionBinding, isJSXCustomElementComponent,
+	isJSXFunctionElementComponent, isValidJSXElement, TemplateBuilder,
+} from './compiler-utils.ts';
+import {
+	ATTR_NAMES,  COMPONENT_LITERAL_PREFIX, DISCARD_TAG,
 	ERROR_MESSAGES, VARIABLES, WHITESPACE_TAGS,
 } from './config.ts';
 
@@ -39,63 +46,8 @@ export const transformJSXElement: VisitNode<
 	// If the parent is not a JSX element,
 	// we need to wrap the JSX in a tagged template expression
 	return void path.replaceWith(
-		transformTopLevelJSXElement(path),
+		processJSXElement(path),
 	);
-};
-
-
-type ValidJSXElement = t.JSXElement & {
-	openingElement: t.JSXOpeningElement & {
-		name: t.JSXIdentifier | t.JSXMemberExpression;
-	};
-};
-
-const isValidJSXElement = (initialPath: NodePath): initialPath is NodePath<ValidJSXElement> => {
-	const node = initialPath.node;
-
-	return t.isJSXElement(node)
-		&& t.isJSXOpeningElement(node.openingElement)
-		&& (t.isJSXIdentifier(node.openingElement.name)
-		|| t.isJSXMemberExpression(node.openingElement.name));
-};
-
-const getJSXElementName = (node: t.JSXElement): string => {
-	const openingElement = node.openingElement;
-
-	const name = t.isJSXIdentifier(openingElement.name)
-		? openingElement.name.name
-		: t.isJSXMemberExpression(openingElement.name)
-			? t.isJSXIdentifier(openingElement.name.object)
-				? openingElement.name.object.name + '.' + openingElement.name.property.name
-				: ''
-			: '';
-
-	return name;
-};
-
-const isJSXCustomElementComponent = (nodeOrName: t.JSXElement | string): boolean => {
-	const tagName = typeof nodeOrName !== 'string'
-		? getJSXElementName(nodeOrName)
-		: nodeOrName;
-
-	if (tagName.endsWith(COMPONENT_POSTFIX))
-		return true;
-
-	return false;
-};
-
-const isJSXFunctionElementComponent = (nodeOrName: t.JSXElement | string) => {
-	const tagName = typeof nodeOrName !== 'string'
-		? getJSXElementName(nodeOrName)
-		: nodeOrName;
-
-	if (!isComponent(tagName))
-		return false;
-
-	if (tagName.endsWith(COMPONENT_POSTFIX))
-		return false;
-
-	return true;
 };
 
 
@@ -119,15 +71,15 @@ type InitialJSXElementContext = Pick<
 >;
 
 
-const transformTopLevelJSXElement = (initialPath: NodePath<t.JSXElement>) => {
+const processJSXElement = (initialPath: NodePath<t.JSXElement>) => {
 	const program = initialPath.findParent(p => t.isProgram(p.node))?.node as t.Program | undefined;
 	if (!program)
 		throw new Error(ERROR_MESSAGES.NO_PROGRAM_FOUND);
 
-	return transformTopLevelJSXElement.transform(initialPath, program);
+	return processJSXElement.transform(initialPath, program);
 };
 
-transformTopLevelJSXElement.transform = (
+processJSXElement.transform = (
 	initialPath: NodePath<t.JSXElement>,
 	program: t.Program,
 ): t.TaggedTemplateExpression => {
@@ -143,12 +95,14 @@ transformTopLevelJSXElement.transform = (
 		isStatic:    { value: false },
 	};
 
-	const context = transformTopLevelJSXElement.processOpeningTag(initialContext);
+	const context = processJSXElement.processOpeningTag(initialContext);
 
-	return transformTopLevelJSXElement.createTaggedTemplate(context);
+	return processJSXElement.createTaggedTemplate(context);
 };
 
-transformTopLevelJSXElement.createTaggedTemplate = (context: JSXElementContext) => {
+processJSXElement.createTaggedTemplate = (
+	context: JSXElementContext,
+) => {
 	let identifier: string = '';
 
 	if (context.isStatic.value) {
@@ -191,7 +145,7 @@ transformTopLevelJSXElement.createTaggedTemplate = (context: JSXElementContext) 
 	return context.builder.createTaggedTemplate(identifier);
 };
 
-transformTopLevelJSXElement.processOpeningTag = (
+processJSXElement.processOpeningTag = (
 	initialContext: InitialJSXElementContext,
 ): JSXElementContext => {
 	const name = getJSXElementName(initialContext.currentPath.node);
@@ -212,7 +166,7 @@ transformTopLevelJSXElement.processOpeningTag = (
 	if (context.tagName === DISCARD_TAG) {
 		context.builder.addText('');
 
-		transformTopLevelJSXElement.processChildren(context);
+		processJSXElement.processChildren(context);
 
 		return context;
 	}
@@ -234,22 +188,18 @@ transformTopLevelJSXElement.processOpeningTag = (
 		context.builder.addText('<');
 		context.builder.addExpression(literalIdentifier);
 
-		transformTopLevelJSXElement.processAttributes(context);
-		transformTopLevelJSXElement.processChildren(context);
-		transformTopLevelJSXElement.processClosingTag(context);
+		processJSXElement.processAttributes(context);
+		processJSXElement.processChildren(context);
+		processJSXElement.processClosingTag(context);
 
 		return context;
 	}
 
 	if (isJSXFunctionElementComponent(context.tagName)) {
-		// If it's a component function, we will instead of creating a wrapping tag element for it
-		// we will wrap it in an expression, take the attributes and children and pass them as an object to
-		// the component function.
-		// where the attributes are passed by their name->value, and the children are passed to the children property.
 		context.isComponentFunction = true;
 
 		// Process attributes and children into a props object
-		const propsObject = transformTopLevelJSXElement.createComponentPropsObject(context);
+		const propsObject = processJSXElement.createComponentPropsObject(context);
 
 		context.builder.addText('');
 		context.builder.addExpression(
@@ -266,14 +216,16 @@ transformTopLevelJSXElement.processOpeningTag = (
 	// If the tag is not a component, we will treat it as a regular HTML element.
 	context.builder.addText('<' + context.tagName);
 
-	transformTopLevelJSXElement.processAttributes(context);
-	transformTopLevelJSXElement.processChildren(context);
-	transformTopLevelJSXElement.processClosingTag(context);
+	processJSXElement.processAttributes(context);
+	processJSXElement.processChildren(context);
+	processJSXElement.processClosingTag(context);
 
 	return context;
 };
 
-transformTopLevelJSXElement.processAttributes = (context: JSXElementContext): void => {
+processJSXElement.processAttributes = (
+	context: JSXElementContext,
+): void => {
 	const attributes = context.currentPath.node.openingElement.attributes;
 
 	for (const [ index, attr ] of attributes.entries()) {
@@ -365,7 +317,9 @@ transformTopLevelJSXElement.processAttributes = (context: JSXElementContext): vo
 	context.builder.addText('>'); // Close the opening tag
 };
 
-transformTopLevelJSXElement.processChildren = (context: JSXElementContext) => {
+processJSXElement.processChildren = (
+	context: JSXElementContext,
+) => {
 	for (const [ index, child ] of context.currentPath.node.children.entries()) {
 		if (t.isJSXText(child)) {
 			if (WHITESPACE_TAGS.includes(context.tagName))
@@ -381,7 +335,7 @@ transformTopLevelJSXElement.processChildren = (context: JSXElementContext) => {
 				throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
 			// Recursively process child elements
-			transformTopLevelJSXElement.processOpeningTag({ ...context, currentPath });
+			processJSXElement.processOpeningTag({ ...context, currentPath });
 
 			continue;
 		}
@@ -395,7 +349,9 @@ transformTopLevelJSXElement.processChildren = (context: JSXElementContext) => {
 	}
 };
 
-transformTopLevelJSXElement.processClosingTag = (context: JSXElementContext): void => {
+processJSXElement.processClosingTag = (
+	context: JSXElementContext,
+): void => {
 	// Add closing tag.
 	// If it's a component tag, we need to close it with the static literal.
 	if (context.isCustomElementTag) {
@@ -408,7 +364,9 @@ transformTopLevelJSXElement.processClosingTag = (context: JSXElementContext): vo
 	}
 };
 
-transformTopLevelJSXElement.createComponentPropsObject = (context: JSXElementContext): t.ObjectExpression => {
+processJSXElement.createComponentPropsObject = (
+	context: JSXElementContext,
+): t.ObjectExpression => {
 	const properties: (t.ObjectProperty | t.SpreadElement)[] = [];
 	const attributes = context.currentPath.node.openingElement.attributes;
 
@@ -417,6 +375,7 @@ transformTopLevelJSXElement.createComponentPropsObject = (context: JSXElementCon
 		if (t.isJSXSpreadAttribute(attr)) {
 			// Handle spread attributes by spreading the object
 			properties.push(t.spreadElement(attr.argument));
+
 			continue;
 		}
 
@@ -444,10 +403,7 @@ transformTopLevelJSXElement.createComponentPropsObject = (context: JSXElementCon
 			value = t.booleanLiteral(true);
 		}
 
-		properties.push(t.objectProperty(
-			t.identifier(name),
-			value,
-		));
+		properties.push(t.objectProperty(t.identifier(name), value));
 	}
 
 	// Process children
@@ -478,11 +434,15 @@ transformTopLevelJSXElement.createComponentPropsObject = (context: JSXElementCon
 				};
 
 				// Recursively process the child element
-				transformTopLevelJSXElement.processOpeningTag(childContext);
+				processJSXElement
+					.processOpeningTag(childContext);
 
 				// Get the tagged template expression from the child
-				const childTemplate = transformTopLevelJSXElement.createTaggedTemplate(childContext);
+				const childTemplate = processJSXElement
+					.createTaggedTemplate(childContext);
+
 				childrenArray.push(childTemplate);
+
 				continue;
 			}
 

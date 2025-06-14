@@ -106,14 +106,14 @@ export interface AttrMemberExpressionParams extends AttrParams {
 	};
 }
 
-export interface AttrSpreadParams extends AttrParams {
-	attr: t.JSXSpreadAttribute & {
-		argument: t.CallExpression & {
-			callee:    t.Identifier;
-			arguments: [ t.Expression ];
-		};
-	};
-}
+//export interface AttrSpreadParams extends AttrParams {
+//	attr: t.JSXSpreadAttribute & {
+//		argument: t.CallExpression & {
+//			callee:    t.Identifier;
+//			arguments: [ t.Expression ];
+//		};
+//	};
+//}
 
 export interface AttrNonExpressionParams extends AttrParams {
 	attr:    t.JSXAttribute & {
@@ -602,3 +602,62 @@ export const ensure = {
 		);
 	},
 } as const;
+
+
+export type ValidJSXElement = t.JSXElement & {
+	openingElement: t.JSXOpeningElement & {
+		name: t.JSXIdentifier | t.JSXMemberExpression;
+	};
+};
+
+
+export const isValidJSXElement = (initialPath: NodePath): initialPath is NodePath<ValidJSXElement> => {
+	const node = initialPath.node;
+
+	return t.isJSXElement(node)
+		&& t.isJSXOpeningElement(node.openingElement)
+		&& (t.isJSXIdentifier(node.openingElement.name)
+		|| t.isJSXMemberExpression(node.openingElement.name));
+};
+
+
+export const getJSXElementName = (node: t.JSXElement): string => {
+	const openingElement = node.openingElement;
+
+	const name = t.isJSXIdentifier(openingElement.name)
+		? openingElement.name.name
+		: t.isJSXMemberExpression(openingElement.name)
+			? t.isJSXIdentifier(openingElement.name.object)
+				? openingElement.name.object.name + '.' + openingElement.name.property.name
+				: ''
+			: '';
+
+	return name;
+};
+
+
+export const isJSXCustomElementComponent = (nodeOrName: t.JSXElement | string): boolean => {
+	const tagName = typeof nodeOrName !== 'string'
+		? getJSXElementName(nodeOrName)
+		: nodeOrName;
+
+	if (tagName.endsWith(COMPONENT_POSTFIX))
+		return true;
+
+	return false;
+};
+
+
+export const isJSXFunctionElementComponent = (nodeOrName: t.JSXElement | string): boolean => {
+	const tagName = typeof nodeOrName !== 'string'
+		? getJSXElementName(nodeOrName)
+		: nodeOrName;
+
+	if (!isComponent(tagName))
+		return false;
+
+	if (tagName.endsWith(COMPONENT_POSTFIX))
+		return false;
+
+	return true;
+};

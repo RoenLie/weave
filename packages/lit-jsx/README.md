@@ -9,14 +9,57 @@ function renderInput({ name, disabled, checked, value, ref }) {
   return (
     <input
       id       ="input"            // static    assignment
-      name     ={asAttr(name)}     // attribute assignment
-      disabled ={asBool(disabled)} // boolean   assignment
-      value    ={value}            // property  assignment
+      name     ={name}             // attribute assignment (default)
+      disabled ={as.bool(disabled)} // boolean   assignment
+      value    ={as.prop(value)}   // property  assignment
       classList={{active: true}}   // classMap  assignment
       styleList={{color: 'blue'}}  // styleMap  assignment
       ref      ={ref}              // ref       assignment
       {...{role: 'button'}}        // spread    assignment
     />
+  );
+}
+```
+
+## New in this version
+- 🎯 **Function Components**: Full support for JSX function components with automatic props object creation
+- 🔄 **Attribute Binding Default**: Expressions now bind as attributes by default instead of properties
+- 🎛️ **Enhanced Binding Control**: Use `as.prop()` and `as.bool()` compile-time annotations for precise control over binding types
+- 📦 **Custom Element Integration**: Improved `toJSX()` function for type-safe custom element components
+- 🏷️ **Dynamic Tag Names**: Enhanced support for conditional and polymorphic element types
+
+**Quick Example of New Features:**
+```tsx
+// Function Components - Now Fully Supported!
+const Card = ({ title, content, variant = 'default', onAction }) => (
+  <div classList={{ [`card-${variant}`]: true }}>
+    <h3>{title}</h3>
+    <p>{content}</p>
+    <button on-click={onAction}>Action</button>
+  </div>
+);
+
+// Enhanced Property Binding (NEW: defaults to properties)
+function TodoItem({ todo, onToggle, onDelete }) {
+  return (
+    <div>
+      <input 
+        type="checkbox"
+        checked={as.prop(todo.completed)}    // Property binding with as.prop()
+        data-id={todo.id}                    // Attribute binding (NEW default)
+        disabled={as.bool(todo.readonly)}   // Boolean attribute with as.bool()
+        on-change={() => onToggle(todo.id)}
+      />
+      <span classList={{ completed: todo.completed }}>
+        {todo.text}
+      </span>
+      <Card 
+        title="Actions"
+        content="Manage this todo"
+        variant="compact"
+        onAction={() => onDelete(todo.id)}
+      />
+    </div>
   );
 }
 ```
@@ -27,9 +70,10 @@ function renderInput({ name, disabled, checked, value, ref }) {
 - 🔧 **Vite integration**: Easy setup with Vite plugins
 - 📦 **Zero runtime overhead**: The custom compiler produces native lit-html code
 - 🎨 **Lit ecosystem compatibility**: Works seamlessly with Lit directives and features
-- 🎛️ **Flexible binding control**: Use `asAttr()` and `asBool()` functions to control how values are bound
+- 🎛️ **Flexible binding control**: Use `as.prop()` and `as.bool()` compile-time annotations to control how values are bound
 - 📦 **Custom element integration**: Use `toJSX()` function for type-safe custom element components
 - 🏷️ **Dynamic tag names**: Support for conditional and polymorphic element types
+- 🎯 **Function Components**: Full support for function components that return JSX
 
 ## Installation
 
@@ -166,6 +210,66 @@ return (
 );
 ```
 
+### Function Components
+
+jsx-lit fully supports function components that return JSX. They are compiled to efficient function calls with props objects:
+
+```tsx
+// Define a function component
+function Button({ label, variant = 'primary', disabled, onClick, children }) {
+  return (
+    <button 
+      classList={{ [`btn-${variant}`]: true, 'disabled': disabled }}
+      disabled={as.bool(disabled)}
+      on-click={onClick}
+    >
+      {label || children}
+    </button>
+  );
+}
+
+// Use the function component
+function App() {
+  return (
+    <div>
+      <Button 
+        label="Click me" 
+        variant="primary" 
+        onClick={() => alert('Clicked!')} 
+      />
+      
+      <Button disabled={true}>
+        <span>Disabled Button</span>
+      </Button>
+    </div>
+  );
+}
+```
+
+**How Function Components Compile:**
+
+```tsx
+// Input JSX
+<Button label="Submit" onClick={handleSubmit} disabled={false}>
+  <Icon name="send" />
+</Button>
+
+// Compiles to:
+html`${Button({
+  label: "Submit",
+  onClick: handleSubmit,
+  disabled: false,
+  children: html`<${Icon({ name: "send" })} />`
+})}`
+```
+
+**Function Component Features:**
+- Props are passed as a single object parameter
+- Children are passed via the `children` property
+- Support all JSX features including conditional rendering, loops, and event handlers
+- Can be composed and nested like regular JSX elements
+- Compile to efficient function calls with zero runtime overhead
+
 ### Event Handlers
 
 ```tsx
@@ -244,15 +348,15 @@ jsx-lit provides fine-grained control over how values are bound to elements thro
 
 #### Default Binding Behavior
 
-By default, expressions in JSX attributes are bound as property assignments:
+By default, expressions in JSX attributes are bound as attribute assignments:
 
 ```tsx
 function renderInputWithDefaults({ disabled, checked, value }) {
   return (
     <input
-      checked={checked}   // Property assignment: element.checked = checked
-      disabled={disabled} // Property assignment: element.disabled = disabled
-      value={value}       // Property assignment: element.value = value
+      checked={checked}   // Attribute assignment: checked="${checked}"
+      disabled={disabled} // Attribute assignment: disabled="${disabled}"
+      value={value}       // Attribute assignment: value="${value}"
     />
   );
 }
@@ -262,39 +366,43 @@ function renderInputWithDefaults({ disabled, checked, value }) {
 
 jsx-lit provides binding functions that allow you to control how values are assigned:
 
-##### `asAttr()` - Force Attribute Binding
+##### `as.prop()` - Force Property Binding
 
-Use `asAttr()` to bind values as HTML attributes instead of properties:
+Use `as.prop()` to bind values as DOM properties instead of attributes:
 
 ```tsx
-import { asAttr } from 'jsx-lit';
-
-function renderDataDiv({ customValue, dataId }) {
+function renderInputWithProperties({ customValue, inputValue }) {
   return (
-    <div
-      data-id={asAttr(dataId)}           // Binds as: data-id="value"
-      custom-attr={asAttr(customValue)}  // Binds as: custom-attr="value"
+    <input
+      value={as.prop(inputValue)}          // Binds as: .value=${inputValue}
+      checked={as.prop(isChecked)}         // Binds as: .checked=${isChecked}
+      
+      // Alternative syntax
+      disabled={prop => isDisabled}       // Binds as: .disabled=${isDisabled}
     />
   );
 }
 
 // Compiles to:
-html`<div data-id=${dataId} custom-attr=${customValue}></div>`
+html`<input .value=${inputValue} .checked=${isChecked} .disabled=${isDisabled}>`
 ```
 
-##### `asBool()` - Force Boolean Attribute Binding
+**Note:** `as.prop()` and `prop =>` are compile-time type annotations that tell the jsx-lit compiler how to bind the value. They are not runtime functions.
 
-Use `asBool()` to bind values as boolean attributes using lit-html's `?` syntax:
+##### `as.bool()` - Force Boolean Attribute Binding
+
+Use `as.bool()` to bind values as boolean attributes using lit-html's `?` syntax:
 
 ```tsx
-import { asBool } from 'jsx-lit';
-
 function renderButton({ disabled, hidden, selected }) {
   return (
     <button
-      disabled={asBool(disabled)}  // Binds as: ?disabled=${disabled}
-      hidden={asBool(hidden)}      // Binds as: ?hidden=${hidden}
-      aria-selected={asBool(selected)} // Binds as: ?aria-selected=${selected}
+      disabled={as.bool(disabled)}         // Binds as: ?disabled=${disabled}
+      hidden={as.bool(hidden)}             // Binds as: ?hidden=${hidden}
+      aria-selected={as.bool(selected)}    // Binds as: ?aria-selected=${selected}
+      
+      // Alternative syntax
+      readonly={bool => isReadonly}        // Binds as: ?readonly=${isReadonly}
     />
   );
 }
@@ -307,9 +415,11 @@ html`<button ?disabled=${disabled} ?hidden=${hidden} ?aria-selected=${selected}>
 
 | Attribute Type | Default Binding | lit-html Syntax | Example |
 |---------------|----------------|-----------------|---------|
-| Expression containers | Property assignment | `.property=${value}` | `checked={value}` → `.checked=${value}` |
-| `asAttr()` wrapped | Attribute binding | `attribute=${value}` | `data-id={asAttr(id)}` → `data-id=${id}` |
-| `asBool()` wrapped | Boolean attribute | `?attribute=${value}` | `disabled={asBool(flag)}` → `?disabled=${flag}` |
+| Expression containers | Attribute assignment | `attribute=${value}` | `checked={value}` → `checked=${value}` |
+| `as.prop()` wrapped | Property binding | `.property=${value}` | `value={as.prop(val)}` → `.value=${val}` |
+| `as.bool()` wrapped | Boolean attribute | `?attribute=${value}` | `disabled={as.bool(flag)}` → `?disabled=${flag}` |
+| Alternative syntax | Property binding | `.property=${value}` | `value={prop => val}` → `.value=${val}` |
+| Alternative syntax | Boolean attribute | `?attribute=${value}` | `disabled={bool => flag}` → `?disabled=${flag}` |
 | Event handlers (`on-*`) | Event binding | `@event=${handler}` | `on-click={handler}` → `@click=${handler}` |
 | String literals | Attribute binding | `attribute="value"` | `class="btn"` → `class="btn"` |
 | `classList` | Class map directive | `class=${classMap(obj)}` | `classList={obj}` → `class=${classMap(obj)}` |
@@ -318,18 +428,18 @@ html`<button ?disabled=${disabled} ?hidden=${hidden} ?aria-selected=${selected}>
 
 #### When to Use Each Binding Type
 
-**Property Assignment (Default)**
-- For standard DOM properties like `value`, `checked`, `disabled`
-- When you want the element to handle the value according to its property setter
-- Most common use case for interactive elements
-
-**Attribute Binding (`asAttr()`)**
+**Attribute Assignment (Default)**
 - For custom attributes or data attributes
 - When you need the value to appear in the HTML as an attribute
 - For attributes that don't have corresponding properties
 - When working with libraries that expect attributes
 
-**Boolean Attribute Binding (`asBool()`)**
+**Property Binding (`as.prop()` or `prop =>` syntax)**
+- For standard DOM properties like `value`, `checked`, `disabled`
+- When you want the element to handle the value according to its property setter
+- For interactive elements that need live property updates
+
+**Boolean Attribute Binding (`as.bool()` or `bool =>` syntax)**
 - For boolean HTML attributes like `disabled`, `hidden`, `readonly`
 - When you want presence/absence semantics (attribute present = true, absent = false)
 - For accessibility attributes that should follow boolean attribute patterns
@@ -352,14 +462,14 @@ function renderForm({ formData, errors }) {
       <input
         type="password"
         value={formData.password}
-        aria-invalid={asBool(errors.password)} // Boolean attr: ?aria-invalid=${errors.password}
+        aria-invalid={as.bool(errors.password)} // Boolean attr: ?aria-invalid=${errors.password}
       />
 
       {/* Custom data attributes */}
       <button
         type="submit"
-        data-form-id={asAttr(formData.id)}      // Attribute: data-form-id="${formData.id}"
-        data-step={asAttr(formData.currentStep)} // Attribute: data-step="${formData.currentStep}"
+        data-form-id={as.attr(formData.id)}      // Attribute: data-form-id="${formData.id}"
+        data-step={as.attr(formData.currentStep)} // Attribute: data-step="${formData.currentStep}"
       >
         Submit
       </button>
@@ -378,12 +488,12 @@ function renderCustomElement({ config, state }) {
       items={state.items}               // Property: element.items = state.items
 
       // Attributes for simple values and styling
-      theme={asAttr(state.theme)}       // Attribute: theme="${state.theme}"
-      size={asAttr(config.size)}        // Attribute: size="${config.size}"
+      theme={as.attr(state.theme)}       // Attribute: theme="${state.theme}"
+      size={as.attr(config.size)}        // Attribute: size="${config.size}"
 
       // Boolean attributes for state
-      loading={asBool(state.isLoading)} // Boolean attr: ?loading=${state.isLoading}
-      disabled={asBool(!state.isReady)} // Boolean attr: ?disabled=${!state.isReady}
+      loading={as.bool(state.isLoading)} // Boolean attr: ?loading=${state.isLoading}
+      disabled={as.bool(!state.isReady)} // Boolean attr: ?disabled=${!state.isReady}
     />
   );
 }
@@ -395,10 +505,10 @@ function renderAccessibleComponent({ expanded, selected, level }) {
   return (
     <div
       role="treeitem"
-      tabindex={asAttr(0)}                    // Attribute: tabindex="0"
-      aria-level={asAttr(level)}              // Attribute: aria-level="${level}"
-      aria-expanded={asBool(expanded)}        // Boolean attr: ?aria-expanded=${expanded}
-      aria-selected={asBool(selected)}       // Boolean attr: ?aria-selected=${selected}
+      tabindex={as.attr(0)}                    // Attribute: tabindex="0"
+      aria-level={as.attr(level)}              // Attribute: aria-level="${level}"
+      aria-expanded={as.bool(expanded)}        // Boolean attr: ?aria-expanded=${expanded}
+      aria-selected={as.bool(selected)}       // Boolean attr: ?aria-selected=${selected}
     >
       Tree Item Content
     </div>
@@ -471,7 +581,6 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { when } from 'lit-html/directives/when.js';
 import { repeat } from 'lit-html/directives/repeat.js';
 import { createRef } from 'lit-html/directives/ref.js';
-import { asAttr, asBool } from 'jsx-lit';
 
 @customElement('todo-list')
 export class TodoList extends LitElement {
@@ -650,18 +759,47 @@ const heading = ({ level, children }) => {
 
 ## Component Patterns
 
-### ⚠️ Important Note on Components
+### Component Types
 
-**Only Component variables that return tagNames are supported.** Component functions or variables that return JSX directly are not supported.
+jsx-lit supports two types of components:
+
+#### Function Components
+
+**Function components** that return JSX are fully supported and compile to efficient call expressions:
+
+```tsx
+// ✅ Supported - Function component
+const MyButton = ({ label, onClick, disabled }) => (
+  <button disabled={disabled} on-click={onClick}>
+    {label}
+  </button>
+);
+
+// Usage
+<MyButton label="Click me" onClick={() => console.log('clicked')} disabled={false} />
+
+// Compiles to:
+html`${MyButton({
+  label: "Click me",
+  onClick: () => console.log('clicked'),
+  disabled: false
+})}`
+```
+
+Function components:
+- Receive props as a single object parameter
+- Can receive `children` as a `children` property in props
+- Are called directly as functions in the compiled output
+- Support all JSX features including conditional rendering and loops
+
+#### Component Variables (Tag Names)
+
+**Component variables** that return tag name strings are also supported for dynamic element types:
 
 ```tsx
 // ✅ Supported - Component variable returning tagName
 const MyButton = 'my-button';
 <MyButton>Click me</MyButton>
-
-// ❌ Not supported - Component function
-const MyButton = () => <button>Click me</button>;
-<MyButton />
 
 // ❌ Not supported - Component variable returning JSX
 const MyButton = <button>Click me</button>;
@@ -967,9 +1105,12 @@ This ensures your bundles only include the directives you actually use.
 - Bundle size matters
 - You want the most efficient lit-html integration
 - Starting a new project with jsx-lit
+- You want to use function components (full support)
 
 **Choose React JSX Runtime (`vite-jsx-react`) when:**
-- You need the features that the custom compiler not yet supports.
+- You need gradual migration from React projects
+- You prefer React-style JSX transformation
+- You're prototyping or in development phase
 
 ## Advanced Usage
 
@@ -1096,11 +1237,11 @@ Most React JSX patterns work with jsx-lit, but note these differences:
 - Ensure you have `@types/react` installed if using React JSX mode
 
 **Runtime errors**
-- Component variables must return tagNames, not JSX elements
+- Function components should return JSX elements, component variables should return tagNames
 - Ensure custom elements are properly defined before use
 - Check that event handlers use the correct `on-` syntax (not `onClick` or other React formats)
-- For boolean attributes, use `asBool()` function to get boolean attribute binding
-- For custom/data attributes, use `asAttr()` function to get attribute binding instead of property binding
+- For boolean attributes, use `as.bool()` function to get boolean attribute binding
+- For DOM properties, use `as.prop()` function to get property binding instead of attribute binding
 
 **Build errors**
 - `Cannot resolve 'jsx-lit/jsx-runtime'`: You're using React JSX mode but importing from wrong path
@@ -1117,12 +1258,19 @@ Most React JSX patterns work with jsx-lit, but note these differences:
 - `styleMap is not defined`: Same as above - check import configuration
 - Spread syntax not working: Verify `RestDirective` is available and imported
 
+**Function component issues**
+- Component not rendering: Ensure the function returns JSX elements, not strings or other values
+- Props not passed correctly: Check that props are destructured from the first parameter object
+- Children not working: Access children via `props.children` in function components
+- TypeScript errors: Ensure function component signatures match `(props: any) => JSX.Element`
+
 ### Debugging Tips
 
 1. **Check compiled output**: Use browser dev tools to see the actual generated code
 2. **Use source maps**: Both modes support source maps for debugging
 3. **Verify binding syntax**: Check that attributes compile to the expected lit-html binding syntax (`.`, `?`, `@`, etc.)
 4. **Test directive imports**: Ensure required lit-html directives are properly imported
+5. **Function component debugging**: Check that function components are called with correct props objects in compiled output
 
 ### Migration Checklist
 
@@ -1131,15 +1279,22 @@ Most React JSX patterns work with jsx-lit, but note these differences:
 - [ ] Update event handlers from `@click` to `on-click`
 - [ ] Convert `${expression}` to `{expression}`
 - [ ] Replace directive usage with JSX attributes where possible
-- [ ] Use `asAttr()` for values that need attribute binding instead of property binding
-- [ ] Use `asBool()` for boolean attributes that need `?` syntax binding
+- [ ] Use `as.prop()` for values that need property binding instead of attribute binding
+- [ ] Use `as.bool()` for boolean attributes that need `?` syntax binding
 
 **From React to jsx-lit:**
 - [ ] Change `className` to `class`
 - [ ] Update event handlers from React format (`onClick`) to `on-` format (`on-click`)
-- [ ] Remove React-specific features (hooks, etc.)
-- [ ] Replace React components with custom elements
-- [ ] Update styling approaches (CSS-in-JS to CSS)
+- [ ] React function components work directly with jsx-lit (no changes needed!)
+- [ ] Replace React-specific features (hooks, state management) with Lit equivalents
+- [ ] Replace React components with custom elements where appropriate
+- [ ] Update styling approaches (CSS-in-JS to CSS or Lit's styling system)
+
+**Upgrading from jsx-lit 1.0.x:**
+- [ ] Expressions now bind as attributes by default (was properties before)
+- [ ] Use `as.prop()` if you need the old property binding behavior
+- [ ] Function components are now fully supported - you can start using them!
+- [ ] `toJSX()` function has improved TypeScript integration
 
 ## Performance Optimization
 
@@ -1169,6 +1324,40 @@ Most React JSX patterns work with jsx-lit, but note these differences:
      }
      return this._filteredItems;
    }
+   ```
+
+5. **Function component best practices**:
+   ```tsx
+   // Good - memoize expensive computations outside render
+   const ExpensiveComponent = ({ data }) => {
+     const processedData = useMemo(() => processData(data), [data]);
+     return <div>{processedData}</div>;
+   };
+
+   // Good - avoid creating new objects/functions in JSX
+   const MyComponent = ({ items, onClick }) => (
+     <div>
+       {items.map(item => (
+         <button key={item.id} on-click={() => onClick(item.id)}>
+           {item.name}
+         </button>
+       ))}
+     </div>
+   );
+
+   // Better - pre-bind handlers if possible
+   const MyComponent = ({ items, onClick }) => {
+     const handleClick = (id) => () => onClick(id);
+     return (
+       <div>
+         {items.map(item => (
+           <button key={item.id} on-click={handleClick(item.id)}>
+             {item.name}
+           </button>
+         ))}
+       </div>
+     );
+   };
    ```
 
 ### Bundle Size Optimization
