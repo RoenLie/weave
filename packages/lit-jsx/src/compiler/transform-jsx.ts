@@ -2,11 +2,11 @@ import { type PluginPass } from '@babel/core';
 import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 
-import type { AttrArrowExpressionParams, AttrExpressionParams, AttrMemberExpressionParams, AttrNonExpressionParams, AttrSpreadParams, Values } from './compiler-utils.ts';
+import type { AttrArrowExpressionParams, AttrExpressionParams, AttrMemberExpressionParams, AttrNonExpressionParams, Values } from './compiler-utils.ts';
 import { attributeProcessors, determineTemplateType, ensure, isArrowFunctionBinding, isCallExpressionBinding, isComponent, TemplateBuilder } from './compiler-utils.ts';
 import {
 	ATTR_NAMES,  COMPONENT_LITERAL_PREFIX, COMPONENT_POSTFIX, DISCARD_TAG,
-	ERROR_MESSAGES, SPECIAL_TAGS, VARIABLES, WHITESPACE_TAGS,
+	ERROR_MESSAGES, VARIABLES, WHITESPACE_TAGS,
 } from './config.ts';
 
 
@@ -248,59 +248,16 @@ transformTopLevelJSXElement.processOpeningTag = (
 		// where the attributes are passed by their name->value, and the children are passed to the children property.
 		context.isComponentFunction = true;
 
-		// If it's a component function, we need to process the attributes and children
-		// and pass them as an object to the component function.
-
-		// TODO, biggest priority, implement this.
-
-		const attributes = context.currentPath.node.openingElement.attributes;
-		const objectExpressionProperties: t.ObjectProperty[] = attributes
-			.map(attr => {
-				if (t.isJSXSpreadAttribute(attr)) {
-					// if it's a spread attribute, we need to create a spread object property
-					// so that the object content is spread into the object.
-					// We do not use the `rest` directive here,
-					// as we want to keep the original object structure.
-
-
-					return t.objectProperty(
-						t.identifier(VARIABLES.REST),
-						attr.argument,
-					) as t.ObjectProperty;
-				}
-
-				if (t.isJSXAttribute(attr)) {
-					const name = attr.name.name.toString();
-					if (attr.value) {
-						if (t.isJSXExpressionContainer(attr.value)) {
-							return t.objectProperty(
-								t.identifier(name),
-								attr.value.expression,
-							);
-						}
-						else {
-							return t.objectProperty(
-								t.identifier(name),
-								t.stringLiteral(attr.value.value),
-							);
-						}
-					}
-
-					return t.objectProperty(
-						t.identifier(name),
-						t.booleanLiteral(true),
-					);
-				}
-			});
+		// Process attributes and children into a props object
+		const propsObject = transformTopLevelJSXElement.createComponentPropsObject(context);
 
 		context.builder.addText('');
 		context.builder.addExpression(
 			t.callExpression(
 				t.identifier(context.tagName),
-				[ t.objectExpression(objectExpressionProperties) ],
+				[ propsObject ],
 			),
 		);
-
 		context.builder.addText('');
 
 		return context;
@@ -449,4 +406,107 @@ transformTopLevelJSXElement.processClosingTag = (context: JSXElementContext): vo
 	else {
 		context.builder.addText('</' + context.tagName + '>');
 	}
+};
+
+transformTopLevelJSXElement.createComponentPropsObject = (context: JSXElementContext): t.ObjectExpression => {
+	const properties: (t.ObjectProperty | t.SpreadElement)[] = [];
+	const attributes = context.currentPath.node.openingElement.attributes;
+
+	// Process attributes
+	for (const attr of attributes) {
+		if (t.isJSXSpreadAttribute(attr)) {
+			// Handle spread attributes by spreading the object
+			properties.push(t.spreadElement(attr.argument));
+			continue;
+		}
+
+		const name = attr.name.name.toString();
+		let value: t.Expression;
+
+		if (attr.value) {
+			if (t.isJSXExpressionContainer(attr.value)) {
+				// If the expression is empty, skip it
+				if (t.isJSXEmptyExpression(attr.value.expression))
+					continue;
+
+				value = attr.value.expression;
+			}
+			else if (t.isStringLiteral(attr.value)) {
+				value = attr.value;
+			}
+			else {
+				// Other literal types
+				value = attr.value as t.Expression;
+			}
+		}
+		else {
+			// Boolean attribute (no value means true)
+			value = t.booleanLiteral(true);
+		}
+
+		properties.push(t.objectProperty(
+			t.identifier(name),
+			value,
+		));
+	}
+
+	// Process children
+	const children = context.currentPath.node.children;
+	if (children.length > 0) {
+		const childrenArray: t.Expression[] = [];
+
+		for (const [ index, child ] of children.entries()) {
+			if (t.isJSXText(child)) {
+				const trimmedValue = child.value.trim();
+				if (trimmedValue)
+					childrenArray.push(t.stringLiteral(trimmedValue));
+
+				continue;
+			}
+
+			if (t.isJSXElement(child)) {
+				const childPath = context.currentPath.get(`children.${ index }`);
+				if (!isValidJSXElement(childPath))
+					throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
+
+				// Create a new builder for this child element
+				const childBuilder = new TemplateBuilder();
+				const childContext: JSXElementContext = {
+					...context,
+					currentPath: childPath,
+					builder:     childBuilder,
+				};
+
+				// Recursively process the child element
+				transformTopLevelJSXElement.processOpeningTag(childContext);
+
+				// Get the tagged template expression from the child
+				const childTemplate = transformTopLevelJSXElement.createTaggedTemplate(childContext);
+				childrenArray.push(childTemplate);
+				continue;
+			}
+
+			if (t.isJSXExpressionContainer(child)) {
+				if (t.isJSXEmptyExpression(child.expression))
+					continue;
+
+				childrenArray.push(child.expression);
+				continue;
+			}
+		}
+
+		// Add children property if there are any children
+		if (childrenArray.length > 0) {
+			const childrenValue: t.Expression = childrenArray.length === 1
+				? childrenArray[0]!
+				: t.arrayExpression(childrenArray);
+
+			properties.push(t.objectProperty(
+				t.identifier('children'),
+				childrenValue,
+			));
+		}
+	}
+
+	return t.objectExpression(properties);
 };

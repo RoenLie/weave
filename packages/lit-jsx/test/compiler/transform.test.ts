@@ -338,11 +338,30 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 	test('should correct convert a Component function', async ({ expect }) => {
 		const source = `
 		const obj = {each: this.items};
-		<For each={this.items} {...{obj}}></For>
+		<For
+			{...{obj}}
+			each={this.items}
+			key={item => item}
+			separator={<hr />}
+		>
+		{item => <div>{item}</div>}
+		</For>
 		`;
 
-		const expected = `import { html } from "lit-html";`
-		+ `\nhtml\`\${For({each: this.items})}\`;`;
+		const expected = ''
+		+ `import { html } from "lit-html";`
+		+ '\nconst obj = {'
+		+ '\n  each: this.items'
+		+ '\n};'
+		+ '\nhtml`${For({'
+		+ '\n  ...{'
+		+ '\n    obj'
+		+ '\n  },'
+		+ '\n  each: this.items,'
+		+ '\n  key: item => item,'
+		+ '\n  separator: html`<hr></hr>`,'
+		+ '\n  children: item => html`<div>${item}</div>`'
+		+ '\n})}`;';
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
