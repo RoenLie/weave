@@ -7,7 +7,7 @@ export const COMPONENT_LITERAL_PREFIX = '__$';
 export const COMPONENT_POSTFIX = '.tag';
 export const DISCARD_TAG = 'discard';
 export const WHITESPACE_TAGS: string[] = [ 'pre', 'textarea' ];
-export const SPECIAL_TAGS: string[] = [ 'For', 'If' ];
+export const SPECIAL_TAGS: string[] = [];
 export const ATTR_NAMES = {
 	REF:          'ref',
 	CLASS_LIST:   'classList',

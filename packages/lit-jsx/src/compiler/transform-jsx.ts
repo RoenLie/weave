@@ -169,7 +169,6 @@ transformTopLevelJSXElement.processOpeningTag = (
 	if (!name)
 		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
-
 	const context: JSXElementContext = Object.assign(initialContext, {
 		isComponentTag:      false,
 		isCustomElementTag:  false,
@@ -181,63 +180,61 @@ transformTopLevelJSXElement.processOpeningTag = (
 
 	// If the tag name is `DISCARD_TAG`, we skip it.
 	// but we still need to process its children.
-	if (context.tagName !== DISCARD_TAG) {
-		// eslint-disable-next-line no-cond-assign
-		if (context.isComponentTag = isComponent(context.tagName)) {
-			if (context.tagName.endsWith(COMPONENT_POSTFIX)) {
-				context.isCustomElementTag = true;
-				context.isStatic.value = true; // Custom elements are always static.
+	if (context.tagName === DISCARD_TAG) {
+		transformTopLevelJSXElement.processChildren(context);
+		transformTopLevelJSXElement.processClosingTag(context);
 
-				// If it's a component, we will use lit static html function to wrap this parent.
-				// then we create a static literal for the tag name at the top of the file.
-				// and use that static literal in the template.
-				// This will allow us to use the component as a tag name.
+		return context;
+	}
 
-				const literalIdentifier = ensure.componentLiteral(
-					context.tagName,
-					COMPONENT_LITERAL_PREFIX + context.tagName,
-					context.currentPath,
-					context.program,
-				);
+	// eslint-disable-next-line no-cond-assign
+	if (context.isComponentTag = isComponent(context.tagName)) {
+		// If the tag is a custom element, we will need to handle it differently.
+		// We will need to create a static literal for the tag name,
+		// and use that static literal in a static template.
+		if (context.tagName.endsWith(COMPONENT_POSTFIX)) {
+			context.isCustomElementTag = true;
+			context.isStatic.value = true; // Custom elements are always static.
 
-				context.literalName = literalIdentifier.name;
+			const literalIdentifier = ensure.componentLiteral(
+				context.tagName,
+				COMPONENT_LITERAL_PREFIX + context.tagName,
+				context.currentPath,
+				context.program,
+			);
 
-				context.builder.addText('<');
-				context.builder.addExpression(literalIdentifier);
-			}
-			// We have a few special Component tags which are library level components.
-			// These we will need to do special handling dependant on which special component it is.
-			else if (SPECIAL_TAGS.includes(context.tagName)) {
-				// For - should compile into a map() directive.
-				// If - should compile into a when() directive.
-			}
-			else {
-				context.isComponentFunction = true;
+			context.literalName = literalIdentifier.name;
 
-				// If it's a component function, we will instead of creating a wrapping tag element for it
-				// we will wrap it in an expression, take the attributes and children and pass them as an object to
-				// the component function.
-				// where the attributes are passed by their name->value, and the children are passed to the children property.
-				context.builder.addText('');
-			}
+			context.builder.addText('<');
+			context.builder.addExpression(literalIdentifier);
 		}
-		else {
-			context.builder.addText('<' + context.tagName);
-		}
-
-		if (!context.isComponentFunction) {
-			transformTopLevelJSXElement.processAttributes(context);
-			transformTopLevelJSXElement.processChildren(context);
-			transformTopLevelJSXElement.processClosingTag(context);
-		}
-		else {
+		// We might have a few special Component tags which are library level components.
+		// These we will need to do special handling dependant on which special component it is.
+		else if (SPECIAL_TAGS.includes(context.tagName)) {
 			//
-			// If it's a component function, we need to process the attributes and children
-			// and pass them as an object to the component function.
+		}
+		else {
+			context.isComponentFunction = true;
+
+			// If it's a component function, we will instead of creating a wrapping tag element for it
+			// we will wrap it in an expression, take the attributes and children and pass them as an object to
+			// the component function.
+			// where the attributes are passed by their name->value, and the children are passed to the children property.
+			context.builder.addText('');
 		}
 	}
 	else {
-		//
+		context.builder.addText('<' + context.tagName);
+	}
+
+	if (context.isComponentFunction) {
+		// If it's a component function, we need to process the attributes and children
+		// and pass them as an object to the component function.
+
+		// TODO, biggest priority, implement this.
+	}
+	else {
+		transformTopLevelJSXElement.processAttributes(context);
 		transformTopLevelJSXElement.processChildren(context);
 		transformTopLevelJSXElement.processClosingTag(context);
 	}
