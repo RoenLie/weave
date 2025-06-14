@@ -1,17 +1,39 @@
 import { LitElement } from 'lit';
-import type { Directive as kake1, Directive as kake2, DirectiveResult } from 'lit-html/directive.js';
 import { ifDefined } from 'lit-html/directives/if-defined.js';
+import { join } from 'lit-html/directives/join.js';
+import { map } from 'lit-html/directives/map.js';
 import { createRef, ref } from 'lit-html/directives/ref.js';
+import { repeat } from 'lit-html/directives/repeat.js';
 
-import { ButtonElement_ } from './button.tsx';
+import { ButtonElement } from './button.tsx';
 
 
 function For<T, U extends JSX.Element>(props: {
-	each:      readonly T[];
-	fallback?: JSX.Element;
-	children:  (item: T, index: number) => U;
+	each:       readonly T[];
+	key?:       (item: T, index: number) => any;
+	separator?: JSX.Element;
+	children:   (item: T, index: number) => U;
 }): () => U[] {
-	return undefined as any;
+	let iter: any;
+
+	if (props.key) {
+		iter = repeat(
+			props.each,
+			(item, index) => props.key!(item, index),
+			(item, index) => props.children(item, index),
+		) as any;
+	}
+	else {
+		iter = map(
+			props.each,
+			(item, index) => props.children(item, index),
+		) as any;
+	}
+
+	if (props.separator)
+		iter = join(iter, props.separator) as any;
+
+	return iter;
 }
 
 
@@ -32,19 +54,24 @@ export class RootElement extends LitElement {
 
 		return (
 			<div class={'test-class'}>
-				<ButtonElement_
+				<ButtonElement.tag
 					about       ={as.prop(about)}
 					aria-checked={as.bool(ariaChecked)}
+					aria-label  ={ifDefined(ariaLabel)}
 					directive   ={ref(this.ref)}
-				></ButtonElement_>
+				></ButtonElement.tag>
 
-				<ButtonElement_
+				<ButtonElement.tag
 					about       ={prop => about}
 					aria-checked={bool => ariaChecked}
 					directive   ={[ ref(this.ref) ]}
-				></ButtonElement_>
+				></ButtonElement.tag>
 
-				<For each={this.items}>
+				<For
+					each={this.items}
+					key={item => item}
+					separator={<span>|</span>}
+				>
 					{(item, index) => (
 						<div class="item" data-key={index}>
 							{item}

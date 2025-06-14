@@ -2,10 +2,11 @@ import { type PluginPass } from '@babel/core';
 import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 
-import type { AttrExpressionParams, AttrNonExpressionParams, AttrSpreadParams, Values } from './compiler-utils.ts';
-import { attributeProcessors, determineTemplateType, ensure, isComponent, TemplateBuilder } from './compiler-utils.ts';
+import type { AttrArrowExpressionParams, AttrExpressionParams, AttrMemberExpressionParams, AttrNonExpressionParams, AttrSpreadParams, Values } from './compiler-utils.ts';
+import { attributeProcessors, determineTemplateType, ensure, isArrowFunctionBinding, isCallExpressionBinding, isComponent, TemplateBuilder } from './compiler-utils.ts';
 import {
-	ATTR_NAMES, ATTR_VALUES, COMPONENT_LITERAL_PREFIX, DISCARD_TAG,
+	ATTR_BIND_OBJ_NAME,
+	ATTR_NAMES, ATTR_VALUES, COMPONENT_LITERAL_PREFIX, COMPONENT_POSTFIX, DISCARD_TAG,
 	ERROR_MESSAGES, SPECIAL_TAGS, VARIABLES, WHITESPACE_TAGS,
 } from './config.ts';
 
@@ -44,9 +45,25 @@ export const transformJSXElement: VisitNode<
 };
 
 
+type ValidJSXElement = t.JSXElement & {
+	openingElement: t.JSXOpeningElement & {
+		name: t.JSXIdentifier | t.JSXMemberExpression;
+	};
+};
+
+const isValidJSXElement = (initialPath: NodePath<t.JSXElement>): initialPath is NodePath<ValidJSXElement> => {
+	const node = initialPath.node;
+
+	return t.isJSXElement(node)
+		&& t.isJSXOpeningElement(node.openingElement)
+		&& (t.isJSXIdentifier(node.openingElement.name)
+		|| t.isJSXMemberExpression(node.openingElement.name));
+};
+
+
 interface JSXElementContext {
-	initialPath:         NodePath<t.JSXElement>;
-	currentPath:         NodePath<t.JSXElement>;
+	initialPath:         NodePath<ValidJSXElement>;
+	currentPath:         NodePath<ValidJSXElement>;
 	program:             t.Program;
 	builder:             TemplateBuilder;
 	literalName:         string;
@@ -76,8 +93,7 @@ transformTopLevelJSXElement.transform = (
 	initialPath: NodePath<t.JSXElement>,
 	program: t.Program,
 ): t.TaggedTemplateExpression => {
-	const openingElementId = initialPath.node.openingElement.name;
-	if (!t.isJSXIdentifier(openingElementId))
+	if (!isValidJSXElement(initialPath))
 		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
 	const builder = new TemplateBuilder();
@@ -142,16 +158,25 @@ transformTopLevelJSXElement.processOpeningTag = (
 ) => {
 	const openingElement = initialContext.currentPath.node.openingElement;
 
-	if (!t.isJSXIdentifier(openingElement.name))
+	const name = t.isJSXIdentifier(openingElement.name)
+		? openingElement.name.name
+		: t.isJSXMemberExpression(openingElement.name)
+			? t.isJSXIdentifier(openingElement.name.object)
+				? openingElement.name.object.name + '.' + openingElement.name.property.name
+				: ''
+			: '';
+
+	if (!name)
 		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
+
 
 	const context: JSXElementContext = Object.assign(initialContext, {
 		isComponentTag:      false,
 		isCustomElementTag:  false,
 		isComponentFunction: false,
 		literalName:         '',
-		tagName:             openingElement.name.name,
-		templateType:        determineTemplateType(openingElement.name.name),
+		tagName:             name,
+		templateType:        determineTemplateType(name),
 	} satisfies Omit<JSXElementContext, keyof InitialJSXElementContext>);
 
 	// If the tag name is `DISCARD_TAG`, we skip it.
@@ -159,7 +184,7 @@ transformTopLevelJSXElement.processOpeningTag = (
 	if (context.tagName !== DISCARD_TAG) {
 		// eslint-disable-next-line no-cond-assign
 		if (context.isComponentTag = isComponent(context.tagName)) {
-			if (context.tagName.endsWith('_')) {
+			if (context.tagName.endsWith(COMPONENT_POSTFIX)) {
 				context.isCustomElementTag = true;
 				context.isStatic.value = true; // Custom elements are always static.
 
@@ -225,44 +250,23 @@ transformTopLevelJSXElement.processAttributes = (context: JSXElementContext): vo
 
 	for (const [ index, attr ] of attributes.entries()) {
 		if (t.isJSXSpreadAttribute(attr)) {
-			const expression = attr.argument;
+			// If it's a spread attribute, we wrap it in our custom
+			// `rest` directive.
+			// This will allow us to handle the spread attribute correctly.
+			// We also need to ensure that the `rest` directive is imported.
+			ensure.restImport(context.program, context.currentPath);
 
-			// If the spread attribute calls a reserved function, we will instead
-			// assign the value of the function as an element directive.
-			if (
-				t.isCallExpression(expression)
-				&& t.isIdentifier(expression.callee)
-				&& expression.callee.name === ATTR_VALUES.DIR
-			) {
-				const params: AttrSpreadParams = {
-					builder: context.builder,
-					attr:    attr as AttrSpreadParams['attr'],
-					path:    context.currentPath,
-					index,
-					program: context.program,
-				};
+			const attrPath = context.currentPath
+				.get(`openingElement.attributes.${ index }.argument`);
 
-				attributeProcessors.asDir(params);
-			}
-			else {
-				// If it's a spread attribute, we wrap it in our custom
-				// `rest` directive.
-				// This will allow us to handle the spread attribute correctly.
-				// We also need to ensure that the `rest` directive is imported.
-				ensure.restImport(context.program, context.currentPath);
+			const newExpression = t.callExpression(
+				t.identifier(VARIABLES.REST),
+				[ attr.argument ],
+			);
+			attrPath.replaceWith(newExpression);
 
-				const attrPath = context.currentPath
-					.get(`openingElement.attributes.${ index }.argument`);
-
-				const newExpression = t.callExpression(
-					t.identifier(VARIABLES.REST),
-					[ attr.argument ],
-				);
-				attrPath.replaceWith(newExpression);
-
-				context.builder.addText(' ');
-				context.builder.addExpression(newExpression);
-			}
+			context.builder.addText(' ');
+			context.builder.addExpression(newExpression);
 
 			continue;
 		}
@@ -284,33 +288,33 @@ transformTopLevelJSXElement.processAttributes = (context: JSXElementContext): vo
 					program: context.program,
 				};
 
-				if (name === ATTR_NAMES.CLASS_LIST) {
+				// If the attribute is classList, we bind it as a classMap directive.
+				if (name === ATTR_NAMES.CLASS_LIST)
 					attributeProcessors.classList(params);
-				}
-				else if (name === ATTR_NAMES.STYLE_LIST) {
+				// If the attribute is styleList, we bind it as a styleMap directive.
+				else if (name === ATTR_NAMES.STYLE_LIST)
 					attributeProcessors.styleList(params);
-				}
-				else if (name.startsWith(ATTR_NAMES.EVENT_PREFIX)) {
+				// If the attribute uses the event binding prefix,
+				// we bind it as an event listener.
+				else if (name.startsWith(ATTR_NAMES.EVENT_PREFIX))
 					attributeProcessors.event(params);
-				}
-				else if (name === ATTR_NAMES.REF) {
+				// If the attribute is ref we bind it as a ref directive.
+				else if (name === ATTR_NAMES.REF)
 					attributeProcessors.ref(params);
-				}
-				// To support being able to set expression container values as attributes and booleans.
-				// we check to see if the expression is calling a predefined function.
-				else if (t.isCallExpression(expression) && t.isIdentifier(expression.callee)) {
-					if (expression.callee.name === ATTR_VALUES.PROP)
-						attributeProcessors.asProp(params);
-					else if (expression.callee.name === ATTR_VALUES.ATTR)
-						attributeProcessors.asAttr(params);
-					else if (expression.callee.name === ATTR_VALUES.BOOL)
-						attributeProcessors.asBool(params);
-					else
-						attributeProcessors.expression(params);
-				}
-				else {
+				// If the attribute is directive, we bind the values it as element directives.
+				else if (name === ATTR_NAMES.DIRECTIVE)
+					attributeProcessors.directive(params);
+				// If the expression in the expression container is a function call,
+				// we check if it is a valid bind expression.
+				else if (isArrowFunctionBinding(expression))
+					attributeProcessors.arrowBinding(params as AttrArrowExpressionParams);
+				// If the expression in the expression container is a member expression
+				// we check if it is a valid bind expression.
+				else if (isCallExpressionBinding(expression))
+					attributeProcessors.callBinding(params as AttrMemberExpressionParams);
+				else
+					// If no other explicit handling, bind it as an attribute.
 					attributeProcessors.expression(params);
-				}
 
 				continue;
 			}
@@ -345,14 +349,14 @@ transformTopLevelJSXElement.processChildren = (context: JSXElementContext) => {
 			continue;
 		}
 		if (t.isJSXElement(child)) {
-			const childPath = context.currentPath
+			const currentPath = context.currentPath
 				.get(`children.${ index }`) as NodePath<t.JSXElement>;
 
+			if (!isValidJSXElement(currentPath))
+				throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
+
 			// Recursively process child elements
-			transformTopLevelJSXElement.processOpeningTag({
-				...context,
-				currentPath: childPath,
-			});
+			transformTopLevelJSXElement.processOpeningTag({ ...context, currentPath });
 
 			continue;
 		}

@@ -3,9 +3,10 @@ import { LitElement } from 'lit';
 import { when } from 'lit-html/directives/when.js';
 
 
-export class ButtonElementCmp extends LitElement {
+export class ButtonElement extends LitElement {
 
 	static tagName: string = 'button-element';
+	static tag = toJSX(ButtonElement);
 
 	override connectedCallback(): void {
 		super.connectedCallback();
@@ -42,15 +43,12 @@ export class ButtonElementCmp extends LitElement {
 
 }
 
-/** This is a button element! */
-export const ButtonElement_ = toJSX(ButtonElementCmp);
-
 
 declare global {
 	namespace JSX {
 		interface HTMLElementTags {
 			/** A custom element! */
-			'button-element': HTMLAttributes<ButtonElementCmp & {
+			'button-element': HTMLAttributes<ButtonElement & {
 				isActive?: boolean;
 			}>;
 		}

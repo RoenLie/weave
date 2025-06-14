@@ -2541,30 +2541,11 @@ declare global {
 	// eslint-disable-next-line no-var
 	var as: {
 		/**
-		 * Informs the compiler that the value should be bound as a directive.\
-		 * This allows using the spread syntax, and this function call to bind element directives.\
-		 * `jsx`
-		 * ```tsx
-		 * <div {...as.dir(myDirective())} />
-		 * ```
-		 * `lit-html`
-		 * ```ts
-		 * html`<div ${myDirective()}></div>`
-		 * ```
-		 */
-		dir:  (...directive: DirectiveResult[]) => ({});
-		/**
 		 * Informs the compiler that the value should be bound as a property value.\
 		 * This binds the expression value as a property, using the `.` syntax e.g `.key=${value}`\
 		 * This function call is removed during compilation, therefore it has no runtime effect.
 		 */
 		prop: <T>(value: T) => T;
-		/**
-		 * Informs the compiler that the value should be bound as an attribute value.\
-		 * This binds the expression value as an attribute, e.g `key=${value}`\
-		 * This function call is removed during compilation, therefore it has no runtime effect.
-		 */
-		attr: <T>(value: T) => T;
 		/**
 		 * Informs the compiler that the value should be bound as a boolean attribute.\
 		 * This allows the template to bind the value using the `?` syntax, e.g. `?disabled=${true}`\
@@ -2572,16 +2553,4 @@ declare global {
 		 */
 		bool: (value: boolean) => boolean;
 	};
-
-
-	// eslint-disable-next-line no-var
-	var bool: 'bool';
-	// eslint-disable-next-line no-var
-	var attr: 'attr';
-	// eslint-disable-next-line no-var
-	var prop: 'prop';
-	// eslint-disable-next-line no-var
-	var dir: 'dir';
-
-	type CompilerFlags = typeof bool | typeof attr | typeof prop | typeof dir;
 }

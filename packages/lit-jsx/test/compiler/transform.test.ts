@@ -66,15 +66,15 @@ describe('Transform JSX', (context) => {
 
 	test('should transform a custom element Component', async ({ expect }) => {
 		const source = `
-		import { SpecialElement_ } from './special-element.ts';
-		const template = <SpecialElement_ name="kakemann" />;
+		import { SpecialElement } from './special-element.ts';
+		const template = <SpecialElement.tag name="kakemann" />;
 		`;
-		const expected =
+		const expected = ''
 		+ `import { html as htmlStatic } from "lit-html/static.js";`
-		+ `\nimport { __$literalMap } from "jsx-lit";`;
-		+ `\nimport { SpecialElement_ } from './special-element.ts';`;
-		+ `\nconst __$SpecialElement_ = __$literalMap.get(SpecialElement_);`;
-		+ `\nconst template = htmlStatic\`<\${__$SpecialElement_} name="kakemann"></\${__$SpecialElement_}>\`;`;
+		+ `\nimport { __$literalMap } from "jsx-lit";`
+		+ `\nimport { SpecialElement } from './special-element.ts';`
+		+ `\nconst __$SpecialElement = __$literalMap.get(SpecialElement.tag);`
+		+ `\nconst template = htmlStatic\`<\${__$SpecialElement} name="kakemann"></\${__$SpecialElement}>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -87,9 +87,9 @@ describe('Transform JSX', (context) => {
 			<div
 				static-attribute="value1"
 				dynamic-attribute={dynamicValue}
-				boolean={asBool(true)}
-				property={asProp('value2')}
-				{...asDire(ifDefined('value3'))}
+				boolean={bool => true}
+				property={prop => 'value2'}
+				directive={ifDefined('value3')}
 			>
 				Hello World
 			</div>
@@ -112,9 +112,9 @@ describe('Transform JSX', (context) => {
 
 	test('should handle spread attributes', async ({ expect }) => {
 		const source = `
-		import { SpecialElement_ } from './special-element.ts';
+		import { SpecialElement } from './special-element.ts';
 		const template = (
-			<SpecialElement_
+			<SpecialElement.tag
 				name="kakemann"
 				{...{
 					foo: 'bar',
@@ -127,12 +127,12 @@ describe('Transform JSX', (context) => {
 		const expected = `import { html as htmlStatic } from "lit-html/static.js";
 import { __$rest } from "jsx-lit";
 import { __$literalMap } from "jsx-lit";
-import { SpecialElement_ } from './special-element.ts';
-const __$SpecialElement_ = __$literalMap.get(SpecialElement_);
-const template = htmlStatic\`<\${__$SpecialElement_} name="kakemann" \${__$rest({
+import { SpecialElement } from './special-element.ts';
+const __$SpecialElement = __$literalMap.get(SpecialElement.tag);
+const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
   foo: 'bar',
   baz: 'qux'
-})}></\${__$SpecialElement_}>\`;`;
+})}></\${__$SpecialElement}>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -214,11 +214,11 @@ const template = htmlStatic\`<\${__$SpecialElement_} name="kakemann" \${__$rest(
 		expect(code).to.be.eq(expected);
 	});
 
-	test('should handle boolean assignment', async ({ expect }) => {
+	test('should handle boolean callExpression assignment', async ({ expect }) => {
 		const source = `
 		const isActive = true;
 		const template = (
-			<div active={asBool(isActive)}>
+			<div active={as.bool(isActive)}>
 				Hello World
 			</div>
 		);
@@ -233,11 +233,68 @@ const template = htmlStatic\`<\${__$SpecialElement_} name="kakemann" \${__$rest(
 		expect(code).to.be.eq(expected);
 	});
 
+	test('should handle boolean arrow function assignment', async ({ expect }) => {
+		const source = `
+		const isActive = true;
+		const template = (
+			<div active={bool => isActive}>
+				Hello World
+			</div>
+		);
+		`;
+		let expected = `import { html } from "lit-html";`;
+		expected += `\nconst isActive = true;`;
+		expected += `\nconst template = html\`<div ?active=\${isActive}>Hello World</div>\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should handle prop callExpression assignment', async ({ expect }) => {
+		const source = `
+		const isActive = true;
+		const template = (
+			<div active={as.prop(isActive)}>
+				Hello World
+			</div>
+		);
+		`;
+		let expected = `import { html } from "lit-html";`;
+		expected += `\nconst isActive = true;`;
+		expected += `\nconst template = html\`<div .active=\${isActive}>Hello World</div>\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should handle prop arrow function assignment', async ({ expect }) => {
+		const source = `
+		const isActive = true;
+		const template = (
+			<div active={prop => isActive}>
+				Hello World
+			</div>
+		);
+		`;
+		let expected = `import { html } from "lit-html";`;
+		expected += `\nconst isActive = true;`;
+		expected += `\nconst template = html\`<div .active=\${isActive}>Hello World</div>\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
 	test('should handle attribute assignment', async ({ expect }) => {
 		const source = `
 		const value = 'test';
 		const template = (
-			<div key={asAttr(value)}>
+			<div key={value}>
 				Hello World
 			</div>
 		);
@@ -249,6 +306,32 @@ const template = htmlStatic\`<\${__$SpecialElement_} name="kakemann" \${__$rest(
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
 
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should handle a single element directive', async ({ expect }) => {
+		const source = `
+		<div directive={myDirective()} />
+		`;
+
+		const expected = `import { html } from "lit-html";`
+		+ `\nhtml\`<div \${myDirective()}></div>\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should handle an array of element directives', async ({ expect }) => {
+		const source = `
+		<div directive={[myDirective()]} />
+		`;
+
+		const expected = `import { html } from "lit-html";`
+		+ `\nhtml\`<div \${myDirective()}></div>\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
 		expect(code).to.be.eq(expected);
 	});
 });

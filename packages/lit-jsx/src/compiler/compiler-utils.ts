@@ -3,7 +3,7 @@ import * as t from '@babel/types';
 
 import { isMathmlTag } from '../shared/mathml-tags.ts';
 import { isSvgTag } from '../shared/svg-tags.ts';
-import { ERROR_MESSAGES, SOURCES, VARIABLES } from './config.ts';
+import { ATTR_BIND_OBJ_NAME, ATTR_VALUES, COMPONENT_POSTFIX, ERROR_MESSAGES, SOURCES, VARIABLES } from './config.ts';
 
 export type Values<T> = T[keyof T];
 
@@ -81,6 +81,31 @@ export interface AttrExpressionParams extends AttrParams {
 	};
 }
 
+export interface AttrArrowExpressionParams extends AttrParams {
+	attr:    t.JSXAttribute & {
+		value: t.JSXExpressionContainer & {
+			expression: t.ArrowFunctionExpression & {
+				params: [ t.Identifier & { name: Values<typeof ATTR_VALUES>; } ];
+				body:   t.Expression;
+			};
+		};
+	};
+}
+
+export interface AttrMemberExpressionParams extends AttrParams {
+	attr:    t.JSXAttribute & {
+		value: t.JSXExpressionContainer & {
+			expression: t.CallExpression & {
+				callee: t.MemberExpression & {
+					object:   t.Identifier;
+					property: t.Identifier;
+				};
+				arguments: [ t.Expression ];
+			};
+		};
+	};
+}
+
 export interface AttrSpreadParams extends AttrParams {
 	attr: t.JSXSpreadAttribute & {
 		argument: t.CallExpression & {
@@ -97,50 +122,68 @@ export interface AttrNonExpressionParams extends AttrParams {
 }
 
 export const attributeProcessors = {
-	asAttr(params: AttrExpressionParams): void {
+	callBinding(params: AttrMemberExpressionParams): void {
 		const expression = params.attr.value.expression;
-		if (!t.isCallExpression(expression))
-			return;
+		const isProp = expression.callee.property.name === ATTR_VALUES.PROP;
+		const isBool = expression.callee.property.name === ATTR_VALUES.BOOL;
 
-		const argument = expression.arguments[0];
-		if (!t.isExpression(argument))
-			return;
+		if (isProp)
+			params.builder.addText(' .');
+		else if (isBool)
+			params.builder.addText(' ?');
+		else
+			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_RETURN_TYPE);
 
 		const name = params.attr.name.name.toString();
-		params.builder.addText(' ' + name + '=');
+		const argument = expression.arguments[0];
+
+		params.builder.addText(name + '=');
 		params.builder.addExpression(argument);
 	},
-	asProp(params: AttrExpressionParams): void {
+	arrowBinding(params: AttrArrowExpressionParams): void {
 		const expression = params.attr.value.expression;
-		if (!t.isCallExpression(expression))
-			return;
+		const param = expression.params[0];
+		const isProp = param.name === ATTR_VALUES.PROP;
+		const isBool = param.name === ATTR_VALUES.BOOL;
 
-		const argument = expression.arguments[0];
-		if (!t.isExpression(argument))
-			return;
-
-		const oldName = params.attr.name.name.toString();
-		const newName = '.' + oldName;
-		params.builder.addText(' ' + newName + '=');
-		params.builder.addExpression(argument);
-	},
-	asBool(params: AttrExpressionParams): void {
-		const expression = params.attr.value.expression;
-		if (!t.isCallExpression(expression))
-			return;
-
-		const argument = expression.arguments[0];
-		if (!t.isExpression(argument))
-			return;
+		if (isProp)
+			params.builder.addText(' .');
+		else if (isBool)
+			params.builder.addText(' ?');
+		else
+			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_RETURN_TYPE);
 
 		const name = params.attr.name.name.toString();
-		params.builder.addText(' ?' + name + '=');
-		params.builder.addExpression(argument);
+		const expressionBody = expression.body;
+
+		params.builder.addText(name + '=');
+		params.builder.addExpression(expressionBody);
 	},
-	asDir(params: AttrSpreadParams): void {
+	directive(params: AttrExpressionParams): void {
 		// Replace the spread attribute with its argument, minus the compiler func.
-		params.builder.addText(' ');
-		params.builder.addExpression(params.attr.argument.arguments[0]);
+		const expression = params.attr.value.expression;
+		if (t.isCallExpression(expression)) {
+			// If the expression is a call, we can add it directly.
+			params.builder.addText(' ');
+			params.builder.addExpression(expression);
+		}
+		else if (t.isArrayExpression(expression)) {
+			for (const item of expression.elements) {
+				if (!t.isExpression(item))
+					throw new Error(ERROR_MESSAGES.EMPTY_JSX_EXPRESSION);
+
+				// Add a space to keep correct spacing in the template.
+				params.builder.addText(' ');
+				params.builder.addExpression(item);
+			}
+		}
+		else {
+			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_RETURN_TYPE);
+		}
+		// If the expression is not a call or array, we can just add it as an expression.
+
+		//params.builder.addText(' ');
+		//params.builder.addExpression(params.attr.argument.arguments[0]);
 	},
 	ref(params: AttrExpressionParams): void {
 		// add a ref call around the expression.
@@ -207,6 +250,54 @@ export const attributeProcessors = {
 		params.builder.addText(' ' + name + '="' + value + '"');
 	},
 } as const;
+
+
+export const isCallExpressionBinding = (
+	expression: t.Expression,
+): expression is AttrMemberExpressionParams['attr']['value']['expression'] => {
+	if (!t.isCallExpression(expression))
+		return false;
+
+	const callee = expression.callee;
+	if (!t.isMemberExpression(callee))
+		return false;
+	if (!t.isIdentifier(callee.object) || !t.isIdentifier(callee.property))
+		return false;
+
+	const objectNameMatches = callee.object.name === ATTR_BIND_OBJ_NAME;
+	if (!objectNameMatches)
+		return false;
+
+	return true;
+};
+
+export const isArrowFunctionBinding = (
+	expression: t.Expression,
+): expression is AttrArrowExpressionParams['attr']['value']['expression'] => {
+	if (!t.isArrowFunctionExpression(expression))
+		return false;
+
+	// If the arrow function has no parameters, we can skip it.
+	if (expression.params.length === 0)
+		return false;
+
+	// If the arrow function has more than one parameter, we can skip it.
+	if (expression.params.length > 1)
+		return false;
+
+	// If the param is not an identifier, we can skip it.
+	const param = expression.params[0];
+	if (!t.isIdentifier(param))
+		return false;
+
+	// If the body of the arrow function is not an expression, we can skip it.
+	if (!t.isExpression(expression.body))
+		return false;
+
+	// We check if it is a valid bind parameter.
+	return param.name === ATTR_VALUES.PROP
+		|| param.name === ATTR_VALUES.BOOL;
+};
 
 
 export const ensure = {
@@ -491,6 +582,9 @@ export const ensure = {
 	): t.Identifier {
 		this.literalMapImport(program, path);
 
+		variableName = variableName.replace(COMPONENT_POSTFIX, '');
+		tagName = tagName.replace(COMPONENT_POSTFIX, '');
+
 		return this.componentTagDeclaration(
 			path,
 			tagName,
@@ -502,7 +596,7 @@ export const ensure = {
 						t.identifier(VARIABLES.LITERAL_MAP),
 						t.identifier('get'),
 					),
-					[ t.identifier(tagName) ],
+					[ t.identifier(tagName + COMPONENT_POSTFIX) ],
 				),
 			),
 		);
