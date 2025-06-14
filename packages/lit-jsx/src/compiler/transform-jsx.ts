@@ -5,8 +5,7 @@ import * as t from '@babel/types';
 import type { AttrArrowExpressionParams, AttrExpressionParams, AttrMemberExpressionParams, AttrNonExpressionParams, AttrSpreadParams, Values } from './compiler-utils.ts';
 import { attributeProcessors, determineTemplateType, ensure, isArrowFunctionBinding, isCallExpressionBinding, isComponent, TemplateBuilder } from './compiler-utils.ts';
 import {
-	ATTR_BIND_OBJ_NAME,
-	ATTR_NAMES, ATTR_VALUES, COMPONENT_LITERAL_PREFIX, COMPONENT_POSTFIX, DISCARD_TAG,
+	ATTR_NAMES,  COMPONENT_LITERAL_PREFIX, COMPONENT_POSTFIX, DISCARD_TAG,
 	ERROR_MESSAGES, SPECIAL_TAGS, VARIABLES, WHITESPACE_TAGS,
 } from './config.ts';
 
@@ -51,13 +50,52 @@ type ValidJSXElement = t.JSXElement & {
 	};
 };
 
-const isValidJSXElement = (initialPath: NodePath<t.JSXElement>): initialPath is NodePath<ValidJSXElement> => {
+const isValidJSXElement = (initialPath: NodePath): initialPath is NodePath<ValidJSXElement> => {
 	const node = initialPath.node;
 
 	return t.isJSXElement(node)
 		&& t.isJSXOpeningElement(node.openingElement)
 		&& (t.isJSXIdentifier(node.openingElement.name)
 		|| t.isJSXMemberExpression(node.openingElement.name));
+};
+
+const getJSXElementName = (node: t.JSXElement): string => {
+	const openingElement = node.openingElement;
+
+	const name = t.isJSXIdentifier(openingElement.name)
+		? openingElement.name.name
+		: t.isJSXMemberExpression(openingElement.name)
+			? t.isJSXIdentifier(openingElement.name.object)
+				? openingElement.name.object.name + '.' + openingElement.name.property.name
+				: ''
+			: '';
+
+	return name;
+};
+
+const isJSXCustomElementComponent = (nodeOrName: t.JSXElement | string): boolean => {
+	const tagName = typeof nodeOrName !== 'string'
+		? getJSXElementName(nodeOrName)
+		: nodeOrName;
+
+	if (tagName.endsWith(COMPONENT_POSTFIX))
+		return true;
+
+	return false;
+};
+
+const isJSXFunctionElementComponent = (nodeOrName: t.JSXElement | string) => {
+	const tagName = typeof nodeOrName !== 'string'
+		? getJSXElementName(nodeOrName)
+		: nodeOrName;
+
+	if (!isComponent(tagName))
+		return false;
+
+	if (tagName.endsWith(COMPONENT_POSTFIX))
+		return false;
+
+	return true;
 };
 
 
@@ -155,17 +193,8 @@ transformTopLevelJSXElement.createTaggedTemplate = (context: JSXElementContext) 
 
 transformTopLevelJSXElement.processOpeningTag = (
 	initialContext: InitialJSXElementContext,
-) => {
-	const openingElement = initialContext.currentPath.node.openingElement;
-
-	const name = t.isJSXIdentifier(openingElement.name)
-		? openingElement.name.name
-		: t.isJSXMemberExpression(openingElement.name)
-			? t.isJSXIdentifier(openingElement.name.object)
-				? openingElement.name.object.name + '.' + openingElement.name.property.name
-				: ''
-			: '';
-
+): JSXElementContext => {
+	const name = getJSXElementName(initialContext.currentPath.node);
 	if (!name)
 		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
@@ -181,63 +210,108 @@ transformTopLevelJSXElement.processOpeningTag = (
 	// If the tag name is `DISCARD_TAG`, we skip it.
 	// but we still need to process its children.
 	if (context.tagName === DISCARD_TAG) {
+		context.builder.addText('');
+
+		transformTopLevelJSXElement.processChildren(context);
+
+		return context;
+	}
+
+	if (isJSXCustomElementComponent(context.tagName)) {
+		context.isCustomElementTag = true;
+		context.isStatic.value = true;
+		context.isComponentTag = true;
+
+		const literalIdentifier = ensure.componentLiteral(
+			context.tagName,
+			COMPONENT_LITERAL_PREFIX + context.tagName,
+			context.currentPath,
+			context.program,
+		);
+
+		context.literalName = literalIdentifier.name;
+
+		context.builder.addText('<');
+		context.builder.addExpression(literalIdentifier);
+
+		transformTopLevelJSXElement.processAttributes(context);
 		transformTopLevelJSXElement.processChildren(context);
 		transformTopLevelJSXElement.processClosingTag(context);
 
 		return context;
 	}
 
-	// eslint-disable-next-line no-cond-assign
-	if (context.isComponentTag = isComponent(context.tagName)) {
-		// If the tag is a custom element, we will need to handle it differently.
-		// We will need to create a static literal for the tag name,
-		// and use that static literal in a static template.
-		if (context.tagName.endsWith(COMPONENT_POSTFIX)) {
-			context.isCustomElementTag = true;
-			context.isStatic.value = true; // Custom elements are always static.
+	if (isJSXFunctionElementComponent(context.tagName)) {
+		// If it's a component function, we will instead of creating a wrapping tag element for it
+		// we will wrap it in an expression, take the attributes and children and pass them as an object to
+		// the component function.
+		// where the attributes are passed by their name->value, and the children are passed to the children property.
+		context.isComponentFunction = true;
 
-			const literalIdentifier = ensure.componentLiteral(
-				context.tagName,
-				COMPONENT_LITERAL_PREFIX + context.tagName,
-				context.currentPath,
-				context.program,
-			);
-
-			context.literalName = literalIdentifier.name;
-
-			context.builder.addText('<');
-			context.builder.addExpression(literalIdentifier);
-		}
-		// We might have a few special Component tags which are library level components.
-		// These we will need to do special handling dependant on which special component it is.
-		else if (SPECIAL_TAGS.includes(context.tagName)) {
-			//
-		}
-		else {
-			context.isComponentFunction = true;
-
-			// If it's a component function, we will instead of creating a wrapping tag element for it
-			// we will wrap it in an expression, take the attributes and children and pass them as an object to
-			// the component function.
-			// where the attributes are passed by their name->value, and the children are passed to the children property.
-			context.builder.addText('');
-		}
-	}
-	else {
-		context.builder.addText('<' + context.tagName);
-	}
-
-	if (context.isComponentFunction) {
 		// If it's a component function, we need to process the attributes and children
 		// and pass them as an object to the component function.
 
 		// TODO, biggest priority, implement this.
+
+		const attributes = context.currentPath.node.openingElement.attributes;
+		const objectExpressionProperties: t.ObjectProperty[] = attributes
+			.map(attr => {
+				if (t.isJSXSpreadAttribute(attr)) {
+					// if it's a spread attribute, we need to create a spread object property
+					// so that the object content is spread into the object.
+					// We do not use the `rest` directive here,
+					// as we want to keep the original object structure.
+
+
+					return t.objectProperty(
+						t.identifier(VARIABLES.REST),
+						attr.argument,
+					) as t.ObjectProperty;
+				}
+
+				if (t.isJSXAttribute(attr)) {
+					const name = attr.name.name.toString();
+					if (attr.value) {
+						if (t.isJSXExpressionContainer(attr.value)) {
+							return t.objectProperty(
+								t.identifier(name),
+								attr.value.expression,
+							);
+						}
+						else {
+							return t.objectProperty(
+								t.identifier(name),
+								t.stringLiteral(attr.value.value),
+							);
+						}
+					}
+
+					return t.objectProperty(
+						t.identifier(name),
+						t.booleanLiteral(true),
+					);
+				}
+			});
+
+		context.builder.addText('');
+		context.builder.addExpression(
+			t.callExpression(
+				t.identifier(context.tagName),
+				[ t.objectExpression(objectExpressionProperties) ],
+			),
+		);
+
+		context.builder.addText('');
+
+		return context;
 	}
-	else {
-		transformTopLevelJSXElement.processAttributes(context);
-		transformTopLevelJSXElement.processChildren(context);
-		transformTopLevelJSXElement.processClosingTag(context);
-	}
+
+	// If the tag is not a component, we will treat it as a regular HTML element.
+	context.builder.addText('<' + context.tagName);
+
+	transformTopLevelJSXElement.processAttributes(context);
+	transformTopLevelJSXElement.processChildren(context);
+	transformTopLevelJSXElement.processClosingTag(context);
 
 	return context;
 };
@@ -334,7 +408,6 @@ transformTopLevelJSXElement.processAttributes = (context: JSXElementContext): vo
 	context.builder.addText('>'); // Close the opening tag
 };
 
-/** Returns true if the template is static. */
 transformTopLevelJSXElement.processChildren = (context: JSXElementContext) => {
 	for (const [ index, child ] of context.currentPath.node.children.entries()) {
 		if (t.isJSXText(child)) {
@@ -346,9 +419,7 @@ transformTopLevelJSXElement.processChildren = (context: JSXElementContext) => {
 			continue;
 		}
 		if (t.isJSXElement(child)) {
-			const currentPath = context.currentPath
-				.get(`children.${ index }`) as NodePath<t.JSXElement>;
-
+			const currentPath = context.currentPath.get(`children.${ index }`);
 			if (!isValidJSXElement(currentPath))
 				throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
@@ -368,18 +439,14 @@ transformTopLevelJSXElement.processChildren = (context: JSXElementContext) => {
 };
 
 transformTopLevelJSXElement.processClosingTag = (context: JSXElementContext): void => {
-	// If the tag is `DISCARD_TAG` we skip, as we did not add the opening tag.
-	if (context.tagName === DISCARD_TAG) { /*  */ }
 	// Add closing tag.
+	// If it's a component tag, we need to close it with the static literal.
+	if (context.isCustomElementTag) {
+		context.builder.addText('</');
+		context.builder.addExpression(t.identifier(context.literalName));
+		context.builder.addText('>');
+	}
 	else {
-		// If it's a component tag, we need to close it with the static literal.
-		if (context.isComponentTag) {
-			context.builder.addText('</');
-			context.builder.addExpression(t.identifier(context.literalName));
-			context.builder.addText('>');
-		}
-		else {
-			context.builder.addText('</' + context.tagName + '>');
-		}
+		context.builder.addText('</' + context.tagName + '>');
 	}
 };

@@ -29,17 +29,17 @@ export const determineTemplateType = (
 
 export class TemplateBuilder {
 
-	protected currentQuasi = '';
-	protected quasis:      t.TemplateElement[] = [];
-	protected expressions: (t.Expression | t.TSType)[] = [];
+	protected currentQuasi: string[] = [];
+	protected quasis:       t.TemplateElement[] = [];
+	protected expressions:  (t.Expression | t.TSType)[] = [];
 
 	protected commitQuasi(): void {
-		this.quasis.push(t.templateElement({ raw: this.currentQuasi, cooked: '' }));
-		this.currentQuasi = '';
+		this.quasis.push(t.templateElement({ raw: this.currentQuasi.join(''), cooked: '' }));
+		this.currentQuasi.length = 0;
 	}
 
 	addText(text: string): void {
-		this.currentQuasi += text;
+		this.currentQuasi.push(text);
 	}
 
 	addExpression(expression: t.Expression): void {
@@ -48,7 +48,7 @@ export class TemplateBuilder {
 	}
 
 	createTaggedTemplate(identifier: string): t.TaggedTemplateExpression {
-		if (this.currentQuasi || (this.expressions.length === 0 && this.quasis.length === 0))
+		if (this.currentQuasi.length)
 			this.commitQuasi();
 
 		const ttl = t.taggedTemplateExpression(

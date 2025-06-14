@@ -334,4 +334,18 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 		const code = result?.code;
 		expect(code).to.be.eq(expected);
 	});
+
+	test('should correct convert a Component function', async ({ expect }) => {
+		const source = `
+		const obj = {each: this.items};
+		<For each={this.items} {...{obj}}></For>
+		`;
+
+		const expected = `import { html } from "lit-html";`
+		+ `\nhtml\`\${For({each: this.items})}\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+		expect(code).to.be.eq(expected);
+	});
 });
