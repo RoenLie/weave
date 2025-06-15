@@ -20,6 +20,20 @@ and this project tries to adhere with [Semantic Versioning](https://semver.org/s
   - Provides TypeScript support for HTML element tag names
   - Essential for proper dynamic tag usage: `const Tag = toTag('div'); <Tag.tag>Content</Tag.tag>`
 
+- **Library Components**: Utility components for common rendering patterns
+  - **`For` Component**: Declarative list rendering with optional keys and separators
+    - Automatically uses `map`, `repeat`, or `join` directives based on props
+    - `<For each={items} key={item => item.id}>{(item, index) => <div>{item}</div>}</For>`
+    - Supports separators: `<For each={items} separator={<hr />}>{...}</For>`
+  - **`Show` Component**: Type-safe conditional rendering with optional fallback
+    - Uses lit-html's `when` directive with strong TypeScript inference
+    - `<Show when={user}>{(user) => <div>Welcome {user.name}!</div>}</Show>`
+    - Supports fallback: `<Show when={condition}>{trueCase} {falseCase}</Show>`
+  - **`Choose` Component**: Multi-condition rendering similar to switch statements
+    - Evaluates condition-output pairs in order, renders first match
+    - `<Choose value={status}>{[condition, output]} {[condition2, output2]}</Choose>`
+    - Supports default cases and complex conditional logic
+
 ### Changed
 - **Attribute Binding Default**: Expressions in JSX attributes now bind as HTML attributes by default instead of properties
   - `<input value={value} />` now compiles to `value=${value}` (attribute binding)
@@ -110,6 +124,31 @@ const MyButton = ({ label, onClick }) => (
 
 // Compiles to:
 html`${MyButton({ label: "Click me", onClick: handler })}`
+```
+
+**Library Components (New)**:
+```tsx
+// For component - List rendering
+<For each={items} key={(item) => item.id} separator={<hr />}>
+  {(item, index) => <div>{item.name}</div>}
+</For>
+
+// Show component - Conditional rendering
+<Show when={user}>
+  {(user) => <div>Welcome {user.name}!</div>}
+</Show>
+
+// Choose component - Multi-condition rendering
+<Choose value={status}>
+  {[
+    (status) => status === 'loading',
+    () => <div>Loading...</div>
+  ]}
+  {[
+    (status) => status === 'error',
+    (status) => <div>Error: {status}</div>
+  ]}
+</Choose>
 ```
 
 **Property Binding (Changed)**:

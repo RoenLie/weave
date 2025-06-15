@@ -48,6 +48,7 @@ html`
 - **🏷️ Dynamic Tags**: Support for conditional element types with static template optimization
 - **📦 Function Components**: Full support for composable function components
 - **🔗 Custom Elements**: Type-safe integration with Lit-based custom elements
+- **🧩 Library Components**: Built-in `For`, `Show`, and `Choose` components for common rendering patterns
 
 ## 📦 Installation
 
@@ -88,13 +89,22 @@ export default defineConfig({
 
 ```tsx
 import { LitElement } from 'lit';
+import { For, Show, Choose } from 'jsx-lit';
 
 export class MyComponent extends LitElement {
   render() {
     return (
       <div>
         <h1>Hello jsx-lit!</h1>
-        <p>JSX compiled to Lit templates</p>
+        <p>JSX compiled to Lit templates with utility components</p>
+
+        <Show when={this.items.length > 0}>
+          {(length) => (
+            <For each={this.items}>
+              {(item, index) => <div>{item}</div>}
+            </For>
+          )}
+        </Show>
       </div>
     );
   }
@@ -251,7 +261,235 @@ function ActionElement({ href, children }) {
 
 jsx-lit provides utility components that enhance common patterns and integrate seamlessly with Lit directives:
 
-*Documentation for library-specific functional components like `For`, `IfElse`, `Switch`, and other utility components will be added here as they are developed.*
+#### For Component - Declarative List Rendering
+
+The `For` component provides a declarative way to render lists with optional keys and separators:
+
+```tsx
+import { For } from 'jsx-lit';
+
+// Basic list rendering
+<For each={users}>
+  {(user, index) => (
+    <div class="user-item">
+      {index + 1}. {user.name}
+    </div>
+  )}
+</For>
+
+// With key function for efficient updates
+<For each={todos} key={(todo) => todo.id}>
+  {(todo, index) => (
+    <li classList={{ completed: todo.completed }}>
+      {todo.text}
+    </li>
+  )}
+</For>
+
+// With separators between items
+<For each={breadcrumbs} separator={<span> / </span>}>
+  {(crumb, index) => (
+    <a href={crumb.url}>{crumb.label}</a>
+  )}
+</For>
+```
+
+The `For` component automatically uses lit-html's optimized directives:
+- **Without key**: Uses `map` directive for simple iteration
+- **With key**: Uses `repeat` directive for efficient updates when items change
+- **With separator**: Uses `join` directive to insert elements between items
+
+#### Show Component - Conditional Rendering
+
+The `Show` component provides type-safe conditional rendering with optional fallback:
+
+```tsx
+import { Show } from 'jsx-lit';
+
+// Simple conditional rendering
+<Show when={user}>
+  {(user) => (
+    <div class="welcome">
+      Welcome back, {user.name}!
+    </div>
+  )}
+</Show>
+
+// With fallback content
+<Show when={currentUser}>
+  {[
+    (user) => (
+      <div class="user-panel">
+        <img src={user.avatar} alt={user.name} />
+        <span>{user.name}</span>
+      </div>
+    ),
+    () => (
+      <div class="login-prompt">
+        <button>Sign In</button>
+      </div>
+    )
+  ]}
+</Show>
+
+// Conditional rendering with complex conditions
+<Show when={items.length > 0}>
+  {(length) => (
+    <div class="item-count">
+      Found {length} items
+    </div>
+  )}
+</Show>
+```
+
+The `Show` component uses lit-html's `when` directive internally and provides strong TypeScript inference for the truthy value.
+
+#### Choose Component - Multi-Condition Rendering
+
+The `Choose` component enables clean switch-like conditional rendering with multiple condition-output pairs:
+
+```tsx
+import { Choose } from 'jsx-lit';
+
+// Multiple conditions based on a value
+<Choose value={status}>
+  {[
+    (status) => status === 'loading',
+    () => (
+      <div class="loading">
+        <spinner-icon></spinner-icon>
+        Loading...
+      </div>
+    )
+  ]}
+  {[
+    (status) => status === 'error',
+    (status) => (
+      <div class="error">
+        Error: {status}
+      </div>
+    )
+  ]}
+  {[
+    (status) => status === 'success',
+    (status) => (
+      <div class="success">
+        Operation completed successfully!
+      </div>
+    )
+  ]}
+  {[
+    () => true, // Default case
+    (status) => (
+      <div class="unknown">
+        Unknown status: {status}
+      </div>
+    )
+  ]}
+</Choose>
+
+// Without a value (boolean conditions)
+<Choose>
+  {[
+    () => user.isAdmin,
+    () => <admin-panel></admin-panel>
+  ]}
+  {[
+    () => user.isModerator,
+    () => <moderator-panel></moderator-panel>
+  ]}
+  {[
+    () => true, // Default case
+    () => <user-panel></user-panel>
+  ]}
+</Choose>
+```
+
+The `Choose` component evaluates conditions in order and renders the first matching case, similar to a switch statement but as an expression.
+
+#### Combining Library Components
+
+These components work seamlessly together for complex rendering scenarios:
+
+```tsx
+import { For, Show, Choose } from 'jsx-lit';
+
+@customElement('user-dashboard')
+export class UserDashboard extends LitElement {
+  @property({ type: Array }) users = [];
+  @property() currentUser = null;
+  @property() viewMode = 'list';
+
+  render() {
+    return (
+      <div class="dashboard">
+        {/* Conditional user greeting */}
+        <Show when={this.currentUser}>
+          {(user) => (
+            <header class="welcome">
+              Welcome back, {user.name}!
+            </header>
+          )}
+        </Show>
+
+        {/* Dynamic view rendering based on mode */}
+        <Choose value={this.viewMode}>
+          {[
+            (mode) => mode === 'grid',
+            () => (
+              <div class="user-grid">
+                <For each={this.users} key={(user) => user.id}>
+                  {(user) => (
+                    <div class="user-card">
+                      <img src={user.avatar} alt={user.name} />
+                      <h3>{user.name}</h3>
+                      <p>{user.role}</p>
+                    </div>
+                  )}
+                </For>
+              </div>
+            )
+          ]}
+          {[
+            (mode) => mode === 'list',
+            () => (
+              <div class="user-list">
+                <For each={this.users} separator={<hr />}>
+                  {(user, index) => (
+                    <div class="user-row">
+                      <span class="user-index">{index + 1}.</span>
+                      <span class="user-name">{user.name}</span>
+                      <span class="user-role">{user.role}</span>
+                    </div>
+                  )}
+                </For>
+              </div>
+            )
+          ]}
+          {[
+            () => true, // Default case
+            (mode) => (
+              <div class="error">
+                Unknown view mode: {mode}
+              </div>
+            )
+          ]}
+        </Choose>
+
+        {/* Conditional empty state */}
+        <Show when={this.users.length === 0}>
+          {() => (
+            <div class="empty-state">
+              <p>No users found</p>
+              <button on-click={this.loadUsers}>Load Users</button>
+            </div>
+          )}
+        </Show>
+      </div>
+    );
+  }
+}
+```
 
 ## 🔧 Advanced Usage
 
