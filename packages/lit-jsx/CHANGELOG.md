@@ -14,6 +14,12 @@ and this project tries to adhere with [Semantic Versioning](https://semver.org/s
   - Support for multiple children (passed as arrays) and single children (passed directly)
   - Zero runtime overhead with compile-time transformation
 
+- **`toTag()` Utility Function**: New utility for creating dynamic tag name objects
+  - Required for dynamic tag names to compile to static templates
+  - Creates objects with `.tag` property that jsx-lit detects for compilation
+  - Provides TypeScript support for HTML element tag names
+  - Essential for proper dynamic tag usage: `const Tag = toTag('div'); <Tag.tag>Content</Tag.tag>`
+
 ### Changed
 - **Attribute Binding Default**: Expressions in JSX attributes now bind as HTML attributes by default instead of properties
   - `<input value={value} />` now compiles to `value=${value}` (attribute binding)
@@ -30,9 +36,63 @@ and this project tries to adhere with [Semantic Versioning](https://semver.org/s
   - Better integration with dynamic tag name features
 
 ### Enhanced
-- **Dynamic Tag Names**: Enhanced support for conditional and polymorphic element types
+- **Dynamic Tag Names**: Enhanced support for conditional and polymorphic element types with **required `.tag` property pattern**
 - **Error Handling**: Better error messages and validation during compilation
 - **Type Safety**: Improved TypeScript definitions and JSX type support
+- **New `toTag()` Utility**: Function to create dynamic tag objects with proper `.tag` property structure
+
+### Critical Breaking Change: Dynamic Tag Names
+
+**IMPORTANT**: Dynamic tag names now require the `.tag` property pattern for proper compilation to static templates.
+
+```tsx
+// ❌ OLD WAY - No longer works correctly
+const Tag = condition ? 'div' : 'span';
+return <Tag>Content</Tag>; // Won't compile to static templates
+
+// ✅ NEW WAY - Required .tag property pattern
+import { toTag } from 'jsx-lit';
+
+const Tag = toTag(condition ? 'div' : 'span');
+return <Tag.tag>Content</Tag.tag>; // Compiles to efficient static templates
+```
+
+**Why This Change**: jsx-lit's compiler specifically looks for the `.tag` property pattern to detect and transform dynamic tags into efficient lit-html static templates. This pattern ensures optimal performance and proper compilation.
+
+### Migration Guide for Dynamic Tags
+
+If you were using dynamic tag names in previous versions, you need to update your code:
+
+```tsx
+// ❌ Before v1.1.0
+const ElementType = condition ? 'div' : 'span';
+return <ElementType>Content</ElementType>;
+
+// ✅ After v1.1.0 - Required pattern for proper compilation
+import { toTag } from 'jsx-lit';
+
+const ElementType = toTag(condition ? 'div' : 'span');
+return <ElementType.tag>Content</ElementType.tag>;
+```
+
+**Custom Elements with Dynamic Usage**:
+```tsx
+// ❌ Before - External variable creation
+import { toJSX } from 'jsx-lit';
+const Button = toJSX(MyButton);
+
+// ✅ After - Static property in class + toTag for dynamic usage
+export class MyButton extends LitElement {
+  static tagName = 'my-button';
+  static tag = toJSX(MyButton);
+}
+
+// For dynamic usage
+const ButtonTag = toTag(MyButton.tag);
+const InputTag = toTag(MyInput.tag);
+const Component = useButton ? ButtonTag : InputTag;
+return <Component.tag>Content</Component.tag>;
+```
 
 ### Examples
 
@@ -77,5 +137,5 @@ html`${MyButton({ label: "Click me", onClick: handler })}`
 - Lit directive integration (classMap, styleMap, ref, etc.)
 - Event handler transformation (`on-*` to `@*`)
 - Spread syntax support
-- Dynamic tag names and component variables
-- Custom element integration with `toJSX()` function
+- Dynamic tag names with **required `.tag` property pattern** and `toTag()` utility
+- Custom element integration with `toJSX()` function and static `.tag` properties

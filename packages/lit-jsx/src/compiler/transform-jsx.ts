@@ -380,6 +380,8 @@ processJSXElement.createComponentPropsObject = (
 		}
 
 		const name = attr.name.name.toString();
+		const camelCaseName = name.replace(/-([a-zA-Z])/g, (_, letter) => letter.toUpperCase());
+
 		let value: t.Expression;
 
 		if (attr.value) {
@@ -403,7 +405,7 @@ processJSXElement.createComponentPropsObject = (
 			value = t.booleanLiteral(true);
 		}
 
-		properties.push(t.objectProperty(t.identifier(name), value));
+		properties.push(t.objectProperty(t.identifier(camelCaseName), value));
 	}
 
 	// Process children

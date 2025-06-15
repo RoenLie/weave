@@ -65,6 +65,25 @@ describe('Transform JSX', (context) => {
 		expect(code).to.be.eq(expected);
 	});
 
+	test('should transform a polymorphic JSX element', async ({ expect }) => {
+		const source = `
+		const Tag = toTag(this.href ? 'a' : 'div');
+
+		const template = <Tag.tag href="https://example.com">Click me</Tag.tag>;
+		`;
+
+		const expected = ''
+		+ `import { html as htmlStatic } from "lit-html/static.js";`
+		+ `\nimport { __$literalMap } from "jsx-lit";`
+		+ `\nconst Tag = toTag(this.href ? 'a' : 'div');`
+		+ `\nconst __$Tag = __$literalMap.get(Tag.tag);`
+		+ `\nconst template = htmlStatic\`<\${__$Tag} href="https://example.com">Click me</\${__$Tag}>\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+		expect(code).to.be.eq(expected);
+	});
+
 	test('should transform a custom element Component', async ({ expect }) => {
 		const source = `
 		import { SpecialElement } from './special-element.ts';

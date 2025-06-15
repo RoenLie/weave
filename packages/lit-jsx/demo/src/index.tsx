@@ -5,6 +5,7 @@ import { map } from 'lit-html/directives/map.js';
 import { createRef, ref } from 'lit-html/directives/ref.js';
 import { repeat } from 'lit-html/directives/repeat.js';
 
+import { toTag } from '../../dist/utils';
 import { ButtonElement } from './button.tsx';
 
 
@@ -52,8 +53,12 @@ export class RootElement extends LitElement {
 		const ariaChecked = true;
 		const ariaLabel = 'Click me!';
 
+		const Tag = toTag('article');
+
 		return (
 			<div class={'test-class'}>
+				<Tag.tag></Tag.tag>
+
 				<ButtonElement.tag
 					about       ={as.prop(about)}
 					aria-checked={as.bool(ariaChecked)}

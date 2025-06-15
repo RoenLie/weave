@@ -1,36 +1,29 @@
 # jsx-lit
 
-A JSX runtime and Vite plugin that transforms JSX into Lit templates at compile time, enabling you to write JSX syntax that compiles to efficient lit-html templates.
+A custom JSX compiler and Vite plugin that transforms JSX into native Lit templates at compile time with zero runtime overhead.
 
 ## Features
 
 ```tsx
-function renderInput({ name, disabled, checked, value, ref }) {
+function Input({ name, disabled, checked, value, ref }) {
   return (
     <input
-      id       ="input"            // static    assignment
-      name     ={name}             // attribute assignment (default)
+      id       ="input"             // static    assignment
+      name     ={name}              // attribute assignment (default)
       disabled ={as.bool(disabled)} // boolean   assignment
-      value    ={as.prop(value)}   // property  assignment
-      classList={{active: true}}   // classMap  assignment
-      styleList={{color: 'blue'}}  // styleMap  assignment
-      ref      ={ref}              // ref       assignment
-      {...{role: 'button'}}        // spread    assignment
+      value    ={as.prop(value)}    // property  assignment
+      classList={{active: true}}    // classMap  assignment
+      styleList={{color: 'blue'}}   // styleMap  assignment
+      ref      ={ref}               // ref       assignment
+      {...{role: 'button'}}         // spread    assignment
     />
   );
 }
 ```
 
-## New in this version
-- 🎯 **Function Components**: Full support for JSX function components with automatic props object creation
-- 🔄 **Attribute Binding Default**: Expressions now bind as attributes by default instead of properties
-- 🎛️ **Enhanced Binding Control**: Use `as.prop()` and `as.bool()` compile-time annotations for precise control over binding types
-- 📦 **Custom Element Integration**: Improved `toJSX()` function for type-safe custom element components
-- 🏷️ **Dynamic Tag Names**: Enhanced support for conditional and polymorphic element types
-
-**Quick Example of New Features:**
+**Quick Example:**
 ```tsx
-// Function Components - Now Fully Supported!
+// Function Components - Fully Supported!
 const Card = ({ title, content, variant = 'default', onAction }) => (
   <div classList={{ [`card-${variant}`]: true }}>
     <h3>{title}</h3>
@@ -39,21 +32,21 @@ const Card = ({ title, content, variant = 'default', onAction }) => (
   </div>
 );
 
-// Enhanced Property Binding (NEW: defaults to properties)
+// Property Binding (defaults to attributes)
 function TodoItem({ todo, onToggle, onDelete }) {
   return (
     <div>
-      <input 
+      <input
         type="checkbox"
-        checked={as.prop(todo.completed)}    // Property binding with as.prop()
-        data-id={todo.id}                    // Attribute binding (NEW default)
-        disabled={as.bool(todo.readonly)}   // Boolean attribute with as.bool()
+        checked={as.prop(todo.completed)} // Property binding with as.prop()
+        data-id={todo.id}                 // Attribute binding (default)
+        disabled={as.bool(todo.readonly)} // Boolean attribute with as.bool()
         on-change={() => onToggle(todo.id)}
       />
       <span classList={{ completed: todo.completed }}>
         {todo.text}
       </span>
-      <Card 
+      <Card
         title="Actions"
         content="Manage this todo"
         variant="compact"
@@ -62,17 +55,27 @@ function TodoItem({ todo, onToggle, onDelete }) {
     </div>
   );
 }
+
+// Dynamic Tag Names (.tag property required)
+import { toTag } from 'jsx-lit';
+
+function FlexibleContainer({ useSection, children }) {
+  const Container = toTag(useSection ? 'section' : 'div');
+
+  return <Container.tag class="container">{children}</Container.tag>;
+}
 ```
 
-## Transformation modes: React JSX runtime and custom JSX compiler
+## Key Features
 - ⚡ **Compile-time transformation**: JSX is transformed to lit-html templates during build
 - 🎯 **Type-safe**: Full TypeScript support with proper JSX type definitions
-- 🔧 **Vite integration**: Easy setup with Vite plugins
-- 📦 **Zero runtime overhead**: The custom compiler produces native lit-html code
+- 🔧 **Vite integration**: Easy setup with Vite plugin
+- 📦 **Zero runtime overhead**: Produces native lit-html code with no runtime dependencies
 - 🎨 **Lit ecosystem compatibility**: Works seamlessly with Lit directives and features
-- 🎛️ **Flexible binding control**: Use `as.prop()` and `as.bool()` compile-time annotations to control how values are bound
+- 🎛️ **Flexible binding control**: Use `as.prop()` and `as.bool()` compile-time annotations (or `prop =>` and `bool =>` syntax) to control how values are bound
 - 📦 **Custom element integration**: Use `toJSX()` function for type-safe custom element components
-- 🏷️ **Dynamic tag names**: Support for conditional and polymorphic element types
+- 🏷️ **Dynamic tag names**: Support for conditional and polymorphic element types with required `.tag` property pattern
+- 🔧 **`toTag()` utility**: Create dynamic tag objects that compile to efficient static templates
 - 🎯 **Function Components**: Full support for function components that return JSX
 
 ## Installation
@@ -87,9 +90,7 @@ yarn add jsx-lit
 
 ## Quick Start
 
-### Method 1: Custom JSX Compiler (Recommended)
-
-This is the preferred method as it produces native lit-html templates with zero runtime overhead.
+Configure your Vite plugin to use the jsx-lit custom compiler:
 
 ```typescript
 // vite.config.ts
@@ -101,27 +102,9 @@ export default defineConfig({
 });
 ```
 
-### Method 2: React JSX Runtime
-
-This method uses React's JSX transformation and converts the result to lit-html at runtime.
-
-```typescript
-// vite.config.ts
-import { litJsx } from 'jsx-lit/vite-jsx-react';
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-  plugins: [litJsx()],
-});
-```
-
 ## TypeScript Configuration
 
-The TypeScript configuration depends on which transformation mode you're using.
-
-### For Custom JSX Compiler (vite-jsx-preserve)
-
-When using the custom compiler, configure your `tsconfig.json` to preserve JSX:
+Configure your `tsconfig.json` to preserve JSX syntax for the custom compiler:
 
 ```json
 {
@@ -136,26 +119,9 @@ This configuration:
 - `"jsx": "preserve"` - Keeps JSX syntax intact for the custom compiler to transform
 - `"jsxImportSource": "jsx-lit"` - Tells TypeScript where to find JSX types
 
-### For React JSX Runtime (vite-jsx-react)
-
-When using the React JSX runtime mode, configure automatic JSX transformation:
-
-```json
-{
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "jsx-lit",
-  }
-}
-```
-
-This configuration:
-- `"jsx": "react-jsx"` - Enables automatic JSX transformation
-- `"jsxImportSource": "jsx-lit"` - Tells TypeScript where to find JSX types
-
 ## Configuration
 
-### Custom JSX Compiler Options
+### Compiler Options
 
 The custom compiler plugin accepts optional Babel configuration:
 
@@ -189,7 +155,7 @@ export default defineConfig({
 	<span>Hello World</span>
 </div>)
 
-// Compiled output (approximate)
+// Compiled output
 html`
 <div class="my-class" id="my-id">
   <span>Hello World</span>
@@ -218,7 +184,7 @@ jsx-lit fully supports function components that return JSX. They are compiled to
 // Define a function component
 function Button({ label, variant = 'primary', disabled, onClick, children }) {
   return (
-    <button 
+    <button
       classList={{ [`btn-${variant}`]: true, 'disabled': disabled }}
       disabled={as.bool(disabled)}
       on-click={onClick}
@@ -232,12 +198,12 @@ function Button({ label, variant = 'primary', disabled, onClick, children }) {
 function App() {
   return (
     <div>
-      <Button 
-        label="Click me" 
-        variant="primary" 
-        onClick={() => alert('Clicked!')} 
+      <Button
+        label="Click me"
+        variant="primary"
+        onClick={() => alert('Clicked!')}
       />
-      
+
       <Button disabled={true}>
         <span>Disabled Button</span>
       </Button>
@@ -344,7 +310,7 @@ html`<div ${__$rest(props)}>Content</div>`
 
 ### Attribute Processing and Value Binding
 
-jsx-lit provides fine-grained control over how values are bound to elements through binding functions and automatic type detection:
+jsx-lit provides fine-grained control over how values are bound to elements through binding functions:
 
 #### Default Binding Behavior
 
@@ -366,43 +332,46 @@ function renderInputWithDefaults({ disabled, checked, value }) {
 
 jsx-lit provides binding functions that allow you to control how values are assigned:
 
-##### `as.prop()` - Force Property Binding
+##### Property and Boolean Binding Functions
 
-Use `as.prop()` to bind values as DOM properties instead of attributes:
+jsx-lit provides binding functions to control how values are assigned. Each function has two equivalent syntaxes:
 
 ```tsx
-function renderInputWithProperties({ customValue, inputValue }) {
+function renderFormElement({ inputValue, isChecked, isDisabled, isRequired, isHidden, isReadonly }) {
   return (
     <input
+      type="checkbox"
+
+      {/* Property binding - Function syntax */}
       value={as.prop(inputValue)}          // Binds as: .value=${inputValue}
-      checked={as.prop(isChecked)}         // Binds as: .checked=${isChecked}
-      
-      // Alternative syntax
-      disabled={prop => isDisabled}       // Binds as: .disabled=${isDisabled}
+
+      {/* Boolean attribute binding - Function syntax */}
+      disabled={as.bool(isDisabled)}      // Binds as: ?disabled=${isDisabled}
+
+      {/* Property binding - Arrow syntax (alternative) */}
+      required={prop => isRequired}       // Binds as: .required=${isRequired}
+
+      {/* Boolean attribute binding - Arrow syntax (alternative) */}
+      readonly={bool => isReadonly}       // Binds as: ?readonly=${isReadonly}
     />
   );
 }
 
 // Compiles to:
-html`<input .value=${inputValue} .checked=${isChecked} .disabled=${isDisabled}>`
+html`<input
+  type="checkbox"
+  .value=${inputValue}
+  ?disabled=${isDisabled}
+  .required=${isRequired}
+  ?readonly=${isReadonly}
+>`
 ```
 
-**Note:** `as.prop()` and `prop =>` are compile-time type annotations that tell the jsx-lit compiler how to bind the value. They are not runtime functions.
+**Binding Types:**
+- **Property binding** (`as.prop()` or `prop =>`): Binds to DOM properties using `.property=${value}` syntax
+- **Boolean attribute binding** (`as.bool()` or `bool =>`): Binds to boolean attributes using `?attribute=${value}` syntax
 
-##### `as.bool()` - Force Boolean Attribute Binding
-
-Use `as.bool()` to bind values as boolean attributes using lit-html's `?` syntax:
-
-```tsx
-function renderButton({ disabled, hidden, selected }) {
-  return (
-    <button
-      disabled={as.bool(disabled)}         // Binds as: ?disabled=${disabled}
-      hidden={as.bool(hidden)}             // Binds as: ?hidden=${hidden}
-      aria-selected={as.bool(selected)}    // Binds as: ?aria-selected=${selected}
-      
-      // Alternative syntax
-      readonly={bool => isReadonly}        // Binds as: ?readonly=${isReadonly}
+**Note:** Both function and arrow syntaxes are compile-time annotations that produce identical output. Choose whichever style you prefer.
     />
   );
 }
@@ -695,17 +664,22 @@ export class TodoList extends LitElement {
 
 ### Dynamic Tag Names
 
-jsx-lit supports dynamic tag names through Component variables. When you use a variable that contains a tag name as a JSX element, jsx-lit will automatically handle it as a dynamic tag and compile it to use lit-html's static templates with `unsafeStatic`.
+### Dynamic Tag Names
+
+jsx-lit supports dynamic tag names through Component variables with a **required `.tag` property pattern**. This pattern is essential for jsx-lit to detect and compile dynamic tags into efficient lit-html static templates.
+
+#### The `.tag` Property Requirement
+
+**CRITICAL**: Dynamic tag names must use the `.tag` property pattern to compile correctly. jsx-lit specifically looks for this pattern to identify and transform dynamic tags into static templates.
 
 ```tsx
-// Dynamic tag name based on condition
-const Tag = this.href ? 'a' : 'span';
+import { toTag } from 'jsx-lit';
 
-return (
-  <Tag href={this.href} class="dynamic-element">
-    Content
-  </Tag>
-);
+// ✅ Correct usage - creates { tag: 'div' } object with .tag property
+function renderConditional({ useDiv }) {
+  const Tag = toTag(useDiv ? 'div' : 'span');
+  return <Tag.tag class="dynamic-element">Content</Tag.tag>; // .tag is required!
+}
 ```
 
 **Compiled Output:**
@@ -713,49 +687,126 @@ return (
 import { html as htmlStatic } from 'lit-html/static.js';
 
 // jsx-lit automatically creates a literal map entry for the dynamic tag
-const __$Tag = __$literalMap.get(Tag);
+const __$Tag_tag = __$literalMap.get(Tag.tag);
 
 return htmlStatic`
-  <${__$Tag} href=${this.href} class="dynamic-element">
+  <${__$Tag_tag} class="dynamic-element">
     Content
-  </${__$Tag}>
+  </${__$Tag_tag}>
 `;
 ```
 
-**How It Works:**
+#### The `toTag` Utility Function
 
-1. **Detection**: jsx-lit detects Component variables (PascalCase identifiers) and treats them as dynamic tags
-2. **Literal Map**: Creates an entry in `__$literalMap` using the variable name
-3. **Static Template**: Uses `htmlStatic` instead of regular `html` to allow for otherwise invalid templates.
-4. **Automatic Import**: Injects the necessary imports for static templates and the literal map
-
-**Use Cases:**
+Use the `toTag` utility to create proper dynamic tag objects:
 
 ```tsx
-// Conditional element types
+import { toTag } from 'jsx-lit';
+
+// Use in conditional rendering
+function renderActionElement({ href, children }) {
+  const ActionTag = toTag(href ? 'a' : 'button');
+
+  return (
+    <ActionTag.tag href={href} class="action-element">
+      {children}
+    </ActionTag.tag>
+  );
+}
+```
+
+#### Common Mistakes and Solutions
+
+```tsx
+// ❌ WRONG - String variables won't compile to static templates
+const badTag = 'div';
+return <badTag>Content</badTag>; // jsx-lit can't detect this pattern
+
+// ❌ WRONG - Missing .tag property
+const BadTag = toTag('div');
+return <BadTag>Content</BadTag>; // Won't compile to static templates
+
+// ❌ WRONG - Direct tag names without toTag wrapper
+const Tag = condition ? 'div' : 'span';
+return <Tag>Content</Tag>; // Not detected as dynamic component
+
+// ✅ CORRECT - Using toTag with .tag property
+const Tag = toTag(condition ? 'div' : 'span');
+return <Tag.tag>Content</Tag.tag>; // Compiles to static templates
+```
+
+#### How It Works
+
+1. **Pattern Detection**: jsx-lit specifically looks for the `.tag` property pattern to identify dynamic components
+2. **Literal Map**: Creates an entry in `__$literalMap` using the tag name value (e.g., 'div', 'span', 'my-custom-element')
+3. **Static Template**: Uses `htmlStatic` instead of regular `html` to allow dynamic tag insertion
+4. **Automatic Import**: Injects the necessary imports for static templates and the literal map
+5. **Type Safety**: The `toTag` function provides proper TypeScript support for HTML elements
+
+#### Advanced Use Cases
+
+```tsx
+import { toTag } from 'jsx-lit';
+
+// Conditional element types with proper .tag pattern
 const linkOrSpan = ({ href, children }) => {
-  const Tag = href ? 'a' : 'span';
-  return <Tag href={href}>{children}</Tag>;
+  const Tag = toTag(href ? 'a' : 'span');
+  return <Tag.tag href={href}>{children}</Tag.tag>;
 };
 
-// Dynamic custom elements
+// Dynamic custom elements with .tag pattern
 const renderWidget = ({ type, data }) => {
-  const WidgetTag = `my-${type}-widget`;
-  return <WidgetTag data={data} />;
+  const WidgetTag = toTag(`my-${type}-widget`);
+  return <WidgetTag.tag data={data} />;
 };
 
-// Polymorphic components
-const heading = ({ level, children }) => {
-  const Tag = `h${level}`;
-  return <Tag>{children}</Tag>;
+// Polymorphic heading components
+const Heading = ({ level, children }) => {
+  const HeadingTag = toTag(`h${level}`);
+  return <HeadingTag.tag>{children}</HeadingTag.tag>;
+};
+
+// Complex conditional rendering
+const FormField = ({ multiline, children }) => {
+  const FieldTag = toTag(multiline ? 'textarea' : 'input');
+
+  return (
+    <div class="form-field">
+      <FieldTag.tag placeholder="Enter text...">{children}</FieldTag.tag>
+    </div>
+  );
 };
 ```
 
-**Requirements:**
+#### Requirements and Best Practices
 
-- The variable must be in scope when the JSX is processed
-- The variable should contain a valid HTML tag name or custom element name
-- Component variable names should follow PascalCase convention to be detected properly
+**Essential Requirements:**
+- **Must use `.tag` property**: Dynamic tags MUST use the `.tag` property pattern for compilation
+- **Use `toTag()` function**: Create dynamic tag objects with the `toTag` utility function
+- **Variable must be in scope**: The dynamic tag variable must be accessible when JSX is processed
+- **Valid tag names**: Must contain valid HTML tag names or custom element names
+
+**Best Practices:**
+- Use descriptive variable names for clarity (e.g., `ActionTag`, `ElementTag`)
+- Put conditional logic inside `toTag()` for cleaner code
+- Consider using TypeScript for better type safety with HTML element types
+- Document complex dynamic tag logic for maintainability
+
+```tsx
+// ✅ Good practices
+function ActionButton({ href, children, ...props }) {
+  const Tag = toTag(href ? 'a' : 'button');
+  return <Tag.tag href={href} {...props}>{children}</Tag.tag>;
+}
+
+// ❌ Avoid - unnecessary separate variables for simple conditionals
+function ActionButton({ href, children, ...props }) {
+  const ButtonTag = toTag('button');
+  const AnchorTag = toTag('a');
+  const Tag = href ? AnchorTag : ButtonTag; // Extra complexity
+  return <Tag.tag href={href} {...props}>{children}</Tag.tag>;
+}
+```
 
 ## Component Patterns
 
@@ -811,9 +862,10 @@ const MyButton = <button>Click me</button>;
 ```tsx
 import { toJSX } from 'jsx-lit';
 
-// Define your custom element
+// Define your custom element with static tag property
 export class MyButton extends LitElement {
   static tagName = 'my-button';
+  static tag = toJSX(MyButton);
 
   render() {
     return (
@@ -824,11 +876,8 @@ export class MyButton extends LitElement {
   }
 }
 
-customElements.define(MyButton.tagName, MyButton);
-
 // Use in JSX
-const ButtonTag = toJSX(MyButton);
-<ButtonTag>Click me</ButtonTag>
+<MyButton.tag>Click me</MyButton.tag>
 ```
 
 ### The toJSX Function
@@ -860,9 +909,10 @@ import { LitElement, html } from 'lit';
 import { property } from 'lit/decorators.js';
 import { toJSX } from 'jsx-lit';
 
-// Define a custom element with typed properties
+// Define a custom element with typed properties and static tag
 export class MyButton extends LitElement {
   static tagName = 'my-button';
+  static tag = toJSX(MyButton);
 
   @property() variant: 'primary' | 'secondary' = 'primary';
   @property() disabled = false;
@@ -880,24 +930,21 @@ export class MyButton extends LitElement {
   }
 }
 
-// Create JSX component variable with type safety
-const Button = toJSX(MyButton);
-
-// Use in JSX with full TypeScript support
+// Use in JSX with full TypeScript support - no separate variable needed!
 function renderApp() {
   return (
     <div>
-      <Button variant="primary" size="large" on-click={handleClick}>
+      <MyButton.tag variant="primary" size="large" on-click={handleClick}>
         Click me!
-      </Button>
+      </MyButton.tag>
 
-      <Button
+      <MyButton.tag
         variant="secondary"
         disabled={true}
         on-click={handleSecondaryClick}
       >
         Secondary action
-      </Button>
+      </MyButton.tag>
     </div>
   );
 }
@@ -914,15 +961,21 @@ function renderApp() {
 The `toJSX` function provides full TypeScript support by leveraging the `JSX.JSXProps<T>` interface:
 
 ```tsx
+// Define once in the class with static tag property
+export class MyButton extends LitElement {
+  static tagName = 'my-button';
+  static tag = toJSX(MyButton);
+  // ... properties and methods
+}
+
 // TypeScript will provide intellisense for:
 // - variant: 'primary' | 'secondary'
 // - disabled: boolean
 // - size: 'small' | 'medium' | 'large'
 // - Standard HTML attributes (class, id, etc.)
 // - Event handlers (on-click, on-change, etc.)
-const Button = toJSX(MyButton);
 
-<Button
+<MyButton.tag
   variant="primary"    // ✅ Type-safe property
   disabled={false}     // ✅ Type-safe property
   invalidProp="test"   // ❌ TypeScript error
@@ -931,16 +984,29 @@ const Button = toJSX(MyButton);
 
 **Relationship to Dynamic Tag Names:**
 
-The `toJSX` function creates Component variables that work seamlessly with jsx-lit's dynamic tag name system:
+The `toJSX` function creates Component variables that work seamlessly with jsx-lit's dynamic tag name system. **Important**: When using `toJSX` results in dynamic contexts, you must still use the `.tag` property pattern:
 
 ```tsx
-const Button = toJSX(MyButton);        // Creates component variable
-const Input = toJSX(MyInput);          // Creates component variable
+// Define custom elements with static tag properties
+export class MyButton extends LitElement {
+  static tagName = 'my-button';
+  static tag = toJSX(MyButton);
+}
 
-// Both compile to efficient static templates using __$literalMap
+export class MyInput extends LitElement {
+  static tagName = 'my-input';
+  static tag = toJSX(MyInput);
+}
+
+// For dynamic usage, you still need .tag property access
 function renderForm({ useButton }) {
-  const SubmitComponent = useButton ? Button : Input;
-  return <SubmitComponent type="submit">Submit</SubmitComponent>;
+  // ❌ WRONG - Direct use without .tag property
+  // const SubmitComponent = useButton ? MyButton.tag : MyInput.tag;
+  // return <SubmitComponent type="submit">Submit</SubmitComponent>;
+
+  // ✅ CORRECT - Wrap in toTag for proper .tag access
+  const SubmitComponent = toTag(useButton ? MyButton.tag : MyInput.tag);
+  return <SubmitComponent.tag type="submit">Submit</SubmitComponent.tag>;
 }
 ```
 
@@ -949,21 +1015,76 @@ This compiles to:
 import { htmlStatic, __$literalMap } from 'jsx-lit';
 
 function renderForm({ useButton }) {
-  const SubmitComponent = useButton ? Button : Input;
-  const __$SubmitComponent = __$literalMap.get('SubmitComponent');
-  return htmlStatic`<${__$SubmitComponent} type="submit">Submit</${__$SubmitComponent}>`;
+  const SubmitComponent = toTag(useButton ? MyButton.tag : MyInput.tag);
+  const __$SubmitComponent_tag = __$literalMap.get(SubmitComponent.tag);
+  return htmlStatic`<${__$SubmitComponent_tag} type="submit">Submit</${__$SubmitComponent_tag}>`;
 }
 ```
 
+**Key Point**: The `.tag` property pattern is required for jsx-lit to detect and properly compile dynamic tag usage into static templates.
+
+### The toTag Function
+
+The `toTag` function is a utility that creates dynamic tag name objects specifically designed for jsx-lit's Component syntax with the required `.tag` property pattern.
+
+```tsx
+import { toTag } from 'jsx-lit';
+```
+
+**Function Signature:**
+```tsx
+function toTag<T extends keyof HTMLElementTagNameMap | (string & {})>(
+  tag: T
+): { tag: T; }
+```
+
+**Purpose**: Creates objects with the `.tag` property that jsx-lit requires to detect and compile dynamic tag names into static templates.
+
+**Usage Examples:**
+
+```tsx
+import { toTag } from 'jsx-lit';
+
+// Use in conditional rendering with required .tag property
+function ConditionalElement({ condition, children }) {
+  const ElementTag = toTag(condition ? 'div' : 'span');
+  return <ElementTag.tag class="conditional">{children}</ElementTag.tag>;
+}
+
+// Complex dynamic tag selection
+function FormField({ type, name, value }) {
+  const getFieldTag = (type) => {
+    switch (type) {
+      case 'textarea': return 'textarea';
+      case 'select': return 'select';
+      default: return 'input';
+    }
+  };
+
+  const FieldTag = toTag(getFieldTag(type));
+  return <FieldTag.tag name={name} value={value} />;
+}
+
+// Custom elements
+function CustomWidget({ type, data }) {
+  const WidgetTag = toTag(`my-${type}-widget`);
+  return <WidgetTag.tag data={data} />;
+}
+```
+
+**Critical Requirements:**
+- **Always use `.tag` property**: `<TagObject.tag>` not `<TagObject>`
+- **Create with `toTag()`**: Don't use plain strings for dynamic tags
+- **TypeScript support**: Provides proper typing for HTML element names
+
+**Why This Pattern Is Required:**
+jsx-lit's compiler specifically looks for the `.tag` property pattern to identify dynamic components and transform them into efficient static templates. Without this pattern, jsx-lit cannot detect dynamic tag usage and will not compile them correctly.
+
 ## How jsx-lit Works
 
-### Transformation Modes Explained
+jsx-lit uses a custom Babel transform to directly convert JSX syntax into lit-html template literals at compile time.
 
-jsx-lit provides two different approaches to transforming JSX into lit-html templates, each with its own benefits and trade-offs.
-
-#### Custom JSX Compiler Mode (vite-jsx-preserve)
-
-This mode uses a custom Babel transform to directly convert JSX syntax into lit-html template literals at compile time.
+### Compilation Process
 
 **Input JSX:**
 ```tsx
@@ -993,62 +1114,13 @@ function renderExample({ name, active }) {
 }
 ```
 
-**Benefits:**
-- ⚡ Zero runtime overhead - produces native lit-html code
-- 📦 Smaller bundle size - no JSX runtime needed
-- 🎯 Direct integration with lit-html ecosystem
-- 🔧 Automatic import injection for directives
+### Key Benefits
 
-#### React JSX Runtime Mode (vite-jsx-react)
-
-This mode leverages React's JSX transformation and converts the result to lit-html at runtime using a custom JSX factory.
-
-**Input JSX:**
-```tsx
-function renderExample({ name, active }) {
-  return (
-    <div classList={{ active }} styleList={{ color: 'red' }}>
-      <h1>Hello {name}!</h1>
-      <button on-click={() => console.log('clicked')}>Click me</button>
-    </div>
-  );
-}
-```
-
-**Intermediate (React JSX):**
-```javascript
-import { jsx } from 'jsx-lit/jsx-runtime';
-
-function renderExample({ name, active }) {
-  return jsx('div', {
-    classList: { active },
-    styleList: { color: 'red' },
-    children: [
-      jsx('h1', { children: ['Hello ', name, '!'] }),
-      jsx('button', { 'on-click': () => console.log('clicked'), children: 'Click me' })
-    ]
-  });
-}
-```
-
-**Runtime Output (lit-html):**
-```javascript
-// The jsx() function converts the React-style calls to lit-html templates
-function renderExample({ name, active }) {
-  return html`
-    <div class=${classMap({ active })} style=${styleMap({ color: 'red' })}>
-      <h1>Hello ${name}!</h1>
-      <button @click=${() => console.log('clicked')}>Click me</button>
-    </div>
-  `;
-}
-```
-
-**Benefits:**
-- 🔄 Familiar React JSX transformation
-- 🛠️ Works with existing React tooling
-- 🔧 Easier to debug (intermediate React JSX is visible)
-- 📱 Good for migration from React projects
+- ⚡ **Zero runtime overhead** - produces native lit-html code
+- 📦 **Smaller bundle size** - no JSX runtime needed
+- 🎯 **Direct integration** with lit-html ecosystem
+- 🔧 **Automatic import injection** for directives
+- 🎯 **Function component support** - compiles to efficient function calls
 
 ### Attribute Processing Details
 
@@ -1082,35 +1154,6 @@ import { ref } from 'lit-html/directives/ref.js';
 ```
 
 This ensures your bundles only include the directives you actually use.
-
-## Comparison: Custom Compiler vs React JSX
-
-| Feature | Custom Compiler | React JSX Runtime |
-|---------|----------------|-------------------|
-| **Performance** | ⚡ Zero runtime overhead | 🔄 Runtime conversion |
-| **Bundle Size** | 📦 Smaller bundles | 📦 Larger bundles (+JSX runtime) |
-| **lit-html Integration** | 🎯 Native templates | 🔄 Converted at runtime |
-| **Build Speed** | ⚡ Faster builds | 🔄 Standard React JSX speed |
-| **Debugging** | 🎯 Direct lit-html output | 🔍 Intermediate React JSX visible |
-| **Tooling** | 🔧 Custom transform | 🛠️ Standard React tooling |
-| **Migration** | 📝 Requires JSX preserve mode | 🔄 Easy from React projects |
-| **Import Management** | 🤖 Automatic directive imports | 📦 Manual import management |
-| **TypeScript Support** | ✅ Full support | ✅ Full support |
-| **Source Maps** | ✅ Supported | ✅ Supported |
-
-### When to Choose Which Mode
-
-**Choose Custom Compiler (`vite-jsx-preserve`) when:**
-- Performance is critical (production apps)
-- Bundle size matters
-- You want the most efficient lit-html integration
-- Starting a new project with jsx-lit
-- You want to use function components (full support)
-
-**Choose React JSX Runtime (`vite-jsx-react`) when:**
-- You need gradual migration from React projects
-- You prefer React-style JSX transformation
-- You're prototyping or in development phase
 
 ## Advanced Usage
 
@@ -1227,14 +1270,13 @@ Most React JSX patterns work with jsx-lit, but note these differences:
 **JSX not transforming**
 - Ensure your files have `.jsx` or `.tsx` extensions
 - Check that the plugin is properly configured in `vite.config.ts`
-- Verify your `tsconfig.json` has the correct `jsx` setting for your chosen mode
-- Make sure you're importing from the correct plugin (`vite-jsx-preserve` vs `vite-jsx-react`)
+- Verify your `tsconfig.json` has `"jsx": "preserve"` and `"jsxImportSource": "jsx-lit"`
+- Make sure you're importing from `jsx-lit/vite-jsx-preserve`
 
 **TypeScript errors**
 - Add `"jsx-lit"` to your `jsxImportSource` property in `tsconfig.json`
-- For custom compiler: Set `"jsx": "preserve"` in compiler options
-- For React runtime: Set `"jsx": "react-jsx"` in compiler options
-- Ensure you have `@types/react` installed if using React JSX mode
+- Set `"jsx": "preserve"` in compiler options
+- Ensure you have the latest version of TypeScript installed
 
 **Runtime errors**
 - Function components should return JSX elements, component variables should return tagNames
@@ -1244,9 +1286,9 @@ Most React JSX patterns work with jsx-lit, but note these differences:
 - For DOM properties, use `as.prop()` function to get property binding instead of attribute binding
 
 **Build errors**
-- `Cannot resolve 'jsx-lit/jsx-runtime'`: You're using React JSX mode but importing from wrong path
-- `Cannot find directive imports`: Custom compiler mode needs `"jsx": "preserve"` in tsconfig
+- `Cannot find directive imports`: Make sure `"jsx": "preserve"` is set in tsconfig
 - Babel transform errors: Check your babel configuration in the plugin options
+- `Cannot resolve 'jsx-lit/jsx-runtime'`: You may be using React JSX mode - see the React JSX Runtime section
 
 **Performance issues**
 - Avoid creating new objects/functions in JSX expressions on every render
@@ -1264,6 +1306,13 @@ Most React JSX patterns work with jsx-lit, but note these differences:
 - Children not working: Access children via `props.children` in function components
 - TypeScript errors: Ensure function component signatures match `(props: any) => JSX.Element`
 
+**Dynamic tag name issues**
+- Dynamic tags not compiling to static templates: Ensure you're using the `.tag` property pattern
+- `toTag` not working: Make sure to access the result with `.tag` property (`<MyTag.tag>` not `<MyTag>`)
+- Runtime errors with dynamic tags: Verify `toTag()` is used to create tag objects, not plain strings
+- TypeScript errors with dynamic tags: Use `toTag()` function for proper typing of HTML elements
+- Static template compilation failing: Check that jsx-lit can detect `.tag` property usage in JSX
+
 ### Debugging Tips
 
 1. **Check compiled output**: Use browser dev tools to see the actual generated code
@@ -1271,6 +1320,8 @@ Most React JSX patterns work with jsx-lit, but note these differences:
 3. **Verify binding syntax**: Check that attributes compile to the expected lit-html binding syntax (`.`, `?`, `@`, etc.)
 4. **Test directive imports**: Ensure required lit-html directives are properly imported
 5. **Function component debugging**: Check that function components are called with correct props objects in compiled output
+6. **Dynamic tag debugging**: Verify `.tag` property usage compiles to `__$literalMap.get()` calls in output
+7. **Static template verification**: Check that dynamic tags use `htmlStatic` instead of regular `html` templates
 
 ### Migration Checklist
 
@@ -1289,12 +1340,6 @@ Most React JSX patterns work with jsx-lit, but note these differences:
 - [ ] Replace React-specific features (hooks, state management) with Lit equivalents
 - [ ] Replace React components with custom elements where appropriate
 - [ ] Update styling approaches (CSS-in-JS to CSS or Lit's styling system)
-
-**Upgrading from jsx-lit 1.0.x:**
-- [ ] Expressions now bind as attributes by default (was properties before)
-- [ ] Use `as.prop()` if you need the old property binding behavior
-- [ ] Function components are now fully supported - you can start using them!
-- [ ] `toJSX()` function has improved TypeScript integration
 
 ## Performance Optimization
 
@@ -1380,6 +1425,113 @@ Apache-2.0
 - [Lit](https://lit.dev/) - Simple. Fast. Web Components.
 - [lit-html](https://lit.dev/docs/libraries/lit-html/) - Efficient, Expressive, Extensible HTML templates in JavaScript
 - [Vite](https://vitejs.dev/) - Next Generation Frontend Tooling
+
+## React JSX Runtime Mode (Alternative)
+
+jsx-lit also supports a React JSX runtime mode for easier migration from React projects.
+
+### Setup
+
+```typescript
+// vite.config.ts
+import { litJsx } from 'jsx-lit/vite-jsx-react';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [litJsx()],
+});
+```
+
+### TypeScript Configuration
+
+When using the React JSX runtime mode, configure automatic JSX transformation:
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "jsx-lit",
+  }
+}
+```
+
+This configuration:
+- `"jsx": "react-jsx"` - Enables automatic JSX transformation
+- `"jsxImportSource": "jsx-lit"` - Tells TypeScript where to find JSX types
+
+### How React JSX Runtime Mode Works
+
+This mode leverages React's JSX transformation and converts the result to lit-html at runtime using a custom JSX factory.
+
+**Input JSX:**
+```tsx
+function renderExample({ name, active }) {
+  return (
+    <div classList={{ active }} styleList={{ color: 'red' }}>
+      <h1>Hello {name}!</h1>
+      <button on-click={() => console.log('clicked')}>Click me</button>
+    </div>
+  );
+}
+```
+
+**Intermediate (React JSX):**
+```javascript
+import { jsx } from 'jsx-lit/jsx-runtime';
+
+function renderExample({ name, active }) {
+  return jsx('div', {
+    classList: { active },
+    styleList: { color: 'red' },
+    children: [
+      jsx('h1', { children: ['Hello ', name, '!'] }),
+      jsx('button', { 'on-click': () => console.log('clicked'), children: 'Click me' })
+    ]
+  });
+}
+```
+
+**Runtime Output (lit-html):**
+```javascript
+// The jsx() function converts the React-style calls to lit-html templates
+function renderExample({ name, active }) {
+  return html`
+    <div class=${classMap({ active })} style=${styleMap({ color: 'red' })}>
+      <h1>Hello ${name}!</h1>
+      <button @click=${() => console.log('clicked')}>Click me</button>
+    </div>
+  `;
+}
+```
+
+### When to Use React JSX Runtime Mode
+
+**Choose React JSX Runtime (`vite-jsx-react`) when:**
+- You need gradual migration from React projects
+- You prefer React-style JSX transformation
+- You're prototyping or in development phase
+
+**Choose Custom Compiler (`vite-jsx-preserve`) when:**
+- Performance is critical (production apps)
+- Bundle size matters
+- You want the most efficient lit-html integration
+- Starting a new project with jsx-lit
+- You want to use function components (full support)
+
+### Comparison: Custom Compiler vs React JSX Runtime
+
+| Feature | Custom Compiler | React JSX Runtime |
+|---------|----------------|-------------------|
+| **Performance** | ⚡ Zero runtime overhead | 🔄 Runtime conversion |
+| **Bundle Size** | 📦 Smaller bundles | 📦 Larger bundles (+JSX runtime) |
+| **lit-html Integration** | 🎯 Native templates | 🔄 Converted at runtime |
+| **Build Speed** | ⚡ Faster builds | 🔄 Standard React JSX speed |
+| **Debugging** | 🎯 Direct lit-html output | 🔍 Intermediate React JSX visible |
+| **Tooling** | 🔧 Custom transform | 🛠️ Standard React tooling |
+| **Migration** | 📝 Requires JSX preserve mode | 🔄 Easy from React projects |
+| **Import Management** | 🤖 Automatic directive imports | 📦 Manual import management |
+| **TypeScript Support** | ✅ Full support | ✅ Full support |
+| **Source Maps** | ✅ Supported | ✅ Supported |
 
 ---
 
