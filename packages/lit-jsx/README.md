@@ -237,6 +237,48 @@ export class MyButton extends LitElement {
 />
 ```
 
+#### Generic Custom Elements
+
+For custom elements with generic types, you can create type-safe JSX components using explicit type casting:
+
+```tsx
+import { toJSX } from 'jsx-lit';
+import { LitElement } from 'lit';
+
+class DataList<T> extends LitElement {
+  static tagName = 'data-list';
+  // Type casting is required due to TypeScript's inability to forward generics
+  static tag = toJSX(this) as <T>(props: JSX.JSXProps<DataList<T>>) => JSX.JSXElement;
+
+  @property({ type: Array }) items: T[] = [];
+  @property() renderItem?: (item: T) => TemplateResult;
+
+  render() {
+    return html`
+      <ul>
+        ${this.items.map(item => html`
+          <li>${this.renderItem ? this.renderItem(item) : item}</li>
+        `)}
+      </ul>
+    `;
+  }
+}
+
+// Usage with explicit type parameter
+<DataList.tag<User>
+  items={users}
+  renderItem={(user) => `${user.name} (${user.email})`}
+/>
+
+// Type inference works for the renderItem callback
+<DataList.tag<Product>
+  items={products}
+  renderItem={(product) => `${product.name} - $${product.price}`}
+/>
+```
+
+**Note**: The current generic syntax requires explicit type casting due to TypeScript's limitations in forwarding generic parameters through static properties. If TypeScript gains the ability to forward generics in this context in the future, jsx-lit will implement a more seamless syntax.
+
 ### Dynamic Tag Names
 
 jsx-lit supports dynamic element types with the `.tag` property pattern:
