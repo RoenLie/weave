@@ -1,44 +1,26 @@
+import { Choose, For, Show, toJSX, toTag } from 'jsx-lit';
 import { LitElement } from 'lit';
 import { ifDefined } from 'lit-html/directives/if-defined.js';
-import { join } from 'lit-html/directives/join.js';
-import { map } from 'lit-html/directives/map.js';
 import { createRef, ref } from 'lit-html/directives/ref.js';
-import { repeat } from 'lit-html/directives/repeat.js';
 
-import { toTag } from '../../dist/utils';
 import { ButtonElement } from './button.tsx';
 
 
-function For<T, U extends JSX.Element>(props: {
-	each:       readonly T[];
-	key?:       (item: T, index: number) => any;
-	separator?: JSX.Element;
-	children:   (item: T, index: number) => U;
-}): () => U[] {
-	let iter: any;
+class GenericTest<T> extends LitElement {
 
-	if (props.key) {
-		iter = repeat(
-			props.each,
-			(item, index) => props.key!(item, index),
-			(item, index) => props.children(item, index),
-		) as any;
-	}
-	else {
-		iter = map(
-			props.each,
-			(item, index) => props.children(item, index),
-		) as any;
-	}
+	static tagName = 'generic-test';
+	static tag = toJSX(this) as <T>(p: JSX.JSXProps<GenericTest<T>>) => string;
 
-	if (props.separator)
-		iter = join(iter, props.separator) as any;
+	kakemann: T;
+	items:    T[] = [];
 
-	return iter;
 }
 
 
 export class RootElement extends LitElement {
+
+	static tagName = 'root-element';
+	static tag = toJSX(this);
 
 	protected items: string[] = [
 		'Item 1',
@@ -48,15 +30,31 @@ export class RootElement extends LitElement {
 
 	protected ref = createRef<HTMLElement>();
 
-	protected render1(): unknown {
+	protected override render(): unknown {
 		const about = 'This is a test element';
 		const ariaChecked = true;
 		const ariaLabel = 'Click me!';
-
 		const Tag = toTag('article');
 
 		return (
 			<div class={'test-class'}>
+
+				<GenericTest.tag<string> items={this.items}>
+				</GenericTest.tag>
+
+				<Show when={this.items.length}>
+					{(length) => (
+						<h2>{length}</h2>
+					)}
+				</Show>
+
+				<Choose>
+					{[
+						() => true,
+						() => <span>Case 1</span>,
+					]}
+				</Choose>
+
 				<Tag.tag></Tag.tag>
 
 				<ButtonElement.tag
@@ -72,9 +70,8 @@ export class RootElement extends LitElement {
 					directive   ={[ ref(this.ref) ]}
 				></ButtonElement.tag>
 
-				<For
-					each={this.items}
-					key={item => item}
+				<For each={this.items}
+					key={(item, index) => item + index}
 					separator={<span>|</span>}
 				>
 					{(item, index) => (
@@ -86,31 +83,5 @@ export class RootElement extends LitElement {
 			</div>
 		);
 	}
-
-
-	//protected immediateRender(): unknown {
-	//	return (
-	//		<div class="first-element">
-	//			<h1>Lit JSX Demo</h1>
-	//			<p>{'dynamic content goes here'}</p>
-	//			<span>{(<s-inner-span></s-inner-span>)}</span>
-	//		</div>
-	//	);
-	//}
-
-	//protected variableRender(): unknown {
-	//const jsx = (
-	//	<div class="first-element">
-	//		<h1>Lit JSX Demo</h1>
-	//		<p>{'dynamic content goes here'}</p>
-	//		<span>{(<s-inner-span></s-inner-span>)}</span>
-	//	</div>
-	//);
-
-	//return jsx;
-	//}
-
-
-	static { customElements.define('root-element', this); }
 
 }

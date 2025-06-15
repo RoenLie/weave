@@ -39,7 +39,7 @@ declare global {
 			unknown,
 		][number];
 
-		type Element = TemplateResult; // This is the return type of a JSX template
+		type Element = TemplateResult<any>; // This is the return type of a JSX template
 		type ElementType = string | JSXElement;
 		interface ElementClass { /* empty, libs can define requirements downstream */ }
 		interface ElementAttributesProperty { /* empty, libs can define requirements downstream */ }
