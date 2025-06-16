@@ -1,8 +1,4 @@
-export const defaultConfig = {
-	validate: true,
-};
-
-
+//
 export const COMPONENT_LITERAL_PREFIX = '__$';
 export const COMPONENT_POSTFIX = '.tag';
 export const DISCARD_TAG = 'discard';
@@ -59,13 +55,14 @@ export const SOURCES = {
 	LITERAL_MAP:       'jsx-lit',
 } as const;
 export const ERROR_MESSAGES = {
-	NO_PROGRAM_FOUND:              'No program found for JSX transformation.',
-	INVALID_OPENING_TAG:           'Invalid opening tag found.',
-	EMPTY_JSX_EXPRESSION:          'Empty JSX expression found.',
-	ONLY_STRING_LITERALS:          'Only string literals are supported for JSX attributes.',
-	INVALID_DIRECTIVE_RETURN_TYPE: 'Invalid return type for directive function.',
-	TAG_NAME_NOT_FOUND:            (tagName: string): string => `Tag name '${ tagName }' not found in any accessible scope`,
-	NO_STATEMENT_PATH:             (tagName: string): string => `Could not find statement-level path for tagName: ${ tagName }`,
-	UNKNOWN_TEMPLATE_TYPE:         (type: string): string => `Unknown template type: ${ type }`,
-	INVALID_BIND_TYPE:             (type: string): string => `Invalid bind type: ${ type }`,
+	NO_PROGRAM_FOUND:           'No program found for JSX transformation.',
+	INVALID_OPENING_TAG:        'Invalid opening tag found.',
+	EMPTY_JSX_EXPRESSION:       'Empty JSX expression found.',
+	ONLY_STRING_LITERALS:       'Only string literals are supported for JSX attributes.',
+	INVALID_DIRECTIVE_VALUE:    'Invalid value in directive expression.',
+	UNKNOWN_JSX_ATTRIBUTE_TYPE: 'Unknown JSX attribute type found.',
+	TAG_NAME_NOT_FOUND:         (tagName: string): string => `Tag name '${ tagName }' not found in any accessible scope`,
+	NO_STATEMENT_PATH:          (tagName: string): string => `Could not find statement-level path for tagName: ${ tagName }`,
+	UNKNOWN_TEMPLATE_TYPE:      (type: string): string => `Unknown template type: ${ type }`,
+	INVALID_BIND_TYPE:          (type: string): string => `Invalid bind type: ${ type }`,
 } as const;

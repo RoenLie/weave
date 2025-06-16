@@ -3,7 +3,10 @@ import * as t from '@babel/types';
 
 import { isMathmlTag } from '../shared/mathml-tags.ts';
 import { isSvgTag } from '../shared/svg-tags.ts';
-import { ATTR_BIND_OBJ_NAME, ATTR_VALUES, COMPONENT_POSTFIX, ERROR_MESSAGES, SOURCES, VARIABLES } from './config.ts';
+import {
+	ATTR_BIND_OBJ_NAME, ATTR_NAMES, ATTR_VALUES,
+	COMPONENT_POSTFIX, ERROR_MESSAGES, SOURCES, VARIABLES,
+} from './config.ts';
 
 export type Values<T> = T[keyof T];
 
@@ -14,7 +17,7 @@ export const isComponent = (tagName: string): boolean => {
 		|| /[^a-zA-Z]/.test(tagName[0] ?? '');
 };
 
-export const determineTemplateType = (
+export const getTemplateType = (
 	tagName: string,
 ): Values<Pick<typeof VARIABLES, 'HTML' | 'SVG' | 'MATHML'>> => {
 	if (isSvgTag(tagName))
@@ -65,107 +68,192 @@ export class TemplateBuilder {
 }
 
 
-interface AttrParams {
+export interface AttrParams {
 	builder: TemplateBuilder;
-	attr:    any;
-	index:   number;
-	path:    NodePath<t.JSXElement>;
 	program: t.Program;
+	path:    NodePath<t.JSXElement>;
+	index:   number;
 }
 
-export interface AttrExpressionParams extends AttrParams {
-	attr:    t.JSXAttribute & {
-		value: t.JSXExpressionContainer & {
-			expression: t.Expression;
-		};
-	};
-}
-
-export interface AttrArrowExpressionParams extends AttrParams {
-	attr:    t.JSXAttribute & {
-		value: t.JSXExpressionContainer & {
-			expression: t.ArrowFunctionExpression & {
-				params: [ t.Identifier & { name: Values<typeof ATTR_VALUES>; } ];
-				body:   t.Expression;
+interface CallBindingAttribute extends t.JSXAttribute {
+	value: t.JSXExpressionContainer & {
+		expression: t.CallExpression & {
+			callee: t.MemberExpression & {
+				object:   t.Identifier;
+				property: t.Identifier;
 			};
+			arguments: [ t.Expression ];
 		};
 	};
 }
 
-export interface AttrMemberExpressionParams extends AttrParams {
-	attr:    t.JSXAttribute & {
-		value: t.JSXExpressionContainer & {
-			expression: t.CallExpression & {
-				callee: t.MemberExpression & {
-					object:   t.Identifier;
-					property: t.Identifier;
-				};
-				arguments: [ t.Expression ];
-			};
+interface ArrowFunctionAttribute extends t.JSXAttribute {
+	value: t.JSXExpressionContainer & {
+		expression: t.ArrowFunctionExpression & {
+			params: [ t.Identifier & { name: Values<typeof ATTR_VALUES>; } ];
+			body:   t.Expression;
 		};
 	};
 }
 
-//export interface AttrSpreadParams extends AttrParams {
-//	attr: t.JSXSpreadAttribute & {
-//		argument: t.CallExpression & {
-//			callee:    t.Identifier;
-//			arguments: [ t.Expression ];
-//		};
-//	};
-//}
-
-export interface AttrNonExpressionParams extends AttrParams {
-	attr:    t.JSXAttribute & {
-		value: Exclude<t.JSXAttribute['value'], t.JSXExpressionContainer>;
+interface JSXAttributeWithExpression extends t.JSXAttribute {
+	value: t.JSXExpressionContainer & {
+		expression: t.Expression;
 	};
 }
 
-export const attributeProcessors = {
-	callBinding(params: AttrMemberExpressionParams): void {
-		const expression = params.attr.value.expression;
+interface JSXAttributeWithoutExpression extends t.JSXAttribute {
+	value: Exclude<t.JSXAttribute['value'], t.JSXExpressionContainer>;
+}
+
+interface JSXAttributeBoolean extends t.JSXAttribute {
+	value: null | undefined;
+}
+
+
+export class AttrValidators {
+
+	static isCallBinding(attr: t.JSXAttribute): attr is CallBindingAttribute {
+		if (!this.isExpression(attr))
+			return false;
+
+		const expression = attr.value.expression;
+
+		if (!t.isCallExpression(expression))
+			return false;
+
+		const callee = expression.callee;
+		if (!t.isMemberExpression(callee))
+			return false;
+		if (!t.isIdentifier(callee.object) || !t.isIdentifier(callee.property))
+			return false;
+
+		const objectNameMatches = callee.object.name === ATTR_BIND_OBJ_NAME;
+		if (!objectNameMatches)
+			return false;
+
+		return true;
+	}
+
+	static isArrowBinding(attr: t.JSXAttribute): attr is ArrowFunctionAttribute {
+		if (!this.isExpression(attr))
+			return false;
+
+		const expression = attr.value.expression;
+
+		if (!t.isArrowFunctionExpression(expression))
+			return false;
+
+		// If the arrow function has no parameters, we can skip it.
+		if (expression.params.length === 0)
+			return false;
+
+		// If the arrow function has more than one parameter, we can skip it.
+		if (expression.params.length > 1)
+			return false;
+
+		// If the param is not an identifier, we can skip it.
+		const param = expression.params[0];
+		if (!t.isIdentifier(param))
+			return false;
+
+		// If the body of the arrow function is not an expression, we can skip it.
+		if (!t.isExpression(expression.body))
+			return false;
+
+		// We check if it is a valid bind parameter.
+		return param.name === ATTR_VALUES.PROP
+		|| param.name === ATTR_VALUES.BOOL;
+	}
+
+	static isDirective(attr: t.JSXAttribute): attr is JSXAttributeWithExpression {
+		return this.isExpression(attr) && attr.name.name.toString() === ATTR_NAMES.DIRECTIVE;
+	}
+
+	static isRef(attr: t.JSXAttribute): attr is JSXAttributeWithExpression {
+		return this.isExpression(attr) && attr.name.name.toString() === ATTR_NAMES.REF;
+	}
+
+	static isClassListBinding(attr: t.JSXAttribute): attr is JSXAttributeWithExpression {
+		return this.isExpression(attr) && attr.name.name.toString() === VARIABLES.CLASS_MAP;
+	}
+
+	static isStyleListBinding(attr: t.JSXAttribute): attr is JSXAttributeWithExpression {
+		return this.isExpression(attr) && attr.name.name.toString() === ATTR_NAMES.STYLE_LIST;
+	}
+
+	static isEvent(attr: t.JSXAttribute): attr is JSXAttributeWithExpression {
+		return attr.name.name.toString().startsWith(ATTR_NAMES.EVENT_PREFIX);
+	}
+
+	static isExpression(attr: t.JSXAttribute): attr is JSXAttributeWithExpression  {
+		return t.isJSXExpressionContainer(attr.value)
+			&& t.isExpression(attr.value.expression);
+	};
+
+	static isNonExpression(attribute: t.JSXAttribute): attribute is JSXAttributeWithoutExpression {
+		return !!attribute.value && !t.isJSXExpressionContainer(attribute.value);
+	};
+
+	static isSpread(attr: t.JSXAttribute | t.JSXSpreadAttribute): attr is t.JSXSpreadAttribute {
+		return t.isJSXSpreadAttribute(attr);
+	}
+
+	static isBoolean(attr: t.JSXAttribute): attr is JSXAttributeBoolean {
+		return !attr.value;
+	}
+
+}
+
+
+export class AttrProcessors {
+
+	static callBinding(attr: CallBindingAttribute, options: AttrParams): void {
+		const expression = attr.value.expression;
 		const isProp = expression.callee.property.name === ATTR_VALUES.PROP;
 		const isBool = expression.callee.property.name === ATTR_VALUES.BOOL;
 
 		if (isProp)
-			params.builder.addText(' .');
+			options.builder.addText(' .');
 		else if (isBool)
-			params.builder.addText(' ?');
+			options.builder.addText(' ?');
 		else
-			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_RETURN_TYPE);
+			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
 
-		const name = params.attr.name.name.toString();
+		const name = attr.name.name.toString();
 		const argument = expression.arguments[0];
 
-		params.builder.addText(name + '=');
-		params.builder.addExpression(argument);
-	},
-	arrowBinding(params: AttrArrowExpressionParams): void {
-		const expression = params.attr.value.expression;
+		options.builder.addText(name + '=');
+		options.builder.addExpression(argument);
+	}
+
+	static arrowBinding(attr: ArrowFunctionAttribute, options: AttrParams): void {
+		const expression = attr.value.expression;
 		const param = expression.params[0];
 		const isProp = param.name === ATTR_VALUES.PROP;
 		const isBool = param.name === ATTR_VALUES.BOOL;
 
 		if (isProp)
-			params.builder.addText(' .');
+			options.builder.addText(' .');
 		else if (isBool)
-			params.builder.addText(' ?');
+			options.builder.addText(' ?');
 		else
-			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_RETURN_TYPE);
+			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
 
-		const name = params.attr.name.name.toString();
+		const name = attr.name.name.toString();
 		const expressionBody = expression.body;
 
-		params.builder.addText(name + '=');
-		params.builder.addExpression(expressionBody);
-	},
-	directive(params: AttrExpressionParams): void {
+		options.builder.addText(name + '=');
+		options.builder.addExpression(expressionBody);
+	}
+
+	static directive(attr: JSXAttributeWithExpression, options: AttrParams): void {
 		// Replace the spread attribute with its argument, minus the compiler func.
-		const expression = params.attr.value.expression;
+		const expression = attr.value.expression;
 		if (t.isCallExpression(expression)) {
 			// If the expression is a call, we can add it directly.
-			params.builder.addText(' ');
-			params.builder.addExpression(expression);
+			options.builder.addText(' ');
+			options.builder.addExpression(expression);
 		}
 		else if (t.isArrayExpression(expression)) {
 			for (const item of expression.elements) {
@@ -173,135 +261,120 @@ export const attributeProcessors = {
 					throw new Error(ERROR_MESSAGES.EMPTY_JSX_EXPRESSION);
 
 				// Add a space to keep correct spacing in the template.
-				params.builder.addText(' ');
-				params.builder.addExpression(item);
+				options.builder.addText(' ');
+				options.builder.addExpression(item);
 			}
 		}
 		else {
-			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_RETURN_TYPE);
+			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
 		}
-		// If the expression is not a call or array, we can just add it as an expression.
+	}
 
-		//params.builder.addText(' ');
-		//params.builder.addExpression(params.attr.argument.arguments[0]);
-	},
-	ref(params: AttrExpressionParams): void {
+	static ref(attr: JSXAttributeWithExpression, options: AttrParams): void {
 		// add a ref call around the expression.
 		const expression = t.callExpression(
 			t.identifier(VARIABLES.REF),
-			[ params.attr.value.expression ],
+			[ attr.value.expression ],
 		);
 
 		// add a space to keep correct spacing in the template.
-		params.builder.addText(' ');
-		params.builder.addExpression(expression);
+		options.builder.addText(' ');
+		options.builder.addExpression(expression);
 
-		ensure.createRefImport(params.program, params.path);
-	},
-	classList(params: AttrExpressionParams): void {
+		Ensure.createRefImport(options.program, options.path);
+	}
+
+	static classList(attr: JSXAttributeWithExpression, options: AttrParams): void {
 		// add a classMap call around the expression.
 		const expression = t.callExpression(
 			t.identifier(VARIABLES.CLASS_MAP),
-			[ params.attr.value.expression ],
+			[ attr.value.expression ],
 		);
 
 		// add classlist without the . to the quasi.
-		params.builder.addText(' class=');
-		params.builder.addExpression(expression);
+		options.builder.addText(' class=');
+		options.builder.addExpression(expression);
 
-		ensure.classMapImport(params.program, params.path);
-	},
-	styleList(params: AttrExpressionParams): void {
-		const name = params.attr.name.name.toString();
+		Ensure.classMapImport(options.program, options.path);
+	}
+
+	static styleList(attr: JSXAttributeWithExpression, options: AttrParams): void {
+		const name = attr.name.name.toString();
 
 		// add a styleMap call around the expression.
 		const expression = t.callExpression(
 			t.identifier(VARIABLES.STYLE_MAP),
-			[ params.attr.value.expression ],
+			[ attr.value.expression ],
 		);
 
-		params.builder.addText(' ' + name + '=');
-		params.builder.addExpression(expression);
+		options.builder.addText(' ' + name + '=');
+		options.builder.addExpression(expression);
 
-		ensure.styleMapImport(params.program, params.path);
-	},
-	event(params: AttrExpressionParams): void {
+		Ensure.styleMapImport(options.program, options.path);
+	}
+
+	static event(attr: JSXAttributeWithExpression, options: AttrParams): void {
 		// If the attribute is an event handler,
 		// we need to convert it to a standard DOM event name.
-		const oldName = params.attr.name.name.toString();
+		const oldName = attr.name.name.toString();
 		const newName = '@' + oldName.slice(3);
-		params.builder.addText(' ' + newName + '=');
-	},
-	expression(params: AttrExpressionParams): void {
+		options.builder.addText(' ' + newName + '=');
+		options.builder.addExpression(attr.value.expression);
+	}
+
+	static expression(attr: JSXAttributeWithExpression, options: AttrParams): void {
 		// Any other attribute which has an expression container value
-		const name = params.attr.name.name.toString();
-		params.builder.addText(' ' + name + '=');
-		params.builder.addExpression(params.attr.value.expression);
-	},
-	nonExpression(params: AttrNonExpressionParams): void {
+		const name = attr.name.name.toString();
+		options.builder.addText(' ' + name + '=');
+		options.builder.addExpression(attr.value.expression);
+	}
+
+	static nonExpression(attribute: JSXAttributeWithoutExpression, options: AttrParams): void {
 		// If the value is a string, we can use it directly
 		// Here we always bind the value as a string.
 		// In the future, we might want to also support numbers.
-		if (!t.isStringLiteral(params.attr.value))
+		if (!t.isStringLiteral(attribute.value))
 			throw new Error(ERROR_MESSAGES.ONLY_STRING_LITERALS);
 
-		const name = params.attr.name.name.toString();
-		const value = params.attr.value.value;
-		params.builder.addText(' ' + name + '="' + value + '"');
-	},
-} as const;
+		const name = attribute.name.name.toString();
+		const value = attribute.value.value;
+		options.builder.addText(' ' + name + '="' + value + '"');
+	};
+
+	static spread(attribute: t.JSXSpreadAttribute, options: AttrParams): void {
+		// If it's a spread attribute, we wrap it in our custom
+		// `rest` directive.
+		// This will allow us to handle the spread attribute correctly.
+		// We also need to ensure that the `rest` directive is imported.
+		Ensure.restImport(options.program, options.path);
+
+		//const attrPath = options.path
+		//	.get(`openingElement.attributes.${ options.index }.argument`);
+
+		const newExpression = t.callExpression(
+			t.identifier(VARIABLES.REST),
+			[ attribute.argument ],
+		);
+
+		//attrPath.replaceWith(newExpression);
+
+		options.builder.addText(' ');
+		options.builder.addExpression(newExpression);
+	}
+
+	static boolean(attribute: JSXAttributeBoolean, options: AttrParams): void {
+		// If the value is null or undefined, we can bind the attribute name directly.
+		// This will result in a attribute without a value, e.g. `<div disabled>`.
+		const name = attribute.name.name.toString();
+		options.builder.addText(' ' + name);
+	};
+
+}
 
 
-export const isCallExpressionBinding = (
-	expression: t.Expression,
-): expression is AttrMemberExpressionParams['attr']['value']['expression'] => {
-	if (!t.isCallExpression(expression))
-		return false;
+export class Ensure {
 
-	const callee = expression.callee;
-	if (!t.isMemberExpression(callee))
-		return false;
-	if (!t.isIdentifier(callee.object) || !t.isIdentifier(callee.property))
-		return false;
-
-	const objectNameMatches = callee.object.name === ATTR_BIND_OBJ_NAME;
-	if (!objectNameMatches)
-		return false;
-
-	return true;
-};
-
-export const isArrowFunctionBinding = (
-	expression: t.Expression,
-): expression is AttrArrowExpressionParams['attr']['value']['expression'] => {
-	if (!t.isArrowFunctionExpression(expression))
-		return false;
-
-	// If the arrow function has no parameters, we can skip it.
-	if (expression.params.length === 0)
-		return false;
-
-	// If the arrow function has more than one parameter, we can skip it.
-	if (expression.params.length > 1)
-		return false;
-
-	// If the param is not an identifier, we can skip it.
-	const param = expression.params[0];
-	if (!t.isIdentifier(param))
-		return false;
-
-	// If the body of the arrow function is not an expression, we can skip it.
-	if (!t.isExpression(expression.body))
-		return false;
-
-	// We check if it is a valid bind parameter.
-	return param.name === ATTR_VALUES.PROP
-		|| param.name === ATTR_VALUES.BOOL;
-};
-
-
-export const ensure = {
-	import(
+	static import(
 		importSource: (value: string) => boolean,
 		importName: (value: string) => boolean,
 		createImport: () => t.ImportDeclaration,
@@ -337,8 +410,9 @@ export const ensure = {
 			const [ insertedPath ] = programPath.unshiftContainer('body', importDeclaration);
 			programPath.scope.registerDeclaration(insertedPath);
 		}
-	},
-	htmlImport(program: t.Program, path: NodePath): void {
+	}
+
+	static htmlImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.HTML || source === SOURCES.HTML_ALT,
 			(name) => name === VARIABLES.HTML,
@@ -349,8 +423,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	htmlStaticImport(program: t.Program, path: NodePath): void {
+	}
+
+	static htmlStaticImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.HTML_STATIC || source === SOURCES.HTML_STATIC_ALT,
 			(name) => name === VARIABLES.HTML,
@@ -366,8 +441,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	svgImport(program: t.Program, path: NodePath): void {
+	}
+
+	static svgImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.SVG || source === SOURCES.SVG_ALT,
 			(name) => name === VARIABLES.SVG,
@@ -378,8 +454,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	svgStaticImport(program: t.Program, path: NodePath): void {
+	}
+
+	static svgStaticImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.SVG_STATIC || source === SOURCES.SVG_STATIC_ALT,
 			(name) => name === VARIABLES.SVG,
@@ -395,8 +472,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	mathmlImport(program: t.Program, path: NodePath): void {
+	}
+
+	static mathmlImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.MATHML || source === SOURCES.MATHML_ALT,
 			(name) => name === VARIABLES.MATHML,
@@ -407,8 +485,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	mathmlStaticImport(program: t.Program, path: NodePath): void {
+	}
+
+	static mathmlStaticImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.MATHML_STATIC || source === SOURCES.MATHML_STATIC_ALT,
 			(name) => name === VARIABLES.MATHML,
@@ -424,8 +503,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	unsafeStaticImport(program: t.Program, path: NodePath): void {
+	}
+
+	static unsafeStaticImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.UNSAFE_STATIC || source === SOURCES.UNSAFE_STATIC_ALT,
 			(name) => name === VARIABLES.UNSAFE_STATIC,
@@ -441,8 +521,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	createRefImport(program: t.Program, path: NodePath): void {
+	}
+
+	static createRefImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.REF_ALT || source === SOURCES.REF,
 			(name) => name === VARIABLES.REF,
@@ -458,8 +539,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	styleMapImport(program: t.Program, path: NodePath): void {
+	}
+
+	static styleMapImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.STYLE_MAP_ALT || source === SOURCES.STYLE_MAP,
 			(name) => name === VARIABLES.STYLE_MAP,
@@ -475,8 +557,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	classMapImport(program: t.Program, path: NodePath): void {
+	}
+
+	static classMapImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.CLASS_MAP_ALT || source === SOURCES.CLASS_MAP,
 			(name) => name === VARIABLES.CLASS_MAP,
@@ -492,8 +575,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	restImport(program: t.Program, path: NodePath): void {
+	}
+
+	static restImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.REST,
 			(name) => name === VARIABLES.REST,
@@ -509,8 +593,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	literalMapImport(program: t.Program, path: NodePath): void {
+	}
+
+	static literalMapImport(program: t.Program, path: NodePath): void {
 		this.import(
 			(source) => source === SOURCES.LITERAL_MAP,
 			(name) => name === VARIABLES.LITERAL_MAP,
@@ -526,8 +611,9 @@ export const ensure = {
 			program,
 			path,
 		);
-	},
-	componentTagDeclaration(
+	}
+
+	static componentTagDeclaration(
 		path: NodePath,
 		tagName: string,
 		variableName: string,
@@ -573,8 +659,9 @@ export const ensure = {
 
 		// If tagName is not found in any scope, throw an error
 		throw new Error(ERROR_MESSAGES.TAG_NAME_NOT_FOUND(tagName));
-	},
-	componentLiteral(
+	}
+
+	static componentLiteral(
 		tagName: string,
 		variableName: string,
 		path: NodePath,
@@ -600,8 +687,9 @@ export const ensure = {
 				),
 			),
 		);
-	},
-} as const;
+	}
+
+}
 
 
 export type ValidJSXElement = t.JSXElement & {
@@ -609,7 +697,6 @@ export type ValidJSXElement = t.JSXElement & {
 		name: t.JSXIdentifier | t.JSXMemberExpression;
 	};
 };
-
 
 export const isValidJSXElement = (initialPath: NodePath): initialPath is NodePath<ValidJSXElement> => {
 	const node = initialPath.node;

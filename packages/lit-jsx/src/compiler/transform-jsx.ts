@@ -2,17 +2,19 @@ import { type PluginPass } from '@babel/core';
 import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 
-import type {
-	AttrArrowExpressionParams, AttrExpressionParams, AttrMemberExpressionParams,
-	AttrNonExpressionParams, ValidJSXElement, Values,
+import type { AttrParams, ValidJSXElement, Values } from './compiler-utils.ts';
+import {
+	AttrProcessors,
+	AttrValidators,
+	Ensure, getJSXElementName,
+	getTemplateType,
+	isJSXCustomElementComponent,
+	isJSXFunctionElementComponent,
+	isValidJSXElement,
+	TemplateBuilder,
 } from './compiler-utils.ts';
 import {
-	attributeProcessors, determineTemplateType, ensure, getJSXElementName,
-	isArrowFunctionBinding, isCallExpressionBinding, isJSXCustomElementComponent,
-	isJSXFunctionElementComponent, isValidJSXElement, TemplateBuilder,
-} from './compiler-utils.ts';
-import {
-	ATTR_NAMES,  COMPONENT_LITERAL_PREFIX, DISCARD_TAG,
+	COMPONENT_LITERAL_PREFIX, DISCARD_TAG,
 	ERROR_MESSAGES, VARIABLES, WHITESPACE_TAGS,
 } from './config.ts';
 
@@ -108,17 +110,17 @@ processJSXElement.createTaggedTemplate = (
 	if (context.isStatic.value) {
 		if (context.templateType === VARIABLES.HTML) {
 			identifier = VARIABLES.HTML_STATIC;
-			ensure.htmlStaticImport(context.program, context.initialPath);
+			Ensure.htmlStaticImport(context.program, context.initialPath);
 		}
 		// This will not happen, as svg and mathml dynamic tags are not supported yet.
 		else if (context.templateType === VARIABLES.SVG) {
 			identifier = VARIABLES.SVG_STATIC;
-			ensure.svgStaticImport(context.program, context.initialPath);
+			Ensure.svgStaticImport(context.program, context.initialPath);
 		}
 		// This will not happen, as svg and mathml dynamic tags are not supported yet.
 		else if (context.templateType === VARIABLES.MATHML) {
 			identifier = VARIABLES.MATHML_STATIC;
-			ensure.mathmlStaticImport(context.program, context.initialPath);
+			Ensure.mathmlStaticImport(context.program, context.initialPath);
 		}
 		else {
 			throw new Error(ERROR_MESSAGES.UNKNOWN_TEMPLATE_TYPE(context.templateType));
@@ -127,15 +129,15 @@ processJSXElement.createTaggedTemplate = (
 	else {
 		if (context.templateType === VARIABLES.HTML) {
 			identifier = VARIABLES.HTML;
-			ensure.htmlImport(context.program, context.initialPath);
+			Ensure.htmlImport(context.program, context.initialPath);
 		}
 		else if (context.templateType === VARIABLES.SVG) {
 			identifier = VARIABLES.SVG;
-			ensure.svgImport(context.program, context.initialPath);
+			Ensure.svgImport(context.program, context.initialPath);
 		}
 		else if (context.templateType === VARIABLES.MATHML) {
 			identifier = VARIABLES.MATHML;
-			ensure.mathmlImport(context.program, context.initialPath);
+			Ensure.mathmlImport(context.program, context.initialPath);
 		}
 		else {
 			throw new Error(ERROR_MESSAGES.UNKNOWN_TEMPLATE_TYPE(context.templateType));
@@ -158,7 +160,7 @@ processJSXElement.processOpeningTag = (
 		isComponentFunction: false,
 		literalName:         '',
 		tagName:             name,
-		templateType:        determineTemplateType(name),
+		templateType:        getTemplateType(name),
 	} satisfies Omit<JSXElementContext, keyof InitialJSXElementContext>);
 
 	// If the tag name is `DISCARD_TAG`, we skip it.
@@ -176,7 +178,7 @@ processJSXElement.processOpeningTag = (
 		context.isStatic.value = true;
 		context.isComponentTag = true;
 
-		const literalIdentifier = ensure.componentLiteral(
+		const literalIdentifier = Ensure.componentLiteral(
 			context.tagName,
 			COMPONENT_LITERAL_PREFIX + context.tagName,
 			context.currentPath,
@@ -226,92 +228,48 @@ processJSXElement.processOpeningTag = (
 processJSXElement.processAttributes = (
 	context: JSXElementContext,
 ): void => {
-	const attributes = context.currentPath.node.openingElement.attributes;
+	const { attributes } = context.currentPath.node.openingElement;
 
 	for (const [ index, attr ] of attributes.entries()) {
-		if (t.isJSXSpreadAttribute(attr)) {
-			// If it's a spread attribute, we wrap it in our custom
-			// `rest` directive.
-			// This will allow us to handle the spread attribute correctly.
-			// We also need to ensure that the `rest` directive is imported.
-			ensure.restImport(context.program, context.currentPath);
+		const params: AttrParams = {
+			builder: context.builder,
+			path:    context.currentPath,
+			program: context.program,
+			index,
+		};
 
-			const attrPath = context.currentPath
-				.get(`openingElement.attributes.${ index }.argument`);
+		// Non expression attributes are checked before expression attributes.
+		if (AttrValidators.isSpread(attr))
+			AttrProcessors.spread(attr, params);
+		else if (AttrValidators.isNonExpression(attr))
+			AttrProcessors.nonExpression(attr, params);
+		else if (AttrValidators.isBoolean(attr))
+			AttrProcessors.boolean(attr, params);
 
-			const newExpression = t.callExpression(
-				t.identifier(VARIABLES.REST),
-				[ attr.argument ],
-			);
-			attrPath.replaceWith(newExpression);
+		// Expression attributes are checked based on their type.
+		// Order is based on a guess as to which expression is more common.
+		else if (AttrValidators.isEvent(attr))
+			AttrProcessors.event(attr, params);
+		else if (AttrValidators.isArrowBinding(attr))
+			AttrProcessors.arrowBinding(attr, params);
+		else if (AttrValidators.isCallBinding(attr))
+			AttrProcessors.callBinding(attr, params);
+		else if (AttrValidators.isClassListBinding(attr))
+			AttrProcessors.classList(attr, params);
+		else if (AttrValidators.isStyleListBinding(attr))
+			AttrProcessors.styleList(attr, params);
+		else if (AttrValidators.isRef(attr))
+			AttrProcessors.ref(attr, params);
+		else if (AttrValidators.isDirective(attr))
+			AttrProcessors.directive(attr, params);
 
-			context.builder.addText(' ');
-			context.builder.addExpression(newExpression);
-
-			continue;
-		}
-
-		const name = attr.name.name.toString();
-		if (attr.value) {
-			if (t.isJSXExpressionContainer(attr.value)) {
-				// If the expression is empty, we can skip it.
-				// This should not happen in valid JSX.
-				if (t.isJSXEmptyExpression(attr.value.expression))
-					throw new Error(ERROR_MESSAGES.EMPTY_JSX_EXPRESSION);
-
-				const expression = attr.value.expression;
-				const params: AttrExpressionParams = {
-					builder: context.builder,
-					attr:    attr as AttrExpressionParams['attr'],
-					path:    context.currentPath,
-					index,
-					program: context.program,
-				};
-
-				// If the attribute is classList, we bind it as a classMap directive.
-				if (name === ATTR_NAMES.CLASS_LIST)
-					attributeProcessors.classList(params);
-				// If the attribute is styleList, we bind it as a styleMap directive.
-				else if (name === ATTR_NAMES.STYLE_LIST)
-					attributeProcessors.styleList(params);
-				// If the attribute uses the event binding prefix,
-				// we bind it as an event listener.
-				else if (name.startsWith(ATTR_NAMES.EVENT_PREFIX))
-					attributeProcessors.event(params);
-				// If the attribute is ref we bind it as a ref directive.
-				else if (name === ATTR_NAMES.REF)
-					attributeProcessors.ref(params);
-				// If the attribute is directive, we bind the values it as element directives.
-				else if (name === ATTR_NAMES.DIRECTIVE)
-					attributeProcessors.directive(params);
-				// If the expression in the expression container is a function call,
-				// we check if it is a valid bind expression.
-				else if (isArrowFunctionBinding(expression))
-					attributeProcessors.arrowBinding(params as AttrArrowExpressionParams);
-				// If the expression in the expression container is a member expression
-				// we check if it is a valid bind expression.
-				else if (isCallExpressionBinding(expression))
-					attributeProcessors.callBinding(params as AttrMemberExpressionParams);
-				else
-					// If no other explicit handling, bind it as an attribute.
-					attributeProcessors.expression(params);
-
-				continue;
-			}
-
-			attributeProcessors.nonExpression({
-				builder: context.builder,
-				attr:    attr as AttrNonExpressionParams['attr'],
-				path:    context.currentPath,
-				index,
-				program: context.program,
-			});
-
-			continue;
-		}
-
-		// If the attribute has no value, we can add it as a boolean attribute.
-		context.builder.addText(' ' + name);
+		// Generic expression attributes are checked last
+		// because this condition will be true for all expression attributes.
+		// and we want the more specific cases to be checked first.
+		else if (AttrValidators.isExpression(attr))
+			AttrProcessors.expression(attr, params);
+		else
+			throw new Error(ERROR_MESSAGES.UNKNOWN_JSX_ATTRIBUTE_TYPE);
 	}
 
 	context.builder.addText('>'); // Close the opening tag
