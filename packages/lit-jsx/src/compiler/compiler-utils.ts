@@ -689,6 +689,19 @@ export class Ensure {
 		);
 	}
 
+	static taggedTemplateUtil(program: t.Program, path: NodePath): void {
+		this.import(
+			(source) => source === 'jsx-lit',
+			(name) => name === '__$t',
+			() => t.importDeclaration(
+				[ t.importSpecifier(t.identifier('__$t'), t.identifier('__$t')) ],
+				t.stringLiteral('jsx-lit'),
+			),
+			program,
+			path,
+		);
+	}
+
 }
 
 

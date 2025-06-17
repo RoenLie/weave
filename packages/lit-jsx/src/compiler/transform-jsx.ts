@@ -6,7 +6,8 @@ import type { AttrParams, ValidJSXElement, Values } from './compiler-utils.ts';
 import {
 	AttrProcessors,
 	AttrValidators,
-	Ensure, getJSXElementName,
+	Ensure,
+	getJSXElementName,
 	getTemplateType,
 	isJSXCustomElementComponent,
 	isJSXFunctionElementComponent,
