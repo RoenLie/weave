@@ -37,20 +37,63 @@ const opts = mergeAndConcat(babelUserOptions, babelOptions);
 
 
 describe('Transform JSX', (context) => {
-	test('should transform a div', async ({ expect }) => {
+	test('should transform a div with a single child expression', async ({ expect }) => {
 		const source = `
-		const sayHello = (name: string) => <h1>Hello {name}{'!'}</h1>;
+		const name = 'World';
+		const sayHello = (name: string) => <div>Hello {name}</div>;
 		`;
 
-		let expected = `import { html } from "lit-html";`;
-		expected += `\nconst template = html\`\`;`;
+		const expected = ``
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst name = 'World';`
+		+ `\nconst sayHello = (name: string) => ({`
+		+ `\n  "_$litType$": {`
+		+ `\n    "h": __$t\`<div>Hello<?></div>\`,`
+		+ `\n    "parts": [{`
+		+ `\n      "type": 2,`
+		+ `\n      "index": 1`
+		+ `\n    }]`
+		+ `\n  },`
+		+ `\n  "values": [name]`
+		+ `\n});`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
 
-		console.log(code);
+		expect(code).to.be.eq(expected);
+	});
 
+	test('should transform a nested div with an expression in each child', async ({ expect }) => {
+		const source = `
+		const name = 'World';
+		const sayHello = (name: string) => (
+			<div>
+				Hello {name}
+				<span>Goodbye {name}</span>
+			</div>
+		);
+		`;
 
-		//expect(code).to.be.eq(expected);
+		const expected = ``
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst name = 'World';`
+		+ `\nconst sayHello = (name: string) => ({`
+		+ `\n  "_$litType$": {`
+		+ `\n    "h": __$t\`<div>Hello<?><span>Goodbye<?></span></div>\`,`
+		+ `\n    "parts": [{`
+		+ `\n      "type": 2,`
+		+ `\n      "index": 1`
+		+ `\n    }, {`
+		+ `\n      "type": 2,`
+		+ `\n      "index": 2`
+		+ `\n    }]`
+		+ `\n  },`
+		+ `\n  "values": [name, name]`
+		+ `\n});`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
 	});
 });

@@ -2,7 +2,7 @@ import { type PluginPass } from '@babel/core';
 import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 
-import type { AttrParams, ValidJSXElement, Values } from './compiler-utils.ts';
+import { EnsureImport, type ValidJSXElement, type Values } from './compiler-utils.ts';
 import {
 	AttrProcessors,
 	AttrValidators,
@@ -48,121 +48,75 @@ export const transformJSXElement: VisitNode<
 
 	// If the parent is not a JSX element,
 	// we need to wrap the JSX in a tagged template expression
-	return void path.replaceWith(
-		processJSXElement(path),
-	);
+	return void path.replaceWith(processJSXElement(path));
 };
 
 
-interface JSXElementContext {
-	initialPath:         NodePath<ValidJSXElement>;
-	currentPath:         NodePath<ValidJSXElement>;
+export interface JSXElementContext {
+	path:                NodePath<ValidJSXElement>;
 	program:             t.Program;
 	builder:             TemplateBuilder;
+	isStatic:            { value: boolean; };
 	literalName:         string;
 	tagName:             string;
 	isComponentTag:      boolean;
 	isCustomElementTag:  boolean;
 	isComponentFunction: boolean;
-	isStatic:            { value: boolean; };
 	templateType:        Values<Pick<typeof VARIABLES, 'HTML' | 'SVG' | 'MATHML'>>;
+	importsUsed:         Set<Omit<keyof typeof EnsureImport, 'prototype'>>;
 }
 
-type InitialJSXElementContext = Pick<
-	JSXElementContext,
-	'initialPath' | 'currentPath' | 'program' | 'builder' | 'isStatic'
->;
 
-
-const processJSXElement = (initialPath: NodePath<t.JSXElement>) => {
-	const program = initialPath.findParent(p => t.isProgram(p.node))?.node as t.Program | undefined;
-	if (!program)
-		throw new Error(ERROR_MESSAGES.NO_PROGRAM_FOUND);
-
-	return processJSXElement.transform(initialPath, program);
-};
-
-processJSXElement.transform = (
-	initialPath: NodePath<t.JSXElement>,
-	program: t.Program,
-): t.TaggedTemplateExpression => {
-	if (!isValidJSXElement(initialPath))
-		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
-
-	const builder = new TemplateBuilder();
-	const initialContext: InitialJSXElementContext = {
+const createJSXElementContext = (
+	path:                NodePath<ValidJSXElement>,
+	program:             t.Program,
+	builder:             TemplateBuilder,
+): JSXElementContext => {
+	return {
 		program,
 		builder,
-		initialPath,
-		currentPath: initialPath,
-		isStatic:    { value: false },
-	};
-
-	const context = processJSXElement.processOpeningTag(initialContext);
-
-	return processJSXElement.createTaggedTemplate(context);
-};
-
-processJSXElement.createTaggedTemplate = (
-	context: JSXElementContext,
-) => {
-	let identifier: string = '';
-
-	if (context.isStatic.value) {
-		if (context.templateType === VARIABLES.HTML) {
-			identifier = VARIABLES.HTML_STATIC;
-			Ensure.htmlStaticImport(context.program, context.initialPath);
-		}
-		// This will not happen, as svg and mathml dynamic tags are not supported yet.
-		else if (context.templateType === VARIABLES.SVG) {
-			identifier = VARIABLES.SVG_STATIC;
-			Ensure.svgStaticImport(context.program, context.initialPath);
-		}
-		// This will not happen, as svg and mathml dynamic tags are not supported yet.
-		else if (context.templateType === VARIABLES.MATHML) {
-			identifier = VARIABLES.MATHML_STATIC;
-			Ensure.mathmlStaticImport(context.program, context.initialPath);
-		}
-		else {
-			throw new Error(ERROR_MESSAGES.UNKNOWN_TEMPLATE_TYPE(context.templateType));
-		}
-	}
-	else {
-		if (context.templateType === VARIABLES.HTML) {
-			identifier = VARIABLES.HTML;
-			Ensure.htmlImport(context.program, context.initialPath);
-		}
-		else if (context.templateType === VARIABLES.SVG) {
-			identifier = VARIABLES.SVG;
-			Ensure.svgImport(context.program, context.initialPath);
-		}
-		else if (context.templateType === VARIABLES.MATHML) {
-			identifier = VARIABLES.MATHML;
-			Ensure.mathmlImport(context.program, context.initialPath);
-		}
-		else {
-			throw new Error(ERROR_MESSAGES.UNKNOWN_TEMPLATE_TYPE(context.templateType));
-		}
-	}
-
-	return context.builder.createTaggedTemplate(identifier);
-};
-
-processJSXElement.processOpeningTag = (
-	initialContext: InitialJSXElementContext,
-): JSXElementContext => {
-	const name = getJSXElementName(initialContext.currentPath.node);
-	if (!name)
-		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
-
-	const context: JSXElementContext = Object.assign(initialContext, {
+		path,
+		isStatic:            { value: false },
 		isComponentTag:      false,
 		isCustomElementTag:  false,
 		isComponentFunction: false,
 		literalName:         '',
-		tagName:             name,
-		templateType:        getTemplateType(name),
-	} satisfies Omit<JSXElementContext, keyof InitialJSXElementContext>);
+		tagName:             '',
+		templateType:        'html',
+		importsUsed:         new Set(),
+	} satisfies JSXElementContext;
+};
+
+
+const processJSXElement = (path: NodePath<t.JSXElement>) => {
+	const program = path.findParent(p => t.isProgram(p.node))?.node as t.Program | undefined;
+	if (!program)
+		throw new Error(ERROR_MESSAGES.NO_PROGRAM_FOUND);
+
+	if (!isValidJSXElement(path))
+		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
+
+	const builder = new TemplateBuilder();
+	const context = createJSXElementContext(path, program, builder);
+
+	processJSXElement.processOpeningTag(context);
+
+	const taggedTemplate = processJSXElement.createTaggedTemplate(context);
+
+	processJSXElement.ensureImports(context);
+
+	return taggedTemplate;
+};
+
+processJSXElement.processOpeningTag = (
+	context: JSXElementContext,
+): JSXElementContext => {
+	const name = getJSXElementName(context.path.node);
+	if (!name)
+		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
+
+	context.tagName = name;
+	context.templateType = getTemplateType(name);
 
 	// If the tag name is `DISCARD_TAG`, we skip it.
 	// but we still need to process its children.
@@ -182,7 +136,7 @@ processJSXElement.processOpeningTag = (
 		const literalIdentifier = Ensure.componentLiteral(
 			context.tagName,
 			COMPONENT_LITERAL_PREFIX + context.tagName,
-			context.currentPath,
+			context.path,
 			context.program,
 		);
 
@@ -226,49 +180,40 @@ processJSXElement.processOpeningTag = (
 	return context;
 };
 
-processJSXElement.processAttributes = (
-	context: JSXElementContext,
-): void => {
-	const { attributes } = context.currentPath.node.openingElement;
+processJSXElement.processAttributes = (context: JSXElementContext): void => {
+	const { attributes } = context.path.node.openingElement;
 
-	for (const [ index, attr ] of attributes.entries()) {
-		const params: AttrParams = {
-			builder: context.builder,
-			path:    context.currentPath,
-			program: context.program,
-			index,
-		};
-
+	for (const attr of attributes.values()) {
 		// Non expression attributes are checked before expression attributes.
 		if (AttrValidators.isSpread(attr))
-			AttrProcessors.spread(attr, params);
+			AttrProcessors.spread(attr, context);
 		else if (AttrValidators.isNonExpression(attr))
-			AttrProcessors.nonExpression(attr, params);
+			AttrProcessors.nonExpression(attr, context);
 		else if (AttrValidators.isBoolean(attr))
-			AttrProcessors.boolean(attr, params);
+			AttrProcessors.boolean(attr, context);
 
 		// Expression attributes are checked based on their type.
 		// Order is based on a guess as to which expression is more common.
 		else if (AttrValidators.isEvent(attr))
-			AttrProcessors.event(attr, params);
+			AttrProcessors.event(attr, context);
 		else if (AttrValidators.isArrowBinding(attr))
-			AttrProcessors.arrowBinding(attr, params);
+			AttrProcessors.arrowBinding(attr, context);
 		else if (AttrValidators.isCallBinding(attr))
-			AttrProcessors.callBinding(attr, params);
+			AttrProcessors.callBinding(attr, context);
 		else if (AttrValidators.isClassListBinding(attr))
-			AttrProcessors.classList(attr, params);
+			AttrProcessors.classList(attr, context);
 		else if (AttrValidators.isStyleListBinding(attr))
-			AttrProcessors.styleList(attr, params);
+			AttrProcessors.styleList(attr, context);
 		else if (AttrValidators.isRef(attr))
-			AttrProcessors.ref(attr, params);
+			AttrProcessors.ref(attr, context);
 		else if (AttrValidators.isDirective(attr))
-			AttrProcessors.directive(attr, params);
+			AttrProcessors.directive(attr, context);
 
 		// Generic expression attributes are checked last
 		// because this condition will be true for all expression attributes.
 		// and we want the more specific cases to be checked first.
 		else if (AttrValidators.isExpression(attr))
-			AttrProcessors.expression(attr, params);
+			AttrProcessors.expression(attr, context);
 		else
 			throw new Error(ERROR_MESSAGES.UNKNOWN_JSX_ATTRIBUTE_TYPE);
 	}
@@ -276,10 +221,8 @@ processJSXElement.processAttributes = (
 	context.builder.addText('>'); // Close the opening tag
 };
 
-processJSXElement.processChildren = (
-	context: JSXElementContext,
-) => {
-	for (const [ index, child ] of context.currentPath.node.children.entries()) {
+processJSXElement.processChildren = (context: JSXElementContext) => {
+	for (const [ index, child ] of context.path.node.children.entries()) {
 		if (t.isJSXText(child)) {
 			if (WHITESPACE_TAGS.includes(context.tagName))
 				context.builder.addText(child.value);
@@ -289,12 +232,12 @@ processJSXElement.processChildren = (
 			continue;
 		}
 		if (t.isJSXElement(child)) {
-			const currentPath = context.currentPath.get(`children.${ index }`);
+			const currentPath = context.path.get(`children.${ index }`);
 			if (!isValidJSXElement(currentPath))
 				throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
 			// Recursively process child elements
-			processJSXElement.processOpeningTag({ ...context, currentPath });
+			processJSXElement.processOpeningTag({ ...context, path: currentPath });
 
 			continue;
 		}
@@ -308,10 +251,7 @@ processJSXElement.processChildren = (
 	}
 };
 
-processJSXElement.processClosingTag = (
-	context: JSXElementContext,
-): void => {
-	// Add closing tag.
+processJSXElement.processClosingTag = (context: JSXElementContext): void => {
 	// If it's a component tag, we need to close it with the static literal.
 	if (context.isCustomElementTag) {
 		context.builder.addText('</');
@@ -323,23 +263,21 @@ processJSXElement.processClosingTag = (
 	}
 };
 
-processJSXElement.createComponentPropsObject = (
-	context: JSXElementContext,
-): t.ObjectExpression => {
+processJSXElement.createComponentPropsObject = (context: JSXElementContext): t.ObjectExpression => {
 	const properties: (t.ObjectProperty | t.SpreadElement)[] = [];
-	const attributes = context.currentPath.node.openingElement.attributes;
+	const attributes = context.path.node.openingElement.attributes;
 
-	// Process attributes
 	for (const attr of attributes) {
+		// Handle spread attributes by spreading the object
 		if (t.isJSXSpreadAttribute(attr)) {
-			// Handle spread attributes by spreading the object
 			properties.push(t.spreadElement(attr.argument));
 
 			continue;
 		}
 
 		const name = attr.name.name.toString();
-		const camelCaseName = name.replace(/-([a-zA-Z])/g, (_, letter) => letter.toUpperCase());
+		const camelCaseName = name
+			.replace(/-([a-zA-Z])/g, (_, letter) => letter.toUpperCase());
 
 		let value: t.Expression;
 
@@ -354,8 +292,8 @@ processJSXElement.createComponentPropsObject = (
 			else if (t.isStringLiteral(attr.value)) {
 				value = attr.value;
 			}
+			// Other literal types
 			else {
-				// Other literal types
 				value = attr.value as t.Expression;
 			}
 		}
@@ -368,7 +306,7 @@ processJSXElement.createComponentPropsObject = (
 	}
 
 	// Process children
-	const children = context.currentPath.node.children;
+	const children = context.path.node.children;
 	if (children.length > 0) {
 		const childrenArray: t.Expression[] = [];
 
@@ -377,12 +315,15 @@ processJSXElement.createComponentPropsObject = (
 				const trimmedValue = child.value.trim();
 				if (trimmedValue)
 					childrenArray.push(t.stringLiteral(trimmedValue));
-
-				continue;
 			}
+			else if (t.isJSXExpressionContainer(child)) {
+				if (t.isJSXEmptyExpression(child.expression))
+					continue;
 
-			if (t.isJSXElement(child)) {
-				const childPath = context.currentPath.get(`children.${ index }`);
+				childrenArray.push(child.expression);
+			}
+			else if (t.isJSXElement(child)) {
+				const childPath = context.path.get(`children.${ index }`);
 				if (!isValidJSXElement(childPath))
 					throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
@@ -390,34 +331,27 @@ processJSXElement.createComponentPropsObject = (
 				const childBuilder = new TemplateBuilder();
 				const childContext: JSXElementContext = {
 					...context,
-					currentPath: childPath,
-					builder:     childBuilder,
+					path:    childPath,
+					builder: childBuilder,
 				};
 
 				// Recursively process the child element
-				processJSXElement
-					.processOpeningTag(childContext);
+				processJSXElement.processOpeningTag(childContext);
 
 				// Get the tagged template expression from the child
 				const childTemplate = processJSXElement
 					.createTaggedTemplate(childContext);
 
 				childrenArray.push(childTemplate);
-
-				continue;
-			}
-
-			if (t.isJSXExpressionContainer(child)) {
-				if (t.isJSXEmptyExpression(child.expression))
-					continue;
-
-				childrenArray.push(child.expression);
-				continue;
 			}
 		}
 
 		// Add children property if there are any children
 		if (childrenArray.length > 0) {
+			// If there's only one child, we can use it directly.
+			// If there are multiple children, we wrap them in an array.
+			// This is because JSX Component Functions expects
+			// either a single child or an array of children.
 			const childrenValue: t.Expression = childrenArray.length === 1
 				? childrenArray[0]!
 				: t.arrayExpression(childrenArray);
@@ -430,4 +364,59 @@ processJSXElement.createComponentPropsObject = (
 	}
 
 	return t.objectExpression(properties);
+};
+
+processJSXElement.createTaggedTemplate = (context: JSXElementContext) => {
+	let identifier: string = '';
+
+	if (context.isStatic.value) {
+		if (context.templateType === VARIABLES.HTML) {
+			identifier = VARIABLES.HTML_STATIC;
+			context.importsUsed.add('htmlStatic');
+		}
+		// This will not happen, as svg and mathml dynamic tags are not supported yet.
+		else if (context.templateType === VARIABLES.SVG) {
+			identifier = VARIABLES.SVG_STATIC;
+			context.importsUsed.add('svgStatic');
+		}
+		// This will not happen, as svg and mathml dynamic tags are not supported yet.
+		else if (context.templateType === VARIABLES.MATHML) {
+			identifier = VARIABLES.MATHML_STATIC;
+			context.importsUsed.add('mathmlStatic');
+		}
+		else {
+			throw new Error(ERROR_MESSAGES.UNKNOWN_TEMPLATE_TYPE(context.templateType));
+		}
+	}
+	else {
+		if (context.templateType === VARIABLES.HTML) {
+			identifier = VARIABLES.HTML;
+			context.importsUsed.add('html');
+		}
+		else if (context.templateType === VARIABLES.SVG) {
+			identifier = VARIABLES.SVG;
+			context.importsUsed.add('svg');
+		}
+		else if (context.templateType === VARIABLES.MATHML) {
+			identifier = VARIABLES.MATHML;
+			context.importsUsed.add('mathml');
+		}
+		else {
+			throw new Error(ERROR_MESSAGES.UNKNOWN_TEMPLATE_TYPE(context.templateType));
+		}
+	}
+
+	return context.builder.createTaggedTemplate(identifier);
+};
+
+processJSXElement.ensureImports = (context: JSXElementContext): void => {
+	type Imports = Omit<typeof EnsureImport, 'prototype'>;
+	const record = EnsureImport as Imports;
+
+	// Ensure all imports used in the JSX element are imported.
+	context.importsUsed.forEach((importName) => {
+		const key = importName as keyof Imports;
+		if (key in record)
+			record[key](context.program, context.path);
+	});
 };
