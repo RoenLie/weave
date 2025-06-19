@@ -1,42 +1,37 @@
 /* eslint-disable @stylistic/max-len */
 
 import * as babel from '@babel/core';
-import { mergeAndConcat } from 'merge-anything';
 import { describe, test } from 'vitest';
 
 import { litJsxBabelPreset } from '../../src/compiler/babel-preset.ts';
+import { isJSXElementStatic } from '../../src/compiler/transform-jsx.ts';
+
 
 type BabelPlugins = NonNullable<NonNullable<babel.TransformOptions['parserOpts']>['plugins']>;
-const plugins: BabelPlugins = [ 'jsx', 'typescript' ];
 
-// Default value for babel user options
-const babelUserOptions: babel.TransformOptions = {};
 
-const babelOptions: babel.TransformOptions = {
-	root:           '.',
-	filename:       'test.tsx',
-	sourceFileName: 'test.tsx',
-	presets:        [
-		[
-			litJsxBabelPreset,
-			/* merged into the metadata obj through state.opts */
-			{},
+describe('Transform JSX', () => {
+	const opts: babel.TransformOptions = {
+		root:           '.',
+		filename:       'test.tsx',
+		sourceFileName: 'test.tsx',
+		presets:        [
+			[
+				litJsxBabelPreset,
+				/* merged into the metadata obj through state.opts */
+				{},
+			],
 		],
-	],
-	plugins:    [],
-	ast:        false,
-	sourceMaps: true,
-	configFile: false,
-	babelrc:    false,
-	parserOpts: {
-		plugins,
-	},
-};
+		plugins:    [],
+		ast:        false,
+		sourceMaps: true,
+		configFile: false,
+		babelrc:    false,
+		parserOpts: {
+			plugins: [ 'jsx', 'typescript' ] satisfies BabelPlugins,
+		},
+	};
 
-const opts = mergeAndConcat(babelUserOptions, babelOptions);
-
-
-describe('Transform JSX', (context) => {
 	test('should transform an empty JSX fragment', async ({ expect }) => {
 		const source = `
 		const template = <></>;
@@ -445,5 +440,180 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
 		expect(code).to.be.eq(expected);
+	});
+
+	test('should handle a template, with an expression using a fragment', async ({ expect }) => {
+		const source = `
+		const template = (
+			<>
+				{() => <>
+				 	<div>First</div>
+				</>}
+			</>
+		);
+		`;
+
+		const expected = ''
+		+ `import { html } from "lit-html";`
+		+ `\nconst template = html\`\${() => html\`<div>First</div>\`}\`;`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+		expect(code).to.be.eq(expected);
+	});
+});
+
+
+describe('isJSXElementStatic', () => {
+	const testStaticDetection = async (source: string): Promise<boolean> => {
+		let testResult = false;
+
+		const visitor = (path: any) => {
+			// Only test root JSX nodes (not nested ones)
+			const isRoot = !path.parent
+				|| (!babel.types.isJSXElement(path.parent)
+				&& !babel.types.isJSXFragment(path.parent));
+
+			if (isRoot) {
+				console.time('isJSXElementStatic');
+				testResult = isJSXElementStatic(path);
+				console.timeEnd('isJSXElementStatic');
+			}
+		};
+
+		const opts: babel.TransformOptions = {
+			root:           '.',
+			filename:       'test.tsx',
+			sourceFileName: 'test.tsx',
+			presets:        [],
+			plugins:        [
+				{
+					visitor: {
+						JSXElement:  visitor,
+						JSXFragment: visitor,
+					},
+				},
+			],
+			ast:        false,
+			sourceMaps: true,
+			configFile: false,
+			babelrc:    false,
+			parserOpts: {
+				plugins: [ 'jsx', 'typescript' ] satisfies BabelPlugins,
+			},
+		};
+
+		await babel.transformAsync(source, opts);
+
+		return testResult;
+	};
+
+	test('should return true for templates with custom element components (.tag)', async ({ expect }) => {
+		const source = `
+		const template = (
+			<div>
+				<SpecialElement.tag name="test">
+					<span>Nested content</span>
+					{someExpression}
+				</SpecialElement.tag>
+				<regular-element>Regular HTML</regular-element>
+			</div>
+		);
+		`;
+
+		const result = await testStaticDetection(source);
+		expect(result).toBe(true);
+	});
+
+	test('should return false for templates without custom element components', async ({ expect }) => {
+		const source = `
+		const template = (
+			<div className="container">
+				<span>Regular content</span>
+				<button onClick={handleClick}>Click me</button>
+				{conditionalContent && <p>Conditional</p>}
+				<For each={items}>
+					{item => <li>{item}</li>}
+				</For>
+			</div>
+		);
+		`;
+
+		const result = await testStaticDetection(source);
+		expect(result).toBe(false);
+	});
+
+	test('should return true for fragments containing custom element components', async ({ expect }) => {
+		const source = `
+		const template = (
+			<>
+				<div>Regular div</div>
+				<CustomComponent.tag prop="value">
+					<nested-element>
+						<AnotherCustom.tag />
+					</nested-element>
+				</CustomComponent.tag>
+				<span>Another regular element</span>
+			</>
+		);
+		`;
+
+		const result = await testStaticDetection(source);
+		expect(result).toBe(true);
+	});
+
+	test('should return false for empty fragments', async ({ expect }) => {
+		const source = `
+		const template = <></>;
+		`;
+
+		const result = await testStaticDetection(source);
+		expect(result).toBe(false);
+	});
+
+	test('should return true for deeply nested custom elements', async ({ expect }) => {
+		const source = `
+		const template = (
+			<div>
+				<section>
+					<article>
+						<header>
+							<Title.tag level={2}>
+								<Icon.tag name="star" />
+								Dynamic Title
+							</Title.tag>
+						</header>
+						<main>
+							<p>Regular content</p>
+							<ComponentFunction prop="value">
+								<span>Function component child</span>
+							</ComponentFunction>
+						</main>
+					</article>
+				</section>
+			</div>
+		);
+		`;
+
+		const result = await testStaticDetection(source);
+		expect(result).toBe(true);
+	});
+
+	test('should return false for templates with only function components', async ({ expect }) => {
+		const source = `
+		const template = (
+			<div>
+				<MyComponent prop="value">
+					<ChildComponent>
+						<span>Nested</span>
+					</ChildComponent>
+				</MyComponent>
+				<AnotherComponent />
+			</div>
+		);
+		`;
+
+		const result = await testStaticDetection(source);
+		expect(result).toBe(false);
 	});
 });

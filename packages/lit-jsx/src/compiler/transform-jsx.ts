@@ -2,7 +2,7 @@ import { type PluginPass } from '@babel/core';
 import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 
-import { EnsureImport, type ValidJSXElement, type Values } from './compiler-utils.ts';
+import { EnsureImport, isJSXElementPath, isJSXFragmentPath, isValidOpeningElement, type ValidJSXElement, type Values } from './compiler-utils.ts';
 import {
 	AttrProcessors,
 	AttrValidators,
@@ -14,36 +14,16 @@ import {
 	isValidJSXElement,
 	TemplateBuilder,
 } from './compiler-utils.ts';
-import {
-	COMPONENT_LITERAL_PREFIX, DISCARD_TAG,
-	ERROR_MESSAGES, VARIABLES, WHITESPACE_TAGS,
-} from './config.ts';
-
-
-export const transformJSXFragment: VisitNode<
-	PluginPass, t.JSXFragment
-> = (path): void => {
-	// If it's a JSX fragment, we replace it with a JSX element
-	// with a `DISCARD_TAG`, which will be handled later.
-	// this lets us strip the fragment without losing its children.
-	const discardWrapper = t.jSXElement(
-		t.jSXOpeningElement(t.jSXIdentifier(DISCARD_TAG), [], false),
-		t.jSXClosingElement(t.jSXIdentifier(DISCARD_TAG)),
-		path.node.children,
-		false,
-	);
-
-	return void path.replaceWith(discardWrapper);
-};
+import { COMPONENT_LITERAL_PREFIX, ERROR_MESSAGES, VARIABLES, WHITESPACE_TAGS } from './config.ts';
 
 
 export const transformJSXElement: VisitNode<
-	PluginPass, t.JSXElement
+	PluginPass, t.JSXElement | t.JSXFragment
 > = (path): void => {
 	// If the parent is a JSX element, we do not need to transform it.
 	// The below condition will handle the case where the JSX element
 	// is nested inside another JSX element.
-	if (t.isJSXElement(path.parent))
+	if (t.isJSXElement(path.parent) || t.isJSXFragment(path.parent))
 		return;
 
 	// If the parent is not a JSX element,
@@ -53,7 +33,7 @@ export const transformJSXElement: VisitNode<
 
 
 export interface JSXElementContext {
-	path:                NodePath<ValidJSXElement>;
+	path:                NodePath<t.JSXElement | t.JSXFragment>;
 	program:             t.Program;
 	builder:             TemplateBuilder;
 	isStatic:            { value: boolean; };
@@ -68,7 +48,7 @@ export interface JSXElementContext {
 
 
 const createJSXElementContext = (
-	path:                NodePath<ValidJSXElement>,
+	path:                NodePath<t.JSXElement | t.JSXFragment>,
 	program:             t.Program,
 	builder:             TemplateBuilder,
 ): JSXElementContext => {
@@ -88,13 +68,11 @@ const createJSXElementContext = (
 };
 
 
-const processJSXElement = (path: NodePath<t.JSXElement>) => {
+const processJSXElement = (path: NodePath<t.JSXElement | t.JSXFragment>) => {
 	const program = path.findParent(p => t.isProgram(p.node))?.node as t.Program | undefined;
 	if (!program)
 		throw new Error(ERROR_MESSAGES.NO_PROGRAM_FOUND);
 
-	if (!isValidJSXElement(path))
-		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
 	const builder = new TemplateBuilder();
 	const context = createJSXElementContext(path, program, builder);
@@ -110,23 +88,21 @@ const processJSXElement = (path: NodePath<t.JSXElement>) => {
 
 processJSXElement.processOpeningTag = (
 	context: JSXElementContext,
-): JSXElementContext => {
+): void => {
+	if (t.isJSXFragment(context.path.node)) {
+		context.builder.addText('');
+
+		processJSXElement.processChildren(context);
+
+		return;
+	}
+
 	const name = getJSXElementName(context.path.node);
 	if (!name)
 		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
 	context.tagName = name;
 	context.templateType = getTemplateType(name);
-
-	// If the tag name is `DISCARD_TAG`, we skip it.
-	// but we still need to process its children.
-	if (context.tagName === DISCARD_TAG) {
-		context.builder.addText('');
-
-		processJSXElement.processChildren(context);
-
-		return context;
-	}
 
 	if (isJSXCustomElementComponent(context.tagName)) {
 		context.isCustomElementTag = true;
@@ -149,7 +125,7 @@ processJSXElement.processOpeningTag = (
 		processJSXElement.processChildren(context);
 		processJSXElement.processClosingTag(context);
 
-		return context;
+		return;
 	}
 
 	if (isJSXFunctionElementComponent(context.tagName)) {
@@ -167,7 +143,7 @@ processJSXElement.processOpeningTag = (
 		);
 		context.builder.addText('');
 
-		return context;
+		return;
 	}
 
 	// If the tag is not a component, we will treat it as a regular HTML element.
@@ -177,10 +153,13 @@ processJSXElement.processOpeningTag = (
 	processJSXElement.processChildren(context);
 	processJSXElement.processClosingTag(context);
 
-	return context;
+	return;
 };
 
 processJSXElement.processAttributes = (context: JSXElementContext): void => {
+	if (!isValidJSXElement(context.path))
+		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
+
 	const { attributes } = context.path.node.openingElement;
 
 	for (const attr of attributes.values()) {
@@ -221,32 +200,26 @@ processJSXElement.processAttributes = (context: JSXElementContext): void => {
 	context.builder.addText('>'); // Close the opening tag
 };
 
-processJSXElement.processChildren = (context: JSXElementContext) => {
+processJSXElement.processChildren = (context: JSXElementContext): void => {
 	for (const [ index, child ] of context.path.node.children.entries()) {
 		if (t.isJSXText(child)) {
 			if (WHITESPACE_TAGS.includes(context.tagName))
 				context.builder.addText(child.value);
 			else
 				context.builder.addText(child.value.trim());
-
-			continue;
 		}
-		if (t.isJSXElement(child)) {
-			const currentPath = context.path.get(`children.${ index }`);
-			if (!isValidJSXElement(currentPath))
-				throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
-
-			// Recursively process child elements
-			processJSXElement.processOpeningTag({ ...context, path: currentPath });
-
-			continue;
-		}
-		if (t.isJSXExpressionContainer(child)) {
+		else if (t.isJSXExpressionContainer(child)) {
 			if (t.isJSXEmptyExpression(child.expression))
 				continue;
 
 			context.builder.addExpression(child.expression);
-			continue;
+		}
+		else if (t.isJSXElement(child)) {
+			const currentPath = context.path.get(`children.${ index }`);
+
+			// Recursively process child elements
+			if (isJSXElementPath(currentPath) || isJSXFragmentPath(currentPath))
+				processJSXElement.processOpeningTag({ ...context, path: currentPath });
 		}
 	}
 };
@@ -264,6 +237,9 @@ processJSXElement.processClosingTag = (context: JSXElementContext): void => {
 };
 
 processJSXElement.createComponentPropsObject = (context: JSXElementContext): t.ObjectExpression => {
+	if (!isValidJSXElement(context.path))
+		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
+
 	const properties: (t.ObjectProperty | t.SpreadElement)[] = [];
 	const attributes = context.path.node.openingElement.attributes;
 
@@ -324,7 +300,8 @@ processJSXElement.createComponentPropsObject = (context: JSXElementContext): t.O
 			}
 			else if (t.isJSXElement(child)) {
 				const childPath = context.path.get(`children.${ index }`);
-				if (!isValidJSXElement(childPath))
+
+				if (!isValidOpeningElement(childPath))
 					throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
 				// Create a new builder for this child element
@@ -366,7 +343,7 @@ processJSXElement.createComponentPropsObject = (context: JSXElementContext): t.O
 	return t.objectExpression(properties);
 };
 
-processJSXElement.createTaggedTemplate = (context: JSXElementContext) => {
+processJSXElement.createTaggedTemplate = (context: JSXElementContext): t.TaggedTemplateExpression => {
 	let identifier: string = '';
 
 	if (context.isStatic.value) {
@@ -419,4 +396,29 @@ processJSXElement.ensureImports = (context: JSXElementContext): void => {
 		if (key in record)
 			record[key](context.program, context.path);
 	});
+};
+
+
+/**
+ * Determines if a JSX element will result in a static template.
+ * This function traverses the JSX tree to check if any custom element components
+ * are present, which would make the template static.
+ *
+ * @param path - The NodePath of the JSX element to analyze
+ * @returns true if the template will be static, false otherwise
+ */
+export const isJSXElementStatic = (path: NodePath<t.JSXElement | t.JSXFragment>): boolean => {
+	if (t.isJSXElement(path.node) && isJSXCustomElementComponent(path.node))
+		return true;
+
+	for (const index of path.node.children.keys()) {
+		const childPath = path.get(`children.${ index }`);
+
+		if (isJSXElementPath(childPath) && isJSXElementStatic(childPath))
+			return true;
+		else if (isJSXFragmentPath(childPath) && isJSXElementStatic(childPath))
+			return true;
+	}
+
+	return false;
 };

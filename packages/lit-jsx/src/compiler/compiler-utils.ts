@@ -707,13 +707,18 @@ export type ValidJSXElement = t.JSXElement & {
 	};
 };
 
-export const isValidJSXElement = (initialPath: NodePath): initialPath is NodePath<ValidJSXElement> => {
-	const node = initialPath.node;
+export const isValidJSXElement = (path: NodePath): path is NodePath<ValidJSXElement> => {
+	const node = path.node;
 
 	return t.isJSXElement(node)
 		&& t.isJSXOpeningElement(node.openingElement)
 		&& (t.isJSXIdentifier(node.openingElement.name)
 		|| t.isJSXMemberExpression(node.openingElement.name));
+};
+
+
+export const isValidOpeningElement = (path: NodePath): path is NodePath<t.JSXElement | t.JSXFragment> => {
+	return t.isJSXElement(path.node) || t.isJSXFragment(path.node);
 };
 
 
@@ -757,3 +762,7 @@ export const isJSXFunctionElementComponent = (nodeOrName: t.JSXElement | string)
 
 	return true;
 };
+
+
+export const isJSXElementPath = (path: NodePath): path is NodePath<t.JSXElement> => t.isJSXElement(path.node);
+export const isJSXFragmentPath = (path: NodePath): path is NodePath<t.JSXFragment> => t.isJSXFragment(path.node);
