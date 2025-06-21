@@ -2,7 +2,13 @@ import { type PluginPass } from '@babel/core';
 import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 
-import { EnsureImport, isJSXElementPath, isJSXFragmentPath, isValidOpeningElement, type ValidJSXElement, type Values } from './compiler-utils.ts';
+import {
+	EnsureImport,
+	isJSXElementPath,
+	isJSXFragmentPath,
+	isValidOpeningElement,
+	type Values,
+} from './compiler-utils.ts';
 import {
 	AttrProcessors,
 	AttrValidators,
@@ -14,7 +20,12 @@ import {
 	isValidJSXElement,
 	TemplateBuilder,
 } from './compiler-utils.ts';
-import { COMPONENT_LITERAL_PREFIX, ERROR_MESSAGES, VARIABLES, WHITESPACE_TAGS } from './config.ts';
+import {
+	COMPONENT_LITERAL_PREFIX,
+	ERROR_MESSAGES,
+	VARIABLES,
+	WHITESPACE_TAGS,
+} from './config.ts';
 
 
 export const transformJSXElement: VisitNode<

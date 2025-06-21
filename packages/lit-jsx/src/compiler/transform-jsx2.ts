@@ -3,7 +3,7 @@ import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 import { PartType } from 'lit-html/directive.js';
 
-import { Ensure, EnsureImport, getJSXElementName, isValidJSXElement } from './compiler-utils.ts';
+import { EnsureImport, getJSXElementName, isValidJSXElement } from './compiler-utils.ts';
 import { ERROR_MESSAGES, WHITESPACE_TAGS } from './config.ts';
 
 
@@ -16,9 +16,15 @@ export const transformJSXElementCompiled: VisitNode<
 	if (t.isJSXElement(path.parent))
 		return;
 
+
+	//const replacementExpression = processJSXElementToCompiled(path);
+
+
 	// If the parent is not a JSX element,
 	// we need to wrap the JSX in a tagged template expression
 	return void path.replaceWith(
+		// This should rather create a variable in the same scope which is then used in the template.
+		// This prevents the compiled template from being recreated more than necessary.
 		processJSXElementToCompiled(path),
 	);
 };
@@ -88,14 +94,15 @@ const process = (context: CompiledContext) => {
 	// Process the children
 	for (const [ index, child ] of context.path.node.children.entries()) {
 		if (t.isJSXText(child)) {
-			console.log(`Text found in JSX: ${ child.value }`);
 			if (WHITESPACE_TAGS.includes(tagName))
 				context.templateText.value += child.value;
 			else
 				context.templateText.value += child.value.trim();
 		}
-		else if (t.isJSXExpressionContainer(child) && !t.isJSXEmptyExpression(child.expression)) {
-			console.log(`Expression found in JSX: ${ child.expression.type }`);
+		else if (t.isJSXExpressionContainer(child)) {
+			if (t.isJSXEmptyExpression(child.expression))
+				continue;
+
 			context.templateText.value += '<?>';
 
 			context.values.push(createValuesEntry(child.expression));

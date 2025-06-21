@@ -60,6 +60,7 @@ export const ERROR_MESSAGES = {
 	ONLY_STRING_LITERALS:       'Only string literals are supported for JSX attributes.',
 	INVALID_DIRECTIVE_VALUE:    'Invalid value in directive expression.',
 	UNKNOWN_JSX_ATTRIBUTE_TYPE: 'Unknown JSX attribute type found.',
+	IDENTIFIER_NOT_FOUND:       (name: string): string => `Identifier '${ name }' not found in any accessible scope`,
 	TAG_NAME_NOT_FOUND:         (tagName: string): string => `Tag name '${ tagName }' not found in any accessible scope`,
 	NO_STATEMENT_PATH:          (tagName: string): string => `Could not find statement-level path for tagName: ${ tagName }`,
 	UNKNOWN_TEMPLATE_TYPE:      (type: string): string => `Unknown template type: ${ type }`,

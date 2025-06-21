@@ -1,4 +1,4 @@
-import type { NodePath } from '@babel/traverse';
+import type { Binding, NodePath } from '@babel/traverse';
 import * as t from '@babel/types';
 
 import { isMathmlTag } from '../shared/mathml-tags.ts';
@@ -401,6 +401,83 @@ export class Ensure {
 			const [ insertedPath ] = programPath.unshiftContainer('body', importDeclaration);
 			programPath.scope.registerDeclaration(insertedPath);
 		}
+	}
+
+	static getNodePath<T extends t.Node>(
+		node: T,
+		path: NodePath,
+	): NodePath<T> | undefined {
+		// First, traverse upwards to find the root (Program) path
+		let rootPath = path;
+		while (rootPath.parentPath)
+			rootPath = rootPath.parentPath;
+
+		// Now traverse down from the root to find the target node
+		let foundPath: NodePath<T> | undefined;
+
+		rootPath.traverse({
+			enter(path) {
+				if (path.node === node) {
+					foundPath = path as NodePath<T>;
+					path.stop();
+				}
+			},
+		});
+
+		return foundPath;
+	}
+
+	static getClosestStatementPath(path: NodePath): NodePath<t.Statement> {
+		let statementPath: NodePath<t.Node> | null = path;
+
+		while (statementPath && !statementPath.isStatement())
+			statementPath = statementPath.parentPath;
+
+		if (!statementPath)
+			throw new Error(`Could not find statement path for node insertion`);
+
+		return statementPath;
+	}
+
+	static getClosestBinding(path: NodePath, name: string): Binding | undefined {
+		let currentScope = path.scope;
+		while (currentScope) {
+			const existingBinding = currentScope.getBinding(name);
+			if (existingBinding)
+				return existingBinding;
+
+			currentScope = currentScope.parent;
+		}
+	}
+
+	static replacePathNodeAsNearestVariableDeclaration(
+		path: NodePath,
+		newIdentifier: string,
+		expression: () => t.Expression,
+	): t.Identifier {
+		if (this.getClosestBinding(path, newIdentifier))
+			return t.identifier(newIdentifier);
+
+		const nodeToReplace = path.node;
+
+		// Create the new variable declaration
+		const identifier = t.identifier(newIdentifier);
+		const declarator = t.variableDeclarator(identifier, expression());
+		const variableDeclaration = t.variableDeclaration('const', [ declarator ]);
+
+		const statementPath = this.getClosestStatementPath(path);
+
+		// Insert the new declaration before the current statement
+		const [ insertedPath ] = statementPath.insertBefore(variableDeclaration);
+
+		// Register the new declaration with the appropriate scope
+		statementPath.scope.registerDeclaration(insertedPath);
+
+		// Replace the target node with an identifier pointing to the new variable
+		const nodePath = this.getNodePath(nodeToReplace, path);
+		nodePath?.replaceWith(identifier);
+
+		return identifier;
 	}
 
 	static componentTagDeclaration(

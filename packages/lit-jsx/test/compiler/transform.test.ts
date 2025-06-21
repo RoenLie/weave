@@ -1,16 +1,20 @@
 /* eslint-disable @stylistic/max-len */
 
+import type { NodePath } from '@babel/core';
 import * as babel from '@babel/core';
+import type { JSXElement, JSXFragment } from '@babel/types';
+import * as t from '@babel/types';
 import { describe, test } from 'vitest';
 
-import { litJsxBabelPreset } from '../../src/compiler/babel-preset.ts';
+import { litJsxBabelPreset, litJsxBabelPreset2 } from '../../src/compiler/babel-preset.ts';
+import { Ensure } from '../../src/compiler/compiler-utils.ts';
 import { isJSXElementStatic } from '../../src/compiler/transform-jsx.ts';
 
 
 type BabelPlugins = NonNullable<NonNullable<babel.TransformOptions['parserOpts']>['plugins']>;
 
 
-describe('Transform JSX', () => {
+describe('Transform JSX to standard lit-html', () => {
 	const opts: babel.TransformOptions = {
 		root:           '.',
 		filename:       'test.tsx',
@@ -468,7 +472,7 @@ describe('isJSXElementStatic', () => {
 	const testStaticDetection = async (source: string): Promise<boolean> => {
 		let testResult = false;
 
-		const visitor = (path: any) => {
+		const visitor = (path: NodePath<JSXElement | JSXFragment>) => {
 			// Only test root JSX nodes (not nested ones)
 			const isRoot = !path.parent
 				|| (!babel.types.isJSXElement(path.parent)
@@ -615,5 +619,165 @@ describe('isJSXElementStatic', () => {
 
 		const result = await testStaticDetection(source);
 		expect(result).toBe(false);
+	});
+});
+
+
+describe('Ensure: able to create and replace a node with a variable declaration', () => {
+	const getOpts = (plugin: babel.PluginItem): babel.TransformOptions => ({
+		root:           '.',
+		filename:       'test.tsx',
+		sourceFileName: 'test.tsx',
+		presets:        [],
+		plugins:        [ plugin ],
+		ast:            false,
+		sourceMaps:     true,
+		configFile:     false,
+		babelrc:        false,
+		parserOpts:     {
+			plugins: [ 'jsx', 'typescript' ] satisfies BabelPlugins,
+		},
+	});
+
+	test('Can insert when declaration is root scope.', async ({ expect }) => {
+		const opts = getOpts({
+			visitor: {
+				NumberLiteral: (path: NodePath) => {
+					Ensure.replacePathNodeAsNearestVariableDeclaration(
+						path,
+						'__test',
+						() => t.stringLiteral('Hello World'),
+					);
+				},
+			},
+		});
+
+		const source = `
+		const test = 0;
+		`;
+
+		const expected = ''
+		+ 'const __test = "Hello World";'
+		+ '\nconst test = __test;';
+
+		const output = await babel.transformAsync(source, opts);
+		const code = output?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('Can insert when declaration is nested in a function scope.', async ({ expect }) => {
+		const opts = getOpts({
+			visitor: {
+				NumberLiteral: (path: NodePath) => {
+					Ensure.replacePathNodeAsNearestVariableDeclaration(
+						path,
+						'__test',
+						() => t.stringLiteral('Hello World'),
+					);
+				},
+			},
+		});
+
+		const source = `
+		function myFunction() {
+			return 0;
+		}
+		`;
+
+		const expected = ''
+		+ 'function myFunction() {'
+		+ '\n  const __test = "Hello World";'
+		+ '\n  return __test;'
+		+ '\n}';
+
+		const output = await babel.transformAsync(source, opts);
+		const code = output?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+});
+
+
+describe('Transform JSX to compiled lit-html', () => {
+	const opts: babel.TransformOptions = {
+		root:           '.',
+		filename:       'test.tsx',
+		sourceFileName: 'test.tsx',
+		presets:        [
+			[
+				litJsxBabelPreset2,
+				/* merged into the metadata obj through state.opts */
+				{},
+			],
+		],
+		plugins:    [],
+		ast:        false,
+		sourceMaps: true,
+		configFile: false,
+		babelrc:    false,
+		parserOpts: {
+			plugins: [ 'jsx', 'typescript' ] satisfies BabelPlugins,
+		},
+	};
+
+	test('should transform a div with a single child expression', async ({ expect }) => {
+		const source = `
+		const name = 'World';
+		const sayHello = (name: string) => <div>Hello {name}</div>;
+		`;
+
+		const expected = ``
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst name = 'World';`
+		+ `\nconst sayHello = (name: string) => ({`
+		+ `\n  "_$litType$": {`
+		+ `\n    "h": __$t\`<div>Hello<?></div>\`,`
+		+ `\n    "parts": [{`
+		+ `\n      "type": 2,`
+		+ `\n      "index": 1`
+		+ `\n    }]`
+		+ `\n  },`
+		+ `\n  "values": [name]`
+		+ `\n});`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a nested div with an expression in each child', async ({ expect }) => {
+		const source = `
+		const name = 'World';
+		const sayHello = (name: string) => (
+			<div>
+				Hello {name}
+				<span>Goodbye {name}</span>
+			</div>
+		);
+		`;
+
+		const expected = ``
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst name = 'World';`
+		+ `\nconst sayHello = (name: string) => ({`
+		+ `\n  "_$litType$": {`
+		+ `\n    "h": __$t\`<div>Hello<?><span>Goodbye<?></span></div>\`,`
+		+ `\n    "parts": [{`
+		+ `\n      "type": 2,`
+		+ `\n      "index": 1`
+		+ `\n    }, {`
+		+ `\n      "type": 2,`
+		+ `\n      "index": 2`
+		+ `\n    }]`
+		+ `\n  },`
+		+ `\n  "values": [name, name]`
+		+ `\n});`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
 	});
 });
