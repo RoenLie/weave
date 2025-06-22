@@ -173,7 +173,7 @@ export class AttrValidators {
 	}
 
 	static isClassListBinding(attr: t.JSXAttribute): attr is JSXAttributeWithExpression {
-		return this.isExpression(attr) && attr.name.name.toString() === VARIABLES.CLASS_MAP;
+		return this.isExpression(attr) && attr.name.name.toString() === ATTR_NAMES.CLASS_LIST;
 	}
 
 	static isStyleListBinding(attr: t.JSXAttribute): attr is JSXAttributeWithExpression {
@@ -297,15 +297,13 @@ export class AttrProcessors {
 	}
 
 	static styleList(attr: JSXAttributeWithExpression, context: JSXElementContext): void {
-		const name = attr.name.name.toString();
-
 		// add a styleMap call around the expression.
 		const expression = t.callExpression(
 			t.identifier(VARIABLES.STYLE_MAP),
 			[ attr.value.expression ],
 		);
 
-		context.builder.addText(' ' + name + '=');
+		context.builder.addText(' ' + 'style=');
 		context.builder.addExpression(expression);
 
 		context.importsUsed.add('styleMap');
@@ -375,11 +373,16 @@ export class CompiledAttrProcessors {
 		const expressionBody = expression.arguments[0];
 
 		if (isProp) {
-			//
-			context.builder.addText(' .');
+			context.parts.push(createPropertyPartEntry(context.currentIndex, name));
+			context.values.push(expressionBody);
+
+			context.importsUsed.add('propertyPart');
 		}
 		else if (isBool) {
-			context.builder.addText(' ?');
+			context.parts.push(createBooleanPartEntry(context.currentIndex, name));
+			context.values.push(expressionBody);
+
+			context.importsUsed.add('booleanPart');
 		}
 		else {
 			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
@@ -417,17 +420,16 @@ export class CompiledAttrProcessors {
 		const expression = attr.value.expression;
 		if (t.isCallExpression(expression)) {
 			// If the expression is a call, we can add it directly.
-			//context.builder.addText(' ');
-			//context.builder.addExpression(expression);
+			context.parts.push(createElementPartEntry(context.currentIndex));
+			context.values.push(expression);
 		}
 		else if (t.isArrayExpression(expression)) {
 			for (const item of expression.elements) {
 				if (!t.isExpression(item))
 					throw new Error(ERROR_MESSAGES.EMPTY_JSX_EXPRESSION);
 
-				// Add a space to keep correct spacing in the template.
-				//context.builder.addText(' ');
-				//context.builder.addExpression(item);
+				context.parts.push(createElementPartEntry(context.currentIndex));
+				context.values.push(item);
 			}
 		}
 		else {
@@ -442,11 +444,10 @@ export class CompiledAttrProcessors {
 			[ attr.value.expression ],
 		);
 
-		// add a space to keep correct spacing in the template.
-		//context.builder.addText(' ');
-		//context.builder.addExpression(expression);
+		context.parts.push(createElementPartEntry(context.currentIndex));
+		context.values.push(expression);
 
-		//context.importsUsed.add('createRef');
+		context.importsUsed.add('createRef');
 	}
 
 	static classList(attr: JSXAttributeWithExpression, context: CompiledContext): void {
@@ -456,35 +457,37 @@ export class CompiledAttrProcessors {
 			[ attr.value.expression ],
 		);
 
-		// add classlist without the . to the quasi.
-		//context.builder.addText(' class=');
-		//context.builder.addExpression(expression);
+		context.parts.push(createAttributePartEntry(context.currentIndex, 'class'));
+		context.values.push(expression);
 
-		//context.importsUsed.add('classMap');
+		context.importsUsed.add('attributePart');
+		context.importsUsed.add('classMap');
 	}
 
 	static styleList(attr: JSXAttributeWithExpression, context: CompiledContext): void {
-		const name = attr.name.name.toString();
-
 		// add a styleMap call around the expression.
 		const expression = t.callExpression(
 			t.identifier(VARIABLES.STYLE_MAP),
 			[ attr.value.expression ],
 		);
 
-		//context.builder.addText(' ' + name + '=');
-		//context.builder.addExpression(expression);
+		context.parts.push(createAttributePartEntry(context.currentIndex, 'style'));
+		context.values.push(expression);
 
-		//context.importsUsed.add('styleMap');
+		context.importsUsed.add('attributePart');
+		context.importsUsed.add('styleMap');
 	}
 
 	static event(attr: JSXAttributeWithExpression, context: CompiledContext): void {
 		// If the attribute is an event handler,
 		// we need to convert it to a standard DOM event name.
 		const oldName = attr.name.name.toString();
-		const newName = '@' + oldName.slice(3);
-		//context.builder.addText(' ' + newName + '=');
-		//context.builder.addExpression(attr.value.expression);
+		const newName = oldName.slice(3);
+
+		context.parts.push(createEventPartEntry(context.currentIndex, newName));
+		context.values.push(attr.value.expression);
+
+		context.importsUsed.add('eventPart');
 	}
 
 	static expression(attr: JSXAttributeWithExpression, context: CompiledContext): void {
@@ -507,30 +510,30 @@ export class CompiledAttrProcessors {
 
 		const name = attribute.name.name.toString();
 		const value = attribute.value.value;
-		//context.builder.addText(' ' + name + '="' + value + '"');
+
+		context.templateText.value += ' ' + name + '="' + value + '"';
 	};
 
 	static spread(attribute: t.JSXSpreadAttribute, context: CompiledContext): void {
 		// If it's a spread attribute, we wrap it in our custom `rest` directive.
 		// This will allow us to handle the spread attribute correctly.
 		// We also need to ensure that the `rest` directive is imported.
-
 		const expression = t.callExpression(
 			t.identifier(VARIABLES.REST),
 			[ attribute.argument ],
 		);
 
-		//context.builder.addText(' ');
-		//context.builder.addExpression(expression);
+		context.parts.push(createElementPartEntry(context.currentIndex));
+		context.values.push(expression);
 
-		//context.importsUsed.add('rest');
+		context.importsUsed.add('rest');
 	}
 
 	static boolean(attribute: JSXAttributeBoolean, context: CompiledContext): void {
 		// If the value is null or undefined, we can bind the attribute name directly.
 		// This will result in a attribute without a value, e.g. `<div disabled>`.
 		const name = attribute.name.name.toString();
-		//context.builder.addText(' ' + name);
+		context.templateText.value += ' ' + name;
 	};
 
 }
@@ -539,6 +542,13 @@ export class CompiledAttrProcessors {
 export const createChildPartEntry = (index: number): t.ObjectExpression => {
 	return t.objectExpression([
 		t.objectProperty(t.stringLiteral('type'), t.numericLiteral(PartType.CHILD)),
+		t.objectProperty(t.stringLiteral('index'), t.numericLiteral(index)),
+	]);
+};
+
+export const createElementPartEntry = (index: number): t.ObjectExpression => {
+	return t.objectExpression([
+		t.objectProperty(t.stringLiteral('type'), t.numericLiteral(PartType.ELEMENT)),
 		t.objectProperty(t.stringLiteral('index'), t.numericLiteral(index)),
 	]);
 };
@@ -579,6 +589,19 @@ export const createBooleanPartEntry = (index: number, name: string): t.ObjectExp
 			t.stringLiteral(''),
 		])),
 		t.objectProperty(t.stringLiteral('ctor'), t.identifier(VARIABLES.BOOLEAN_PART)),
+	]);
+};
+
+export const createEventPartEntry = (index: number, name: string): t.ObjectExpression => {
+	return t.objectExpression([
+		t.objectProperty(t.stringLiteral('type'), t.numericLiteral(PartType.ATTRIBUTE)),
+		t.objectProperty(t.stringLiteral('index'), t.numericLiteral(index)),
+		t.objectProperty(t.stringLiteral('name'), t.stringLiteral(name)),
+		t.objectProperty(t.stringLiteral('strings'), t.arrayExpression([
+			t.stringLiteral(''),
+			t.stringLiteral(''),
+		])),
+		t.objectProperty(t.stringLiteral('ctor'), t.identifier(VARIABLES.EVENT_PART)),
 	]);
 };
 

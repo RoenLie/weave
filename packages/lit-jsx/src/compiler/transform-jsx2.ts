@@ -3,7 +3,15 @@ import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 import { PartType } from 'lit-html/directive.js';
 
-import { AttrValidators, CompiledAttrProcessors, createChildPartEntry, Ensure, EnsureImport, getJSXElementName, isValidJSXElement } from './compiler-utils.ts';
+import {
+	AttrValidators,
+	CompiledAttrProcessors,
+	createChildPartEntry,
+	Ensure,
+	EnsureImport,
+	getJSXElementName,
+	isValidJSXElement,
+} from './compiler-utils.ts';
 import { ERROR_MESSAGES, WHITESPACE_TAGS } from './config.ts';
 
 
@@ -88,7 +96,7 @@ const processJSXElementToCompiled = (path: NodePath<t.JSXElement>) => {
 const process = (context: CompiledContext) => {
 	const tagName = getJSXElementName(context.path.node);
 	// Process the opening tag
-	context.templateText.value += '<' + tagName + '>';
+	context.templateText.value += '<' + tagName;
 
 	const { attributes } = context.path.node.openingElement;
 
@@ -127,6 +135,9 @@ const process = (context: CompiledContext) => {
 		else
 			throw new Error(ERROR_MESSAGES.UNKNOWN_JSX_ATTRIBUTE_TYPE);
 	}
+
+	// Close the opening tag
+	context.templateText.value += '>';
 
 	// Process the children
 	for (const [ index, child ] of context.path.node.children.entries()) {

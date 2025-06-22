@@ -11,18 +11,18 @@
 		"clean-all": "rimraf --glob **/node_modules **/dist"
 	},
 	"devDependencies": {
+		"@roenlie/build-package": "workspace:^",
 		"@roenlie/eslint-config": "workspace:^",
 		"@roenlie/package-toolbox": "workspace:^",
-		"@roenlie/build-package": "workspace:^",
 		"@roenlie/tsconfig": "workspace:^",
-		"@types/node": "^22.14.1",
-		"@vitest/browser": "^3.1.1",
-		"playwright": "^1.51.1",
-		"tsx": "^4.19.3",
+		"@types/node": "^24.0.3",
+		"@vitest/browser": "^3.2.4",
+		"playwright": "^1.53.1",
+		"tsx": "^4.20.3",
 		"typescript": "^5.8.3",
 		"vite": "^6.3.0",
-		"vitest": "^3.1.1",
-		"wrangler": "^4.11.1"
+		"vitest": "^3.2.4",
+		"wrangler": "^4.20.5"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

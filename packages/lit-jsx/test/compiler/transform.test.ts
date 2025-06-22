@@ -41,8 +41,8 @@ describe('Transform JSX to standard lit-html', () => {
 		const template = <></>;
 		`;
 
-		let expected = `import { html } from "lit-html";`;
-		expected += `\nconst template = html\`\`;`;
+		const expected = `import { html } from "lit-html";`
+		+ `\nconst template = html\`\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -67,7 +67,6 @@ describe('Transform JSX to standard lit-html', () => {
 	test('should transform a polymorphic JSX element', async ({ expect }) => {
 		const source = `
 		const Tag = toTag(this.href ? 'a' : 'div');
-
 		const template = <Tag.tag href="https://example.com">Click me</Tag.tag>;
 		`;
 
@@ -88,6 +87,7 @@ describe('Transform JSX to standard lit-html', () => {
 		import { SpecialElement } from './special-element.ts';
 		const template = <SpecialElement.tag name="kakemann" />;
 		`;
+
 		const expected = ''
 		+ `import { html as htmlStatic } from "lit-html/static.js";`
 		+ `\nimport { __$literalMap } from "jsx-lit";`
@@ -114,15 +114,15 @@ describe('Transform JSX to standard lit-html', () => {
 			</div>
 		</>;
 		`;
-		let expected = `import { html } from "lit-html";`;
-		expected += `\nconst template = html\``;
-		expected += `<div static-attribute="value1"`;
-		expected += ` dynamic-attribute=\${dynamicValue}`;
-		expected += ` ?boolean=\${true}`;
-		expected += ` .property=\${'value2'}`;
-		expected += ` \${ifDefined('value3')}`;
-		expected += `>Hello World</div>\`;`;
 
+		const expected = `import { html } from "lit-html";`
+		+ `\nconst template = html\``
+		+ `<div static-attribute="value1"`
+		+ ` dynamic-attribute=\${dynamicValue}`
+		+ ` ?boolean=\${true}`
+		+ ` .property=\${'value2'}`
+		+ ` \${ifDefined('value3')}`
+		+ `>Hello World</div>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -143,15 +143,16 @@ describe('Transform JSX to standard lit-html', () => {
 		);
 		`;
 
-		const expected = `import { html as htmlStatic } from "lit-html/static.js";
-import { __$rest } from "jsx-lit";
-import { __$literalMap } from "jsx-lit";
-import { SpecialElement } from './special-element.ts';
-const __$SpecialElement = __$literalMap.get(SpecialElement.tag);
-const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
-  foo: 'bar',
-  baz: 'qux'
-})}></\${__$SpecialElement}>\`;`;
+		const expected = ``
+		+ `import { html as htmlStatic } from "lit-html/static.js";`
+		+ `\nimport { __$rest } from "jsx-lit";`
+		+ `\nimport { __$literalMap } from "jsx-lit";`
+		+ `\nimport { SpecialElement } from './special-element.ts';`
+		+ `\nconst __$SpecialElement = __$literalMap.get(SpecialElement.tag);`
+		+ `\nconst template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({`
+		+ `\n  foo: 'bar',`
+		+ `\n  baz: 'qux'`
+		+ `\n})}></\${__$SpecialElement}>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -166,8 +167,9 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 		);
 		`;
 
-		let expected = `import { svg } from "lit-html/directives/svg.js";`;
-		expected += `\nconst template = svg\`<circle></circle>\`;`;
+		const expected = ``
+		+ `import { svg } from "lit-html/directives/svg.js";`
+		+ `\nconst template = svg\`<circle></circle>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -184,8 +186,9 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 		);
 		`;
 
-		let expected = `import { html } from "lit-html";`;
-		expected += `\nconst template = html\`<svg><circle></circle></svg>\`;`;
+		const expected = ``
+		+ `import { html } from "lit-html";`
+		+ `\nconst template = html\`<svg><circle></circle></svg>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -204,8 +207,9 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 		);
 		`;
 
-		let expected = `import { mathml } from "lit-html/directives/mathml.js";`;
-		expected += `\nconst template = mathml\`<mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow>\`;`;
+		const expected = ``
+		+ `import { mathml } from "lit-html/directives/mathml.js";`
+		+ `\nconst template = mathml\`<mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -224,8 +228,9 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 		);
 		`;
 
-		let expected = `import { html } from "lit-html";`;
-		expected += `\nconst template = html\`<math><mrow><mi>x</mi></mrow></math>\`;`;
+		const expected = ``
+		+ `import { html } from "lit-html";`
+		+ `\nconst template = html\`<math><mrow><mi>x</mi></mrow></math>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -242,9 +247,11 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 			</div>
 		);
 		`;
-		let expected = `import { html } from "lit-html";`;
-		expected += `\nconst isActive = true;`;
-		expected += `\nconst template = html\`<div ?active=\${isActive}>Hello World</div>\`;`;
+
+		const expected = ``
+		+ `import { html } from "lit-html";`
+		+ `\nconst isActive = true;`
+		+ `\nconst template = html\`<div ?active=\${isActive}>Hello World</div>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -261,9 +268,11 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 			</div>
 		);
 		`;
-		let expected = `import { html } from "lit-html";`;
-		expected += `\nconst isActive = true;`;
-		expected += `\nconst template = html\`<div ?active=\${isActive}>Hello World</div>\`;`;
+
+		const expected = ``
+		+ `import { html } from "lit-html";`
+		+ `\nconst isActive = true;`
+		+ `\nconst template = html\`<div ?active=\${isActive}>Hello World</div>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -280,9 +289,11 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 			</div>
 		);
 		`;
-		let expected = `import { html } from "lit-html";`;
-		expected += `\nconst isActive = true;`;
-		expected += `\nconst template = html\`<div .active=\${isActive}>Hello World</div>\`;`;
+
+		const expected = ``
+		+ `import { html } from "lit-html";`
+		+ `\nconst isActive = true;`
+		+ `\nconst template = html\`<div .active=\${isActive}>Hello World</div>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -299,9 +310,11 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 			</div>
 		);
 		`;
-		let expected = `import { html } from "lit-html";`;
-		expected += `\nconst isActive = true;`;
-		expected += `\nconst template = html\`<div .active=\${isActive}>Hello World</div>\`;`;
+
+		const expected = ``
+		+ `import { html } from "lit-html";`
+		+ `\nconst isActive = true;`
+		+ `\nconst template = html\`<div .active=\${isActive}>Hello World</div>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -318,9 +331,10 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 			</div>
 		);
 		`;
-		let expected = `import { html } from "lit-html";`;
-		expected += `\nconst value = 'test';`;
-		expected += `\nconst template = html\`<div key=\${value}>Hello World</div>\`;`;
+
+		const expected = `import { html } from "lit-html";`
+		+ `\nconst value = 'test';`
+		+ `\nconst template = html\`<div key=\${value}>Hello World</div>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
@@ -333,7 +347,8 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 		<div directive={myDirective()} />
 		`;
 
-		const expected = `import { html } from "lit-html";`
+		const expected = ``
+		+ `import { html } from "lit-html";`
 		+ `\nhtml\`<div \${myDirective()}></div>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
@@ -346,7 +361,8 @@ const template = htmlStatic\`<\${__$SpecialElement} name="kakemann" \${__$rest({
 		<div directive={[myDirective()]} />
 		`;
 
-		const expected = `import { html } from "lit-html";`
+		const expected = ``
+		+ `import { html } from "lit-html";`
 		+ `\nhtml\`<div \${myDirective()}></div>\`;`;
 
 		const result = await babel.transformAsync(source, opts);
@@ -479,9 +495,9 @@ describe('isJSXElementStatic', () => {
 				&& !babel.types.isJSXFragment(path.parent));
 
 			if (isRoot) {
-				console.time('isJSXElementStatic');
+				//console.time('isJSXElementStatic');
 				testResult = isJSXElementStatic(path);
-				console.timeEnd('isJSXElementStatic');
+				//console.timeEnd('isJSXElementStatic');
 			}
 		};
 
@@ -723,9 +739,6 @@ describe('Ensure: able to create and replace a node with a variable declaration'
 		const output = await babel.transformAsync(source, opts);
 		const code = output?.code;
 
-		console.log(code);
-
-
 		expect(code).to.be.eq(expected);
 	});
 
@@ -846,7 +859,29 @@ describe('Transform JSX to compiled lit-html', () => {
 		expect(code).to.be.eq(expected);
 	});
 
-	test('should transform a div with an attribute assignment', async ({ expect }) => {
+	test('should transform a div with a non-expression assignment', async ({ expect }) => {
+		const source = `
+		const template = <div attribute='value'></div>;
+		`;
+
+		const expected = ``
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div attribute="value"></div>\`,`
+		+ `\n  "parts": []`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": []`
+		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a div with an expression assignment', async ({ expect }) => {
 		const source = `
 		const template = <div attribute={'value'}></div>;
 		`;
@@ -877,12 +912,23 @@ describe('Transform JSX to compiled lit-html', () => {
 
 	test('should transform a div with a property assignment', async ({ expect }) => {
 		const source = `
-		const template = <div attribute={prop => 'value'}></div>;
+		const template1 = <div attribute={prop => 'value'}></div>;
+		const template2 = <div attribute={as.prop('value')}></div>;
 		`;
 
 		const expected = ``
 		+ `import { PropertyPart } from "jsx-lit";`
 		+ `\nimport { __$t } from "jsx-lit";`
+		+ `\nconst _temp2 = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "attribute",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": PropertyPart`
+		+ `\n  }]`
+		+ `\n};`
 		+ `\nconst _temp = {`
 		+ `\n  "h": __$t\`<div></div>\`,`
 		+ `\n  "parts": [{`
@@ -893,8 +939,12 @@ describe('Transform JSX to compiled lit-html', () => {
 		+ `\n    "ctor": PropertyPart`
 		+ `\n  }]`
 		+ `\n};`
-		+ `\nconst template = {`
+		+ `\nconst template1 = {`
 		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": ['value']`
+		+ `\n};`
+		+ `\nconst template2 = {`
+		+ `\n  "_$litType$": _temp2,`
 		+ `\n  "values": ['value']`
 		+ `\n};`;
 
@@ -906,12 +956,23 @@ describe('Transform JSX to compiled lit-html', () => {
 
 	test('should transform a div with a boolean assignment', async ({ expect }) => {
 		const source = `
-		const template = <div attribute={bool => true}></div>;
+		const template1 = <div attribute={bool => true}></div>;
+		const template2 = <div attribute={as.bool(true)}></div>;
 		`;
 
 		const expected = ``
 		+ `import { BooleanPart } from "jsx-lit";`
 		+ `\nimport { __$t } from "jsx-lit";`
+		+ `\nconst _temp2 = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "attribute",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": BooleanPart`
+		+ `\n  }]`
+		+ `\n};`
 		+ `\nconst _temp = {`
 		+ `\n  "h": __$t\`<div></div>\`,`
 		+ `\n  "parts": [{`
@@ -922,10 +983,260 @@ describe('Transform JSX to compiled lit-html', () => {
 		+ `\n    "ctor": BooleanPart`
 		+ `\n  }]`
 		+ `\n};`
-		+ `\nconst template = {`
+		+ `\nconst template1 = {`
 		+ `\n  "_$litType$": _temp,`
 		+ `\n  "values": [true]`
+		+ `\n};`
+		+ `\nconst template2 = {`
+		+ `\n  "_$litType$": _temp2,`
+		+ `\n  "values": [true]`
 		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a div with a boolean attribute', async ({ expect }) => {
+		const source = `
+		const template = <div attribute></div>;
+		`;
+
+		const expected = ``
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div attribute></div>\`,`
+		+ `\n  "parts": []`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": []`
+		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a div with one or multiple directives', async ({ expect }) => {
+		const source = `
+		const template1 = <div directive={myDirective()}></div>;
+		const template2 = <div directive={[myDirective(), myDirective()]}></div>;
+		`;
+
+		const expected = ``
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst _temp2 = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 6,`
+		+ `\n    "index": 0`
+		+ `\n  }, {`
+		+ `\n    "type": 6,`
+		+ `\n    "index": 0`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 6,`
+		+ `\n    "index": 0`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst template1 = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": [myDirective()]`
+		+ `\n};`
+		+ `\nconst template2 = {`
+		+ `\n  "_$litType$": _temp2,`
+		+ `\n  "values": [myDirective(), myDirective()]`
+		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a div with a ref assignment', async ({ expect }) => {
+		const source = `
+		const template = <div ref={this.elRef}></div>;
+		`;
+
+		const expected = ``
+		+ `import { ref } from "lit-html/directives/ref.js";`
+		+ `\nimport { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 6,`
+		+ `\n    "index": 0`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": [ref(this.elRef)]`
+		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a div with classList assignment', async ({ expect }) => {
+		const source = `
+		const template = <div classList={{active: true}}></div>;
+		`;
+
+		const expected = ``
+		+ `import { classMap } from "lit-html/directives/class-map.js";`
+		+ `\nimport { AttributePart } from "jsx-lit";`
+		+ `\nimport { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "class",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": AttributePart`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": [classMap({`
+		+ `\n    active: true`
+		+ `\n  })]`
+		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a div with styleList assignment', async ({ expect }) => {
+		const source = `
+		const template = <div styleList={{active: true}}></div>;
+		`;
+
+		const expected = ``
+		+ `import { styleMap } from "lit-html/directives/style-map.js";`
+		+ `\nimport { AttributePart } from "jsx-lit";`
+		+ `\nimport { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "style",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": AttributePart`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": [styleMap({`
+		+ `\n    active: true`
+		+ `\n  })]`
+		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a div with an event assignment', async ({ expect }) => {
+		const source = `
+		const template = <div on-click={this.handleClick}></div>;
+		`;
+
+		const expected = ``
+		+ `import { EventPart } from "jsx-lit";`
+		+ `\nimport { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "click",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": EventPart`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": [this.handleClick]`
+		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a div with a spread assignment', async ({ expect }) => {
+		const source = `
+		const rest = { foo: 'bar', baz: 'qux' };
+		const template = <div {...rest}></div>;
+		`;
+
+		const expected = ``
+		+ `import { __$rest } from "jsx-lit";`
+		+ `\nimport { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 6,`
+		+ `\n    "index": 0`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst rest = {`
+		+ `\n  foo: 'bar',`
+		+ `\n  baz: 'qux'`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": [__$rest(rest)]`
+		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should pass a function into template', async ({ expect }) => {
+		const source = `
+		const inner = () => <p>Inner</p>;
+		const outer = () => <div>{inner()}</div>;
+		`;
+
+		const expected = ``
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst _temp2 = {`
+		+ `\n  "h": __$t\`<div><?></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 2,`
+		+ `\n    "index": 1`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<p>Inner</p>\`,`
+		+ `\n  "parts": []`
+		+ `\n};`
+		+ `\nconst inner = () => ({`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": []`
+		+ `\n});`
+		+ `\nconst outer = () => ({`
+		+ `\n  "_$litType$": _temp2,`
+		+ `\n  "values": [inner()]`
+		+ `\n});`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
