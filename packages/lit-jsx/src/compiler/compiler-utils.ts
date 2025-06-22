@@ -1,5 +1,6 @@
 import type { Binding, NodePath } from '@babel/traverse';
 import * as t from '@babel/types';
+import { PartType } from 'lit-html/directive.js';
 
 import { isMathmlTag } from '../shared/mathml-tags.ts';
 import { isSvgTag } from '../shared/svg-tags.ts';
@@ -8,6 +9,7 @@ import {
 	COMPONENT_POSTFIX, ERROR_MESSAGES, SOURCES, VARIABLES,
 } from './config.ts';
 import type { JSXElementContext } from './transform-jsx.ts';
+import type { CompiledContext } from './transform-jsx2.ts';
 
 
 export type Values<T> = T[keyof T];
@@ -361,6 +363,224 @@ export class AttrProcessors {
 	};
 
 }
+
+export class CompiledAttrProcessors {
+
+	static callBinding(attr: CallBindingAttribute, context: CompiledContext): void {
+		const expression = attr.value.expression;
+		const isProp = expression.callee.property.name === ATTR_VALUES.PROP;
+		const isBool = expression.callee.property.name === ATTR_VALUES.BOOL;
+
+		const name = attr.name.name.toString();
+		const expressionBody = expression.arguments[0];
+
+		if (isProp) {
+			//
+			context.builder.addText(' .');
+		}
+		else if (isBool) {
+			context.builder.addText(' ?');
+		}
+		else {
+			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
+		}
+	}
+
+	static arrowBinding(attr: ArrowFunctionAttribute, context: CompiledContext): void {
+		const expression = attr.value.expression;
+		const param = expression.params[0];
+		const isProp = param.name === ATTR_VALUES.PROP;
+		const isBool = param.name === ATTR_VALUES.BOOL;
+
+		const name = attr.name.name.toString();
+		const expressionBody = expression.body;
+
+		if (isProp) {
+			context.parts.push(createPropertyPartEntry(context.currentIndex, name));
+			context.values.push(expressionBody);
+
+			context.importsUsed.add('propertyPart');
+		}
+		else if (isBool) {
+			context.parts.push(createBooleanPartEntry(context.currentIndex, name));
+			context.values.push(expressionBody);
+
+			context.importsUsed.add('booleanPart');
+		}
+		else {
+			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
+		}
+	}
+
+	static directive(attr: JSXAttributeWithExpression, context: CompiledContext): void {
+		// Replace the spread attribute with its argument, minus the compiler func.
+		const expression = attr.value.expression;
+		if (t.isCallExpression(expression)) {
+			// If the expression is a call, we can add it directly.
+			//context.builder.addText(' ');
+			//context.builder.addExpression(expression);
+		}
+		else if (t.isArrayExpression(expression)) {
+			for (const item of expression.elements) {
+				if (!t.isExpression(item))
+					throw new Error(ERROR_MESSAGES.EMPTY_JSX_EXPRESSION);
+
+				// Add a space to keep correct spacing in the template.
+				//context.builder.addText(' ');
+				//context.builder.addExpression(item);
+			}
+		}
+		else {
+			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
+		}
+	}
+
+	static ref(attr: JSXAttributeWithExpression, context: CompiledContext): void {
+		// add a ref call around the expression.
+		const expression = t.callExpression(
+			t.identifier(VARIABLES.REF),
+			[ attr.value.expression ],
+		);
+
+		// add a space to keep correct spacing in the template.
+		//context.builder.addText(' ');
+		//context.builder.addExpression(expression);
+
+		//context.importsUsed.add('createRef');
+	}
+
+	static classList(attr: JSXAttributeWithExpression, context: CompiledContext): void {
+		// add a classMap call around the expression.
+		const expression = t.callExpression(
+			t.identifier(VARIABLES.CLASS_MAP),
+			[ attr.value.expression ],
+		);
+
+		// add classlist without the . to the quasi.
+		//context.builder.addText(' class=');
+		//context.builder.addExpression(expression);
+
+		//context.importsUsed.add('classMap');
+	}
+
+	static styleList(attr: JSXAttributeWithExpression, context: CompiledContext): void {
+		const name = attr.name.name.toString();
+
+		// add a styleMap call around the expression.
+		const expression = t.callExpression(
+			t.identifier(VARIABLES.STYLE_MAP),
+			[ attr.value.expression ],
+		);
+
+		//context.builder.addText(' ' + name + '=');
+		//context.builder.addExpression(expression);
+
+		//context.importsUsed.add('styleMap');
+	}
+
+	static event(attr: JSXAttributeWithExpression, context: CompiledContext): void {
+		// If the attribute is an event handler,
+		// we need to convert it to a standard DOM event name.
+		const oldName = attr.name.name.toString();
+		const newName = '@' + oldName.slice(3);
+		//context.builder.addText(' ' + newName + '=');
+		//context.builder.addExpression(attr.value.expression);
+	}
+
+	static expression(attr: JSXAttributeWithExpression, context: CompiledContext): void {
+		// Any other attribute which has an expression container value
+		const name = attr.name.name.toString();
+		const expressionBody = attr.value.expression;
+
+		context.parts.push(createAttributePartEntry(context.currentIndex, name));
+		context.values.push(expressionBody);
+
+		context.importsUsed.add('attributePart');
+	}
+
+	static nonExpression(attribute: JSXAttributeWithoutExpression, context: CompiledContext): void {
+		// If the value is a string, we can use it directly
+		// Here we always bind the value as a string.
+		// In the future, we might want to also support numbers.
+		if (!t.isStringLiteral(attribute.value))
+			throw new Error(ERROR_MESSAGES.ONLY_STRING_LITERALS);
+
+		const name = attribute.name.name.toString();
+		const value = attribute.value.value;
+		//context.builder.addText(' ' + name + '="' + value + '"');
+	};
+
+	static spread(attribute: t.JSXSpreadAttribute, context: CompiledContext): void {
+		// If it's a spread attribute, we wrap it in our custom `rest` directive.
+		// This will allow us to handle the spread attribute correctly.
+		// We also need to ensure that the `rest` directive is imported.
+
+		const expression = t.callExpression(
+			t.identifier(VARIABLES.REST),
+			[ attribute.argument ],
+		);
+
+		//context.builder.addText(' ');
+		//context.builder.addExpression(expression);
+
+		//context.importsUsed.add('rest');
+	}
+
+	static boolean(attribute: JSXAttributeBoolean, context: CompiledContext): void {
+		// If the value is null or undefined, we can bind the attribute name directly.
+		// This will result in a attribute without a value, e.g. `<div disabled>`.
+		const name = attribute.name.name.toString();
+		//context.builder.addText(' ' + name);
+	};
+
+}
+
+
+export const createChildPartEntry = (index: number): t.ObjectExpression => {
+	return t.objectExpression([
+		t.objectProperty(t.stringLiteral('type'), t.numericLiteral(PartType.CHILD)),
+		t.objectProperty(t.stringLiteral('index'), t.numericLiteral(index)),
+	]);
+};
+
+export const createAttributePartEntry = (index: number, name: string): t.ObjectExpression => {
+	return t.objectExpression([
+		t.objectProperty(t.stringLiteral('type'), t.numericLiteral(PartType.ATTRIBUTE)),
+		t.objectProperty(t.stringLiteral('index'), t.numericLiteral(index)),
+		t.objectProperty(t.stringLiteral('name'), t.stringLiteral(name)),
+		t.objectProperty(t.stringLiteral('strings'), t.arrayExpression([
+			t.stringLiteral(''),
+			t.stringLiteral(''),
+		])),
+		t.objectProperty(t.stringLiteral('ctor'), t.identifier(VARIABLES.ATTRIBUTE_PART)),
+	]);
+};
+
+export const createPropertyPartEntry = (index: number, name: string): t.ObjectExpression => {
+	return t.objectExpression([
+		t.objectProperty(t.stringLiteral('type'), t.numericLiteral(PartType.ATTRIBUTE)),
+		t.objectProperty(t.stringLiteral('index'), t.numericLiteral(index)),
+		t.objectProperty(t.stringLiteral('name'), t.stringLiteral(name)),
+		t.objectProperty(t.stringLiteral('strings'), t.arrayExpression([
+			t.stringLiteral(''),
+			t.stringLiteral(''),
+		])),
+		t.objectProperty(t.stringLiteral('ctor'), t.identifier(VARIABLES.PROPERTY_PART)),
+	]);
+};
+
+export const createBooleanPartEntry = (index: number, name: string): t.ObjectExpression => {
+	return t.objectExpression([
+		t.objectProperty(t.stringLiteral('type'), t.numericLiteral(PartType.ATTRIBUTE)),
+		t.objectProperty(t.stringLiteral('index'), t.numericLiteral(index)),
+		t.objectProperty(t.stringLiteral('name'), t.stringLiteral(name)),
+		t.objectProperty(t.stringLiteral('strings'), t.arrayExpression([
+			t.stringLiteral(''),
+			t.stringLiteral(''),
+		])),
+		t.objectProperty(t.stringLiteral('ctor'), t.identifier(VARIABLES.BOOLEAN_PART)),
+	]);
+};
 
 
 export class Ensure {
@@ -875,12 +1095,104 @@ export class EnsureImport {
 
 	static taggedTemplateUtil(program: t.Program, path: NodePath): void {
 		Ensure.import(
-			(source) => source === 'jsx-lit',
-			(name) => name === '__$t',
-			() => t.importDeclaration(
-				[ t.importSpecifier(t.identifier('__$t'), t.identifier('__$t')) ],
-				t.stringLiteral('jsx-lit'),
-			),
+			(source) => source === SOURCES.JSX_LIT,
+			(name) => name === VARIABLES.TAGGED_TEMPLATE_UTIL,
+			() => t.importDeclaration([
+				t.importSpecifier(
+					t.identifier(VARIABLES.TAGGED_TEMPLATE_UTIL),
+					t.identifier(VARIABLES.TAGGED_TEMPLATE_UTIL),
+				),
+			], t.stringLiteral(SOURCES.JSX_LIT)),
+			program,
+			path,
+		);
+	}
+
+	static booleanPart(program: t.Program, path: NodePath): void {
+		Ensure.import(
+			(source) => source === SOURCES.JSX_LIT,
+			(name) => name === VARIABLES.BOOLEAN_PART,
+			() => t.importDeclaration([
+				t.importSpecifier(
+					t.identifier(VARIABLES.BOOLEAN_PART),
+					t.identifier(VARIABLES.BOOLEAN_PART),
+				),
+			], t.stringLiteral(SOURCES.JSX_LIT)),
+			program,
+			path,
+		);
+	}
+
+	static attributePart(program: t.Program, path: NodePath): void {
+		Ensure.import(
+			(source) => source === SOURCES.JSX_LIT,
+			(name) => name === VARIABLES.ATTRIBUTE_PART,
+			() => t.importDeclaration([
+				t.importSpecifier(
+					t.identifier(VARIABLES.ATTRIBUTE_PART),
+					t.identifier(VARIABLES.ATTRIBUTE_PART),
+				),
+			], t.stringLiteral(SOURCES.JSX_LIT)),
+			program,
+			path,
+		);
+	}
+
+	static propertyPart(program: t.Program, path: NodePath): void {
+		Ensure.import(
+			(source) => source === SOURCES.JSX_LIT,
+			(name) => name === VARIABLES.PROPERTY_PART,
+			() => t.importDeclaration([
+				t.importSpecifier(
+					t.identifier(VARIABLES.PROPERTY_PART),
+					t.identifier(VARIABLES.PROPERTY_PART),
+				),
+			], t.stringLiteral(SOURCES.JSX_LIT)),
+			program,
+			path,
+		);
+	}
+
+	static elementPart(program: t.Program, path: NodePath): void {
+		Ensure.import(
+			(source) => source === SOURCES.JSX_LIT,
+			(name) => name === VARIABLES.ELEMENT_PART,
+			() => t.importDeclaration([
+				t.importSpecifier(
+					t.identifier(VARIABLES.ELEMENT_PART),
+					t.identifier(VARIABLES.ELEMENT_PART),
+				),
+			], t.stringLiteral(SOURCES.JSX_LIT)),
+			program,
+			path,
+		);
+	}
+
+	static eventPart(program: t.Program, path: NodePath): void {
+		Ensure.import(
+			(source) => source === SOURCES.JSX_LIT,
+			(name) => name === VARIABLES.EVENT_PART,
+			() => t.importDeclaration([
+				t.importSpecifier(
+					t.identifier(VARIABLES.EVENT_PART),
+					t.identifier(VARIABLES.EVENT_PART),
+				),
+			], t.stringLiteral(SOURCES.JSX_LIT)),
+			program,
+			path,
+		);
+	}
+
+	static childPart(program: t.Program, path: NodePath): void {
+		Ensure.import(
+			(source) => source === SOURCES.JSX_LIT,
+			(name) => name === VARIABLES.CHILD_PART,
+			() => t.importDeclaration([
+				t.importSpecifier(
+					t.identifier(VARIABLES.CHILD_PART),
+					t.identifier(VARIABLES.CHILD_PART),
+				),
+			], t.stringLiteral(SOURCES.JSX_LIT)),
 			program,
 			path,
 		);

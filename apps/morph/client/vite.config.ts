@@ -1,6 +1,6 @@
 import { htmlModules } from '@roenlie/vite-plugin-html-modules';
+import { importCSSSheet } from '@roenlie/vite-plugin-import-css-sheet';
 import { defineConfig } from 'vite';
-import { viteImportCssSheet } from '@roenlie/vite-plugin-import-css-sheet';
 
 
 export default defineConfig({
@@ -38,12 +38,12 @@ export default defineConfig({
 							? path!.split('/').slice(2).join('/')
 							: path!.split('/').slice(1).join('/');
 
-						const newName = `${['node_modules', newVersion, newPath].join('/')}.js`;
+						const newName = `${ [ 'node_modules', newVersion, newPath ].join('/') }.js`;
 
 						return newName;
 					}
 
-					return `${name}.js`;
+					return `${ name }.js`;
 				},
 
 				/** We remove src from any module paths to preserve the folder
@@ -52,5 +52,5 @@ export default defineConfig({
 			},
 		},
 	},
-	plugins: [ viteImportCssSheet(), htmlModules({ exportIds: true }) ],
+	plugins: [ importCSSSheet(), htmlModules({ exportIds: true }) ],
 });

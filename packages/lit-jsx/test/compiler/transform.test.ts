@@ -792,23 +792,21 @@ describe('Transform JSX to compiled lit-html', () => {
 
 		const expected = ``
 		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div>Hello<?></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 2,`
+		+ `\n    "index": 1`
+		+ `\n  }]`
+		+ `\n};`
 		+ `\nconst name = 'World';`
 		+ `\nconst sayHello = (name: string) => ({`
-		+ `\n  "_$litType$": {`
-		+ `\n    "h": __$t\`<div>Hello<?></div>\`,`
-		+ `\n    "parts": [{`
-		+ `\n      "type": 2,`
-		+ `\n      "index": 1`
-		+ `\n    }]`
-		+ `\n  },`
+		+ `\n  "_$litType$": _temp,`
 		+ `\n  "values": [name]`
 		+ `\n});`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
-
-		console.log(code);
-
 
 		expect(code).to.be.eq(expected);
 	});
@@ -826,20 +824,108 @@ describe('Transform JSX to compiled lit-html', () => {
 
 		const expected = ``
 		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div>Hello<?><span>Goodbye<?></span></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 2,`
+		+ `\n    "index": 1`
+		+ `\n  }, {`
+		+ `\n    "type": 2,`
+		+ `\n    "index": 2`
+		+ `\n  }]`
+		+ `\n};`
 		+ `\nconst name = 'World';`
 		+ `\nconst sayHello = (name: string) => ({`
-		+ `\n  "_$litType$": {`
-		+ `\n    "h": __$t\`<div>Hello<?><span>Goodbye<?></span></div>\`,`
-		+ `\n    "parts": [{`
-		+ `\n      "type": 2,`
-		+ `\n      "index": 1`
-		+ `\n    }, {`
-		+ `\n      "type": 2,`
-		+ `\n      "index": 2`
-		+ `\n    }]`
-		+ `\n  },`
+		+ `\n  "_$litType$": _temp,`
 		+ `\n  "values": [name, name]`
 		+ `\n});`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a div with an attribute assignment', async ({ expect }) => {
+		const source = `
+		const template = <div attribute={'value'}></div>;
+		`;
+
+		const expected = ``
+		+ `import { AttributePart } from "jsx-lit";`
+		+ `\nimport { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "attribute",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": AttributePart`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": ['value']`
+		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a div with a property assignment', async ({ expect }) => {
+		const source = `
+		const template = <div attribute={prop => 'value'}></div>;
+		`;
+
+		const expected = ``
+		+ `import { PropertyPart } from "jsx-lit";`
+		+ `\nimport { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "attribute",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": PropertyPart`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": ['value']`
+		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform a div with a boolean assignment', async ({ expect }) => {
+		const source = `
+		const template = <div attribute={bool => true}></div>;
+		`;
+
+		const expected = ``
+		+ `import { BooleanPart } from "jsx-lit";`
+		+ `\nimport { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "attribute",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": BooleanPart`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": [true]`
+		+ `\n};`;
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;

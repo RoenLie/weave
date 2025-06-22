@@ -3,7 +3,7 @@ import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 import { PartType } from 'lit-html/directive.js';
 
-import { Ensure, EnsureImport, getJSXElementName, isValidJSXElement } from './compiler-utils.ts';
+import { AttrValidators, CompiledAttrProcessors, createChildPartEntry, Ensure, EnsureImport, getJSXElementName, isValidJSXElement } from './compiler-utils.ts';
 import { ERROR_MESSAGES, WHITESPACE_TAGS } from './config.ts';
 
 
@@ -25,13 +25,16 @@ export const transformJSXElementCompiled: VisitNode<
 };
 
 
-interface CompiledContext {
+export interface CompiledContext {
 	program:      t.Program;
 	path:         NodePath<t.JSXElement>;
+	currentIndex: number;
 	templateText: { value: string; };
 	parts:        t.ObjectExpression[];
 	values:       t.Expression[];
 	partsUsed:    Set<PartType>;
+	importsUsed:  Set<keyof typeof EnsureImport>;
+
 }
 
 
@@ -45,13 +48,17 @@ const processJSXElementToCompiled = (path: NodePath<t.JSXElement>) => {
 	const data: CompiledContext = {
 		program,
 		path,
+		currentIndex: 0,
 		templateText: { value: '' },
 		parts:        [],
 		values:       [],
-		partsUsed:    new Set<PartType>(),
+		partsUsed:    new Set(),
+		importsUsed:  new Set(),
 	};
 
 	process(data);
+
+	ensureImports(data);
 
 	// Finalize the template text and parts
 	const taggedTemplateExpression = t.taggedTemplateExpression(
@@ -87,8 +94,38 @@ const process = (context: CompiledContext) => {
 
 	// Process the attributes
 	for (const attr of attributes.values()) {
-		//
-		attr;
+		// Non expression attributes are checked before expression attributes.
+		if (AttrValidators.isSpread(attr))
+			CompiledAttrProcessors.spread(attr, context);
+		else if (AttrValidators.isNonExpression(attr))
+			CompiledAttrProcessors.nonExpression(attr, context);
+		else if (AttrValidators.isBoolean(attr))
+			CompiledAttrProcessors.boolean(attr, context);
+
+		// Expression attributes are checked based on their type.
+		// Order is based on a guess as to which expression is more common.
+		else if (AttrValidators.isEvent(attr))
+			CompiledAttrProcessors.event(attr, context);
+		else if (AttrValidators.isArrowBinding(attr))
+			CompiledAttrProcessors.arrowBinding(attr, context);
+		else if (AttrValidators.isCallBinding(attr))
+			CompiledAttrProcessors.callBinding(attr, context);
+		else if (AttrValidators.isClassListBinding(attr))
+			CompiledAttrProcessors.classList(attr, context);
+		else if (AttrValidators.isStyleListBinding(attr))
+			CompiledAttrProcessors.styleList(attr, context);
+		else if (AttrValidators.isRef(attr))
+			CompiledAttrProcessors.ref(attr, context);
+		else if (AttrValidators.isDirective(attr))
+			CompiledAttrProcessors.directive(attr, context);
+
+		// Generic expression attributes are checked last
+		// because this condition will be true for all expression attributes.
+		// and we want the more specific cases to be checked first.
+		else if (AttrValidators.isExpression(attr))
+			CompiledAttrProcessors.expression(attr, context);
+		else
+			throw new Error(ERROR_MESSAGES.UNKNOWN_JSX_ATTRIBUTE_TYPE);
 	}
 
 	// Process the children
@@ -105,7 +142,7 @@ const process = (context: CompiledContext) => {
 
 			context.templateText.value += '<?>';
 
-			context.values.push(createValuesEntry(child.expression));
+			context.values.push(child.expression);
 			context.parts.push(createChildPartEntry(context.values.length));
 			context.partsUsed.add(PartType.CHILD);
 		}
@@ -115,7 +152,8 @@ const process = (context: CompiledContext) => {
 				throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
 			// Recursively process child elements
-			process({ ...context, path });
+			// Index is incremented to ensure correct part indices.
+			process({ ...context, path, currentIndex: context.currentIndex + 1 });
 		}
 	}
 
@@ -124,19 +162,14 @@ const process = (context: CompiledContext) => {
 };
 
 
-const createPartsEntry = (type: number, index: number): t.ObjectExpression => {
-	return t.objectExpression([
-		t.objectProperty(t.stringLiteral('type'), t.numericLiteral(type)),
-		t.objectProperty(t.stringLiteral('index'), t.numericLiteral(index)),
-	]);
-};
+const ensureImports = (context: CompiledContext): void => {
+	type Imports = Omit<typeof EnsureImport, 'prototype'>;
+	const record = EnsureImport as Imports;
 
-
-const createValuesEntry = (value: t.Expression): t.Expression => {
-	return value;
-};
-
-
-const createChildPartEntry = (index: number): t.ObjectExpression => {
-	return createPartsEntry(PartType.CHILD, index);
+	// Ensure all imports used in the JSX element are imported.
+	context.importsUsed.forEach((importName) => {
+		const key = importName as keyof Imports;
+		if (key in record)
+			record[key](context.program, context.path);
+	});
 };

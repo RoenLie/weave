@@ -1,4 +1,5 @@
 export * from './runtime/choose-component.js';
+export * from './runtime/compiler-ctors.js';
 export * from './runtime/for-component.js';
 export * from './runtime/literal-map.js';
 export * from './runtime/rest-directive.js';

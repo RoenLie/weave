@@ -66,9 +66,9 @@ export class ImportCSSSheet {
 			return;
 
 		const importerContent = await readFile(importer!, { encoding: 'utf8' });
-		const regxp = this.cssImportAssertRegex(source);
+		const regexp = this.cssImportAssertRegex(source);
 
-		if (regxp.test(importerContent)) {
+		if (regexp.test(importerContent)) {
 			const modId = '\0virtual:' + source.replace('.css', '.stylesheet');
 			this.virtualModules.set(modId, resolvedId);
 
