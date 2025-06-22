@@ -643,7 +643,7 @@ describe('Ensure: able to create and replace a node with a variable declaration'
 		const opts = getOpts({
 			visitor: {
 				NumberLiteral: (path: NodePath) => {
-					Ensure.hoistAsVariable(
+					Ensure.replaceAndHoistAsVariable(
 						path,
 						'__test',
 						t.stringLiteral('Hello World'),
@@ -670,7 +670,7 @@ describe('Ensure: able to create and replace a node with a variable declaration'
 		const opts = getOpts({
 			visitor: {
 				NumberLiteral: (path: NodePath) => {
-					Ensure.hoistAsVariable(
+					Ensure.replaceAndHoistAsVariable(
 						path,
 						'__test',
 						t.stringLiteral('Hello World'),
@@ -701,7 +701,7 @@ describe('Ensure: able to create and replace a node with a variable declaration'
 		const opts = getOpts({
 			visitor: {
 				NumberLiteral: (path: NodePath) => {
-					Ensure.hoistAsVariable(
+					Ensure.replaceAndHoistAsVariable(
 						path,
 						'__test',
 						t.stringLiteral('Hello World'),
@@ -733,7 +733,7 @@ describe('Ensure: able to create and replace a node with a variable declaration'
 		const opts = getOpts({
 			visitor: {
 				NumberLiteral: (path: NodePath) => {
-					Ensure.hoistAsVariable(
+					Ensure.replaceAndHoistAsVariable(
 						path,
 						'__test',
 						t.stringLiteral('Hello World'),
@@ -806,6 +806,9 @@ describe('Transform JSX to compiled lit-html', () => {
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
+
+		console.log(code);
+
 
 		expect(code).to.be.eq(expected);
 	});

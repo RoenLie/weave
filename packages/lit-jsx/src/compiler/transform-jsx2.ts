@@ -3,7 +3,7 @@ import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 import { PartType } from 'lit-html/directive.js';
 
-import { EnsureImport, getJSXElementName, isValidJSXElement } from './compiler-utils.ts';
+import { Ensure, EnsureImport, getJSXElementName, isValidJSXElement } from './compiler-utils.ts';
 import { ERROR_MESSAGES, WHITESPACE_TAGS } from './config.ts';
 
 
@@ -16,17 +16,12 @@ export const transformJSXElementCompiled: VisitNode<
 	if (t.isJSXElement(path.parent))
 		return;
 
+	const { compiledTemplate, createExpression } = processJSXElementToCompiled(path);
 
-	//const replacementExpression = processJSXElementToCompiled(path);
+	const variableName = path.scope.generateUid();
+	Ensure.hoistAsTopLevelVariable(path, variableName, compiledTemplate);
 
-
-	// If the parent is not a JSX element,
-	// we need to wrap the JSX in a tagged template expression
-	return void path.replaceWith(
-		// This should rather create a variable in the same scope which is then used in the template.
-		// This prevents the compiled template from being recreated more than necessary.
-		processJSXElementToCompiled(path),
-	);
+	path.replaceWith(createExpression(variableName));
 };
 
 
@@ -59,22 +54,27 @@ const processJSXElementToCompiled = (path: NodePath<t.JSXElement>) => {
 	process(data);
 
 	// Finalize the template text and parts
-	const ttl = t.taggedTemplateExpression(
+	const taggedTemplateExpression = t.taggedTemplateExpression(
 		t.identifier('__$t'),
 		t.templateLiteral([ t.templateElement({ raw: data.templateText.value }) ], []),
 	);
 
 	const compiledTemplate = t.objectExpression([
-		t.objectProperty(t.stringLiteral('h'), ttl),
+		t.objectProperty(t.stringLiteral('h'), taggedTemplateExpression),
 		t.objectProperty(t.stringLiteral('parts'), t.arrayExpression(data.parts)),
 	]);
 
-	const compiledExpr = t.objectExpression([
-		t.objectProperty(t.stringLiteral('_$litType$'), compiledTemplate),
-		t.objectProperty(t.stringLiteral('values'), t.arrayExpression(data.values)),
-	]);
+	const createExpression = (variableName: string) => {
+		return t.objectExpression([
+			t.objectProperty(t.stringLiteral('_$litType$'), t.identifier(variableName)),
+			t.objectProperty(t.stringLiteral('values'), t.arrayExpression(data.values)),
+		]);
+	};
 
-	return compiledExpr;
+	return {
+		compiledTemplate,
+		createExpression,
+	};
 };
 
 

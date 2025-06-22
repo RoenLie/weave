@@ -365,6 +365,14 @@ export class AttrProcessors {
 
 export class Ensure {
 
+	static findProgram(path: NodePath): NodePath<t.Program> {
+		const programPath = path.findParent(p => t.isProgram(p.node)) as NodePath<t.Program>;
+		if (!programPath)
+			throw new Error('Could not find program path');
+
+		return programPath;
+	}
+
 	static import(
 		importSource: (value: string) => boolean,
 		importName: (value: string) => boolean,
@@ -484,10 +492,11 @@ export class Ensure {
 	* If the path is not inside such an arrow function, it inserts the variable declaration
 	* before the closest statement and replaces the target node with the new variable identifier.
 	*/
-	static hoistAsVariable(
+	static replaceAndHoistAsVariable(
 		path: NodePath,
 		variableName: string,
 		expression: t.Expression,
+		expandArrow = true,
 	): t.Identifier {
 		if (this.getClosestBinding(path, variableName))
 			return t.identifier(variableName);
@@ -500,7 +509,9 @@ export class Ensure {
 		const variableDeclaration = t.variableDeclaration('const', [ declarator ]);
 
 		// Check if we're inside an arrow function with an expression body
-		const arrowFunctionPath = this.getArrowExpressionPath(path);
+		// If expandArrow is false, we skip this check and always insert
+		// the variable declaration as a regular statement.
+		const arrowFunctionPath = expandArrow ? this.getArrowExpressionPath(path) : undefined;
 
 		if (arrowFunctionPath) {
 			// Convert arrow function expression body to block statement
@@ -527,6 +538,54 @@ export class Ensure {
 			// Replace the target node with an identifier pointing to the new variable
 			const nodePath = this.getNodePath(nodeToReplace, path);
 			nodePath?.replaceWith(identifier);
+		}
+
+		return identifier;
+	}
+
+	static hoistAsTopLevelVariable(
+		path: NodePath,
+		variableName: string,
+		expression: t.Expression,
+	): t.Identifier {
+		// Find the program path
+		const programPath = this.findProgram(path);
+
+		// Check if variable with this name already exists at the top level
+		const existingBinding = programPath.scope.getBinding(variableName);
+		if (existingBinding)
+			return t.identifier(variableName);
+
+		// Create the variable declaration
+		const identifier = t.identifier(variableName);
+		const declarator = t.variableDeclarator(identifier, expression);
+		const variableDeclaration = t.variableDeclaration('const', [ declarator ]);
+
+		// Find the last import declaration index
+		const programBody = programPath.node.body;
+		const lastImportIndex = programBody.reduceRight((lastIndex, node, index) => {
+			return lastIndex === -1 && t.isImportDeclaration(node) ? index : lastIndex;
+		}, -1);
+
+		// Insert after the last import, or at the beginning if no imports
+		const insertionIndex = lastImportIndex + 1;
+
+		if (insertionIndex === 0 || insertionIndex >= programBody.length) {
+			// No imports found or at the end - add to the beginning/end
+			const [ insertedPath ] = insertionIndex === 0
+				? programPath.unshiftContainer('body', variableDeclaration)
+				: programPath.pushContainer('body', variableDeclaration);
+
+			programPath.scope.registerDeclaration(insertedPath);
+		}
+		else {
+			// Insert after the last import
+			const bodyPaths = programPath.get('body') as NodePath<t.Statement>[];
+			const targetPath = bodyPaths[insertionIndex];
+			if (targetPath) {
+				const [ insertedPath ] = targetPath.insertBefore(variableDeclaration);
+				programPath.scope.registerDeclaration(insertedPath);
+			}
 		}
 
 		return identifier;
