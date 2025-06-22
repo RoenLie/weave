@@ -450,32 +450,84 @@ export class Ensure {
 		}
 	}
 
-	static replacePathNodeAsNearestVariableDeclaration(
+	/**
+ 	* Finds the closest arrow function expression with an expression body
+	* starting from the given path.
+	* Returns the NodePath of the arrow function expression if found, otherwise undefined.
+	*/
+	static getArrowExpressionPath(
 		path: NodePath,
-		newIdentifier: string,
-		expression: () => t.Expression,
+	): NodePath<t.ArrowFunctionExpression> |  undefined {
+		// Check if we're inside an arrow function with an expression body
+		let currentPath: NodePath | null = path;
+		let arrowFunctionPath: NodePath<t.ArrowFunctionExpression> | undefined;
+
+		while (currentPath && currentPath.parentPath) {
+			if (t.isArrowFunctionExpression(currentPath.node) && t.isExpression(currentPath.node.body)) {
+				arrowFunctionPath = currentPath as NodePath<t.ArrowFunctionExpression>;
+				break;
+			}
+
+			currentPath = currentPath.parentPath;
+		}
+
+		return arrowFunctionPath;
+	}
+
+	/**
+	* Hoists the expression to a variable declaration in the closest scope.
+	*
+	* If the path is inside an arrow function with an expression body, it converts
+	* the arrow function body to a block statement and inserts the variable declaration
+	* before the return statement.
+	*
+	* If the path is not inside such an arrow function, it inserts the variable declaration
+	* before the closest statement and replaces the target node with the new variable identifier.
+	*/
+	static hoistAsVariable(
+		path: NodePath,
+		variableName: string,
+		expression: t.Expression,
 	): t.Identifier {
-		if (this.getClosestBinding(path, newIdentifier))
-			return t.identifier(newIdentifier);
+		if (this.getClosestBinding(path, variableName))
+			return t.identifier(variableName);
 
 		const nodeToReplace = path.node;
 
 		// Create the new variable declaration
-		const identifier = t.identifier(newIdentifier);
-		const declarator = t.variableDeclarator(identifier, expression());
+		const identifier = t.identifier(variableName);
+		const declarator = t.variableDeclarator(identifier, expression);
 		const variableDeclaration = t.variableDeclaration('const', [ declarator ]);
 
-		const statementPath = this.getClosestStatementPath(path);
+		// Check if we're inside an arrow function with an expression body
+		const arrowFunctionPath = this.getArrowExpressionPath(path);
 
-		// Insert the new declaration before the current statement
-		const [ insertedPath ] = statementPath.insertBefore(variableDeclaration);
+		if (arrowFunctionPath) {
+			// Convert arrow function expression body to block statement
+			const returnStatement = t.returnStatement(identifier);
+			const blockStatement = t.blockStatement([ variableDeclaration, returnStatement ]);
 
-		// Register the new declaration with the appropriate scope
-		statementPath.scope.registerDeclaration(insertedPath);
+			// Replace the arrow function body
+			arrowFunctionPath.get('body').replaceWith(blockStatement);
 
-		// Replace the target node with an identifier pointing to the new variable
-		const nodePath = this.getNodePath(nodeToReplace, path);
-		nodePath?.replaceWith(identifier);
+			// Replace the target node with an identifier pointing to the new variable
+			const nodePath = this.getNodePath(nodeToReplace, path);
+			nodePath?.replaceWith(identifier);
+		}
+		else {
+			// Fall back to the original behavior
+			const statementPath = this.getClosestStatementPath(path);
+
+			// Insert the new declaration before the current statement
+			const [ insertedPath ] = statementPath.insertBefore(variableDeclaration);
+
+			// Register the new declaration with the appropriate scope
+			statementPath.scope.registerDeclaration(insertedPath);
+
+			// Replace the target node with an identifier pointing to the new variable
+			const nodePath = this.getNodePath(nodeToReplace, path);
+			nodePath?.replaceWith(identifier);
+		}
 
 		return identifier;
 	}

@@ -643,10 +643,10 @@ describe('Ensure: able to create and replace a node with a variable declaration'
 		const opts = getOpts({
 			visitor: {
 				NumberLiteral: (path: NodePath) => {
-					Ensure.replacePathNodeAsNearestVariableDeclaration(
+					Ensure.hoistAsVariable(
 						path,
 						'__test',
-						() => t.stringLiteral('Hello World'),
+						t.stringLiteral('Hello World'),
 					);
 				},
 			},
@@ -670,10 +670,10 @@ describe('Ensure: able to create and replace a node with a variable declaration'
 		const opts = getOpts({
 			visitor: {
 				NumberLiteral: (path: NodePath) => {
-					Ensure.replacePathNodeAsNearestVariableDeclaration(
+					Ensure.hoistAsVariable(
 						path,
 						'__test',
-						() => t.stringLiteral('Hello World'),
+						t.stringLiteral('Hello World'),
 					);
 				},
 			},
@@ -690,6 +690,69 @@ describe('Ensure: able to create and replace a node with a variable declaration'
 		+ '\n  const __test = "Hello World";'
 		+ '\n  return __test;'
 		+ '\n}';
+
+		const output = await babel.transformAsync(source, opts);
+		const code = output?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('Can insert when node is in a immediate return statement.', async ({ expect }) => {
+		const opts = getOpts({
+			visitor: {
+				NumberLiteral: (path: NodePath) => {
+					Ensure.hoistAsVariable(
+						path,
+						'__test',
+						t.stringLiteral('Hello World'),
+					);
+				},
+			},
+		});
+
+		const source = `
+		const myFunction = () => 0;
+		`;
+
+		const expected = ''
+		+ 'const myFunction = () => {'
+		+ '\n  const __test = "Hello World";'
+		+ '\n  return __test;'
+		+ '\n};';
+
+		const output = await babel.transformAsync(source, opts);
+		const code = output?.code;
+
+		console.log(code);
+
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('Can insert when node is in an arrow function with block statement.', async ({ expect }) => {
+		const opts = getOpts({
+			visitor: {
+				NumberLiteral: (path: NodePath) => {
+					Ensure.hoistAsVariable(
+						path,
+						'__test',
+						t.stringLiteral('Hello World'),
+					);
+				},
+			},
+		});
+
+		const source = `
+		const myFunction = () => {
+			return 0;
+		};
+		`;
+
+		const expected = ''
+		+ 'const myFunction = () => {'
+		+ '\n  const __test = "Hello World";'
+		+ '\n  return __test;'
+		+ '\n};';
 
 		const output = await babel.transformAsync(source, opts);
 		const code = output?.code;
