@@ -3,6 +3,10 @@ import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 
 import {
+	AttributeHandler,
+	TemplateAttributeProcessor,
+} from './attribute-processor.ts';
+import {
 	EnsureImport,
 	isJSXElementPath,
 	isJSXFragmentPath,
@@ -10,15 +14,12 @@ import {
 	type Values,
 } from './compiler-utils.ts';
 import {
-	AttrProcessors,
-	AttrValidators,
 	Ensure,
 	getJSXElementName,
 	getTemplateType,
 	isJSXCustomElementComponent,
 	isJSXFunctionElementComponent,
 	isValidJSXElement,
-	TemplateBuilder,
 } from './compiler-utils.ts';
 import {
 	COMPONENT_LITERAL_PREFIX,
@@ -26,6 +27,7 @@ import {
 	VARIABLES,
 	WHITESPACE_TAGS,
 } from './config.ts';
+import { TemplateBuilder } from './template-builder.ts';
 
 
 export const transformJSXElement: VisitNode<
@@ -173,42 +175,14 @@ processJSXElement.processAttributes = (context: JSXElementContext): void => {
 
 	const { attributes } = context.path.node.openingElement;
 
-	for (const attr of attributes.values()) {
-		// Non expression attributes are checked before expression attributes.
-		if (AttrValidators.isSpread(attr))
-			AttrProcessors.spread(attr, context);
-		else if (AttrValidators.isNonExpression(attr))
-			AttrProcessors.nonExpression(attr, context);
-		else if (AttrValidators.isBoolean(attr))
-			AttrProcessors.boolean(attr, context);
+	const processor = new TemplateAttributeProcessor();
+	const handler = new AttributeHandler(processor);
 
-		// Expression attributes are checked based on their type.
-		// Order is based on a guess as to which expression is more common.
-		else if (AttrValidators.isEvent(attr))
-			AttrProcessors.event(attr, context);
-		else if (AttrValidators.isArrowBinding(attr))
-			AttrProcessors.arrowBinding(attr, context);
-		else if (AttrValidators.isCallBinding(attr))
-			AttrProcessors.callBinding(attr, context);
-		else if (AttrValidators.isClassListBinding(attr))
-			AttrProcessors.classList(attr, context);
-		else if (AttrValidators.isStyleListBinding(attr))
-			AttrProcessors.styleList(attr, context);
-		else if (AttrValidators.isRef(attr))
-			AttrProcessors.ref(attr, context);
-		else if (AttrValidators.isDirective(attr))
-			AttrProcessors.directive(attr, context);
+	for (const attr of attributes.values())
+		handler.processAttribute(attr, context);
 
-		// Generic expression attributes are checked last
-		// because this condition will be true for all expression attributes.
-		// and we want the more specific cases to be checked first.
-		else if (AttrValidators.isExpression(attr))
-			AttrProcessors.expression(attr, context);
-		else
-			throw new Error(ERROR_MESSAGES.UNKNOWN_JSX_ATTRIBUTE_TYPE);
-	}
-
-	context.builder.addText('>'); // Close the opening tag
+	// Close the opening tag
+	context.builder.addText('>');
 };
 
 processJSXElement.processChildren = (context: JSXElementContext): void => {
