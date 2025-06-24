@@ -6,9 +6,8 @@ import type { JSXElement, JSXFragment } from '@babel/types';
 import * as t from '@babel/types';
 import { describe, test } from 'vitest';
 
-import { litJsxBabelPreset, litJsxBabelPreset2 } from '../../src/compiler/babel-preset.ts';
-import { Ensure } from '../../src/compiler/compiler-utils.ts';
-import { isJSXElementStatic } from '../../src/compiler/transform-jsx.ts';
+import { litJsxBabelPreset, litJsxBabelPresetCompiled } from '../../src/compiler/babel-preset.ts';
+import { Ensure, isJSXElementStatic } from '../../src/compiler/compiler-utils.ts';
 
 
 type BabelPlugins = NonNullable<NonNullable<babel.TransformOptions['parserOpts']>['plugins']>;
@@ -494,11 +493,8 @@ describe('isJSXElementStatic', () => {
 				|| (!babel.types.isJSXElement(path.parent)
 				&& !babel.types.isJSXFragment(path.parent));
 
-			if (isRoot) {
-				//console.time('isJSXElementStatic');
+			if (isRoot)
 				testResult = isJSXElementStatic(path);
-				//console.timeEnd('isJSXElementStatic');
-			}
 		};
 
 		const opts: babel.TransformOptions = {
@@ -782,7 +778,7 @@ describe('Transform JSX to compiled lit-html', () => {
 		sourceFileName: 'test.tsx',
 		presets:        [
 			[
-				litJsxBabelPreset2,
+				litJsxBabelPresetCompiled,
 				/* merged into the metadata obj through state.opts */
 				{},
 			],
@@ -1092,8 +1088,8 @@ describe('Transform JSX to compiled lit-html', () => {
 		`;
 
 		const expected = ``
-		+ `import { classMap } from "lit-html/directives/class-map.js";`
-		+ `\nimport { AttributePart } from "jsx-lit";`
+		+ `import { AttributePart } from "jsx-lit";`
+		+ `\nimport { classMap } from "lit-html/directives/class-map.js";`
 		+ `\nimport { __$t } from "jsx-lit";`
 		+ `\nconst _temp = {`
 		+ `\n  "h": __$t\`<div></div>\`,`
@@ -1124,8 +1120,8 @@ describe('Transform JSX to compiled lit-html', () => {
 		`;
 
 		const expected = ``
-		+ `import { styleMap } from "lit-html/directives/style-map.js";`
-		+ `\nimport { AttributePart } from "jsx-lit";`
+		+ `import { AttributePart } from "jsx-lit";`
+		+ `\nimport { styleMap } from "lit-html/directives/style-map.js";`
 		+ `\nimport { __$t } from "jsx-lit";`
 		+ `\nconst _temp = {`
 		+ `\n  "h": __$t\`<div></div>\`,`
@@ -1393,6 +1389,88 @@ describe('Transform JSX to compiled lit-html', () => {
 		const result = await babel.transformAsync(source, opts);
 		console.timeEnd('Transform');
 		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should not handle a top level function component', async ({ expect }) => {
+		const source = `
+		<MyComponent prop1="value" prop2={expression}>
+			<div>First child</div>
+			{someExpression}
+			<span>Second child</span>
+			Text content
+		</MyComponent>
+		`;
+
+		const expected = ''
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`\`,`
+		+ `\n  "parts": []`
+		+ `\n};`
+		+ `\n({`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": []`
+		+ `\n});`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		console.log(code);
+
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should handle a nested function component', async ({ expect }) => {
+		const source = `
+		<div>
+			<MyComponent prop1="value" prop2={expression}>
+				<div>First child</div>
+				{someExpression}
+				<span>Second child</span>
+				Text content
+			</MyComponent>
+		</div>
+		`;
+
+		const expected = ''
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst _temp3 = {`
+		+ `\n  "h": __$t\`<div><?></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 2,`
+		+ `\n    "index": 2`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst _temp2 = {`
+		+ `\n  "h": __$t\`<span>Second child</span>\`,`
+		+ `\n  "parts": []`
+		+ `\n};`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div>First child</div>\`,`
+		+ `\n  "parts": []`
+		+ `\n};`
+		+ `\n({`
+		+ `\n  "_$litType$": _temp3,`
+		+ `\n  "values": [MyComponent({`
+		+ `\n    prop1: "value",`
+		+ `\n    prop2: expression,`
+		+ `\n    children: [{`
+		+ `\n      "_$litType$": _temp,`
+		+ `\n      "values": []`
+		+ `\n    }, someExpression, {`
+		+ `\n      "_$litType$": _temp2,`
+		+ `\n      "values": []`
+		+ `\n    }, "Text content"]`
+		+ `\n  })]`
+		+ `\n});`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		console.log(code);
 
 		expect(code).to.be.eq(expected);
 	});

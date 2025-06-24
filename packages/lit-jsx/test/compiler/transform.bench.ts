@@ -1,7 +1,7 @@
 import * as babel from '@babel/core';
 import { bench, describe } from 'vitest';
 
-import { litJsxBabelPreset2 } from '../../src/compiler/babel-preset.ts';
+import { litJsxBabelPresetCompiled } from '../../src/compiler/babel-preset.ts';
 
 type BabelPlugins = NonNullable<NonNullable<babel.TransformOptions['parserOpts']>['plugins']>;
 
@@ -11,7 +11,7 @@ describe('Transform to compiled, benchmarks', () => {
 		root:           '.',
 		filename:       'test.tsx',
 		sourceFileName: 'test.tsx',
-		presets:        [ litJsxBabelPreset2 ],
+		presets:        [ litJsxBabelPresetCompiled ],
 		plugins:        [],
 		ast:            false,
 		sourceMaps:     true,

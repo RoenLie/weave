@@ -3,6 +3,7 @@ import * as t from '@babel/types';
 
 import { isMathmlTag } from '../shared/mathml-tags.ts';
 import { isSvgTag } from '../shared/svg-tags.ts';
+import type { ProcessorContext } from './attribute-processor.ts';
 import { COMPONENT_POSTFIX, ERROR_MESSAGES, SOURCES, VARIABLES } from './config.ts';
 
 
@@ -711,3 +712,40 @@ export const isJSXFunctionElementComponent = (nodeOrName: t.JSXElement | string)
 
 export const isJSXElementPath = (path: NodePath): path is NodePath<t.JSXElement> => t.isJSXElement(path.node);
 export const isJSXFragmentPath = (path: NodePath): path is NodePath<t.JSXFragment> => t.isJSXFragment(path.node);
+
+
+/**
+ * Determines if a JSX element will result in a static template.
+ * This function traverses the JSX tree to check if any custom element components
+ * are present, which would make the template static.
+ *
+ * @param path - The NodePath of the JSX element to analyze
+ * @returns true if the template will be static, false otherwise
+ */
+export const isJSXElementStatic = (path: NodePath<t.JSXElement | t.JSXFragment>): boolean => {
+	if (t.isJSXElement(path.node) && isJSXCustomElementComponent(path.node))
+		return true;
+
+	for (const childPath of path.get('children')) {
+		if (!isJSXElementPath(childPath) && !isJSXFragmentPath(childPath))
+			continue;
+
+		if (isJSXElementStatic(childPath))
+			return true;
+	}
+
+	return false;
+};
+
+
+export const ensureImports = (context: ProcessorContext): void => {
+	type Imports = Omit<typeof EnsureImport, 'prototype'>;
+	const record = EnsureImport as Imports;
+
+	// Ensure all imports used in the JSX element are imported.
+	context.importsUsed.forEach(importName => {
+		const key = importName as keyof Imports;
+		if (key in record)
+			record[key](context.program, context.path);
+	});
+};

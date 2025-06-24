@@ -1,7 +1,8 @@
+import type { NodePath } from '@babel/traverse';
 import * as t from '@babel/types';
 import { PartType } from 'lit-html/directive.js';
 
-import type { Values } from './compiler-utils.ts';
+import type { EnsureImport, Values } from './compiler-utils.ts';
 import {
 	ATTR_BIND_OBJ_NAME,
 	ATTR_NAMES,
@@ -52,21 +53,6 @@ interface ValueBinding {
 	type:       'prop' | 'bool';
 	name:       string;
 	expression: t.Expression;
-}
-
-
-interface IAttributeProcessor<TContext = any> {
-	callBinding(attr: CallBindingAttribute, context: TContext): void;
-	arrowBinding(attr: ArrowFunctionAttribute, context: TContext): void;
-	directive(attr: JSXAttributeWithExpression, context: TContext): void;
-	ref(attr: JSXAttributeWithExpression, context: TContext): void;
-	classList(attr: JSXAttributeWithExpression, context: TContext): void;
-	styleList(attr: JSXAttributeWithExpression, context: TContext): void;
-	event(attr: JSXAttributeWithExpression, context: TContext): void;
-	expression(attr: JSXAttributeWithExpression, context: TContext): void;
-	nonExpression(attr: JSXAttributeWithoutExpression, context: TContext): void;
-	spread(attr: t.JSXSpreadAttribute, context: TContext): void;
-	boolean(attr: JSXAttributeBoolean, context: TContext): void;
 }
 
 
@@ -166,7 +152,31 @@ export class AttributeValidators {
 }
 
 
-export abstract class AttributeProcessor<TContext> implements IAttributeProcessor<TContext> {
+export interface ProcessorContext {
+	program:             t.Program;
+	path:                NodePath<t.JSXElement | t.JSXFragment>;
+	tagName:             string;
+	isComponentFunction: boolean;
+	isInitialElement:    boolean;
+	importsUsed:         Set<keyof Omit<typeof EnsureImport, 'prototype'>>;
+}
+
+interface IAttributeProcessor<TContext extends ProcessorContext = ProcessorContext> {
+	callBinding(attr: CallBindingAttribute, context: TContext): void;
+	arrowBinding(attr: ArrowFunctionAttribute, context: TContext): void;
+	directive(attr: JSXAttributeWithExpression, context: TContext): void;
+	ref(attr: JSXAttributeWithExpression, context: TContext): void;
+	classList(attr: JSXAttributeWithExpression, context: TContext): void;
+	styleList(attr: JSXAttributeWithExpression, context: TContext): void;
+	event(attr: JSXAttributeWithExpression, context: TContext): void;
+	expression(attr: JSXAttributeWithExpression, context: TContext): void;
+	nonExpression(attr: JSXAttributeWithoutExpression, context: TContext): void;
+	spread(attr: t.JSXSpreadAttribute, context: TContext): void;
+	boolean(attr: JSXAttributeBoolean, context: TContext): void;
+}
+
+export abstract class AttributeProcessor<TContext extends ProcessorContext>
+implements IAttributeProcessor<TContext> {
 
 	abstract callBinding(attr: CallBindingAttribute, context: TContext): void;
 	abstract arrowBinding(attr: ArrowFunctionAttribute, context: TContext): void;
@@ -180,7 +190,10 @@ export abstract class AttributeProcessor<TContext> implements IAttributeProcesso
 	abstract spread(attr: t.JSXSpreadAttribute, context: TContext): void;
 	abstract boolean(attr: JSXAttributeBoolean, context: TContext): void;
 
-	protected createValueBinding(attr: CallBindingAttribute | ArrowFunctionAttribute, context: TContext): ValueBinding {
+	protected createValueBinding(
+		attr: CallBindingAttribute | ArrowFunctionAttribute,
+		context: TContext,
+	): ValueBinding {
 		const expression = attr.value.expression;
 
 		let isProp: boolean = false;
@@ -236,6 +249,8 @@ export abstract class AttributeProcessor<TContext> implements IAttributeProcesso
 	}
 
 	protected createRef(attr: JSXAttributeWithExpression, context: TContext): t.CallExpression {
+		context.importsUsed.add('createRef');
+
 		// add a ref call around the expression.
 		const expression = t.callExpression(
 			t.identifier(VARIABLES.REF),
@@ -246,6 +261,8 @@ export abstract class AttributeProcessor<TContext> implements IAttributeProcesso
 	}
 
 	protected createClassList(attr: JSXAttributeWithExpression, context: TContext): t.CallExpression {
+		context.importsUsed.add('classMap');
+
 		// add a classMap call around the expression.
 		const expression = t.callExpression(
 			t.identifier(VARIABLES.CLASS_MAP),
@@ -255,8 +272,55 @@ export abstract class AttributeProcessor<TContext> implements IAttributeProcesso
 		return expression;
 	}
 
-}
+	protected createStyleList(attr: JSXAttributeWithExpression, context: TContext): t.CallExpression {
+		context.importsUsed.add('styleMap');
 
+		// add a styleMap call around the expression.
+		const expression = t.callExpression(
+			t.identifier(VARIABLES.STYLE_MAP),
+			[ attr.value.expression ],
+		);
+
+		return expression;
+	}
+
+	protected createEvent(attr: JSXAttributeWithExpression, context: TContext): [ string, t.Expression ] {
+		return [ attr.name.name.toString().slice(3), attr.value.expression ];
+	}
+
+	protected createExpression(attr: JSXAttributeWithExpression, context: TContext): [string, t.Expression] {
+		return [ attr.name.name.toString(), attr.value.expression ];
+	}
+
+	protected createNonExpression(attr: JSXAttributeWithoutExpression, context: TContext): [string, string] {
+		// If the value is a string, we can use it directly
+		// Here we always bind the value as a string.
+		// In the future, we might want to also support numbers.
+		if (!t.isStringLiteral(attr.value))
+			throw new Error(ERROR_MESSAGES.ONLY_STRING_LITERALS);
+
+		return [ attr.name.name.toString(), attr.value.value ];
+	}
+
+	protected createSpread(attr: t.JSXSpreadAttribute, context: TContext): t.CallExpression {
+		context.importsUsed.add('rest');
+
+		// If it's a spread attribute, we wrap it in our custom `rest` directive.
+		// This will allow us to handle the spread attribute correctly.
+		// We also need to ensure that the `rest` directive is imported.
+		return t.callExpression(
+			t.identifier(VARIABLES.REST),
+			[ attr.argument ],
+		);
+	}
+
+	protected createBoolean(attr: JSXAttributeBoolean, context: TContext): string {
+		// If the value is null or undefined, we can bind the attribute name directly.
+		// This will result in a attribute without a value, e.g. `<div disabled>`.
+		return attr.name.name.toString();
+	}
+
+}
 
 export class TemplateAttributeProcessor extends AttributeProcessor<TemplateContext> {
 
@@ -281,8 +345,6 @@ export class TemplateAttributeProcessor extends AttributeProcessor<TemplateConte
 		// add a space to keep correct spacing in the template.
 		context.builder.addText(' ');
 		context.builder.addExpression(expression);
-
-		context.importsUsed.add('createRef');
 	}
 
 	classList(attr: JSXAttributeWithExpression, context: TemplateContext): void {
@@ -290,250 +352,158 @@ export class TemplateAttributeProcessor extends AttributeProcessor<TemplateConte
 
 		context.builder.addText(' class=');
 		context.builder.addExpression(expression);
-
-		context.importsUsed.add('classMap');
 	}
 
 	styleList(attr: JSXAttributeWithExpression, context: TemplateContext): void {
-		// add a styleMap call around the expression.
-		const expression = t.callExpression(
-			t.identifier(VARIABLES.STYLE_MAP),
-			[ attr.value.expression ],
-		);
+		const expression = this.createStyleList(attr, context);
 
 		context.builder.addText(' ' + 'style=');
 		context.builder.addExpression(expression);
-
-		context.importsUsed.add('styleMap');
 	}
 
 	event(attr: JSXAttributeWithExpression, context: TemplateContext): void {
-		// If the attribute is an event handler,
-		// we need to convert it to a standard DOM event name.
-		const oldName = attr.name.name.toString();
-		const newName = '@' + oldName.slice(3);
-		context.builder.addText(' ' + newName + '=');
-		context.builder.addExpression(attr.value.expression);
+		const [ name, expression ] = this.createEvent(attr, context);
+
+		context.builder.addText(' @' + name + '=');
+		context.builder.addExpression(expression);
 	}
 
 	expression(attr: JSXAttributeWithExpression, context: TemplateContext): void {
-		// Any other attribute which has an expression container value
-		const name = attr.name.name.toString();
+		const [ name, expression ] = this.createExpression(attr, context);
+
 		context.builder.addText(' ' + name + '=');
-		context.builder.addExpression(attr.value.expression);
+		context.builder.addExpression(expression);
 	}
 
-	nonExpression(attribute: JSXAttributeWithoutExpression, context: TemplateContext): void {
-		// If the value is a string, we can use it directly
-		// Here we always bind the value as a string.
-		// In the future, we might want to also support numbers.
-		if (!t.isStringLiteral(attribute.value))
-			throw new Error(ERROR_MESSAGES.ONLY_STRING_LITERALS);
+	nonExpression(attr: JSXAttributeWithoutExpression, context: TemplateContext): void {
+		const [ name, value ] = this.createNonExpression(attr, context);
 
-		const name = attribute.name.name.toString();
-		const value = attribute.value.value;
 		context.builder.addText(' ' + name + '="' + value + '"');
 	};
 
 	spread(attribute: t.JSXSpreadAttribute, context: TemplateContext): void {
-		// If it's a spread attribute, we wrap it in our custom `rest` directive.
-		// This will allow us to handle the spread attribute correctly.
-		// We also need to ensure that the `rest` directive is imported.
-
-		const expression = t.callExpression(
-			t.identifier(VARIABLES.REST),
-			[ attribute.argument ],
-		);
+		const expression = this.createSpread(attribute, context);
 
 		context.builder.addText(' ');
 		context.builder.addExpression(expression);
-
-		context.importsUsed.add('rest');
 	}
 
 	boolean(attribute: JSXAttributeBoolean, context: TemplateContext): void {
-		// If the value is null or undefined, we can bind the attribute name directly.
-		// This will result in a attribute without a value, e.g. `<div disabled>`.
-		const name = attribute.name.name.toString();
+		const name = this.createBoolean(attribute, context);
+
 		context.builder.addText(' ' + name);
 	};
 
-	protected valueBinding(attr: CallBindingAttribute | ArrowFunctionAttribute, context: TemplateContext): void {
-		const valueBinding = this.createValueBinding(attr, context);
+	protected valueBinding(
+		attr: CallBindingAttribute | ArrowFunctionAttribute,
+		context: TemplateContext,
+	): void {
+		const { type, name, expression } = this.createValueBinding(attr, context);
 
-		if (valueBinding.type === 'prop')
+		if (type === 'prop')
 			context.builder.addText(' .');
-		else if (valueBinding.type === 'bool')
+		else if (type === 'bool')
 			context.builder.addText(' ?');
 
-		context.builder.addText(valueBinding.name + '=');
-		context.builder.addExpression(valueBinding.expression);
+		context.builder.addText(name + '=');
+		context.builder.addExpression(expression);
 	}
 
 }
 
-export class CompiledAttributeProcessor implements IAttributeProcessor<CompiledContext> {
+export class CompiledAttributeProcessor extends AttributeProcessor<CompiledContext> {
 
 	callBinding(attr: CallBindingAttribute, context: CompiledContext): void {
-		const expression = attr.value.expression;
-		const isProp = expression.callee.property.name === ATTR_VALUES.PROP;
-		const isBool = expression.callee.property.name === ATTR_VALUES.BOOL;
-
-		const name = attr.name.name.toString();
-		const expressionBody = expression.arguments[0];
-
-		if (isProp) {
-			context.builder.addPart(CreateCompiledPart.property(context.currentIndex, name));
-			context.builder.addValue(expressionBody);
-			context.builder.addImport('propertyPart');
-		}
-		else if (isBool) {
-			context.builder.addPart(CreateCompiledPart.boolean(context.currentIndex, name));
-			context.builder.addValue(expressionBody);
-			context.builder.addImport('booleanPart');
-		}
-		else {
-			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
-		}
+		this.valueBinding(attr, context);
 	}
 
 	arrowBinding(attr: ArrowFunctionAttribute, context: CompiledContext): void {
-		const expression = attr.value.expression;
-		const param = expression.params[0];
-		const isProp = param.name === ATTR_VALUES.PROP;
-		const isBool = param.name === ATTR_VALUES.BOOL;
-
-		const name = attr.name.name.toString();
-		const expressionBody = expression.body;
-
-		if (isProp) {
-			context.builder.addPart(CreateCompiledPart.property(context.currentIndex, name));
-			context.builder.addValue(expressionBody);
-			context.builder.addImport('propertyPart');
-		}
-		else if (isBool) {
-			context.builder.addPart(CreateCompiledPart.boolean(context.currentIndex, name));
-			context.builder.addValue(expressionBody);
-			context.builder.addImport('booleanPart');
-		}
-		else {
-			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
-		}
+		this.valueBinding(attr, context);
 	}
 
 	directive(attr: JSXAttributeWithExpression, context: CompiledContext): void {
-		// Replace the spread attribute with its argument, minus the compiler func.
-		const expression = attr.value.expression;
-		if (t.isCallExpression(expression)) {
-			// If the expression is a call, we can add it directly.
+		for (const expression of this.createDirective(attr, context)) {
 			context.builder.addPart(CreateCompiledPart.element(context.currentIndex));
 			context.builder.addValue(expression);
-		}
-		else if (t.isArrayExpression(expression)) {
-			for (const item of expression.elements) {
-				if (!t.isExpression(item))
-					throw new Error(ERROR_MESSAGES.EMPTY_JSX_EXPRESSION);
-
-				context.builder.addPart(CreateCompiledPart.element(context.currentIndex));
-				context.builder.addValue(item);
-			}
-		}
-		else {
-			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
 		}
 	}
 
 	ref(attr: JSXAttributeWithExpression, context: CompiledContext): void {
-		// add a ref call around the expression.
-		const expression = t.callExpression(
-			t.identifier(VARIABLES.REF),
-			[ attr.value.expression ],
-		);
+		const expression = this.createRef(attr, context);
 
 		context.builder.addPart(CreateCompiledPart.element(context.currentIndex));
 		context.builder.addValue(expression);
-		context.builder.addImport('createRef');
+		context.importsUsed.add('createRef');
 	}
 
 	classList(attr: JSXAttributeWithExpression, context: CompiledContext): void {
-		// add a classMap call around the expression.
-		const expression = t.callExpression(
-			t.identifier(VARIABLES.CLASS_MAP),
-			[ attr.value.expression ],
-		);
+		const expression = this.createClassList(attr, context);
 
 		context.builder.addPart(CreateCompiledPart.attribute(context.currentIndex, 'class'));
 		context.builder.addValue(expression);
-		context.builder.addImport('attributePart');
-		context.builder.addImport('classMap');
+		context.importsUsed.add('attributePart');
 	}
 
 	styleList(attr: JSXAttributeWithExpression, context: CompiledContext): void {
-		// add a styleMap call around the expression.
-		const expression = t.callExpression(
-			t.identifier(VARIABLES.STYLE_MAP),
-			[ attr.value.expression ],
-		);
+		const expression = this.createStyleList(attr, context);
 
 		context.builder.addPart(CreateCompiledPart.attribute(context.currentIndex, 'style'));
 		context.builder.addValue(expression);
-		context.builder.addImport('attributePart');
-		context.builder.addImport('styleMap');
+		context.importsUsed.add('attributePart');
 	}
 
 	event(attr: JSXAttributeWithExpression, context: CompiledContext): void {
-		// If the attribute is an event handler,
-		// we need to convert it to a standard DOM event name.
-		const oldName = attr.name.name.toString();
-		const newName = oldName.slice(3);
+		const [ name, expression ] = this.createEvent(attr, context);
 
-		context.builder.addPart(CreateCompiledPart.event(context.currentIndex, newName));
-		context.builder.addValue(attr.value.expression);
-		context.builder.addImport('eventPart');
+		context.builder.addPart(CreateCompiledPart.event(context.currentIndex, name));
+		context.builder.addValue(expression);
+		context.importsUsed.add('eventPart');
 	}
 
 	expression(attr: JSXAttributeWithExpression, context: CompiledContext): void {
-		// Any other attribute which has an expression container value
-		const name = attr.name.name.toString();
-		const expressionBody = attr.value.expression;
+		const [ name, expression ] = this.createExpression(attr, context);
 
 		context.builder.addPart(CreateCompiledPart.attribute(context.currentIndex, name));
-		context.builder.addValue(expressionBody);
-		context.builder.addImport('attributePart');
+		context.builder.addValue(expression);
+		context.importsUsed.add('attributePart');
 	}
 
-	nonExpression(attribute: JSXAttributeWithoutExpression, context: CompiledContext): void {
-		// If the value is a string, we can use it directly
-		// Here we always bind the value as a string.
-		// In the future, we might want to also support numbers.
-		if (!t.isStringLiteral(attribute.value))
-			throw new Error(ERROR_MESSAGES.ONLY_STRING_LITERALS);
-
-		const name = attribute.name.name.toString();
-		const value = attribute.value.value;
+	nonExpression(attr: JSXAttributeWithoutExpression, context: CompiledContext): void {
+		const [ name, value ] = this.createNonExpression(attr, context);
 
 		context.builder.addText(' ' + name + '="' + value + '"');
 	};
 
-	spread(attribute: t.JSXSpreadAttribute, context: CompiledContext): void {
-		// If it's a spread attribute, we wrap it in our custom `rest` directive.
-		// This will allow us to handle the spread attribute correctly.
-		// We also need to ensure that the `rest` directive is imported.
-		const expression = t.callExpression(
-			t.identifier(VARIABLES.REST),
-			[ attribute.argument ],
-		);
+	spread(attr: t.JSXSpreadAttribute, context: CompiledContext): void {
+		const expression = this.createSpread(attr, context);
 
 		context.builder.addPart(CreateCompiledPart.element(context.currentIndex));
 		context.builder.addValue(expression);
-		context.builder.addImport('rest');
 	}
 
-	boolean(attribute: JSXAttributeBoolean, context: CompiledContext): void {
-		// If the value is null or undefined, we can bind the attribute name directly.
-		// This will result in a attribute without a value, e.g. `<div disabled>`.
-		context.builder.addText(' ' + attribute.name.name.toString());
+	boolean(attr: JSXAttributeBoolean, context: CompiledContext): void {
+		const name = this.createBoolean(attr, context);
+
+		context.builder.addText(' ' + name);
 	};
+
+	protected valueBinding(
+		attr: CallBindingAttribute | ArrowFunctionAttribute,
+		context: CompiledContext,
+	): void {
+		const { type, name, expression } = this.createValueBinding(attr, context);
+
+		if (type === 'prop') {
+			context.builder.addPart(CreateCompiledPart.property(context.currentIndex, name));
+			context.builder.addValue(expression);
+			context.importsUsed.add('propertyPart');
+		}
+		else if (type === 'bool') {
+			context.builder.addPart(CreateCompiledPart.boolean(context.currentIndex, name));
+			context.builder.addValue(expression);
+			context.importsUsed.add('booleanPart');
+		}
+	}
 
 }
 

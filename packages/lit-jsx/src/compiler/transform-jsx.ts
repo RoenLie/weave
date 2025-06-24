@@ -4,11 +4,12 @@ import * as t from '@babel/types';
 
 import {
 	AttributeHandler,
+	type ProcessorContext,
 	TemplateAttributeProcessor,
 } from './attribute-processor.ts';
 import { TemplateBuilder } from './builder.ts';
 import {
-	EnsureImport,
+	ensureImports,
 	isJSXElementPath,
 	isJSXFragmentPath,
 	isValidOpeningElement,
@@ -41,22 +42,17 @@ export const transformJSXElement: VisitNode<
 
 	// If the parent is not a JSX element,
 	// we need to wrap the JSX in a tagged template expression
-	return void path.replaceWith(processJSXElement(path));
+	return void path.replaceWith(processTemplate(path));
 };
 
 
-export interface TemplateContext {
-	path:                NodePath<t.JSXElement | t.JSXFragment>;
-	program:             t.Program;
-	builder:             TemplateBuilder;
-	isStatic:            { value: boolean; };
-	literalName:         string;
-	tagName:             string;
-	isComponentTag:      boolean;
-	isCustomElementTag:  boolean;
-	isComponentFunction: boolean;
-	templateType:        Values<Pick<typeof VARIABLES, 'HTML' | 'SVG' | 'MATHML'>>;
-	importsUsed:         Set<keyof Omit<typeof EnsureImport, 'prototype'>>;
+export interface TemplateContext extends ProcessorContext {
+	builder:            TemplateBuilder;
+	isStatic:           { value: boolean; };
+	literalName:        string;
+	isComponentTag:     boolean;
+	isCustomElementTag: boolean;
+	templateType:       Values<Pick<typeof VARIABLES, 'HTML' | 'SVG' | 'MATHML'>>;
 }
 
 
@@ -73,6 +69,7 @@ const createTemplateContext = (
 		isComponentTag:      false,
 		isCustomElementTag:  false,
 		isComponentFunction: false,
+		isInitialElement:    true,
 		literalName:         '',
 		tagName:             '',
 		templateType:        'html',
@@ -81,7 +78,7 @@ const createTemplateContext = (
 };
 
 
-const processJSXElement = (path: NodePath<t.JSXElement | t.JSXFragment>) => {
+const processTemplate = (path: NodePath<t.JSXElement | t.JSXFragment>) => {
 	const program = path.findParent(p => t.isProgram(p.node))?.node as t.Program | undefined;
 	if (!program)
 		throw new Error(ERROR_MESSAGES.NO_PROGRAM_FOUND);
@@ -90,22 +87,22 @@ const processJSXElement = (path: NodePath<t.JSXElement | t.JSXFragment>) => {
 	const builder = new TemplateBuilder();
 	const context = createTemplateContext(path, program, builder);
 
-	processJSXElement.processOpeningTag(context);
+	processTemplate.processOpeningTag(context);
 
-	const taggedTemplate = processJSXElement.createTaggedTemplate(context);
+	const taggedTemplate = processTemplate.createTaggedTemplate(context);
 
-	processJSXElement.ensureImports(context);
+	ensureImports(context);
 
 	return taggedTemplate;
 };
 
-processJSXElement.processOpeningTag = (
+processTemplate.processOpeningTag = (
 	context: TemplateContext,
 ): void => {
 	if (t.isJSXFragment(context.path.node)) {
 		context.builder.addText('');
 
-		processJSXElement.processChildren(context);
+		processTemplate.processChildren(context);
 
 		return;
 	}
@@ -134,9 +131,9 @@ processJSXElement.processOpeningTag = (
 		context.builder.addText('<');
 		context.builder.addExpression(literalIdentifier);
 
-		processJSXElement.processAttributes(context);
-		processJSXElement.processChildren(context);
-		processJSXElement.processClosingTag(context);
+		processTemplate.processAttributes(context);
+		processTemplate.processChildren(context);
+		processTemplate.processClosingTag(context);
 
 		return;
 	}
@@ -145,16 +142,7 @@ processJSXElement.processOpeningTag = (
 		context.isComponentFunction = true;
 
 		// Process attributes and children into a props object
-		const propsObject = processJSXElement.createComponentPropsObject(context);
-
-		context.builder.addText('');
-		context.builder.addExpression(
-			t.callExpression(
-				t.identifier(context.tagName),
-				[ propsObject ],
-			),
-		);
-		context.builder.addText('');
+		processTemplate.processFunctionalComponent(context);
 
 		return;
 	}
@@ -162,14 +150,14 @@ processJSXElement.processOpeningTag = (
 	// If the tag is not a component, we will treat it as a regular HTML element.
 	context.builder.addText('<' + context.tagName);
 
-	processJSXElement.processAttributes(context);
-	processJSXElement.processChildren(context);
-	processJSXElement.processClosingTag(context);
+	processTemplate.processAttributes(context);
+	processTemplate.processChildren(context);
+	processTemplate.processClosingTag(context);
 
 	return;
 };
 
-processJSXElement.processAttributes = (context: TemplateContext): void => {
+processTemplate.processAttributes = (context: TemplateContext): void => {
 	if (!isValidJSXElement(context.path))
 		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
@@ -185,7 +173,7 @@ processJSXElement.processAttributes = (context: TemplateContext): void => {
 	context.builder.addText('>');
 };
 
-processJSXElement.processChildren = (context: TemplateContext): void => {
+processTemplate.processChildren = (context: TemplateContext): void => {
 	for (const [ index, child ] of context.path.node.children.entries()) {
 		if (t.isJSXText(child)) {
 			if (WHITESPACE_TAGS.includes(context.tagName))
@@ -203,13 +191,18 @@ processJSXElement.processChildren = (context: TemplateContext): void => {
 			const currentPath = context.path.get(`children.${ index }`);
 
 			// Recursively process child elements
-			if (isJSXElementPath(currentPath) || isJSXFragmentPath(currentPath))
-				processJSXElement.processOpeningTag({ ...context, path: currentPath });
+			if (isJSXElementPath(currentPath) || isJSXFragmentPath(currentPath)) {
+				processTemplate.processOpeningTag({
+					...context,
+					path:             currentPath,
+					isInitialElement: false,
+				});
+			}
 		}
 	}
 };
 
-processJSXElement.processClosingTag = (context: TemplateContext): void => {
+processTemplate.processClosingTag = (context: TemplateContext): void => {
 	// If it's a component tag, we need to close it with the static literal.
 	if (context.isCustomElementTag) {
 		context.builder.addText('</');
@@ -221,7 +214,7 @@ processJSXElement.processClosingTag = (context: TemplateContext): void => {
 	}
 };
 
-processJSXElement.createComponentPropsObject = (context: TemplateContext): t.ObjectExpression => {
+processTemplate.processFunctionalComponent = (context: TemplateContext): void => {
 	if (!isValidJSXElement(context.path))
 		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
@@ -271,7 +264,10 @@ processJSXElement.createComponentPropsObject = (context: TemplateContext): t.Obj
 	if (children.length > 0) {
 		const childrenArray: t.Expression[] = [];
 
-		for (const [ index, child ] of children.entries()) {
+		const childrenPaths = context.path.get(`children`);
+		for (const childPath of childrenPaths) {
+			const child = childPath.node;
+
 			if (t.isJSXText(child)) {
 				const trimmedValue = child.value.trim();
 				if (trimmedValue)
@@ -284,8 +280,6 @@ processJSXElement.createComponentPropsObject = (context: TemplateContext): t.Obj
 				childrenArray.push(child.expression);
 			}
 			else if (t.isJSXElement(child)) {
-				const childPath = context.path.get(`children.${ index }`);
-
 				if (!isValidOpeningElement(childPath))
 					throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
@@ -293,15 +287,16 @@ processJSXElement.createComponentPropsObject = (context: TemplateContext): t.Obj
 				const childBuilder = new TemplateBuilder();
 				const childContext: TemplateContext = {
 					...context,
-					path:    childPath,
-					builder: childBuilder,
+					path:             childPath,
+					builder:          childBuilder,
+					isInitialElement: false,
 				};
 
 				// Recursively process the child element
-				processJSXElement.processOpeningTag(childContext);
+				processTemplate.processOpeningTag(childContext);
 
 				// Get the tagged template expression from the child
-				const childTemplate = processJSXElement
+				const childTemplate = processTemplate
 					.createTaggedTemplate(childContext);
 
 				childrenArray.push(childTemplate);
@@ -325,10 +320,17 @@ processJSXElement.createComponentPropsObject = (context: TemplateContext): t.Obj
 		}
 	}
 
-	return t.objectExpression(properties);
+	context.builder.addText('');
+	context.builder.addExpression(
+		t.callExpression(
+			t.identifier(context.tagName),
+			[ t.objectExpression(properties) ],
+		),
+	);
+	context.builder.addText('');
 };
 
-processJSXElement.createTaggedTemplate = (context: TemplateContext): t.TaggedTemplateExpression => {
+processTemplate.createTaggedTemplate = (context: TemplateContext): t.TaggedTemplateExpression => {
 	let identifier: string = '';
 
 	if (context.isStatic.value) {
@@ -369,41 +371,4 @@ processJSXElement.createTaggedTemplate = (context: TemplateContext): t.TaggedTem
 	}
 
 	return context.builder.createTaggedTemplate(identifier);
-};
-
-processJSXElement.ensureImports = (context: TemplateContext): void => {
-	type Imports = Omit<typeof EnsureImport, 'prototype'>;
-	const record = EnsureImport as Imports;
-
-	// Ensure all imports used in the JSX element are imported.
-	context.importsUsed.forEach((importName) => {
-		const key = importName as keyof Imports;
-		if (key in record)
-			record[key](context.program, context.path);
-	});
-};
-
-
-/**
- * Determines if a JSX element will result in a static template.
- * This function traverses the JSX tree to check if any custom element components
- * are present, which would make the template static.
- *
- * @param path - The NodePath of the JSX element to analyze
- * @returns true if the template will be static, false otherwise
- */
-export const isJSXElementStatic = (path: NodePath<t.JSXElement | t.JSXFragment>): boolean => {
-	if (t.isJSXElement(path.node) && isJSXCustomElementComponent(path.node))
-		return true;
-
-	for (const index of path.node.children.keys()) {
-		const childPath = path.get(`children.${ index }`);
-
-		if (isJSXElementPath(childPath) && isJSXElementStatic(childPath))
-			return true;
-		else if (isJSXFragmentPath(childPath) && isJSXElementStatic(childPath))
-			return true;
-	}
-
-	return false;
 };

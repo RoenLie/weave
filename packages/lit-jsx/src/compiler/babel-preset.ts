@@ -36,7 +36,7 @@ export const litJsxBabelPreset = (
 
 
 /** Compiles to compiled lit-html where available. */
-export const litJsxBabelPreset2 = (
+export const litJsxBabelPresetCompiled = (
 	context: any,
 	options = {},
 ): { plugins: [PluginObj, PluginOptions][]; } => {
@@ -47,9 +47,9 @@ export const litJsxBabelPreset2 = (
 					name:     'lit-jsx-transform2',
 					inherits: SyntaxJSX.default,
 					visitor:  {
-						JSXElement: transformJSXElementCompiled,
-						//JSXFragment: transformJSXFragment,
-						Program:    {
+						JSXElement:  transformJSXElementCompiled,
+						JSXFragment: transformJSXElementCompiled,
+						Program:     {
 							enter: preprocess,
 							exit:  postprocess,
 						},
