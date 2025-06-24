@@ -6,6 +6,7 @@ import {
 	AttributeHandler,
 	TemplateAttributeProcessor,
 } from './attribute-processor.ts';
+import { TemplateBuilder } from './builder.ts';
 import {
 	EnsureImport,
 	isJSXElementPath,
@@ -27,7 +28,6 @@ import {
 	VARIABLES,
 	WHITESPACE_TAGS,
 } from './config.ts';
-import { TemplateBuilder } from './template-builder.ts';
 
 
 export const transformJSXElement: VisitNode<
@@ -45,7 +45,7 @@ export const transformJSXElement: VisitNode<
 };
 
 
-export interface JSXElementContext {
+export interface TemplateContext {
 	path:                NodePath<t.JSXElement | t.JSXFragment>;
 	program:             t.Program;
 	builder:             TemplateBuilder;
@@ -56,15 +56,15 @@ export interface JSXElementContext {
 	isCustomElementTag:  boolean;
 	isComponentFunction: boolean;
 	templateType:        Values<Pick<typeof VARIABLES, 'HTML' | 'SVG' | 'MATHML'>>;
-	importsUsed:         Set<Omit<keyof typeof EnsureImport, 'prototype'>>;
+	importsUsed:         Set<keyof Omit<typeof EnsureImport, 'prototype'>>;
 }
 
 
-const createJSXElementContext = (
+const createTemplateContext = (
 	path:                NodePath<t.JSXElement | t.JSXFragment>,
 	program:             t.Program,
 	builder:             TemplateBuilder,
-): JSXElementContext => {
+): TemplateContext => {
 	return {
 		program,
 		builder,
@@ -77,7 +77,7 @@ const createJSXElementContext = (
 		tagName:             '',
 		templateType:        'html',
 		importsUsed:         new Set(),
-	} satisfies JSXElementContext;
+	} satisfies TemplateContext;
 };
 
 
@@ -88,7 +88,7 @@ const processJSXElement = (path: NodePath<t.JSXElement | t.JSXFragment>) => {
 
 
 	const builder = new TemplateBuilder();
-	const context = createJSXElementContext(path, program, builder);
+	const context = createTemplateContext(path, program, builder);
 
 	processJSXElement.processOpeningTag(context);
 
@@ -100,7 +100,7 @@ const processJSXElement = (path: NodePath<t.JSXElement | t.JSXFragment>) => {
 };
 
 processJSXElement.processOpeningTag = (
-	context: JSXElementContext,
+	context: TemplateContext,
 ): void => {
 	if (t.isJSXFragment(context.path.node)) {
 		context.builder.addText('');
@@ -169,7 +169,7 @@ processJSXElement.processOpeningTag = (
 	return;
 };
 
-processJSXElement.processAttributes = (context: JSXElementContext): void => {
+processJSXElement.processAttributes = (context: TemplateContext): void => {
 	if (!isValidJSXElement(context.path))
 		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
@@ -185,7 +185,7 @@ processJSXElement.processAttributes = (context: JSXElementContext): void => {
 	context.builder.addText('>');
 };
 
-processJSXElement.processChildren = (context: JSXElementContext): void => {
+processJSXElement.processChildren = (context: TemplateContext): void => {
 	for (const [ index, child ] of context.path.node.children.entries()) {
 		if (t.isJSXText(child)) {
 			if (WHITESPACE_TAGS.includes(context.tagName))
@@ -209,7 +209,7 @@ processJSXElement.processChildren = (context: JSXElementContext): void => {
 	}
 };
 
-processJSXElement.processClosingTag = (context: JSXElementContext): void => {
+processJSXElement.processClosingTag = (context: TemplateContext): void => {
 	// If it's a component tag, we need to close it with the static literal.
 	if (context.isCustomElementTag) {
 		context.builder.addText('</');
@@ -221,7 +221,7 @@ processJSXElement.processClosingTag = (context: JSXElementContext): void => {
 	}
 };
 
-processJSXElement.createComponentPropsObject = (context: JSXElementContext): t.ObjectExpression => {
+processJSXElement.createComponentPropsObject = (context: TemplateContext): t.ObjectExpression => {
 	if (!isValidJSXElement(context.path))
 		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
@@ -291,7 +291,7 @@ processJSXElement.createComponentPropsObject = (context: JSXElementContext): t.O
 
 				// Create a new builder for this child element
 				const childBuilder = new TemplateBuilder();
-				const childContext: JSXElementContext = {
+				const childContext: TemplateContext = {
 					...context,
 					path:    childPath,
 					builder: childBuilder,
@@ -328,7 +328,7 @@ processJSXElement.createComponentPropsObject = (context: JSXElementContext): t.O
 	return t.objectExpression(properties);
 };
 
-processJSXElement.createTaggedTemplate = (context: JSXElementContext): t.TaggedTemplateExpression => {
+processJSXElement.createTaggedTemplate = (context: TemplateContext): t.TaggedTemplateExpression => {
 	let identifier: string = '';
 
 	if (context.isStatic.value) {
@@ -371,7 +371,7 @@ processJSXElement.createTaggedTemplate = (context: JSXElementContext): t.TaggedT
 	return context.builder.createTaggedTemplate(identifier);
 };
 
-processJSXElement.ensureImports = (context: JSXElementContext): void => {
+processJSXElement.ensureImports = (context: TemplateContext): void => {
 	type Imports = Omit<typeof EnsureImport, 'prototype'>;
 	const record = EnsureImport as Imports;
 

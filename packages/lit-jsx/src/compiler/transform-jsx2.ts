@@ -7,7 +7,7 @@ import {
 	CompiledAttributeProcessor,
 	CreateCompiledPart,
 } from './attribute-processor.ts';
-import { CompiledBuilder } from './compiled-builder.ts';
+import { CompiledBuilder } from './builder.ts';
 import {
 	Ensure,
 	EnsureImport,
@@ -90,11 +90,11 @@ const process = (context: CompiledContext) => {
 	// Close the opening tag
 	context.builder.addText('>');
 
-	//const children = context.path.get(`children`);
-	//children.forEach(child => child.node)
-
 	// Process the children
-	for (const [ index, child ] of context.path.node.children.entries()) {
+	for (const childPath of context.path.get('children').values()) {
+		const child = childPath.node;
+
+		// Index is incremented to ensure correct part indices.
 		const partIndex = context.currentIndex + 1;
 
 		if (t.isJSXText(child)) {
@@ -105,20 +105,18 @@ const process = (context: CompiledContext) => {
 		}
 		else if (t.isJSXExpressionContainer(child)) {
 			if (t.isJSXEmptyExpression(child.expression))
-				continue;
+				throw new Error(ERROR_MESSAGES.EMPTY_EXPRESSION);
 
 			context.builder.addText('<?>');
 			context.builder.addValue(child.expression);
 			context.builder.addPart(CreateCompiledPart.child(partIndex));
 		}
 		else if (t.isJSXElement(child)) {
-			const path = context.path.get(`children.${ index }`);
-			if (!isValidJSXElement(path))
+			if (!isValidJSXElement(childPath))
 				throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
 			// Recursively process child elements
-			// Index is incremented to ensure correct part indices.
-			process({ ...context, path, currentIndex: partIndex });
+			process({ ...context, path: childPath, currentIndex: partIndex });
 		}
 	}
 

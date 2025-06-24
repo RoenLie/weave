@@ -1243,4 +1243,157 @@ describe('Transform JSX to compiled lit-html', () => {
 
 		expect(code).to.be.eq(expected);
 	});
+
+	test('children should have correct index in template', async ({ expect }) => {
+		const source = `
+		const template = (
+			<div id="1" attribute={'value'} boolean={bool => true} property={as.prop([])} on-event={this.onClick}>
+				{'child1'}
+				<div attribute={'value'} id="2" boolean={as.bool(true)} property={prop => []} on-event={this.onClick}>
+					{'child2'}
+					<div attribute={'value'} boolean={bool => true} id="3" property={as.prop([])} on-event={this.onClick}>
+						{'child3'}
+						<div attribute={'value'} boolean={as.bool(true)} property={prop => []} id="4" on-event={this.onClick}>
+							{'child4'}
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+		`;
+
+		const expected = ``
+		+ `import { EventPart } from "jsx-lit";`
+		+ `\nimport { PropertyPart } from "jsx-lit";`
+		+ `\nimport { BooleanPart } from "jsx-lit";`
+		+ `\nimport { AttributePart } from "jsx-lit";`
+		+ `\nimport { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div id="1"><?><div id="2"><?><div id="3"><?><div id="4"><?></div></div></div></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "attribute",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": AttributePart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "boolean",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": BooleanPart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "property",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": PropertyPart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 0,`
+		+ `\n    "name": "event",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": EventPart`
+		+ `\n  }, {`
+		+ `\n    "type": 2,`
+		+ `\n    "index": 1`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 1,`
+		+ `\n    "name": "attribute",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": AttributePart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 1,`
+		+ `\n    "name": "boolean",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": BooleanPart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 1,`
+		+ `\n    "name": "property",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": PropertyPart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 1,`
+		+ `\n    "name": "event",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": EventPart`
+		+ `\n  }, {`
+		+ `\n    "type": 2,`
+		+ `\n    "index": 2`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 2,`
+		+ `\n    "name": "attribute",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": AttributePart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 2,`
+		+ `\n    "name": "boolean",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": BooleanPart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 2,`
+		+ `\n    "name": "property",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": PropertyPart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 2,`
+		+ `\n    "name": "event",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": EventPart`
+		+ `\n  }, {`
+		+ `\n    "type": 2,`
+		+ `\n    "index": 3`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 3,`
+		+ `\n    "name": "attribute",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": AttributePart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 3,`
+		+ `\n    "name": "boolean",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": BooleanPart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 3,`
+		+ `\n    "name": "property",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": PropertyPart`
+		+ `\n  }, {`
+		+ `\n    "type": 1,`
+		+ `\n    "index": 3,`
+		+ `\n    "name": "event",`
+		+ `\n    "strings": ["", ""],`
+		+ `\n    "ctor": EventPart`
+		+ `\n  }, {`
+		+ `\n    "type": 2,`
+		+ `\n    "index": 4`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": [`
+		+ `'value', true, [], this.onClick, 'child1', `
+		+ `'value', true, [], this.onClick, 'child2', `
+		+ `'value', true, [], this.onClick, 'child3', `
+		+ `'value', true, [], this.onClick, 'child4']`
+		+ `\n};`;
+
+		console.time('Transform');
+		const result = await babel.transformAsync(source, opts);
+		console.timeEnd('Transform');
+		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
 });

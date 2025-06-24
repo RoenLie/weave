@@ -9,7 +9,7 @@ import {
 	ERROR_MESSAGES,
 	VARIABLES,
 } from './config.ts';
-import type { JSXElementContext } from './transform-jsx.ts';
+import type { TemplateContext } from './transform-jsx.ts';
 import type { CompiledContext } from './transform-jsx2.ts';
 
 
@@ -46,6 +46,12 @@ interface JSXAttributeWithoutExpression extends t.JSXAttribute {
 
 interface JSXAttributeBoolean extends t.JSXAttribute {
 	value: null | undefined;
+}
+
+interface ValueBinding {
+	type:       'prop' | 'bool';
+	name:       string;
+	expression: t.Expression;
 }
 
 
@@ -160,76 +166,117 @@ export class AttributeValidators {
 }
 
 
-export class TemplateAttributeProcessor implements IAttributeProcessor<JSXElementContext> {
+export abstract class AttributeProcessor<TContext> implements IAttributeProcessor<TContext> {
 
-	callBinding(attr: CallBindingAttribute, context: JSXElementContext): void {
+	abstract callBinding(attr: CallBindingAttribute, context: TContext): void;
+	abstract arrowBinding(attr: ArrowFunctionAttribute, context: TContext): void;
+	abstract directive(attr: JSXAttributeWithExpression, context: TContext): void;
+	abstract ref(attr: JSXAttributeWithExpression, context: TContext): void;
+	abstract classList(attr: JSXAttributeWithExpression, context: TContext): void;
+	abstract styleList(attr: JSXAttributeWithExpression, context: TContext): void;
+	abstract event(attr: JSXAttributeWithExpression, context: TContext): void;
+	abstract expression(attr: JSXAttributeWithExpression, context: TContext): void;
+	abstract nonExpression(attr: JSXAttributeWithoutExpression, context: TContext): void;
+	abstract spread(attr: t.JSXSpreadAttribute, context: TContext): void;
+	abstract boolean(attr: JSXAttributeBoolean, context: TContext): void;
+
+	protected createValueBinding(attr: CallBindingAttribute | ArrowFunctionAttribute, context: TContext): ValueBinding {
 		const expression = attr.value.expression;
-		const isProp = expression.callee.property.name === ATTR_VALUES.PROP;
-		const isBool = expression.callee.property.name === ATTR_VALUES.BOOL;
 
-		if (isProp)
-			context.builder.addText(' .');
-		else if (isBool)
-			context.builder.addText(' ?');
-		else
-			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
+		let isProp: boolean = false;
+		let isBool: boolean = false;
+		let expressionBody: t.Expression;
 
-		const name = attr.name.name.toString();
-		const argument = expression.arguments[0];
-
-		context.builder.addText(name + '=');
-		context.builder.addExpression(argument);
-	}
-
-	arrowBinding(attr: ArrowFunctionAttribute, context: JSXElementContext): void {
-		const expression = attr.value.expression;
-		const param = expression.params[0];
-		const isProp = param.name === ATTR_VALUES.PROP;
-		const isBool = param.name === ATTR_VALUES.BOOL;
-
-		if (isProp)
-			context.builder.addText(' .');
-		else if (isBool)
-			context.builder.addText(' ?');
-		else
-			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
-
-		const name = attr.name.name.toString();
-		const expressionBody = expression.body;
-
-		context.builder.addText(name + '=');
-		context.builder.addExpression(expressionBody);
-	}
-
-	directive(attr: JSXAttributeWithExpression, context: JSXElementContext): void {
-		// Replace the spread attribute with its argument, minus the compiler func.
-		const expression = attr.value.expression;
 		if (t.isCallExpression(expression)) {
-			// If the expression is a call, we can add it directly.
-			context.builder.addText(' ');
-			context.builder.addExpression(expression);
+			isProp = expression.callee.property.name === ATTR_VALUES.PROP;
+			isBool = expression.callee.property.name === ATTR_VALUES.BOOL;
+			expressionBody = expression.arguments[0];
 		}
-		else if (t.isArrayExpression(expression)) {
-			for (const item of expression.elements) {
-				if (!t.isExpression(item))
-					throw new Error(ERROR_MESSAGES.EMPTY_JSX_EXPRESSION);
+		else if (t.isArrowFunctionExpression(expression)) {
+			const param = expression.params[0];
+			isProp = param.name === ATTR_VALUES.PROP;
+			isBool = param.name === ATTR_VALUES.BOOL;
+			expressionBody = expression.body;
+		}
+		else {
+			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
+		}
 
-				// Add a space to keep correct spacing in the template.
-				context.builder.addText(' ');
-				context.builder.addExpression(item);
-			}
+		if (isProp) {
+			return {
+				type:       'prop',
+				name:       attr.name.name.toString(),
+				expression: expressionBody,
+			};
+		}
+		else if (isBool) {
+			return {
+				type:       'bool',
+				name:       attr.name.name.toString(),
+				expression: expressionBody,
+			};
 		}
 		else {
 			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
 		}
 	}
 
-	ref(attr: JSXAttributeWithExpression, context: JSXElementContext): void {
+	protected createDirective(attr: JSXAttributeWithExpression, context: TContext): t.Expression[] {
+		// Replace the spread attribute with its argument, minus the compiler func.
+		const expression = attr.value.expression;
+
+		// If the expression is a call, we can add it directly.
+		if (t.isCallExpression(expression))
+			return [ expression ];
+		// If the expression is an array, we can add each item.
+		else if (t.isArrayExpression(expression))
+			return expression.elements.filter(item => t.isExpression(item));
+		else
+			throw new Error(ERROR_MESSAGES.INVALID_DIRECTIVE_VALUE);
+	}
+
+	protected createRef(attr: JSXAttributeWithExpression, context: TContext): t.CallExpression {
 		// add a ref call around the expression.
 		const expression = t.callExpression(
 			t.identifier(VARIABLES.REF),
 			[ attr.value.expression ],
 		);
+
+		return expression;
+	}
+
+	protected createClassList(attr: JSXAttributeWithExpression, context: TContext): t.CallExpression {
+		// add a classMap call around the expression.
+		const expression = t.callExpression(
+			t.identifier(VARIABLES.CLASS_MAP),
+			[ attr.value.expression ],
+		);
+
+		return expression;
+	}
+
+}
+
+
+export class TemplateAttributeProcessor extends AttributeProcessor<TemplateContext> {
+
+	callBinding(attr: CallBindingAttribute, context: TemplateContext): void {
+		this.valueBinding(attr, context);
+	}
+
+	arrowBinding(attr: ArrowFunctionAttribute, context: TemplateContext): void {
+		this.valueBinding(attr, context);
+	}
+
+	directive(attr: JSXAttributeWithExpression, context: TemplateContext): void {
+		for (const expression of this.createDirective(attr, context)) {
+			context.builder.addText(' ');
+			context.builder.addExpression(expression);
+		}
+	}
+
+	ref(attr: JSXAttributeWithExpression, context: TemplateContext): void {
+		const expression = this.createRef(attr, context);
 
 		// add a space to keep correct spacing in the template.
 		context.builder.addText(' ');
@@ -238,21 +285,16 @@ export class TemplateAttributeProcessor implements IAttributeProcessor<JSXElemen
 		context.importsUsed.add('createRef');
 	}
 
-	classList(attr: JSXAttributeWithExpression, context: JSXElementContext): void {
-		// add a classMap call around the expression.
-		const expression = t.callExpression(
-			t.identifier(VARIABLES.CLASS_MAP),
-			[ attr.value.expression ],
-		);
+	classList(attr: JSXAttributeWithExpression, context: TemplateContext): void {
+		const expression = this.createClassList(attr, context);
 
-		// add classlist without the . to the quasi.
 		context.builder.addText(' class=');
 		context.builder.addExpression(expression);
 
 		context.importsUsed.add('classMap');
 	}
 
-	styleList(attr: JSXAttributeWithExpression, context: JSXElementContext): void {
+	styleList(attr: JSXAttributeWithExpression, context: TemplateContext): void {
 		// add a styleMap call around the expression.
 		const expression = t.callExpression(
 			t.identifier(VARIABLES.STYLE_MAP),
@@ -265,7 +307,7 @@ export class TemplateAttributeProcessor implements IAttributeProcessor<JSXElemen
 		context.importsUsed.add('styleMap');
 	}
 
-	event(attr: JSXAttributeWithExpression, context: JSXElementContext): void {
+	event(attr: JSXAttributeWithExpression, context: TemplateContext): void {
 		// If the attribute is an event handler,
 		// we need to convert it to a standard DOM event name.
 		const oldName = attr.name.name.toString();
@@ -274,14 +316,14 @@ export class TemplateAttributeProcessor implements IAttributeProcessor<JSXElemen
 		context.builder.addExpression(attr.value.expression);
 	}
 
-	expression(attr: JSXAttributeWithExpression, context: JSXElementContext): void {
+	expression(attr: JSXAttributeWithExpression, context: TemplateContext): void {
 		// Any other attribute which has an expression container value
 		const name = attr.name.name.toString();
 		context.builder.addText(' ' + name + '=');
 		context.builder.addExpression(attr.value.expression);
 	}
 
-	nonExpression(attribute: JSXAttributeWithoutExpression, context: JSXElementContext): void {
+	nonExpression(attribute: JSXAttributeWithoutExpression, context: TemplateContext): void {
 		// If the value is a string, we can use it directly
 		// Here we always bind the value as a string.
 		// In the future, we might want to also support numbers.
@@ -293,7 +335,7 @@ export class TemplateAttributeProcessor implements IAttributeProcessor<JSXElemen
 		context.builder.addText(' ' + name + '="' + value + '"');
 	};
 
-	spread(attribute: t.JSXSpreadAttribute, context: JSXElementContext): void {
+	spread(attribute: t.JSXSpreadAttribute, context: TemplateContext): void {
 		// If it's a spread attribute, we wrap it in our custom `rest` directive.
 		// This will allow us to handle the spread attribute correctly.
 		// We also need to ensure that the `rest` directive is imported.
@@ -309,12 +351,24 @@ export class TemplateAttributeProcessor implements IAttributeProcessor<JSXElemen
 		context.importsUsed.add('rest');
 	}
 
-	boolean(attribute: JSXAttributeBoolean, context: JSXElementContext): void {
+	boolean(attribute: JSXAttributeBoolean, context: TemplateContext): void {
 		// If the value is null or undefined, we can bind the attribute name directly.
 		// This will result in a attribute without a value, e.g. `<div disabled>`.
 		const name = attribute.name.name.toString();
 		context.builder.addText(' ' + name);
 	};
+
+	protected valueBinding(attr: CallBindingAttribute | ArrowFunctionAttribute, context: TemplateContext): void {
+		const valueBinding = this.createValueBinding(attr, context);
+
+		if (valueBinding.type === 'prop')
+			context.builder.addText(' .');
+		else if (valueBinding.type === 'bool')
+			context.builder.addText(' ?');
+
+		context.builder.addText(valueBinding.name + '=');
+		context.builder.addExpression(valueBinding.expression);
+	}
 
 }
 
