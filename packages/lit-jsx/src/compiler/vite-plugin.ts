@@ -2,7 +2,7 @@ import * as babel from '@babel/core';
 import { mergeAndConcat } from 'merge-anything';
 import type { PluginOption } from 'vite';
 
-import { litJsxBabelPreset } from './babel-preset.ts';
+import { litJsxBabelPresetTemplate } from './babel-preset.ts';
 
 
 type BabelPlugins = NonNullable<NonNullable<babel.TransformOptions['parserOpts']>['plugins']>;
@@ -56,7 +56,7 @@ export const litJsx = (options: {
 					sourceFileName: id,
 					presets:        [
 						[
-							litJsxBabelPreset,
+							litJsxBabelPresetTemplate,
 							/* merged into the metadata obj through state.opts */
 							{},
 						],

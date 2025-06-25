@@ -8,16 +8,19 @@ import {
 	CreateCompiledPart,
 	type ProcessorContext,
 } from './attribute-processor.ts';
-import { CompiledBuilder } from './builder.ts';
+import { CompiledBuilder, TemplateBuilder } from './builder.ts';
 import {
 	Ensure,
-	EnsureImport,
 	ensureImports,
 	getJSXElementName,
+	getProgramFromPath,
+	getTemplateType,
+	isJSXElementStatic,
 	isJSXFunctionElementComponent,
 	isValidJSXElement,
 } from './compiler-utils.ts';
 import { ERROR_MESSAGES, WHITESPACE_TAGS } from './config.ts';
+import { processTemplate, type TemplateContext } from './transform-jsx-template.ts';
 
 
 export const transformJSXElementCompiled: VisitNode<
@@ -26,57 +29,43 @@ export const transformJSXElementCompiled: VisitNode<
 	// If the parent is a JSX element, we do not need to transform it.
 	// The below condition will handle the case where the JSX element
 	// is nested inside another JSX element.
-	if (t.isJSXElement(path.parent))
+	if (t.isJSXElement(path.parent) || t.isJSXFragment(path.parent))
 		return;
 
-	const { compiledTemplate, createExpression } = processJSXElementToCompiled(path);
-
-	const variableName = path.scope.generateUid();
-	Ensure.hoistAsTopLevelVariable(path, variableName, compiledTemplate);
-
-	path.replaceWith(createExpression(variableName));
+	path.replaceWith(processJSXElementToCompiled(path));
 };
 
 
 export interface CompiledContext extends ProcessorContext {
-	currentIndex: number;
 	builder:      CompiledBuilder;
+	currentIndex: number;
 }
 
 
-const processJSXElementToCompiled = (path: NodePath<t.JSXElement | t.JSXFragment>, context?: CompiledContext) => {
-	const program = path.findParent(p => t.isProgram(p.node))?.node as t.Program | undefined;
-	if (!program)
-		throw new Error(ERROR_MESSAGES.NO_PROGRAM_FOUND);
+export const processJSXElementToCompiled = (path: NodePath<t.JSXElement | t.JSXFragment>): t.Expression => {
+	const program = getProgramFromPath(path);
 
-	EnsureImport.taggedTemplateUtil(program, path);
-
-	context ??= {
+	const context: CompiledContext = {
 		program,
 		path,
-		currentIndex:        0,
-		tagName:             '',
-		isComponentFunction: false,
-		isInitialElement:    true,
-		builder:             new CompiledBuilder(),
-		importsUsed:         new Set(),
+		currentIndex:     0,
+		tagName:          '',
+		isInitialElement: true,
+		builder:          new CompiledBuilder(),
+		importsUsed:      new Set([ 'taggedTemplateUtil' ]),
 	};
 
 	processCompiled(context);
+
+	const compiledExpression = processCompiled.createCompiledExpression(context);
+
 	ensureImports(context);
 
-	const compiledTemplate = context.builder.createCompiledTemplate();
-	const createExpression = (variableName: string) =>
-		context.builder.createExpression(variableName);
-
-	return {
-		compiledTemplate,
-		createExpression,
-	};
+	return compiledExpression;
 };
 
 
-const processCompiled = (context: CompiledContext) => {
+export const processCompiled = (context: CompiledContext): void => {
 	if (t.isJSXFragment(context.path.node)) {
 		context.builder.addText('');
 
@@ -88,15 +77,12 @@ const processCompiled = (context: CompiledContext) => {
 	context.tagName = getJSXElementName(context.path.node);
 
 	if (isJSXFunctionElementComponent(context.tagName)) {
-		context.isComponentFunction = true;
-
-		// TODO, need to handle it if it's a top level functional component.
-		// Then we should be able to just return the expression...
-		// But there might be other implications.
-
 		// Process attributes and children into a props object
 		if (!context.isInitialElement)
 			processCompiled.processFunctionalComponent(context);
+
+		// If this is the initial element, this should not happen.
+		// and it should instead have been processed as a single expression.
 
 		return;
 	}
@@ -117,7 +103,7 @@ const processCompiled = (context: CompiledContext) => {
 	context.builder.addText('</' + context.tagName + '>');
 };
 
-processCompiled.attributes = (context: CompiledContext) => {
+processCompiled.attributes = (context: CompiledContext): void => {
 	if (!isValidJSXElement(context.path))
 		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
@@ -130,7 +116,7 @@ processCompiled.attributes = (context: CompiledContext) => {
 		handler.processAttribute(attr, context);
 };
 
-processCompiled.children = (context: CompiledContext) => {
+processCompiled.children = (context: CompiledContext): void => {
 	for (const childPath of context.path.get('children').values()) {
 		const child = childPath.node;
 
@@ -166,12 +152,25 @@ processCompiled.children = (context: CompiledContext) => {
 	}
 };
 
-processCompiled.processFunctionalComponent = (context: CompiledContext): void => {
+processCompiled.createFunctionalComponent = (path: NodePath<t.JSXElement | t.JSXFragment>): t.Expression => {
+	const program = getProgramFromPath(path);
+
+	const context: CompiledContext = {
+		program,
+		path,
+		currentIndex:     0,
+		tagName:          '',
+		isInitialElement: true,
+		builder:          new CompiledBuilder(),
+		importsUsed:      new Set([ 'taggedTemplateUtil' ]),
+	};
+
 	if (!isValidJSXElement(context.path))
 		throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
 	const properties: (t.ObjectProperty | t.SpreadElement)[] = [];
 	const attributes = context.path.node.openingElement.attributes;
+	const tagName = getJSXElementName(context.path.node);
 
 	for (const attr of attributes) {
 		// Handle spread attributes by spreading the object
@@ -212,8 +211,7 @@ processCompiled.processFunctionalComponent = (context: CompiledContext): void =>
 	}
 
 	// Process children
-	const children = context.path.node.children;
-	if (children.length > 0) {
+	if (context.path.node.children.length > 0) {
 		const childrenArray: t.Expression[] = [];
 
 		for (const childPath of context.path.get('children')) {
@@ -234,25 +232,48 @@ processCompiled.processFunctionalComponent = (context: CompiledContext): void =>
 				if (!isValidJSXElement(childPath))
 					throw new Error(ERROR_MESSAGES.INVALID_OPENING_TAG);
 
-				// For compiled version, we need to process child elements differently
-				// Create a new compiled builder for this child element
-				const { compiledTemplate, createExpression } = processJSXElementToCompiled(
-					childPath as NodePath<t.JSXElement>,
-					{
+				const isStatic = isJSXElementStatic(childPath);
+				const templateType = getTemplateType(childPath);
+
+				if (isStatic || templateType !== 'html') {
+					// Create a new builder for this child element
+					const childContext: TemplateContext = {
+						...context,
+						literalName:      '',
+						templateType:     'html',
+						path:             childPath,
+						builder:          new TemplateBuilder(),
+						isInitialElement: false,
+					};
+
+					// Recursively process the child element
+					processTemplate(childContext);
+
+					// Get the tagged template expression from the child
+					const childTemplate = processTemplate
+						.createTaggedTemplate(childContext, isStatic, templateType);
+
+					childrenArray.push(childTemplate);
+				}
+				else {
+					// For compiled version, we need to process child elements differently
+					// Create a new compiled builder for this child element
+					const childContext: CompiledContext = {
 						...context,
 						path:             childPath,
+						builder:          new CompiledBuilder(),
 						currentIndex:     context.currentIndex + 1,
 						isInitialElement: false,
-						builder:          new CompiledBuilder(),
-					},
-				);
+					};
 
-				// Generate a unique variable name for this child template
-				const childVariableName = context.path.scope.generateUid();
-				Ensure.hoistAsTopLevelVariable(context.path, childVariableName, compiledTemplate);
+					processCompiled(childContext);
 
-				// Add the child expression to the array
-				childrenArray.push(createExpression(childVariableName));
+					const compiledExpression = processCompiled
+						.createCompiledExpression(childContext);
+
+					// Add the child expression to the array
+					childrenArray.push(compiledExpression);
+				}
 			}
 		}
 
@@ -273,15 +294,28 @@ processCompiled.processFunctionalComponent = (context: CompiledContext): void =>
 		}
 	}
 
-	// For compiled version, we need to add the component call as a compiled part
-	const partIndex = context.currentIndex + 1;
+	const expression = t.callExpression(
+		t.identifier(tagName),
+		[ t.objectExpression(properties) ],
+	);
+
+	return expression;
+};
+
+processCompiled.processFunctionalComponent = (context: CompiledContext): void => {
+	const expression = processCompiled.createFunctionalComponent(context.path);
 
 	context.builder.addText('<?>');
-	context.builder.addValue(
-		t.callExpression(
-			t.identifier(context.tagName),
-			[ t.objectExpression(properties) ],
-		),
-	);
-	context.builder.addPart(CreateCompiledPart.child(partIndex));
+	context.builder.addValue(expression);
+	context.builder.addPart(CreateCompiledPart.child(context.currentIndex + 1));
+};
+
+processCompiled.createCompiledExpression = (context: CompiledContext): t.ObjectExpression => {
+	const variableName = context.path.scope.generateUid();
+	const compiledTemplate = context.builder.createCompiledTemplate();
+	const compiledExpression = context.builder.createExpression(variableName);
+
+	Ensure.hoistAsTopLevelVariable(context.path, variableName, compiledTemplate);
+
+	return compiledExpression;
 };

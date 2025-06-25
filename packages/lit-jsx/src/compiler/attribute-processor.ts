@@ -10,8 +10,8 @@ import {
 	ERROR_MESSAGES,
 	VARIABLES,
 } from './config.ts';
-import type { TemplateContext } from './transform-jsx.ts';
-import type { CompiledContext } from './transform-jsx2.ts';
+import type { CompiledContext } from './transform-jsx-compiled.ts';
+import type { TemplateContext } from './transform-jsx-template.ts';
 
 
 interface CallBindingAttribute extends t.JSXAttribute {
@@ -153,12 +153,11 @@ export class AttributeValidators {
 
 
 export interface ProcessorContext {
-	program:             t.Program;
-	path:                NodePath<t.JSXElement | t.JSXFragment>;
-	tagName:             string;
-	isComponentFunction: boolean;
-	isInitialElement:    boolean;
-	importsUsed:         Set<keyof Omit<typeof EnsureImport, 'prototype'>>;
+	program:          t.Program;
+	path:             NodePath<t.JSXElement | t.JSXFragment>;
+	tagName:          string;
+	isInitialElement: boolean;
+	importsUsed:      Set<keyof Omit<typeof EnsureImport, 'prototype'>>;
 }
 
 interface IAttributeProcessor<TContext extends ProcessorContext = ProcessorContext> {

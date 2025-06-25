@@ -6,7 +6,7 @@ import type { JSXElement, JSXFragment } from '@babel/types';
 import * as t from '@babel/types';
 import { describe, test } from 'vitest';
 
-import { litJsxBabelPreset, litJsxBabelPresetCompiled } from '../../src/compiler/babel-preset.ts';
+import { litJsxBabelPresetCompiled, litJsxBabelPresetTemplate } from '../../src/compiler/babel-preset.ts';
 import { Ensure, isJSXElementStatic } from '../../src/compiler/compiler-utils.ts';
 
 
@@ -20,7 +20,7 @@ describe('Transform JSX to standard lit-html', () => {
 		sourceFileName: 'test.tsx',
 		presets:        [
 			[
-				litJsxBabelPreset,
+				litJsxBabelPresetTemplate,
 				/* merged into the metadata obj through state.opts */
 				{},
 			],
@@ -372,7 +372,7 @@ describe('Transform JSX to standard lit-html', () => {
 	test('should correct convert a Component function', async ({ expect }) => {
 		const source = `
 		const obj = {each: this.items};
-		<div>
+		const template = <div>
 			<For
 				{...{obj}}
 				each={this.items}
@@ -389,7 +389,7 @@ describe('Transform JSX to standard lit-html', () => {
 		+ '\nconst obj = {'
 		+ '\n  each: this.items'
 		+ '\n};'
-		+ '\nhtml`<div>${For({'
+		+ '\nconst template = html`<div>${For({'
 		+ '\n  ...{'
 		+ '\n    obj'
 		+ '\n  },'
@@ -401,6 +401,10 @@ describe('Transform JSX to standard lit-html', () => {
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
+
+		console.log(code);
+
+
 		expect(code).to.be.eq(expected);
 	});
 
@@ -816,6 +820,34 @@ describe('Transform JSX to compiled lit-html', () => {
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
+
+		expect(code).to.be.eq(expected);
+	});
+
+	test('should transform two divs inside a fragment', async ({ expect }) => {
+		const source = `
+		const template = <>
+			<div>Hello</div>
+			<div>World</div>
+		</>;
+		`;
+
+		const expected = ``
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div>Hello</div><div>World</div>\`,`
+		+ `\n  "parts": []`
+		+ `\n};`
+		+ `\nconst template = {`
+		+ `\n  "_$litType$": _temp,`
+		+ `\n  "values": []`
+		+ `\n};`;
+
+		const result = await babel.transformAsync(source, opts);
+		const code = result?.code;
+
+		console.log(code);
+
 
 		expect(code).to.be.eq(expected);
 	});
@@ -1417,9 +1449,6 @@ describe('Transform JSX to compiled lit-html', () => {
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
 
-		console.log(code);
-
-
 		expect(code).to.be.eq(expected);
 	});
 
@@ -1469,8 +1498,6 @@ describe('Transform JSX to compiled lit-html', () => {
 
 		const result = await babel.transformAsync(source, opts);
 		const code = result?.code;
-
-		console.log(code);
 
 		expect(code).to.be.eq(expected);
 	});

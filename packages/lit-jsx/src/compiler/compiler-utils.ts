@@ -16,16 +16,12 @@ export const isComponent = (tagName: string): boolean => {
 		|| /[^a-zA-Z]/.test(tagName[0] ?? '');
 };
 
-export const getTemplateType = (
-	tagName: string,
-): Values<Pick<typeof VARIABLES, 'HTML' | 'SVG' | 'MATHML'>> => {
-	if (isSvgTag(tagName))
-		return VARIABLES.SVG;
+export const getProgramFromPath = (path: NodePath): t.Program => {
+	const program = path.findParent(p => t.isProgram(p.node))?.node as t.Program | undefined;
+	if (!program)
+		throw new Error(ERROR_MESSAGES.NO_PROGRAM_FOUND);
 
-	if (isMathmlTag(tagName))
-		return VARIABLES.MATHML;
-
-	return VARIABLES.HTML;
+	return program;
 };
 
 
@@ -695,10 +691,21 @@ export const isJSXCustomElementComponent = (nodeOrName: t.JSXElement | string): 
 };
 
 
-export const isJSXFunctionElementComponent = (nodeOrName: t.JSXElement | string): boolean => {
-	const tagName = typeof nodeOrName !== 'string'
-		? getJSXElementName(nodeOrName)
-		: nodeOrName;
+export const isJSXFunctionElementComponent = (
+	pathOrName: NodePath<t.JSXElement | t.JSXFragment> | string,
+): boolean => {
+	let tagName: string;
+	if (typeof pathOrName === 'string') {
+		tagName = pathOrName;
+	}
+	else {
+		const node = pathOrName.node;
+		// If it's a fragment, we cannot determine the tag name.
+		if (t.isJSXFragment(node))
+			return false;
+
+		tagName = getJSXElementName(node);
+	}
 
 	if (!isComponent(tagName))
 		return false;
@@ -748,4 +755,35 @@ export const ensureImports = (context: ProcessorContext): void => {
 		if (key in record)
 			record[key](context.program, context.path);
 	});
+};
+
+export type TemplateType = Values<Pick<typeof VARIABLES, 'HTML' | 'SVG' | 'MATHML'>>;
+export const getTemplateType = (path: NodePath<t.JSXElement | t.JSXFragment>): TemplateType => {
+	if (t.isJSXElement(path.node)) {
+		const name = getJSXElementName(path.node);
+
+		return getTemplateTag(name);
+	}
+
+	for (const childPath of path.get('children')) {
+		if (!isJSXElementPath(childPath) && !isJSXFragmentPath(childPath))
+			continue;
+
+		return getTemplateType(childPath);
+	}
+
+	return VARIABLES.HTML;
+};
+
+
+export const getTemplateTag = (
+	tagName: string,
+): Values<Pick<typeof VARIABLES, 'HTML' | 'SVG' | 'MATHML'>> => {
+	if (isSvgTag(tagName))
+		return VARIABLES.SVG;
+
+	if (isMathmlTag(tagName))
+		return VARIABLES.MATHML;
+
+	return VARIABLES.HTML;
 };

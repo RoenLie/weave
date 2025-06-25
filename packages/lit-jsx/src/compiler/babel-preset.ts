@@ -4,10 +4,11 @@ import SyntaxJSX from '@babel/plugin-syntax-jsx';
 import { postprocess } from './postprocess.ts';
 import { preprocess } from './preprocess.ts';
 import { transformJSXElement } from './transform-jsx.ts';
-import { transformJSXElementCompiled } from './transform-jsx2.ts';
+import { transformJSXElementCompiled } from './transform-jsx-compiled.ts';
+import { transformJSXElementTemplate } from './transform-jsx-template.ts';
 
 
-/** Compiles to standard lit-html templates */
+/** Compiles jsx to a combination of standard and compiled lit-html */
 export const litJsxBabelPreset = (
 	context: any,
 	options = {},
@@ -35,7 +36,35 @@ export const litJsxBabelPreset = (
 };
 
 
-/** Compiles to compiled lit-html where available. */
+/** Compiles to standard lit-html */
+export const litJsxBabelPresetTemplate = (
+	context: any,
+	options = {},
+): { plugins: [PluginObj, PluginOptions][]; } => {
+	return {
+		plugins: [
+			[
+				{
+					name:     'lit-jsx-transform-template',
+					inherits: SyntaxJSX.default,
+					visitor:  {
+						JSXElement:  transformJSXElementTemplate,
+						JSXFragment: transformJSXElementTemplate,
+						Program:     {
+							enter: preprocess,
+							exit:  postprocess,
+						},
+					},
+				},
+				Object.assign({
+				}, options),
+			],
+		],
+	};
+};
+
+
+/** Compiles to compiled lit-html. */
 export const litJsxBabelPresetCompiled = (
 	context: any,
 	options = {},
@@ -44,7 +73,7 @@ export const litJsxBabelPresetCompiled = (
 		plugins: [
 			[
 				{
-					name:     'lit-jsx-transform2',
+					name:     'lit-jsx-transform-compiled',
 					inherits: SyntaxJSX.default,
 					visitor:  {
 						JSXElement:  transformJSXElementCompiled,
