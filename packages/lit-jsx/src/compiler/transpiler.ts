@@ -2,7 +2,6 @@ import type { NodePath } from '@babel/traverse';
 import * as t from '@babel/types';
 
 import {
-	AttributeHandler,
 	CompiledAttributeProcessor,
 	CreateCompiledPart,
 	type ProcessorContext,
@@ -146,10 +145,9 @@ export class TemplateTranspiler extends JSXTranspiler<TemplateContext> {
 		const { attributes } = context.path.node.openingElement;
 
 		const processor = new TemplateAttributeProcessor();
-		const handler = new AttributeHandler(processor);
 
 		for (const attr of attributes.values())
-			handler.processAttribute(attr, context);
+			processor.processAttribute(attr, context);
 
 		// Close the opening tag
 		context.builder.addText('>');
@@ -444,11 +442,10 @@ export class CompiledTranspiler extends JSXTranspiler<CompiledContext> {
 
 		const { attributes } = context.path.node.openingElement;
 		const processor = new CompiledAttributeProcessor();
-		const handler = new AttributeHandler(processor);
 
 		// Process the attributes
 		for (const attr of attributes.values())
-			handler.processAttribute(attr, context);
+			processor.processAttribute(attr, context);
 
 		// Close the opening tag
 		context.builder.addText('>');

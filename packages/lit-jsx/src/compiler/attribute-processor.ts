@@ -160,22 +160,8 @@ export interface ProcessorContext {
 	importsUsed:      Set<keyof Omit<typeof EnsureImport, 'prototype'>>;
 }
 
-interface IAttributeProcessor<TContext extends ProcessorContext = ProcessorContext> {
-	callBinding(attr: CallBindingAttribute, context: TContext): void;
-	arrowBinding(attr: ArrowFunctionAttribute, context: TContext): void;
-	directive(attr: JSXAttributeWithExpression, context: TContext): void;
-	ref(attr: JSXAttributeWithExpression, context: TContext): void;
-	classList(attr: JSXAttributeWithExpression, context: TContext): void;
-	styleList(attr: JSXAttributeWithExpression, context: TContext): void;
-	event(attr: JSXAttributeWithExpression, context: TContext): void;
-	expression(attr: JSXAttributeWithExpression, context: TContext): void;
-	nonExpression(attr: JSXAttributeWithoutExpression, context: TContext): void;
-	spread(attr: t.JSXSpreadAttribute, context: TContext): void;
-	boolean(attr: JSXAttributeBoolean, context: TContext): void;
-}
 
-export abstract class AttributeProcessor<TContext extends ProcessorContext>
-implements IAttributeProcessor<TContext> {
+abstract class AttributeProcessor<TContext extends ProcessorContext> {
 
 	abstract callBinding(attr: CallBindingAttribute, context: TContext): void;
 	abstract arrowBinding(attr: ArrowFunctionAttribute, context: TContext): void;
@@ -188,6 +174,40 @@ implements IAttributeProcessor<TContext> {
 	abstract nonExpression(attr: JSXAttributeWithoutExpression, context: TContext): void;
 	abstract spread(attr: t.JSXSpreadAttribute, context: TContext): void;
 	abstract boolean(attr: JSXAttributeBoolean, context: TContext): void;
+
+	processAttribute(attr: t.JSXAttribute | t.JSXSpreadAttribute, context: TContext): void {
+		if (AttributeValidators.isSpread(attr))
+			this.spread(attr, context);
+		else if (AttributeValidators.isNonExpression(attr))
+			this.nonExpression(attr, context);
+		else if (AttributeValidators.isBoolean(attr))
+			this.boolean(attr, context);
+
+		// Expression attributes are checked based on their type.
+		// Order is based on a guess as to which expression is more common.
+		else if (AttributeValidators.isEvent(attr))
+			this.event(attr, context);
+		else if (AttributeValidators.isArrowBinding(attr))
+			this.arrowBinding(attr, context);
+		else if (AttributeValidators.isCallBinding(attr))
+			this.callBinding(attr, context);
+		else if (AttributeValidators.isClassListBinding(attr))
+			this.classList(attr, context);
+		else if (AttributeValidators.isStyleListBinding(attr))
+			this.styleList(attr, context);
+		else if (AttributeValidators.isRef(attr))
+			this.ref(attr, context);
+		else if (AttributeValidators.isDirective(attr))
+			this.directive(attr, context);
+
+		// Generic expression attributes are checked last
+		// because this condition will be true for all expression attributes.
+		// and we want the more specific cases to be checked first.
+		else if (AttributeValidators.isExpression(attr))
+			this.expression(attr, context);
+		else
+			throw new Error(ERROR_MESSAGES.UNKNOWN_JSX_ATTRIBUTE_TYPE);
+	}
 
 	protected createValueBinding(
 		attr: CallBindingAttribute | ArrowFunctionAttribute,
@@ -502,47 +522,6 @@ export class CompiledAttributeProcessor extends AttributeProcessor<CompiledConte
 			context.builder.addValue(expression);
 			context.importsUsed.add('booleanPart');
 		}
-	}
-
-}
-
-
-export class AttributeHandler {
-
-	constructor(protected processor: IAttributeProcessor) {}
-
-	processAttribute(attr: t.JSXAttribute | t.JSXSpreadAttribute, context: any): void {
-		if (AttributeValidators.isSpread(attr))
-			this.processor.spread(attr, context);
-		else if (AttributeValidators.isNonExpression(attr))
-			this.processor.nonExpression(attr, context);
-		else if (AttributeValidators.isBoolean(attr))
-			this.processor.boolean(attr, context);
-
-		// Expression attributes are checked based on their type.
-		// Order is based on a guess as to which expression is more common.
-		else if (AttributeValidators.isEvent(attr))
-			this.processor.event(attr, context);
-		else if (AttributeValidators.isArrowBinding(attr))
-			this.processor.arrowBinding(attr, context);
-		else if (AttributeValidators.isCallBinding(attr))
-			this.processor.callBinding(attr, context);
-		else if (AttributeValidators.isClassListBinding(attr))
-			this.processor.classList(attr, context);
-		else if (AttributeValidators.isStyleListBinding(attr))
-			this.processor.styleList(attr, context);
-		else if (AttributeValidators.isRef(attr))
-			this.processor.ref(attr, context);
-		else if (AttributeValidators.isDirective(attr))
-			this.processor.directive(attr, context);
-
-		// Generic expression attributes are checked last
-		// because this condition will be true for all expression attributes.
-		// and we want the more specific cases to be checked first.
-		else if (AttributeValidators.isExpression(attr))
-			this.processor.expression(attr, context);
-		else
-			throw new Error(ERROR_MESSAGES.UNKNOWN_JSX_ATTRIBUTE_TYPE);
 	}
 
 }
