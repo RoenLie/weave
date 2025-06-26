@@ -10,8 +10,7 @@ import {
 	ERROR_MESSAGES,
 	VARIABLES,
 } from './config.ts';
-import type { CompiledContext } from './transform-jsx-compiled.ts';
-import type { TemplateContext } from './transform-jsx-template.ts';
+import type { CompiledContext, TemplateContext } from './transpiler.ts';
 
 
 interface CallBindingAttribute extends t.JSXAttribute {
@@ -153,6 +152,7 @@ export class AttributeValidators {
 
 
 export interface ProcessorContext {
+	builder:          unknown;
 	program:          t.Program;
 	path:             NodePath<t.JSXElement | t.JSXFragment>;
 	tagName:          string;

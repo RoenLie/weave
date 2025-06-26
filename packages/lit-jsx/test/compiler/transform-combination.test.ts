@@ -140,12 +140,25 @@ describe('Transform JSX to a combination or standard and compiled lit-html', () 
 		</For>;
 		`;
 
-		const expected = ``;
+		const expected = ``
+		+ `import { __$t } from "jsx-lit";`
+		+ `\nconst _temp = {`
+		+ `\n  "h": __$t\`<div><?></div>\`,`
+		+ `\n  "parts": [{`
+		+ `\n    "type": 2,`
+		+ `\n    "index": 1`
+		+ `\n  }]`
+		+ `\n};`
+		+ `\nconst template = For({`
+		+ `\n  each: items,`
+		+ `\n  children: item => ({`
+		+ `\n    "_$litType$": _temp,`
+		+ `\n    "values": [item]`
+		+ `\n  })`
+		+ `\n});`;
 
 		const result = await babel.transformAsync(source, getOpts());
 		const code = result?.code;
-
-		console.log(code);
 
 		expect(code).to.be.eq(expected);
 	});

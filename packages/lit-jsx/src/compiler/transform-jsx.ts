@@ -3,8 +3,7 @@ import type { NodePath, VisitNode } from '@babel/traverse';
 import * as t from '@babel/types';
 
 import { getTemplateType, isJSXElementStatic, isJSXFunctionElementComponent } from './compiler-utils.ts';
-import { processJSXElementToCompiled } from './transform-jsx-compiled.ts';
-import { processJSXElementToTemplate, processTemplate } from './transform-jsx-template.ts';
+import { CompiledTranspiler, TemplateTranspiler } from './transpiler.ts';
 
 
 export const transformJSXElement: VisitNode<
@@ -25,13 +24,13 @@ export const transformJSXElement: VisitNode<
 const processJSXElement = (path: NodePath<t.JSXElement | t.JSXFragment>) => {
 	const isStatic = isJSXElementStatic(path);
 	const templateType = getTemplateType(path);
-	const isFunctionComponent = isJSXFunctionElementComponent(path)
+	const isFunctionComponent = isJSXFunctionElementComponent(path);
 
 	if (isFunctionComponent)
-		return processTemplate.createFunctionalComponent(path);
+		return new TemplateTranspiler().createFunctionalComponent(path);
 
 	if (isStatic || templateType !== 'html')
-		return processJSXElementToTemplate(path);
+		return new TemplateTranspiler().start(path);
 
-	return processJSXElementToCompiled(path);
+	return new CompiledTranspiler().start(path);
 };
