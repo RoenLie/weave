@@ -11,6 +11,6 @@ jobs:
     uses: roenlie/github-workflows/.github/workflows/subtree-sync.yml@main
     with:
       package-path: packages/lit-jsx
-      target-repo: roenlie/jsx-lit
+      target-repo: RoenLie/jsx-lit
     secrets:
       sync-token: ${{ secrets.SUBTREE_SYNC }}
