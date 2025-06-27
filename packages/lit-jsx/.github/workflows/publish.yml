@@ -1,0 +1,35 @@
+name: Publish jsx-lit package
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["publish"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org/
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3.0.0
+        with:
+          version: latest
+
+      - name: Set github registry token
+        run: npm config set //npm.pkg.github.com/:_authToken ${{ secrets.PACKAGE_REGISTRY_TOKEN }}
+
+      - name: Install dependencies.
+        run: pnpm install
+
+      - name: Build dependencies, project and publish package.
+        run: pnpm release @roenlie/vite-plugin-import-css-sheet
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
