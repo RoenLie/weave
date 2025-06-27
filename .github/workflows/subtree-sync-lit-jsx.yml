@@ -17,22 +17,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.SUBTREE_SYNC }}
           fetch-depth: 0  # Fetch full history for subtree
-
-      - name: Setup GitHub CLI
-        run: |
-          echo "${{ secrets.SUBTREE_SYNC }}" | gh auth login --with-token
 
       - name: Configure Git
         run: |
-          git config --unset "http.https://github.com/.extraheader"
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898283+github-actions[bot]@users.noreply.github.com"
-
-      - name: Debug token (remove after testing)
-        run: |
-          echo "Token exists: ${{ secrets.SUBTREE_SYNC != '' }}"
-          echo "Remote URL will be: https://x-access-token:***@github.com/RoenLie/jsx-lit.git"
 
       - name: Add remote repository
         run: |
