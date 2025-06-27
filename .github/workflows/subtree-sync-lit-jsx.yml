@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  sync:
+  sync-subtree:
     uses: roenlie/github-workflows/.github/workflows/subtree-sync.yml@main
     with:
       package-path: packages/lit-jsx
