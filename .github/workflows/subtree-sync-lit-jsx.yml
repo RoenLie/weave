@@ -2,33 +2,15 @@ name: Sync lit-jsx to standalone repo
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'packages/lit-jsx/**'
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [main]
+    paths: ['packages/lit-jsx/**']
   workflow_dispatch:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.SUBTREE_SYNC }}
-          fetch-depth: 0  # Fetch full history for subtree
-
-      - name: Configure Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898283+github-actions[bot]@users.noreply.github.com"
-
-      - name: Add remote repository
-        run: |
-          git remote add jsx-lit-repo https://x-access-token:${{ secrets.SUBTREE_SYNC }}@github.com/RoenLie/jsx-lit.git
-
-      - name: Push subtree to standalone repo
-        run: |
-          git subtree push --prefix=packages/lit-jsx jsx-lit-repo main
+    uses: roenlie/github-workflows/.github/workflows/subtree-sync.yml@main
+    with:
+      package-path: packages/lit-jsx
+      target-repo: roenlie/jsx-lit
+    secrets:
+      sync-token: ${{ secrets.SUBTREE_SYNC }}
