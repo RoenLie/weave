@@ -21,9 +21,14 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Debug token (remove after testing)
+        run: |
+          echo "Token exists: ${{ secrets.SUBTREE_SYNC != '' }}"
+          echo "Remote URL will be: https://x-access-token:***@github.com/roenlie/jsx-lit.git"
+
       - name: Add remote repository
         run: |
-          git remote add jsx-lit-repo https://x-access-token:${{ secrets.REPO }}@github.com/roenlie/jsx-lit.git
+          git remote add jsx-lit-repo https://x-access-token:${{ secrets.SUBTREE_SYNC }}@github.com/roenlie/jsx-lit.git
 
       - name: Push subtree to standalone repo
         run: |
