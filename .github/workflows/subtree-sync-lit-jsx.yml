@@ -16,6 +16,10 @@ jobs:
         with:
           fetch-depth: 0  # Fetch full history for subtree
 
+      - name: Setup GitHub CLI
+        run: |
+          echo "${{ secrets.SUBTREE_SYNC }}" | gh auth login --with-token
+
       - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
