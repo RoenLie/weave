@@ -1,0 +1,30 @@
+name: Sync lit-jsx to standalone repo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/lit-jsx/**'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for subtree
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add remote repository
+        run: |
+          git remote add jsx-lit-repo https://x-access-token:${{ secrets.REPO }}@github.com/roenlie/jsx-lit.git
+
+      - name: Push subtree to standalone repo
+        run: |
+          git subtree push --prefix=packages/lit-jsx jsx-lit-repo main
