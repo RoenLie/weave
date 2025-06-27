@@ -7,6 +7,9 @@ on:
     paths:
       - 'packages/lit-jsx/**'
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -22,8 +25,9 @@ jobs:
 
       - name: Configure Git
         run: |
+          git config --unset "http.https://github.com/.extraheader"
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.email "41898283+github-actions[bot]@users.noreply.github.com"
 
       - name: Debug token (remove after testing)
         run: |
